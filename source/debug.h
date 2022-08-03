@@ -1,9 +1,6 @@
 #pragma once
 
 #include "common.h"
-#include "lexer.h"
-
-void printToken(Token* token);
 
 //for processing the command line arguments
 typedef struct {

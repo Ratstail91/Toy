@@ -1,7 +1,7 @@
 #include "debug.h"
 
 #include "lexer.h"
-//-#include "parser.h"
+#include "parser.h"
 //#include "toy.h"
 
 #include <stdio.h>
@@ -130,16 +130,22 @@ void repl() {
 
 void debug() {
 	Lexer lexer;
-	Token token;
+	Parser parser;
 
 	char* source = readFile(command.filename);
 
 	initLexer(&lexer, source);
+	initParser(&parser, &lexer);
 
-	//run the lexer until the end of the source
-	do {
-		token = scanLexer(&lexer);
-	} while(token.type != TOKEN_EOF);
+	//run the parser until the end of the source
+	Node* node = scanParser(&parser);
+	while(node != NULL) {
+		printNode(node);
+
+		freeNode(node);
+
+		node = scanParser(&parser);
+	}
 }
 
 //entry point

@@ -22,3 +22,4 @@ typedef struct {
 void initLexer(Lexer* lexer, char* source);
 Token scanLexer(Lexer* lexer);
 
+void printToken(Token* token);
