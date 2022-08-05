@@ -21,6 +21,7 @@ out/
 *.meta
 *.log
 out
+*.stackdump
 
 #Shell files
 *.bat

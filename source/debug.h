@@ -19,3 +19,5 @@ void initCommand(int argc, const char* argv[]);
 void usageCommand(int argc, const char* argv[]);
 void helpCommand(int argc, const char* argv[]);
 void copyrightCommand(int argc, const char* argv[]);
+
+void dissectBytecode(const char* tb, int size);

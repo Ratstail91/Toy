@@ -2,7 +2,10 @@
 
 #include "lexer.h"
 #include "parser.h"
+#include "compiler.h"
 //#include "toy.h"
+
+#include "memory.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -131,21 +134,34 @@ void repl() {
 void debug() {
 	Lexer lexer;
 	Parser parser;
+	Compiler compiler;
 
 	char* source = readFile(command.filename);
 
 	initLexer(&lexer, source);
 	initParser(&parser, &lexer);
+	initCompiler(&compiler);
 
 	//run the parser until the end of the source
 	Node* node = scanParser(&parser);
 	while(node != NULL) {
-		printNode(node);
+		writeCompiler(&compiler, node);
 
 		freeNode(node);
 
 		node = scanParser(&parser);
 	}
+
+	//get the data dump
+	int size = 0;
+	const char* tb = collateCompiler(&compiler, &size);
+
+	dissectBytecode(tb, size);
+
+	//cleanup
+	FREE_ARRAY(char, tb, size);
+	freeCompiler(&compiler);
+	freeParser(&parser);
 }
 
 //entry point

@@ -1,43 +1,46 @@
 #pragma once
 
-#include "opcodes.h"
 #include "literal.h"
+#include "opcodes.h"
 
 //nodes are the intermediaries between parsers and compilers
 typedef union _node Node;
 
 typedef enum NodeType {
-	NODE_ATOMIC, //a simple value
+	NODE_LITERAL, //a simple value
 	NODE_UNARY, //one child
 	NODE_BINARY, //two children, left and right
 	// NODE_GROUPING,
 } NodeType;
 
-typedef struct NodeAtomic {
+typedef struct NodeLiteral {
 	NodeType type;
 	Literal literal;
-} NodeAtomic;
+} NodeLiteral;
 
 typedef struct NodeUnary {
 	NodeType type;
+	Opcode opcode;
 	Node* child;
 } NodeUnary;
 
 typedef struct NodeBinary {
 	NodeType type;
+	Opcode opcode;
 	Node* left;
 	Node* right;
 } NodeBinary;
 
 union _node {
 	NodeType type;
-	NodeAtomic atomic;
+	NodeLiteral atomic;
 	NodeUnary unary;
 	NodeBinary binary;
 };
 
 void freeNode(Node* node);
-void emitAtomicLiteral(Node** nodeHandle, Literal literal);
+void emitNodeLiteral(Node** nodeHandle, Literal literal);
+void emitNodeUnary(Node** nodeHandle, Opcode opcode);
 
 void printNode(Node* node);
 

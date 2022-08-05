@@ -110,12 +110,12 @@ ParseRule parseRules[];
 //forward declarations
 static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule rule);
 
-//the atomic expression rules
+//the expression rules
 static void string(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	//handle strings
 	switch(parser->previous.type) {
 		case TOKEN_LITERAL_STRING:
-			emitAtomicLiteral(nodeHandle, TO_STRING_LITERAL(copyString(parser->previous.lexeme, parser->previous.length)));
+			emitNodeLiteral(nodeHandle, TO_STRING_LITERAL(copyString(parser->previous.lexeme, parser->previous.length)));
 		break;
 
 		//TODO: interpolated strings
@@ -130,21 +130,67 @@ static void binary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 }
 
 static void unary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
-	//TODO
+	switch(parser->previous.type) {
+		case TOKEN_MINUS:
+			//temp handle to potentially negate values
+			Node* tmpNode = NULL;
+			parsePrecedence(parser, &tmpNode, PREC_TERNARY);
+
+			//check for literals
+			if (tmpNode->type == NODE_LITERAL) {
+				//negate directly, if int or float
+				Literal lit = tmpNode->atomic.literal;
+
+				if (IS_INTEGER(lit)) {
+					lit = TO_INTEGER_LITERAL( -AS_INTEGER(lit) );
+				}
+
+				if (IS_FLOAT(lit)) {
+					lit = TO_FLOAT_LITERAL( -AS_FLOAT(lit) );
+				}
+
+				tmpNode->atomic.literal = lit;
+				*nodeHandle = tmpNode;
+			}
+			else {
+				//process normally
+				emitNodeUnary(nodeHandle, OP_NEGATE);
+				parsePrecedence(parser, nodeHandle, PREC_TERNARY);
+			}
+
+		break;
+
+		default:
+			error(parser, parser->previous, "Unexpected token passed to unary precedence rule");
+	}
 }
 
 static void atomic(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	switch(parser->previous.type) {
 		case TOKEN_NULL:
-			emitAtomicLiteral(nodeHandle, TO_NULL_LITERAL);
+			emitNodeLiteral(nodeHandle, TO_NULL_LITERAL);
 		break;
 
 		case TOKEN_LITERAL_TRUE:
-			emitAtomicLiteral(nodeHandle, TO_BOOLEAN_LITERAL(true));
+			emitNodeLiteral(nodeHandle, TO_BOOLEAN_LITERAL(true));
 		break;
 
 		case TOKEN_LITERAL_FALSE:
-			emitAtomicLiteral(nodeHandle, TO_BOOLEAN_LITERAL(false));
+			emitNodeLiteral(nodeHandle, TO_BOOLEAN_LITERAL(false));
+		break;
+
+		case TOKEN_LITERAL_INTEGER: {
+			int value = 0;
+			sscanf(parser->previous.lexeme, "%d", &value);
+			emitNodeLiteral(nodeHandle, TO_INTEGER_LITERAL(value));
+		}
+		break;
+
+		case TOKEN_LITERAL_FLOAT: {
+			float value = 0;
+			sscanf(parser->previous.lexeme, "%f", &value);
+			emitNodeLiteral(nodeHandle, TO_FLOAT_LITERAL(value));
+		}
 		break;
 
 		default:
@@ -190,13 +236,13 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_IDENTIFIER,
 	{atomic, NULL, PREC_NONE},// TOKEN_LITERAL_TRUE,
 	{atomic, NULL, PREC_NONE},// TOKEN_LITERAL_FALSE,
-	{NULL, NULL, PREC_NONE},// TOKEN_LITERAL_INTEGER,
-	{NULL, NULL, PREC_NONE},// TOKEN_LITERAL_FLOAT,
+	{atomic, NULL, PREC_NONE},// TOKEN_LITERAL_INTEGER,
+	{atomic, NULL, PREC_NONE},// TOKEN_LITERAL_FLOAT,
 	{string, NULL, PREC_PRIMARY},// TOKEN_LITERAL_STRING,
 
 	//math operators
 	{NULL, NULL, PREC_NONE},// TOKEN_PLUS,
-	{NULL, NULL, PREC_NONE},// TOKEN_MINUS,
+	{unary, NULL, PREC_NONE},// TOKEN_MINUS,
 	{NULL, NULL, PREC_NONE},// TOKEN_MULTIPLY,
 	{NULL, NULL, PREC_NONE},// TOKEN_DIVIDE,
 	{NULL, NULL, PREC_NONE},// TOKEN_MODULO,
@@ -287,6 +333,7 @@ static void printStmt(Parser* parser, Node* node) {
 	
 	//set the node info
 	node->type = NODE_UNARY;
+	node->unary.opcode = OP_PRINT;
 	node->unary.child = ALLOCATE(Node, 1);
 	expression(parser, &(node->unary.child));
 
@@ -329,7 +376,12 @@ void initParser(Parser* parser, Lexer* lexer) {
 }
 
 void freeParser(Parser* parser) {
-	initParser(parser, NULL);
+	parser->lexer = NULL;
+	parser->error = false;
+	parser->panic = false;
+
+	parser->previous.type = TOKEN_NULL;
+	parser->current.type = TOKEN_NULL;
 }
 
 Node* scanParser(Parser* parser) {
