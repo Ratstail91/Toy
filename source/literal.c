@@ -55,5 +55,6 @@ Literal _toStringLiteral(char* cstr) {
 char* copyString(char* original, int length) {
 	char* buffer = ALLOCATE(char, length + 1);
 	strncpy(buffer, original, length);
+	buffer[length] = '\0';
 	return buffer;
 }
