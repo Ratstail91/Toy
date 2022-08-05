@@ -131,7 +131,7 @@ static void binary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 
 static void unary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	switch(parser->previous.type) {
-		case TOKEN_MINUS:
+		case TOKEN_MINUS: {
 			//temp handle to potentially negate values
 			Node* tmpNode = NULL;
 			parsePrecedence(parser, &tmpNode, PREC_TERNARY);
@@ -157,7 +157,7 @@ static void unary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 				emitNodeUnary(nodeHandle, OP_NEGATE);
 				parsePrecedence(parser, nodeHandle, PREC_TERNARY);
 			}
-
+		}
 		break;
 
 		default:

@@ -20,7 +20,7 @@ void initCompiler(Compiler* compiler) {
 
 void writeCompiler(Compiler* compiler, Node* node) {
 	//grow if the bytecode space is too small
-	if (compiler->capacity < compiler->count + 8) { //assume 8 is the maximum space needed by each instruction (can change later)
+	if (compiler->capacity < compiler->count + 1) {
 		int oldCapacity = compiler->capacity;
 
 		compiler->capacity = GROW_CAPACITY(oldCapacity);

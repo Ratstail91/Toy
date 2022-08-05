@@ -56,29 +56,29 @@ int findLiteralIndex(LiteralArray* array, Literal literal) {
 				if (AS_BOOLEAN(array->literals[i]) == AS_BOOLEAN(literal)) {
 					return i;
 				}
-			break;
+			continue;
 
 			case LITERAL_INTEGER:
 				if (AS_INTEGER(array->literals[i]) == AS_INTEGER(literal)) {
 					return i;
 				}
-			break;
+			continue;
 
 			case LITERAL_FLOAT:
 				if (AS_FLOAT(array->literals[i]) == AS_FLOAT(literal)) {
 					return i;
 				}
-			break;
+			continue;
 
 			case LITERAL_STRING:
-				if (strcmp(AS_STRING(array->literals[i]), AS_STRING(literal)) == 0) {
+				if (strncmp(AS_STRING(array->literals[i]), AS_STRING(literal), STRLEN(literal)) == 0) {
 					return i;
 				}
-			break;
+
+			continue;
 
 			default:
 				fprintf(stderr, "[Internal] Unexpected literal type in findLiteralIndex(): %d\n", literal.type);
-			break;
 		}
 	}
 

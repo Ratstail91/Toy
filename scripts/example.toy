@@ -6,3 +6,6 @@ print 42;
 print 3.14;
 print -69;
 print -4.20;
+print "hello world";
+print "hello world";
+print "hello world";

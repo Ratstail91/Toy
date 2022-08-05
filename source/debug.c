@@ -176,7 +176,7 @@ void dissectBytecode(const char* tb, int size) {
 			break;
 
 			case LITERAL_STRING: {
-				const s = printString(tb, &count);
+				const char* s = printString(tb, &count);
 				printf("(string)");
 			}
 			break;
@@ -190,7 +190,7 @@ void dissectBytecode(const char* tb, int size) {
 	//code
 	printf("--bytecode--\n");
 	while(tb[count] != OP_EOF) {
-		const opcode = printByte(tb, &count);
+		const unsigned char opcode = printByte(tb, &count);
 
 		switch (opcode) {
 			case OP_PRINT:
