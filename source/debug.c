@@ -206,7 +206,7 @@ void dissectBytecode(const char* tb, int size) {
 
 			case OP_LITERAL_LONG: {
 				printf("long literal ");
-				printByte(tb, &count);
+				printShort(tb, &count);
 				printf("\n");
 			}
 			break;
