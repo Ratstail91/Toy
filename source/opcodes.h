@@ -12,6 +12,11 @@ typedef enum Opcode {
 
 	//operators
 	OP_NEGATE,
+	OP_ADDITION,
+	OP_SUBTRACTION,
+	OP_MULTIPLICATION,
+	OP_DIVISION,
+	OP_MODULO,
 
 	//meta
 	OP_SECTION_END,

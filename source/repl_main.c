@@ -91,7 +91,7 @@ void repl() {
 	Interpreter interpreter; //persist the interpreter for the scopes
 
 	for(;;) {
-		printf(">");
+		printf("> ");
 		fgets(input, size, stdin);
 
 		//setup this iteration

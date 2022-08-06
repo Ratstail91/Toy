@@ -54,20 +54,20 @@ static char* readString(unsigned char* tb, int* count) {
 
 static void consumeByte(unsigned char byte, unsigned char* tb, int* count) {
 	if (byte != tb[*count]) {
-		printf("Failed to consume the correct byte");
+		printf("Failed to consume the correct byte\n");
 	}
 	*count += 1;
 }
 
 static void consumeShort(unsigned short bytes, unsigned char* tb, int* count) {
 	if (bytes != *(unsigned short*)(tb + *count)) {
-		printf("Failed to consume the correct bytes");
+		printf("Failed to consume the correct bytes\n");
 	}
 	*count += 2;
 }
 
 //each available statement
-static void execPrint(Interpreter* interpreter) {
+static bool execPrint(Interpreter* interpreter) {
 	//print what is on top of the stack, then pop it
 	Literal lit = popLiteralArray(&interpreter->stack);
 
@@ -75,9 +75,11 @@ static void execPrint(Interpreter* interpreter) {
 	printf("\n");
 
 	freeLiteral(lit);
+
+	return true;
 }
 
-static void execPushLiteral(Interpreter* interpreter, bool lng) {
+static bool execPushLiteral(Interpreter* interpreter, bool lng) {
 	//read the index in the cache
 	int index = 0;
 
@@ -90,9 +92,11 @@ static void execPushLiteral(Interpreter* interpreter, bool lng) {
 
 	//push from cache to stack
 	pushLiteralArray(&interpreter->stack, interpreter->literalCache.literals[index]);
+
+	return true;
 }
 
-static void execNegate(Interpreter* interpreter) {
+static bool execNegate(Interpreter* interpreter) {
 	//negate the top literal on the stack
 	Literal lit = popLiteralArray(&interpreter->stack);
 
@@ -106,9 +110,81 @@ static void execNegate(Interpreter* interpreter) {
 		printf("[internal] The interpreter can't negate that literal: ");
 		printLiteral(lit);
 		printf("\n");
+		return false;
 	}
 
 	pushLiteralArray(&interpreter->stack, lit);
+	return true;
+}
+
+static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
+	Literal rhs = popLiteralArray(&interpreter->stack);
+	Literal lhs = popLiteralArray(&interpreter->stack);
+
+	//type coersion
+	if (IS_FLOAT(lhs) && IS_INTEGER(rhs)) {
+		rhs = TO_FLOAT_LITERAL(AS_INTEGER(rhs));
+	}
+
+	if (IS_INTEGER(lhs) && IS_FLOAT(rhs)) {
+		lhs = TO_FLOAT_LITERAL(AS_INTEGER(lhs));
+	}
+
+	//maths based on types
+	if(IS_INTEGER(lhs) && IS_INTEGER(rhs)) {
+		switch(opcode) {
+			case OP_ADDITION:
+				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) + AS_INTEGER(rhs) ));
+				return true;
+
+			case OP_SUBTRACTION:
+				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) - AS_INTEGER(rhs) ));
+				return true;
+
+			case OP_MULTIPLICATION:
+				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) * AS_INTEGER(rhs) ));
+				return true;
+
+			case OP_DIVISION:
+				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) / AS_INTEGER(rhs) ));
+				return true;
+
+			case OP_MODULO:
+				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) % AS_INTEGER(rhs) ));
+				return true;
+
+		}
+	}
+
+	//catch bad modulo
+	if (opcode == OP_MODULO) {
+		printf("Bad arithmetic argument (modulo on floats not allowed)");
+		return false;
+	}
+
+	if(IS_FLOAT(lhs) && IS_FLOAT(rhs)) {
+		switch(opcode) {
+			case OP_ADDITION:
+				pushLiteralArray(&interpreter->stack, TO_FLOAT_LITERAL( AS_FLOAT(lhs) + AS_FLOAT(rhs) ));
+				return true;
+
+			case OP_SUBTRACTION:
+				pushLiteralArray(&interpreter->stack, TO_FLOAT_LITERAL( AS_FLOAT(lhs) - AS_FLOAT(rhs) ));
+				return true;
+
+			case OP_MULTIPLICATION:
+				pushLiteralArray(&interpreter->stack, TO_FLOAT_LITERAL( AS_FLOAT(lhs) * AS_FLOAT(rhs) ));
+				return true;
+
+			case OP_DIVISION:
+				pushLiteralArray(&interpreter->stack, TO_FLOAT_LITERAL( AS_FLOAT(lhs) / AS_FLOAT(rhs) ));
+				return true;
+		}
+	}
+
+	//wrong types
+	printf("Bad arithmetic argument");
+	return false;
 }
 
 //the heart of toy
@@ -118,16 +194,32 @@ static void execInterpreter(Interpreter* interpreter) {
 	while(opcode != OP_EOF && opcode != OP_SECTION_END) {
 		switch(opcode) {
 			case OP_PRINT:
-				execPrint(interpreter);
+				if (!execPrint(interpreter)) {
+					return;
+				}
 			break;
 
 			case OP_LITERAL:
 			case OP_LITERAL_LONG:
-				execPushLiteral(interpreter, opcode == OP_LITERAL_LONG);
+				if (!execPushLiteral(interpreter, opcode == OP_LITERAL_LONG)) {
+					return;
+				}
 			break;
 
 			case OP_NEGATE:
-				execNegate(interpreter);
+				if (!execNegate(interpreter)) {
+					return;
+				}
+			break;
+
+			case OP_ADDITION:
+			case OP_SUBTRACTION:
+			case OP_MULTIPLICATION:
+			case OP_DIVISION:
+			case OP_MODULO:
+				if (!execArithmetic(interpreter, opcode)) {
+					return;
+				}
 			break;
 
 			default:

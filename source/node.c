@@ -40,6 +40,17 @@ void emitNodeUnary(Node** nodeHandle, Opcode opcode) {
 	(*nodeHandle)->unary.child = NULL;
 }
 
+void emitNodeBinary(Node** nodeHandle, Node* rhs, Opcode opcode) {
+	Node* tmp = ALLOCATE(Node, 1);
+
+	tmp->type = NODE_BINARY;
+	tmp->binary.opcode = opcode;
+	tmp->binary.left = *nodeHandle;
+	tmp->binary.right = rhs;
+
+	*nodeHandle = tmp;
+}
+
 void printNode(Node* node) {
 	switch(node->type) {
 		case NODE_LITERAL:
@@ -53,10 +64,11 @@ void printNode(Node* node) {
 			break;
 
 		case NODE_BINARY:
-			printf("binary left:");
+			printf("binary-left:");
 			printNode(node->binary.left);
-			printf("binary right:");
+			printf("binary-right:");
 			printNode(node->binary.right);
+			printf(";");
 			break;
 	}
 }

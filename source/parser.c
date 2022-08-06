@@ -4,6 +4,7 @@
 
 #include "memory.h"
 #include "literal.h"
+#include "opcodes.h"
 
 #include <stdio.h>
 
@@ -98,7 +99,7 @@ typedef enum {
 	PREC_PRIMARY,
 } PrecedenceRule;
 
-typedef void (*ParseFn)(Parser* parser, Node** nodeHandle, bool canBeAssigned);
+typedef Opcode (*ParseFn)(Parser* parser, Node** nodeHandle, bool canBeAssigned);
 
 typedef struct {
 	ParseFn prefix;
@@ -112,25 +113,58 @@ ParseRule parseRules[];
 static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule rule);
 
 //the expression rules
-static void string(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
+static Opcode string(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	//handle strings
 	switch(parser->previous.type) {
 		case TOKEN_LITERAL_STRING:
 			emitNodeLiteral(nodeHandle, TO_STRING_LITERAL(copyString(parser->previous.lexeme, parser->previous.length)));
-		break;
+			return OP_EOF;
 
 		//TODO: interpolated strings
 
 		default:
 			error(parser, parser->previous, "Unexpected token passed to string precedence rule");
+			return OP_EOF;
 	}
 }
 
-static void binary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
-	//TODO
+static Opcode binary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
+	advance(parser);
+
+	//binary() is an infix rule - so only get the RHS of the operator
+	switch(parser->previous.type) {
+		case TOKEN_PLUS: {
+			parsePrecedence(parser, nodeHandle, PREC_TERM);
+			return OP_ADDITION;
+		}
+
+		case TOKEN_MINUS: {
+			parsePrecedence(parser, nodeHandle, PREC_TERM);
+			return OP_SUBTRACTION;
+		}
+
+		case TOKEN_MULTIPLY: {
+			parsePrecedence(parser, nodeHandle, PREC_FACTOR);
+			return OP_MULTIPLICATION;
+		}
+
+		case TOKEN_DIVIDE: {
+			parsePrecedence(parser, nodeHandle, PREC_FACTOR);
+			return OP_DIVISION;
+		}
+
+		case TOKEN_MODULO: {
+			parsePrecedence(parser, nodeHandle, PREC_FACTOR);
+			return OP_MODULO;
+		}
+
+	default:
+		error(parser, parser->previous, "Unexpected token passed to binary precedence rule");
+		return OP_EOF;
+	}
 }
 
-static void unary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
+static Opcode unary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	switch(parser->previous.type) {
 		case TOKEN_MINUS: {
 			//temp handle to potentially negate values
@@ -153,7 +187,7 @@ static void unary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 				tmpNode->atomic.literal = lit;
 				*nodeHandle = tmpNode;
 
-				break;
+				return OP_EOF;
 			}
 
 			//process the literal without optimizations
@@ -161,48 +195,50 @@ static void unary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 				emitNodeUnary(nodeHandle, OP_NEGATE);
 				nodeHandle = &((*nodeHandle)->unary.child); //re-align after append
 				(*nodeHandle) = tmpNode; //set negate's child to the literal
-				break;
+				return OP_EOF;
 			}
 
 			error(parser, parser->previous, "Unexpected token passed to unary minus precedence rule");
+			return OP_EOF;
 		}
-		break;
 
 		default:
 			error(parser, parser->previous, "Unexpected token passed to unary precedence rule");
+			return OP_EOF;
 	}
 }
 
-static void atomic(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
+static Opcode atomic(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	switch(parser->previous.type) {
 		case TOKEN_NULL:
 			emitNodeLiteral(nodeHandle, TO_NULL_LITERAL);
-		break;
+			return OP_EOF;
 
 		case TOKEN_LITERAL_TRUE:
 			emitNodeLiteral(nodeHandle, TO_BOOLEAN_LITERAL(true));
-		break;
+			return OP_EOF;
 
 		case TOKEN_LITERAL_FALSE:
 			emitNodeLiteral(nodeHandle, TO_BOOLEAN_LITERAL(false));
-		break;
+			return OP_EOF;
 
 		case TOKEN_LITERAL_INTEGER: {
 			int value = 0;
 			sscanf(parser->previous.lexeme, "%d", &value);
 			emitNodeLiteral(nodeHandle, TO_INTEGER_LITERAL(value));
+			return OP_EOF;
 		}
-		break;
 
 		case TOKEN_LITERAL_FLOAT: {
 			float value = 0;
 			sscanf(parser->previous.lexeme, "%f", &value);
 			emitNodeLiteral(nodeHandle, TO_FLOAT_LITERAL(value));
+			return OP_EOF;
 		}
-		break;
 
 		default:
 			error(parser, parser->previous, "Unexpected token passed to atomic precedence rule");
+			return OP_EOF;
 	}
 }
 
@@ -249,11 +285,11 @@ ParseRule parseRules[] = { //must match the token types
 	{string, NULL, PREC_PRIMARY},// TOKEN_LITERAL_STRING,
 
 	//math operators
-	{NULL, NULL, PREC_NONE},// TOKEN_PLUS,
-	{unary, NULL, PREC_UNARY},// TOKEN_MINUS,
-	{NULL, NULL, PREC_NONE},// TOKEN_MULTIPLY,
-	{NULL, NULL, PREC_NONE},// TOKEN_DIVIDE,
-	{NULL, NULL, PREC_NONE},// TOKEN_MODULO,
+	{NULL, binary, PREC_TERM},// TOKEN_PLUS,
+	{unary, binary, PREC_TERM},// TOKEN_MINUS,
+	{NULL, binary, PREC_TERM},// TOKEN_MULTIPLY,
+	{NULL, binary, PREC_TERM},// TOKEN_DIVIDE,
+	{NULL, binary, PREC_TERM},// TOKEN_MODULO,
 	{NULL, NULL, PREC_NONE},// TOKEN_PLUS_ASSIGN,
 	{NULL, NULL, PREC_NONE},// TOKEN_MINUS_ASSIGN,
 	{NULL, NULL, PREC_NONE},// TOKEN_MULTIPLY_ASSIGN,
@@ -298,6 +334,114 @@ ParseRule* getRule(TokenType type) {
 	return &parseRules[type];
 }
 
+static bool calcStaticBinaryArithmetic(Node** nodeHandle) {
+	switch((*nodeHandle)->binary.opcode) {
+		case OP_ADDITION:
+		case OP_SUBTRACTION:
+		case OP_MULTIPLICATION:
+		case OP_DIVISION:
+		case OP_MODULO:
+			break;
+
+		default:
+			return true;
+	}
+
+	//recurse to the left and right
+	if ((*nodeHandle)->binary.left->type == NODE_BINARY) {
+		calcStaticBinaryArithmetic(&(*nodeHandle)->binary.left);
+	}
+
+	if ((*nodeHandle)->binary.right->type == NODE_BINARY) {
+		calcStaticBinaryArithmetic(&(*nodeHandle)->binary.right);
+	}
+
+	//make sure left and right are both literals
+	if (!((*nodeHandle)->binary.left->type == NODE_LITERAL && (*nodeHandle)->binary.right->type == NODE_LITERAL)) {
+		return true;
+	}
+
+	//evaluate
+	Literal lhs = (*nodeHandle)->binary.left->atomic.literal;
+	Literal rhs = (*nodeHandle)->binary.right->atomic.literal;
+	Literal result = TO_NULL_LITERAL;
+
+	//type coersion
+	if (IS_FLOAT(lhs) && IS_INTEGER(rhs)) {
+		rhs = TO_FLOAT_LITERAL(AS_INTEGER(rhs));
+	}
+
+	if (IS_INTEGER(lhs) && IS_FLOAT(rhs)) {
+		lhs = TO_FLOAT_LITERAL(AS_INTEGER(lhs));
+	}
+
+	//maths based on types
+	if(IS_INTEGER(lhs) && IS_INTEGER(rhs)) {
+		switch((*nodeHandle)->binary.opcode) {
+			case OP_ADDITION:
+				result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) + AS_INTEGER(rhs) );
+			break;
+
+			case OP_SUBTRACTION:
+				result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) - AS_INTEGER(rhs) );
+			break;
+
+			case OP_MULTIPLICATION:
+				result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) * AS_INTEGER(rhs) );
+			break;
+
+			case OP_DIVISION:
+				result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) / AS_INTEGER(rhs) );
+			break;
+
+			case OP_MODULO:
+				result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) % AS_INTEGER(rhs) );
+			break;
+		}
+	}
+
+	//catch bad modulo
+	if ((IS_FLOAT(lhs) || IS_FLOAT(rhs)) && (*nodeHandle)->binary.opcode == OP_MODULO) {
+		printf("Bad arithmetic argument (modulo on floats not allowed)");
+		return false;
+	}
+
+	if(IS_FLOAT(lhs) && IS_FLOAT(rhs)) {
+		switch((*nodeHandle)->binary.opcode) {
+			case OP_ADDITION:
+				printf("binary foobar");
+				result = TO_FLOAT_LITERAL( AS_FLOAT(lhs) + AS_FLOAT(rhs) );
+			break;
+
+			case OP_SUBTRACTION:
+				result = TO_FLOAT_LITERAL( AS_FLOAT(lhs) - AS_FLOAT(rhs) );
+			break;
+
+			case OP_MULTIPLICATION:
+				result = TO_FLOAT_LITERAL( AS_FLOAT(lhs) * AS_FLOAT(rhs) );
+			break;
+
+			case OP_DIVISION:
+				result = TO_FLOAT_LITERAL( AS_FLOAT(lhs) / AS_FLOAT(rhs) );
+			break;
+		}
+	}
+
+	//nothing can be done to optimize
+	if (IS_NULL(result)) {
+		return true;
+	}
+
+	//optimize by converting this node into a literal
+	freeNode((*nodeHandle)->binary.left);
+	freeNode((*nodeHandle)->binary.right);
+
+	(*nodeHandle)->type = NODE_LITERAL;
+	(*nodeHandle)->atomic.literal = result;
+
+	return true;
+}
+
 static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule rule) {
 	//every expression has a prefix rule
 	advance(parser);
@@ -320,7 +464,13 @@ static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule ru
 			return;
 		}
 
-		infixRule(parser, nodeHandle, canBeAssigned); //NOTE: infix rule must advance the parser
+		Node* rhsNode = NULL;
+		const Opcode opcode = infixRule(parser, &rhsNode, canBeAssigned); //NOTE: infix rule must advance the parser
+		emitNodeBinary(nodeHandle, rhsNode, opcode);
+
+		if (command.optimize >= 1 && !calcStaticBinaryArithmetic(nodeHandle)) {
+			return;
+		}
 	}
 
 	//if your precedence is below "assignment"
