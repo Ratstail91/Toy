@@ -45,99 +45,11 @@ char* readFile(char* path) {
 	return buffer;
 }
 
-/*
-//run functions
 void runString(char* source) {
-	Lexer lexer;
-	Parser parser;
-	Toy toy;
-
-	initLexer(&lexer, source);
-	initParser(&parser, &lexer);
-	initToy(&toy);
-
-	Chunk* chunk = scanParser(&parser);
-
-	if (chunk->count > 1 && command.verbose) {
-		printChunk(chunk, "    ");
-	}
-
-	executeChunk(&toy, chunk);
-
-	freeChunk(chunk);
-
-	freeToy(&toy);
-	freeParser(&parser);
-}
-
-void runFile(char* fname) {
-	char* source = readFile(fname);
-
-	runString(source);
-
-	free((void*)source);
-}
-
-void repl() {
-	const int size = 2048;
-	char input[size];
-	memset(input, 0, size);
-
-	Parser parser;
-	Toy toy;
-
-	initToy(&toy);
-
-	for(;;) {
-		printf(">");
-		fgets(input, size, stdin);
-
-		//setup
-		Lexer lexer;
-
-		initLexer(&lexer, input);
-		initParser(&parser, &lexer);
-
-		//run
-		Chunk* chunk = scanParser(&parser);
-
-		if (chunk->count > 1 && command.verbose) {
-			printChunk(chunk, "    ");
-		}
-
-		//clean up the memory
-		if (parser.error) {
-			freeChunk(chunk);
-			freeParser(&parser);
-			continue;
-		}
-
-		executeChunk(&toy, chunk);
-
-		if (toy.panic) {
-			toy.panic = false;
-			freeChunk(chunk);
-			freeParser(&parser);
-			continue;
-		}
-
-		freeChunk(chunk);
-
-		//cleanup
-		freeParser(&parser);
-	}
-
-	freeToy(&toy);
-}
-*/
-
-void debug() {
 	Lexer lexer;
 	Parser parser;
 	Compiler compiler;
 	Interpreter interpreter;
-
-	char* source = readFile(command.filename);
 
 	initLexer(&lexer, source);
 	initParser(&parser, &lexer);
@@ -151,7 +63,7 @@ void debug() {
 		node = scanParser(&parser);
 	}
 
-	//get the data dump
+	//get the bytecode dump
 	int size = 0;
 	char* tb = collateCompiler(&compiler, &size);
 
@@ -159,8 +71,60 @@ void debug() {
 	freeCompiler(&compiler);
 	freeParser(&parser);
 
+	//run the bytecode
 	initInterpreter(&interpreter, tb, size);
 	runInterpreter(&interpreter);
+	freeInterpreter(&interpreter);
+}
+
+void runFile(char* fname) {
+	char* source = readFile(fname);
+	runString(source);
+	free((void*)source);
+}
+
+void repl() {
+	const int size = 2048;
+	char input[size];
+	memset(input, 0, size);
+
+	Interpreter interpreter; //persist the interpreter for the scopes
+
+	for(;;) {
+		printf(">");
+		fgets(input, size, stdin);
+
+		//setup this iteration
+		Lexer lexer;
+		Parser parser;
+		Compiler compiler;
+
+		initLexer(&lexer, input);
+		initParser(&parser, &lexer);
+		initCompiler(&compiler);
+
+		//run this iteration
+		Node* node = scanParser(&parser);
+		while(node != NULL) {
+			writeCompiler(&compiler, node);
+			freeNode(node);
+			node = scanParser(&parser);
+		}
+
+		//get the bytecode dump
+		int size = 0;
+		char* tb = collateCompiler(&compiler, &size);
+
+		//run the bytecode
+		initInterpreter(&interpreter, tb, size);
+		runInterpreter(&interpreter);
+		freeInterpreter(&interpreter); //TODO: option to retain the scopes
+
+		//clean up this iteration
+		freeCompiler(&compiler);
+		freeParser(&parser);
+	}
+
 	freeInterpreter(&interpreter);
 }
 
@@ -190,30 +154,16 @@ int main(int argc, const char* argv[]) {
 	}
 
 	if (command.filename) {
-		debug();
-//		runFile(command.filename);
+		runFile(command.filename);
 		return 0;
 	}
 
 	if (command.source) {
-//		runString(command.source);
-
-		// Lexer lexer;
-		// initLexer(&lexer, command.source);
-
-		// //debugging
-		// while(true) {
-		// 	Token token = scanLexer(&lexer);
-
-		// 	if (token.type == TOKEN_EOF) {
-		// 		break;
-		// 	}
-		// }
-
+		runString(command.source);
 		return 0;
 	}
 
-//	repl();
+	repl();
 
 	return 0;
 }

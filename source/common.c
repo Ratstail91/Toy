@@ -51,11 +51,6 @@ void initCommand(int argc, const char* argv[]) {
 
 		command.error = true;
 	}
-
-	//no arguments
-	if (argc == 1) {
-		command.error = true;
-	}
 }
 
 void usageCommand(int argc, const char* argv[]) {
