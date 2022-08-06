@@ -12,7 +12,7 @@ void initLiteralArray(LiteralArray* array) {
 	array->literals = NULL;
 }
 
-int writeLiteralArray(LiteralArray* array, Literal literal) {
+int pushLiteralArray(LiteralArray* array, Literal literal) {
 	if (array->capacity < array->count + 1) {
 		int oldCapacity = array->capacity;
 
@@ -27,6 +27,17 @@ int writeLiteralArray(LiteralArray* array, Literal literal) {
 
 	array->literals[array->count] = literal;
 	return array->count++;
+}
+
+Literal popLiteralArray(LiteralArray* array) {
+	//get the return
+	Literal ret = array->literals[array->count-1];
+
+	//null the existing data
+	array->literals[array->count-1] = TO_NULL_LITERAL;
+
+	array->count--;
+	return ret;
 }
 
 void freeLiteralArray(LiteralArray* array) {
@@ -83,4 +94,11 @@ int findLiteralIndex(LiteralArray* array, Literal literal) {
 	}
 
 	return -1;
+}
+
+void printLiteralArray(LiteralArray* array, const char* delim) {
+	for (int i = 0; i < array->count; i++) {
+		printLiteral(array->literals[i]);
+		printf("%s", delim);
+	}
 }

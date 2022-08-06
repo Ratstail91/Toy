@@ -9,8 +9,10 @@ typedef struct LiteralArray {
 } LiteralArray;
 
 void initLiteralArray(LiteralArray* array);
-int writeLiteralArray(LiteralArray* array, Literal literal);
+int pushLiteralArray(LiteralArray* array, Literal literal);
+Literal popLiteralArray(LiteralArray* array);
 void freeLiteralArray(LiteralArray* array);
 
 int findLiteralIndex(LiteralArray* array, Literal literal);
 
+void printLiteralArray(LiteralArray* array, const char* delim);

@@ -13,9 +13,9 @@ void initCompiler(Compiler* compiler) {
 	Literal t = TO_BOOLEAN_LITERAL(true);
 	Literal f = TO_BOOLEAN_LITERAL(false);
 
-	writeLiteralArray(&compiler->literalCache, n);
-	writeLiteralArray(&compiler->literalCache, t);
-	writeLiteralArray(&compiler->literalCache, f);
+	pushLiteralArray(&compiler->literalCache, n);
+	pushLiteralArray(&compiler->literalCache, t);
+	pushLiteralArray(&compiler->literalCache, f);
 }
 
 void writeCompiler(Compiler* compiler, Node* node) {
@@ -33,7 +33,7 @@ void writeCompiler(Compiler* compiler, Node* node) {
 			//ensure the literal is in the cache
 			int index = findLiteralIndex(&compiler->literalCache, node->atomic.literal);
 			if (index < 0) {
-				index = writeLiteralArray(&compiler->literalCache, node->atomic.literal);
+				index = pushLiteralArray(&compiler->literalCache, node->atomic.literal);
 			}
 
 			//push the node opcode to the bytecode

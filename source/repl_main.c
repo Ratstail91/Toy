@@ -3,7 +3,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "compiler.h"
-//#include "toy.h"
+#include "interpreter.h"
 
 #include "memory.h"
 
@@ -135,6 +135,7 @@ void debug() {
 	Lexer lexer;
 	Parser parser;
 	Compiler compiler;
+	Interpreter interpreter;
 
 	char* source = readFile(command.filename);
 
@@ -146,22 +147,21 @@ void debug() {
 	Node* node = scanParser(&parser);
 	while(node != NULL) {
 		writeCompiler(&compiler, node);
-
 		freeNode(node);
-
 		node = scanParser(&parser);
 	}
 
 	//get the data dump
 	int size = 0;
-	const char* tb = collateCompiler(&compiler, &size);
-
-	dissectBytecode(tb, size);
+	char* tb = collateCompiler(&compiler, &size);
 
 	//cleanup
-	FREE_ARRAY(char, tb, size);
 	freeCompiler(&compiler);
 	freeParser(&parser);
+
+	initInterpreter(&interpreter, tb, size);
+	runInterpreter(&interpreter);
+	freeInterpreter(&interpreter);
 }
 
 //entry point

@@ -7,27 +7,23 @@
 void printLiteral(Literal literal) {
 	switch(literal.type) {
 		case LITERAL_NULL:
-			printf("null\n");
+			printf("null");
 			break;
 
 		case LITERAL_BOOLEAN:
-			printf(AS_BOOLEAN(literal) ? "true\n" : "false\n");
+			printf(AS_BOOLEAN(literal) ? "true" : "false");
 			break;
 
 		case LITERAL_INTEGER:
-			printf("%d\n", AS_INTEGER(literal));
+			printf("%d", AS_INTEGER(literal));
 			break;
 
 		case LITERAL_FLOAT:
-			printf("%g\n", AS_FLOAT(literal));
+			printf("%g", AS_FLOAT(literal));
 			break;
 
 		case LITERAL_STRING:
-			printf("%.*s (%d)\n", STRLEN(literal), AS_STRING(literal), STRLEN(literal));
-			break;
-
-		case LITERAL_FUNCTION:
-			printf("<toy function>\n");
+			printf("%.*s", STRLEN(literal), AS_STRING(literal));
 			break;
 
 		default:

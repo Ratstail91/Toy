@@ -1,7 +1,7 @@
 CC=gcc
 
 IDIR =.
-CFLAGS=$(addprefix -I,$(IDIR)) -g -Wall -W -pedantic
+CFLAGS=$(addprefix -I,$(IDIR)) -g # -Wall -W -pedantic
 LIBS=
 
 ODIR=obj

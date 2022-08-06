@@ -51,7 +51,7 @@ static void consumeByte(unsigned char byte, const char* str, int* count) {
 
 static void consumeShort(unsigned short bytes, const char* str, int* count) {
 	if (bytes != *(unsigned short*)(str + *count)) {
-		printf("Failed to consume the correct byte");
+		printf("Failed to consume the correct bytes");
 	}
 	*count += 2;
 }
