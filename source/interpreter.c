@@ -126,6 +126,10 @@ static void execInterpreter(Interpreter* interpreter) {
 				execPushLiteral(interpreter, opcode == OP_LITERAL_LONG);
 			break;
 
+			case OP_NEGATE:
+				execNegate(interpreter);
+			break;
+
 			default:
 				printf("Unknown opcode found %d, terminating\n", opcode);
 				printLiteralArray(&interpreter->stack, "\n");
