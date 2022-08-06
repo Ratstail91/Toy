@@ -7,6 +7,7 @@
 typedef union _node Node;
 
 typedef enum NodeType {
+	NODE_ERROR,
 	NODE_LITERAL, //a simple value
 	NODE_UNARY, //one child
 	NODE_BINARY, //two children, left and right

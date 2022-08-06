@@ -20,6 +20,7 @@ void initCommand(int argc, const char* argv[]) {
 	command.filename = NULL;
 	command.source = NULL;
 	command.verbose = false;
+	command.optimize = 1;
 
 	for (int i = 1; i < argc; i++) { //start at 1 to skip the program name
 		if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
@@ -49,6 +50,11 @@ void initCommand(int argc, const char* argv[]) {
 			continue;
 		}
 
+		if (!strncmp(argv[i], "-O", 2)) {
+			sscanf(argv[i], "-O%d", &command.optimize);
+			continue;
+		}
+
 		command.error = true;
 	}
 
@@ -59,7 +65,7 @@ void initCommand(int argc, const char* argv[]) {
 }
 
 void usageCommand(int argc, const char* argv[]) {
-	printf("Usage: %s [-h | -v | [-d][-f filename | -i source]]\n\n", argv[0]);
+	printf("Usage: %s [-h | -v | [-OX][-d][-f filename | -i source]]\n\n", argv[0]);
 }
 
 void helpCommand(int argc, const char* argv[]) {
@@ -70,6 +76,7 @@ void helpCommand(int argc, const char* argv[]) {
 	printf("-f | --file filename\tParse and execute the source file.\n");
 	printf("-i | --input source\tParse and execute this given string of source code.\n");
 	printf("-d | --debug\t\tBe verbose when operating.\n");
+	printf("-OX\t\t\tUse level X optimization (default 1)\n");
 }
 
 void copyrightCommand(int argc, const char* argv[]) {
@@ -194,7 +201,7 @@ void dissectBytecode(const char* tb, int size) {
 
 		switch (opcode) {
 			case OP_PRINT:
-				printf("print:\n");
+				printf("print\n");
 			break;
 
 			case OP_LITERAL: {

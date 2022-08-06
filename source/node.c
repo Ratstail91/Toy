@@ -46,7 +46,7 @@ void printNode(Node* node) {
 			printf("literal:");
 			printLiteral(node->atomic.literal);
 			break;
-		
+
 		case NODE_UNARY:
 			printf("unary:");
 			printNode(node->unary.child);

@@ -1,4 +1,6 @@
 #include "parser.h"
+
+#include "debug.h"
 #include "common.h"
 
 #include "memory.h"
@@ -134,29 +136,36 @@ static void unary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 		case TOKEN_MINUS: {
 			//temp handle to potentially negate values
 			Node* tmpNode = NULL;
-			parsePrecedence(parser, &tmpNode, PREC_TERNARY);
+			parsePrecedence(parser, &tmpNode, PREC_TERNARY); //can be a literal
 
-			//check for literals
-			if (tmpNode->type == NODE_LITERAL) {
+			//check for negative literals (optimisation)
+			if (command.optimize >= 1 && tmpNode->type == NODE_LITERAL) {
 				//negate directly, if int or float
 				Literal lit = tmpNode->atomic.literal;
 
 				if (IS_INTEGER(lit)) {
-					lit = TO_INTEGER_LITERAL( -AS_INTEGER(lit) );
+					lit = TO_INTEGER_LITERAL(-AS_INTEGER(lit));
 				}
 
 				if (IS_FLOAT(lit)) {
-					lit = TO_FLOAT_LITERAL( -AS_FLOAT(lit) );
+					lit = TO_FLOAT_LITERAL(-AS_FLOAT(lit));
 				}
 
 				tmpNode->atomic.literal = lit;
 				*nodeHandle = tmpNode;
+
+				break;
 			}
-			else {
-				//process normally
+
+			//process the literal without optimizations
+			if (tmpNode->type == NODE_LITERAL) {
 				emitNodeUnary(nodeHandle, OP_NEGATE);
-				parsePrecedence(parser, nodeHandle, PREC_TERNARY);
+				nodeHandle = &((*nodeHandle)->unary.child); //re-align after append
+				(*nodeHandle) = tmpNode; //set negate's child to the literal
+				break;
 			}
+
+			error(parser, parser->previous, "Unexpected token passed to unary minus precedence rule");
 		}
 		break;
 
@@ -200,7 +209,7 @@ static void atomic(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 
 ParseRule parseRules[] = { //must match the token types
 	//types
-	{atomic, NULL, PREC_NONE},// TOKEN_NULL,
+	{atomic, NULL, PREC_PRIMARY},// TOKEN_NULL,
 	{NULL, NULL, PREC_NONE},// TOKEN_BOOLEAN,
 	{NULL, NULL, PREC_NONE},// TOKEN_INTEGER,
 	{NULL, NULL, PREC_NONE},// TOKEN_FLOAT,
@@ -234,15 +243,15 @@ ParseRule parseRules[] = { //must match the token types
 
 	//literal values
 	{NULL, NULL, PREC_NONE},// TOKEN_IDENTIFIER,
-	{atomic, NULL, PREC_NONE},// TOKEN_LITERAL_TRUE,
-	{atomic, NULL, PREC_NONE},// TOKEN_LITERAL_FALSE,
-	{atomic, NULL, PREC_NONE},// TOKEN_LITERAL_INTEGER,
-	{atomic, NULL, PREC_NONE},// TOKEN_LITERAL_FLOAT,
+	{atomic, NULL, PREC_PRIMARY},// TOKEN_LITERAL_TRUE,
+	{atomic, NULL, PREC_PRIMARY},// TOKEN_LITERAL_FALSE,
+	{atomic, NULL, PREC_PRIMARY},// TOKEN_LITERAL_INTEGER,
+	{atomic, NULL, PREC_PRIMARY},// TOKEN_LITERAL_FLOAT,
 	{string, NULL, PREC_PRIMARY},// TOKEN_LITERAL_STRING,
 
 	//math operators
 	{NULL, NULL, PREC_NONE},// TOKEN_PLUS,
-	{unary, NULL, PREC_NONE},// TOKEN_MINUS,
+	{unary, NULL, PREC_UNARY},// TOKEN_MINUS,
 	{NULL, NULL, PREC_NONE},// TOKEN_MULTIPLY,
 	{NULL, NULL, PREC_NONE},// TOKEN_DIVIDE,
 	{NULL, NULL, PREC_NONE},// TOKEN_MODULO,
@@ -334,7 +343,6 @@ static void printStmt(Parser* parser, Node* node) {
 	//set the node info
 	node->type = NODE_UNARY;
 	node->unary.opcode = OP_PRINT;
-	node->unary.child = ALLOCATE(Node, 1);
 	expression(parser, &(node->unary.child));
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of print statement");

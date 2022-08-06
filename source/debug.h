@@ -10,6 +10,7 @@ typedef struct {
 	char* filename;
 	char* source;
 	bool verbose;
+	int optimize;
 } Command;
 
 extern Command command;
