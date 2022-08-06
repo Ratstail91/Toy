@@ -1,6 +1,5 @@
 #include "parser.h"
 
-#include "debug.h"
 #include "common.h"
 
 #include "memory.h"

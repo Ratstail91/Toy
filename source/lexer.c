@@ -1,8 +1,6 @@
 #include "lexer.h"
 #include "keyword_types.h"
 
-#include "debug.h"
-
 #include <stdio.h>
 #include <string.h>
 
