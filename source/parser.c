@@ -409,7 +409,6 @@ static bool calcStaticBinaryArithmetic(Node** nodeHandle) {
 	if(IS_FLOAT(lhs) && IS_FLOAT(rhs)) {
 		switch((*nodeHandle)->binary.opcode) {
 			case OP_ADDITION:
-				printf("binary foobar");
 				result = TO_FLOAT_LITERAL( AS_FLOAT(lhs) + AS_FLOAT(rhs) );
 			break;
 
