@@ -29,6 +29,8 @@ void writeCompiler(Compiler* compiler, Node* node) {
 
 	//determine node type
 	switch(node->type) {
+		//TODO: more types, like variables, etc.
+
 		case NODE_LITERAL: {
 			//ensure the literal is in the cache
 			int index = findLiteralIndex(&compiler->literalCache, node->atomic.literal);

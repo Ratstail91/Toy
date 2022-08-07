@@ -60,6 +60,7 @@ typedef struct {
 // #define TO_FUNCTION_PTR(value)		((Literal){LITERAL_FUNCTION,	{ .function = (Function*)value }})
 
 void printLiteral(Literal literal);
+void printLiteralCustom(Literal literal, void (printFn)(const char*));
 void freeLiteral(Literal literal);
 
 #define IS_TRUTHY(x) _isTruthy(x)

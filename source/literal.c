@@ -4,27 +4,44 @@
 #include <stdio.h>
 #include <string.h>
 
+static void stdoutWrapper(const char* output) {
+	fprintf(stdout, output);
+}
+
 void printLiteral(Literal literal) {
+	printLiteralCustom(literal, stdoutWrapper);
+}
+
+void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 	switch(literal.type) {
 		case LITERAL_NULL:
-			printf("null");
-			break;
+			printFn("null");
+		break;
 
 		case LITERAL_BOOLEAN:
-			printf(AS_BOOLEAN(literal) ? "true" : "false");
-			break;
+			printFn(AS_BOOLEAN(literal) ? "true" : "false");
+		break;
 
-		case LITERAL_INTEGER:
-			printf("%d", AS_INTEGER(literal));
-			break;
+		case LITERAL_INTEGER: {
+			char buffer[256];
+			snprintf(buffer, 256, "%d", AS_INTEGER(literal));
+			printFn(buffer);
+		}
+		break;
 
-		case LITERAL_FLOAT:
-			printf("%g", AS_FLOAT(literal));
-			break;
+		case LITERAL_FLOAT: {
+			char buffer[256];
+			snprintf(buffer, 256, "%g", AS_FLOAT(literal));
+			printFn(buffer);
+		}
+		break;
 
-		case LITERAL_STRING:
-			printf("%.*s", STRLEN(literal), AS_STRING(literal));
-			break;
+		case LITERAL_STRING: {
+			char buffer[256];
+			snprintf(buffer, 256, "%.*s", STRLEN(literal), AS_STRING(literal));
+			printFn(buffer);
+		}
+		break;
 
 		default:
 			//should never bee seen

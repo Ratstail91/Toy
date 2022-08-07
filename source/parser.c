@@ -486,14 +486,24 @@ static void expression(Parser* parser, Node** nodeHandle) {
 
 //statements
 static void printStmt(Parser* parser, Node* node) {
-	int line = parser->previous.line;
-	
 	//set the node info
 	node->type = NODE_UNARY;
 	node->unary.opcode = OP_PRINT;
 	expression(parser, &(node->unary.child));
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of print statement");
+}
+
+static void assertStmt(Parser* parser, Node* node) {
+	//set the node info
+	node->type = NODE_BINARY;
+	node->unary.opcode = OP_ASSERT;
+
+	expression(parser, &(node->binary.left));
+	consume(parser, TOKEN_COMMA, "Expected ',' in assert statement");
+	expression(parser, &(node->binary.right));
+
+	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of assert statement");
 }
 
 //precedence functions
@@ -505,6 +515,12 @@ static void statement(Parser* parser, Node* node) {
 	//print
 	if (match(parser, TOKEN_PRINT)) {
 		printStmt(parser, node);
+		return;
+	}
+
+	//assert
+	if (match(parser, TOKEN_ASSERT)) {
+		assertStmt(parser, node);
 		return;
 	}
 

@@ -3,7 +3,8 @@
 typedef enum Opcode {
 	OP_EOF,
 
-	//basic operations
+	//basic statements
+	OP_ASSERT,
 	OP_PRINT,
 
 	//data

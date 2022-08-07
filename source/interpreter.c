@@ -6,6 +6,17 @@
 #include <stdio.h>
 #include <string.h>
 
+static void stdoutWrapper(const char* output) {
+	fprintf(stdout, output);
+	fprintf(stdout, "\n"); //default new line
+}
+
+static void stderrWrapper(const char* output) {
+	fprintf(stderr, "Assertion failure: ");
+	fprintf(stderr, output);
+	fprintf(stderr, "\n"); //default new line
+}
+
 void initInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length) {
 	initLiteralArray(&interpreter->literalCache);
 	interpreter->bytecode = bytecode;
@@ -13,12 +24,24 @@ void initInterpreter(Interpreter* interpreter, unsigned char* bytecode, int leng
 	interpreter->count = 0;
 
 	initLiteralArray(&interpreter->stack);
+
+	setInterpreterPrint(interpreter, stdoutWrapper);
+	setInterpreterAssert(interpreter, stderrWrapper);
 }
 
 void freeInterpreter(Interpreter* interpreter) {
 	freeLiteralArray(&interpreter->literalCache);
 	FREE_ARRAY(char, interpreter->bytecode, interpreter->length);
 	freeLiteralArray(&interpreter->stack);
+}
+
+//utilities for the host program
+void setInterpreterPrint(Interpreter* interpreter, PrintFn printOutput) {
+	interpreter->printOutput = printOutput;
+}
+
+void setInterpreterAssert(Interpreter* interpreter, PrintFn assertOutput) {
+	interpreter->assertOutput = assertOutput;
 }
 
 //utils
@@ -67,12 +90,30 @@ static void consumeShort(unsigned short bytes, unsigned char* tb, int* count) {
 }
 
 //each available statement
+static bool execAssert(Interpreter* interpreter) {
+	Literal rhs = popLiteralArray(&interpreter->stack);
+	Literal lhs = popLiteralArray(&interpreter->stack);
+
+	if (!IS_STRING(rhs)) {
+		printf("[internal] The interpreter's assert keyword needs a string as the second argument, received: ");
+		printLiteral(rhs);
+		printf("\n");
+		return false;
+	}
+
+	if (!IS_TRUTHY(lhs)) {
+		(*interpreter->assertOutput)(AS_STRING(rhs));
+		return false;
+	}
+
+	return true;
+}
+
 static bool execPrint(Interpreter* interpreter) {
 	//print what is on top of the stack, then pop it
 	Literal lit = popLiteralArray(&interpreter->stack);
 
-	printLiteral(lit);
-	printf("\n");
+	printLiteralCustom(lit, interpreter->printOutput);
 
 	freeLiteral(lit);
 
@@ -193,6 +234,12 @@ static void execInterpreter(Interpreter* interpreter) {
 
 	while(opcode != OP_EOF && opcode != OP_SECTION_END) {
 		switch(opcode) {
+			case OP_ASSERT:
+				if (!execAssert(interpreter)) {
+					return;
+				}
+			break;
+
 			case OP_PRINT:
 				if (!execPrint(interpreter)) {
 					return;
