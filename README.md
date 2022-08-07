@@ -10,7 +10,7 @@ Special thanks to http://craftinginterpreters.com/ for their fantastic book that
 
 ## Building
 
-Simply run make in the rood directory.
+Simply run make in the root directory.
 
 # License
 
