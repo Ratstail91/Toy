@@ -73,7 +73,7 @@ void runString(char* source) {
 
 	//get the bytecode dump
 	int size = 0;
-	char* tb = collateCompiler(&compiler, &size);
+	unsigned char* tb = collateCompiler(&compiler, &size);
 
 	//cleanup
 	freeCompiler(&compiler);
@@ -131,7 +131,7 @@ void repl() {
 		if (!error) {
 			//get the bytecode dump
 			int size = 0;
-			char* tb = collateCompiler(&compiler, &size);
+			unsigned char* tb = collateCompiler(&compiler, &size);
 
 			// for (int i = 0; i < size; i++) {
 			// 	printf("%d ", tb[i]);

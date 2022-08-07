@@ -2,6 +2,8 @@
 
 #include "memory.h"
 
+#include <stdio.h>
+
 void initCompiler(Compiler* compiler) {
 	initLiteralArray(&compiler->literalCache);
 	compiler->bytecode = NULL;
@@ -30,6 +32,11 @@ void writeCompiler(Compiler* compiler, Node* node) {
 	//determine node type
 	switch(node->type) {
 		//TODO: more types, like variables, etc.
+		case NODE_ERROR: {
+			printf("[internal] NODE_ERROR encountered in writeCompiler()");
+			compiler->bytecode[compiler->count++] = OP_EOF; //1 byte
+		}
+		break;
 
 		case NODE_LITERAL: {
 			//ensure the literal is in the cache
@@ -83,19 +90,19 @@ void freeCompiler(Compiler* compiler) {
 	compiler->count = 0;
 }
 
-static void emitByte(char** collationPtr, int* capacityPtr, int* countPtr, unsigned char byte) {
+static void emitByte(unsigned char** collationPtr, int* capacityPtr, int* countPtr, unsigned char byte) {
 	//grow the array
 	if (*countPtr + 1 > *capacityPtr) {
 		int oldCapacity = *capacityPtr;
 		*capacityPtr = GROW_CAPACITY(*capacityPtr);
-		*collationPtr = GROW_ARRAY(char, *collationPtr, oldCapacity, *capacityPtr);
+		*collationPtr = GROW_ARRAY(unsigned char, *collationPtr, oldCapacity, *capacityPtr);
 	}
 
 	//append to the collation
 	(*collationPtr)[(*countPtr)++] = byte;
 }
 
-static void emitShort(char** collationPtr, int* capacityPtr, int* countPtr, unsigned short bytes) {
+static void emitShort(unsigned char** collationPtr, int* capacityPtr, int* countPtr, unsigned short bytes) {
 	char* ptr = (char*)&bytes;
 
 	emitByte(collationPtr, capacityPtr, countPtr, *ptr);
@@ -103,7 +110,7 @@ static void emitShort(char** collationPtr, int* capacityPtr, int* countPtr, unsi
 	emitByte(collationPtr, capacityPtr, countPtr, *ptr);
 }
 
-static void emitInt(char** collationPtr, int* capacityPtr, int* countPtr, int bytes) {
+static void emitInt(unsigned char** collationPtr, int* capacityPtr, int* countPtr, int bytes) {
 	char* ptr = (char*)&bytes;
 
 	emitByte(collationPtr, capacityPtr, countPtr, *ptr);
@@ -115,7 +122,7 @@ static void emitInt(char** collationPtr, int* capacityPtr, int* countPtr, int by
 	emitByte(collationPtr, capacityPtr, countPtr, *ptr);
 }
 
-static void emitFloat(char** collationPtr, int* capacityPtr, int* countPtr, float bytes) {
+static void emitFloat(unsigned char** collationPtr, int* capacityPtr, int* countPtr, float bytes) {
 	char* ptr = (char*)&bytes;
 
 	emitByte(collationPtr, capacityPtr, countPtr, *ptr);
@@ -128,10 +135,10 @@ static void emitFloat(char** collationPtr, int* capacityPtr, int* countPtr, floa
 }
 
 //return the result
-char* collateCompiler(Compiler* compiler, int* size) {
+unsigned char* collateCompiler(Compiler* compiler, int* size) {
 	int capacity = GROW_CAPACITY(0);
 	int count = 0;
-	char* collation = ALLOCATE(char, capacity);
+	unsigned char* collation = ALLOCATE(unsigned char, capacity);
 
 	//embed the header with version information
 	emitByte(&collation, &capacity, &count, TOY_VERSION_MAJOR);
@@ -142,7 +149,7 @@ char* collateCompiler(Compiler* compiler, int* size) {
 	if (strlen(TOY_VERSION_BUILD) + count + 1 > capacity) {
 		int oldCapacity = capacity;
 		capacity = strlen(TOY_VERSION_BUILD) + count + 1; //full header size
-		collation = GROW_ARRAY(char, collation, oldCapacity, capacity);
+		collation = GROW_ARRAY(unsigned char, collation, oldCapacity, capacity);
 	}
 
 	memcpy(&collation[count], TOY_VERSION_BUILD, strlen(TOY_VERSION_BUILD));
@@ -208,7 +215,7 @@ char* collateCompiler(Compiler* compiler, int* size) {
 	emitByte(&collation, &capacity, &count, OP_EOF); //terminate bytecode
 
 	//finalize
-	SHRINK_ARRAY(char, collation, capacity, count);
+	SHRINK_ARRAY(unsigned char, collation, capacity, count);
 
 	*size = count;
 

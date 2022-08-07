@@ -70,9 +70,9 @@ static float readFloat(unsigned char* tb, int* count) {
 }
 
 static char* readString(unsigned char* tb, int* count) {
-	char* ret = tb + *count;
-	*count += strlen(ret) + 1; //+1 for null character
-	return ret;
+	unsigned char* ret = tb + *count;
+	*count += strlen((char*)ret) + 1; //+1 for null character
+	return (char*)ret;
 }
 
 static void consumeByte(unsigned char byte, unsigned char* tb, int* count) {
@@ -194,6 +194,9 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) % AS_INTEGER(rhs) ));
 				return true;
 
+			default:
+				printf("[internal] bad opcode argument passed to execArithmetic()");
+				return false;
 		}
 	}
 
@@ -220,6 +223,10 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 			case OP_DIVISION:
 				pushLiteralArray(&interpreter->stack, TO_FLOAT_LITERAL( AS_FLOAT(lhs) / AS_FLOAT(rhs) ));
 				return true;
+
+			default:
+				printf("[internal] bad opcode argument passed to execArithmetic()");
+				return false;
 		}
 	}
 

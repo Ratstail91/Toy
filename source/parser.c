@@ -424,6 +424,10 @@ static bool calcStaticBinaryArithmetic(Node** nodeHandle) {
 			case OP_MODULO:
 				result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) % AS_INTEGER(rhs) );
 			break;
+
+			default:
+				printf("[internal] bad opcode argument passed to calcStaticBinaryArithmetic()");
+				return false;
 		}
 	}
 
@@ -450,6 +454,10 @@ static bool calcStaticBinaryArithmetic(Node** nodeHandle) {
 			case OP_DIVISION:
 				result = TO_FLOAT_LITERAL( AS_FLOAT(lhs) / AS_FLOAT(rhs) );
 			break;
+
+			default:
+				printf("[internal] bad opcode argument passed to calcStaticBinaryArithmetic()");
+				return false;
 		}
 	}
 

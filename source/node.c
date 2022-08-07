@@ -11,6 +11,10 @@ void freeNode(Node* node) {
 	}
 
 	switch(node->type) {
+		case NODE_ERROR:
+			//NO-OP
+			break;
+
 		case NODE_LITERAL:
 			freeLiteral(node->atomic.literal);
 			break;
@@ -71,6 +75,10 @@ void emitNodeGrouping(Node** nodeHandle) {
 
 void printNode(Node* node) {
 	switch(node->type) {
+		case NODE_ERROR:
+			printf("error");
+			break;
+
 		case NODE_LITERAL:
 			printf("literal:");
 			printLiteral(node->atomic.literal);

@@ -32,7 +32,7 @@ KeywordType keywordTypes[] = {
 	{TOKEN_OF,         "of"},
 	{TOKEN_PRINT,      "print"},
 	{TOKEN_RETURN,     "return"},
-	{TOKEN_USING,      "using"},
+	{TOKEN_TYPE,       "type"},
 	{TOKEN_VAR,        "var"},
 	{TOKEN_WHILE,      "while"},
 
@@ -41,8 +41,8 @@ KeywordType keywordTypes[] = {
 	{TOKEN_LITERAL_FALSE,  "false"},
 
 	//meta tokens
-	{TOKEN_PASS,       "pass"},
-	{TOKEN_ERROR,      "error"},
+	{TOKEN_PASS,       NULL},
+	{TOKEN_ERROR,      NULL},
 
 	{TOKEN_EOF, NULL},
 };

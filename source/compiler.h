@@ -18,4 +18,4 @@ void writeCompiler(Compiler* compiler, Node* node);
 void freeCompiler(Compiler* compiler);
 
 //embed the header with version information, data section, code section, etc.
-char* collateCompiler(Compiler* compiler, int* size);
+unsigned char* collateCompiler(Compiler* compiler, int* size);
