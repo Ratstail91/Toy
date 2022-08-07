@@ -289,8 +289,11 @@ Token scanLexer(Lexer* lexer) {
 			return makeString(lexer, c);
 			//TODO: possibly support interpolated strings
 
-		default:
-			return makeErrorToken(lexer, "Unexpected token");
+		default: {
+			char buffer[128];
+			snprintf(buffer, 128, "Unexpected token: %c", c);
+			return makeErrorToken(lexer, buffer);
+		}
 	}
 }
 

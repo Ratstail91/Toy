@@ -199,7 +199,7 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 
 	//catch bad modulo
 	if (opcode == OP_MODULO) {
-		printf("Bad arithmetic argument (modulo on floats not allowed)");
+		printf("Bad arithmetic argument (modulo on floats not allowed)\n");
 		return false;
 	}
 
@@ -224,7 +224,7 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 	}
 
 	//wrong types
-	printf("Bad arithmetic argument");
+	printf("Bad arithmetic argument\n");
 	return false;
 }
 
@@ -268,6 +268,13 @@ static void execInterpreter(Interpreter* interpreter) {
 					return;
 				}
 			break;
+
+			case OP_GROUPING_BEGIN:
+				execInterpreter(interpreter);
+			break;
+
+			case OP_GROUPING_END:
+				return;
 
 			default:
 				printf("Unknown opcode found %d, terminating\n", opcode);

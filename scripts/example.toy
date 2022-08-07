@@ -1,3 +1,9 @@
+//single line comment
+
+/*
+multi line comment
+*/
+
 print "hello world";
 print null;
 print true;
@@ -6,3 +12,9 @@ print 42;
 print 3.14;
 print -69;
 print -4.20;
+print 2 + (3 * 3);
+
+assert true, "This won't be seen";
+
+assert false, "This is an error";
+

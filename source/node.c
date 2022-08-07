@@ -5,6 +5,11 @@
 #include <stdio.h>
 
 void freeNode(Node* node) {
+	//don't free a NULL node
+	if (node == NULL) {
+		return;
+	}
+
 	switch(node->type) {
 		case NODE_LITERAL:
 			freeLiteral(node->atomic.literal);
@@ -17,6 +22,10 @@ void freeNode(Node* node) {
 		case NODE_BINARY:
 			freeNode(node->binary.left);
 			freeNode(node->binary.right);
+			break;
+
+		case NODE_GROUPING:
+			freeNode(node->grouping.child);
 			break;
 	}
 
@@ -69,6 +78,12 @@ void printNode(Node* node) {
 			printf("binary-right:");
 			printNode(node->binary.right);
 			printf(";");
+			break;
+
+		case NODE_GROUPING:
+			printf("(");
+			printNode(node->grouping.child);
+			printf(")");
 			break;
 	}
 }

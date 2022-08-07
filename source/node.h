@@ -11,7 +11,7 @@ typedef enum NodeType {
 	NODE_LITERAL, //a simple value
 	NODE_UNARY, //one child
 	NODE_BINARY, //two children, left and right
-	// NODE_GROUPING,
+	NODE_GROUPING, //one child
 } NodeType;
 
 typedef struct NodeLiteral {
@@ -32,11 +32,17 @@ typedef struct NodeBinary {
 	Node* right;
 } NodeBinary;
 
+typedef struct NodeGrouping {
+	NodeType type;
+	Node* child;
+} NodeGrouping;
+
 union _node {
 	NodeType type;
 	NodeLiteral atomic;
 	NodeUnary unary;
 	NodeBinary binary;
+	NodeGrouping grouping;
 };
 
 void freeNode(Node* node);

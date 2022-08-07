@@ -58,6 +58,14 @@ void runString(char* source) {
 	//run the parser until the end of the source
 	Node* node = scanParser(&parser);
 	while(node != NULL) {
+		//pack up and leave
+		if (node->type == NODE_ERROR) {
+			freeNode(node);
+			freeCompiler(&compiler);
+			freeParser(&parser);
+			return;
+		}
+
 		writeCompiler(&compiler, node);
 		freeNode(node);
 		node = scanParser(&parser);
@@ -84,6 +92,8 @@ void runFile(char* fname) {
 }
 
 void repl() {
+	bool error = false;
+
 	const int size = 2048;
 	char input[size];
 	memset(input, 0, size);
@@ -106,23 +116,33 @@ void repl() {
 		//run this iteration
 		Node* node = scanParser(&parser);
 		while(node != NULL) {
+			//pack up and restart
+			if (node->type == NODE_ERROR) {
+				error = true;
+				freeNode(node);
+				break;
+			}
+
 			writeCompiler(&compiler, node);
 			freeNode(node);
 			node = scanParser(&parser);
 		}
 
-		//get the bytecode dump
-		int size = 0;
-		char* tb = collateCompiler(&compiler, &size);
+		if (!error) {
+			//get the bytecode dump
+			int size = 0;
+			char* tb = collateCompiler(&compiler, &size);
 
-		//run the bytecode
-		initInterpreter(&interpreter, tb, size);
-		runInterpreter(&interpreter);
-		freeInterpreter(&interpreter); //TODO: option to retain the scopes
+			//run the bytecode
+			initInterpreter(&interpreter, tb, size);
+			runInterpreter(&interpreter);
+			freeInterpreter(&interpreter); //TODO: option to retain the scopes
+		}
 
 		//clean up this iteration
 		freeCompiler(&compiler);
 		freeParser(&parser);
+		error = false;
 	}
 
 	freeInterpreter(&interpreter);

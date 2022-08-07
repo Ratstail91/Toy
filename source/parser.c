@@ -128,6 +128,33 @@ static Opcode string(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	}
 }
 
+static Opcode grouping(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
+	//handle three diffent types of groupings: (), {}, []
+	switch(parser->previous.type) {
+		case TOKEN_PAREN_LEFT: {
+			Node* tmpNode = NULL;
+			parsePrecedence(parser, &tmpNode, PREC_TERNARY);
+			consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of grouping");
+
+			//if it's just a literal, don't need a grouping
+			if (command.optimize >= 1 && tmpNode->type == NODE_LITERAL) {
+				(*nodeHandle) = tmpNode;
+				return OP_EOF;
+			}
+
+			//process the result without optimisations
+			emitNodeUnary(nodeHandle, NODE_GROUPING);
+			nodeHandle = &((*nodeHandle)->unary.child); //re-align after append
+			(*nodeHandle) = tmpNode;
+			return OP_EOF;
+		}
+
+		default:
+			error(parser, parser->previous, "Unexpected token passed to grouping precedence rule");
+			return OP_EOF;
+	}
+}
+
 static Opcode binary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	advance(parser);
 
@@ -158,9 +185,9 @@ static Opcode binary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 			return OP_MODULO;
 		}
 
-	default:
-		error(parser, parser->previous, "Unexpected token passed to binary precedence rule");
-		return OP_EOF;
+		default:
+			error(parser, parser->previous, "Unexpected token passed to binary precedence rule");
+			return OP_EOF;
 	}
 }
 
@@ -299,7 +326,7 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_MINUS_MINUS,
 
 	//logical operators
-	{NULL, NULL, PREC_NONE},// TOKEN_PAREN_LEFT,
+	{grouping, NULL, PREC_CALL},// TOKEN_PAREN_LEFT,
 	{NULL, NULL, PREC_NONE},// TOKEN_PAREN_RIGHT,
 	{NULL, NULL, PREC_NONE},// TOKEN_BRACKET_LEFT,
 	{NULL, NULL, PREC_NONE},// TOKEN_BRACKET_RIGHT,
@@ -447,18 +474,20 @@ static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule ru
 	ParseFn prefixRule = getRule(parser->previous.type)->prefix;
 
 	if (prefixRule == NULL) {
+		*nodeHandle = NULL; //the handle's value MUST be set to null for error handling
 		error(parser, parser->previous, "Expected expression");
 		return;
 	}
 
 	bool canBeAssigned = rule <= PREC_ASSIGNMENT;
-	prefixRule(parser, nodeHandle, canBeAssigned);
+	prefixRule(parser, nodeHandle, canBeAssigned); //ignore the returned opcode
 
 	//infix rules are left-recursive
 	while (rule <= getRule(parser->current.type)->precedence) {
 		ParseFn infixRule = getRule(parser->current.type)->infix;
 
 		if (infixRule == NULL) {
+			*nodeHandle = NULL; //the handle's value MUST be set to null for error handling
 			error(parser, parser->current, "Expected operator");
 			return;
 		}
@@ -528,11 +557,14 @@ static void statement(Parser* parser, Node* node) {
 	expressionStmt(parser, node);
 }
 
-static void declaration(Parser* parser, Node* node) {
-	statement(parser, node);
+static void declaration(Parser* parser, Node** nodeHandle) {
+	statement(parser, *nodeHandle);
 
 	if (parser->panic) {
 		synchronize(parser);
+		//return an error node for this iteration
+		*nodeHandle = ALLOCATE(Node, 1);
+		(*nodeHandle)->type = NODE_ERROR;
 	}
 }
 
@@ -564,10 +596,10 @@ Node* scanParser(Parser* parser) {
 
 	//returns nodes on the heap
 	Node* node = ALLOCATE(Node, 1);
+	node->type = NODE_ERROR; //BUGFIX: so freeing won't break the damn thing
 
 	//process the grammar rule for this line
-	declaration(parser, node);
+	declaration(parser, &node);
 
 	return node;
 }
-
