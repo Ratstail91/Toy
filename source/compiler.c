@@ -68,9 +68,9 @@ void writeCompiler(Compiler* compiler, Node* node) {
 		break;
 
 		case NODE_GROUPING:
-			compiler->bytecode[compiler->count++] = OP_GROUPING_BEGIN; //1 byte
+			compiler->bytecode[compiler->count++] = (unsigned char)OP_GROUPING_BEGIN; //1 byte
 			writeCompiler(compiler, node->grouping.child);
-			compiler->bytecode[compiler->count++] = OP_GROUPING_END; //1 byte
+			compiler->bytecode[compiler->count++] = (unsigned char)OP_GROUPING_END; //1 byte
 		break;
 	}
 }

@@ -143,7 +143,7 @@ static Opcode grouping(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 			}
 
 			//process the result without optimisations
-			emitNodeUnary(nodeHandle, NODE_GROUPING);
+			emitNodeGrouping(nodeHandle);
 			nodeHandle = &((*nodeHandle)->unary.child); //re-align after append
 			(*nodeHandle) = tmpNode;
 			return OP_EOF;

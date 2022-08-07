@@ -60,6 +60,15 @@ void emitNodeBinary(Node** nodeHandle, Node* rhs, Opcode opcode) {
 	*nodeHandle = tmp;
 }
 
+void emitNodeGrouping(Node** nodeHandle) {
+	Node* tmp = ALLOCATE(Node, 1);
+
+	tmp->type = NODE_GROUPING;
+	tmp->grouping.child = NULL;
+
+	*nodeHandle = tmp;
+}
+
 void printNode(Node* node) {
 	switch(node->type) {
 		case NODE_LITERAL:

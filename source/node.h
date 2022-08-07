@@ -49,6 +49,7 @@ void freeNode(Node* node);
 void emitNodeLiteral(Node** nodeHandle, Literal literal);
 void emitNodeUnary(Node** nodeHandle, Opcode opcode);
 void emitNodeBinary(Node** nodeHandle, Node* rhs, Opcode opcode);
+void emitNodeGrouping(Node** nodeHandle);
 
 void printNode(Node* node);
 
