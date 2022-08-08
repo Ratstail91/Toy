@@ -8,55 +8,55 @@
 #include <stdio.h>
 
 //utils
-static unsigned char printByte(const char* tb, int* count) {
+static unsigned char printByte(unsigned char* tb, int* count) {
 	unsigned char ret = *(unsigned char*)(tb + *count);
 	printf("%u ", ret);
 	*count += 1;
 	return ret;
 }
 
-static unsigned short printShort(const char* tb, int* count) {
+static unsigned short printShort(unsigned char* tb, int* count) {
 	unsigned short ret = *(unsigned short*)(tb + *count);
 	printf("%d ", ret);
 	*count += 2;
 	return ret;
 }
 
-static int printInt(const char* tb, int* count) {
+static int printInt(unsigned char* tb, int* count) {
 	int ret = *(int*)(tb + *count);
 	printf("%d ", ret);
 	*count += 4;
 	return ret;
 }
 
-static float printFloat(const char* tb, int* count) {
+static float printFloat(unsigned char* tb, int* count) {
 	float ret = *(float*)(tb + *count);
 	printf("%f ", ret);
 	*count += 4;
 	return ret;
 }
 
-static const char* printString(const char* tb, int* count) {
-	const char* ret = tb + *count;
-	*count += printf("%s ", ret); //return includes the space, but not the null terminator
+static unsigned char* printString(unsigned char* tb, int* count) {
+	unsigned char* ret = tb + *count;
+	*count += printf("%s ", (char*)ret); //return includes the space, but not the null terminator
 	return ret;
 }
 
-static void consumeByte(unsigned char byte, const char* str, int* count) {
+static void consumeByte(unsigned char byte, unsigned char* str, int* count) {
 	if (byte != str[*count]) {
 		printf("Failed to consume the correct byte");
 	}
 	*count += 1;
 }
 
-static void consumeShort(unsigned short bytes, const char* str, int* count) {
+static void consumeShort(unsigned short bytes, unsigned char* str, int* count) {
 	if (bytes != *(unsigned short*)(str + *count)) {
 		printf("Failed to consume the correct bytes");
 	}
 	*count += 2;
 }
 
-void dissectBytecode(const char* tb, int size) {
+void dissectBytecode(unsigned char* tb, int size) {
 	int count = 0;
 
 	//header
@@ -101,7 +101,7 @@ void dissectBytecode(const char* tb, int size) {
 			break;
 
 			case LITERAL_STRING: {
-				const char* s = printString(tb, &count);
+				const unsigned char* s = printString(tb, &count);
 				printf("(string)");
 			}
 			break;
@@ -118,31 +118,60 @@ void dissectBytecode(const char* tb, int size) {
 		const unsigned char opcode = printByte(tb, &count);
 
 		switch (opcode) {
+			case OP_ASSERT:
+				printf("assert\n");
+			break;
+
 			case OP_PRINT:
 				printf("print\n");
 			break;
 
-			case OP_LITERAL: {
+			case OP_LITERAL:
 				printf("literal ");
 				printByte(tb, &count);
 				printf("\n");
-			}
 			break;
 
-			case OP_LITERAL_LONG: {
+			case OP_LITERAL_LONG:
 				printf("long literal ");
 				printShort(tb, &count);
 				printf("\n");
-			}
 			break;
 
-			case OP_NEGATE: {
+			case OP_NEGATE:
 				printf("negate\n");
-			}
+			break;
+
+			case OP_ADDITION:
+				printf("+\n");
+			break;
+
+			case OP_SUBTRACTION:
+				printf("-\n");
+			break;
+			
+			case OP_MULTIPLICATION:
+				printf("*\n");
+			break;
+			
+			case OP_DIVISION:
+				printf("/\n");
+			break;
+
+			case OP_MODULO:
+				printf("%%\n");
+			break;
+
+			case OP_GROUPING_BEGIN:
+				printf("(\n");
+			break;
+
+			case OP_GROUPING_END:
+				printf(")\n");
 			break;
 
 			case OP_SECTION_END: {
-				printf("--SECTION END--");
+				printf("--SECTION END--\n");
 			}
 			break;
 

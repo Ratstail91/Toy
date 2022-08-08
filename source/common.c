@@ -11,7 +11,10 @@ void initCommand(int argc, const char* argv[]) {
 	command.error = false;
 	command.help = false;
 	command.version = false;
-	command.filename = NULL;
+	command.binaryfile = NULL;
+	command.sourcefile = NULL;
+	command.compilefile = NULL;
+	command.outfile = "out.tb";
 	command.source = NULL;
 	command.verbose = false;
 	command.optimize = 1;
@@ -27,8 +30,22 @@ void initCommand(int argc, const char* argv[]) {
 			continue;
 		}
 
-		if ((!strcmp(argv[i], "-f") || !strcmp(argv[i], "--file")) && i + 1 < argc) {
-			command.filename = (char*)argv[i + 1];
+		//binary file check at the end
+
+		if ((!strcmp(argv[i], "-f") || !strcmp(argv[i], "--sourcefile")) && i + 1 < argc) {
+			command.sourcefile = (char*)argv[i + 1];
+			i++;
+			continue;
+		}
+
+		if ((!strcmp(argv[i], "-c") || !strcmp(argv[i], "--compile")) && i + 1 < argc) {
+			command.compilefile = (char*)argv[i + 1];
+			i++;
+			continue;
+		}
+
+		if ((!strcmp(argv[i], "-o") || !strcmp(argv[i], "--output")) && i + 1 < argc) {
+			command.outfile = (char*)argv[i + 1];
 			i++;
 			continue;
 		}
@@ -49,23 +66,32 @@ void initCommand(int argc, const char* argv[]) {
 			continue;
 		}
 
+		//option without a flag = binary input
+		if (i < argc) {
+			command.binaryfile = (char*)argv[i];
+			continue;
+		}
+
 		command.error = true;
 	}
 }
 
 void usageCommand(int argc, const char* argv[]) {
-	printf("Usage: %s [-h | -v | [-OX][-d][-f filename | -i source]]\n\n", argv[0]);
+	printf("Usage: %s [<filename> | -h | -v | [-OX][-d][-f file | -i source | -c file [-o outfile]]]\n\n", argv[0]);
 }
 
 void helpCommand(int argc, const char* argv[]) {
 	usageCommand(argc, argv);
 
-	printf("-h | --help\t\tShow this help then exit.\n");
-	printf("-v | --version\t\tShow version and copyright information then exit.\n");
-	printf("-f | --file filename\tParse and execute the source file.\n");
-	printf("-i | --input source\tParse and execute this given string of source code.\n");
-	printf("-d | --debug\t\tBe verbose when operating.\n");
-	printf("-OX\t\t\tUse level X optimization (default 1)\n");
+	printf("<filename>\t\t\tBinary input file in tb format, must be version %d.%d.%d.\n\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH);
+	printf("-h\t| --help\t\tShow this help then exit.\n\n");
+	printf("-v\t| --version\t\tShow version and copyright information then exit.\n\n");
+	printf("-f\t| --file filename\tParse, compile and execute the source file.\n\n");
+	printf("-c\t| --compile filename\tParse and compile the specified source file into an output file.\n\n");
+	printf("-o\t| --output filename\tName of the file compiled with --compile (default: out.tb).\n\n");
+	printf("-i\t| --input source\tParse, compile and execute this given string of source code.\n\n");
+	printf("-d\t| --debug\t\tBe verbose when operating.\n\n");
+	printf("-OX\t\t\t\tUse level X optimization (default 1)\n\n");
 }
 
 void copyrightCommand(int argc, const char* argv[]) {

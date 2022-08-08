@@ -14,7 +14,10 @@ typedef struct {
 	bool error;
 	bool help;
 	bool version;
-	char* filename;
+	char* binaryfile;
+	char* sourcefile;
+	char* compilefile;
+	char* outfile; //defaults to out.tb
 	char* source;
 	bool verbose;
 	int optimize;

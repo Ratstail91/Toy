@@ -2,4 +2,4 @@
 
 #include "common.h"
 
-void dissectBytecode(const char* tb, int size);
+void dissectBytecode(unsigned char* tb, int size);

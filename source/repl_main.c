@@ -11,45 +11,60 @@
 #include <stdlib.h>
 #include <string.h>
 
-//read a file and return it as a char array
-char* readFile(char* path) {
+//IO functions
+char* readFile(char* path, size_t* fileSize) {
 	FILE* file = fopen(path, "rb");
 
 	if (file == NULL) {
 		fprintf(stderr, "Could not open file \"%s\"\n", path);
-		exit(74);
+		exit(-1);
 	}
 
 	fseek(file, 0L, SEEK_END);
-	size_t fileSize = ftell(file);
+	*fileSize = ftell(file);
 	rewind(file);
 
-	char* buffer = (char*)malloc(fileSize + 1);
+	char* buffer = (char*)malloc(*fileSize);
 
 	if (buffer == NULL) {
 		fprintf(stderr, "Not enough memory to read \"%s\"\n", path);
-		exit(74);
+		exit(-1);
 	}
 
-	size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
+	size_t bytesRead = fread(buffer, sizeof(char), *fileSize, file);
 
-	if (bytesRead < fileSize) {
+	if (bytesRead < *fileSize) {
 		fprintf(stderr, "Could not read file \"%s\"\n", path);
-		exit(74);
+		exit(-1);
 	}
 
 	fclose(file);
 
-	buffer[bytesRead] = '\0';
-
 	return buffer;
 }
 
-void runString(char* source) {
+void writeFile(char* path, unsigned char* bytes, size_t size) {
+	FILE* file = fopen(path, "wb");
+
+	if (file == NULL) {
+		fprintf(stderr, "Could not open file \"%s\"\n", path);
+		exit(-1);
+	}
+
+	int written = fwrite(bytes, size, 1, file);
+
+	if (written != 1) {
+		fprintf(stderr, "Could not write file \"%s\"\n", path);
+		exit(-1);
+	}
+
+	fclose(file);
+}
+
+unsigned char* compileString(char* source, size_t* size) {
 	Lexer lexer;
 	Parser parser;
 	Compiler compiler;
-	Interpreter interpreter;
 
 	initLexer(&lexer, source);
 	initParser(&parser, &lexer);
@@ -63,7 +78,7 @@ void runString(char* source) {
 			freeNode(node);
 			freeCompiler(&compiler);
 			freeParser(&parser);
-			return;
+			return NULL;
 		}
 
 		writeCompiler(&compiler, node);
@@ -72,26 +87,46 @@ void runString(char* source) {
 	}
 
 	//get the bytecode dump
-	int size = 0;
-	unsigned char* tb = collateCompiler(&compiler, &size);
+	unsigned char* tb = collateCompiler(&compiler, (int*)(size));
 
 	//cleanup
 	freeCompiler(&compiler);
 	freeParser(&parser);
+	//no lexer to clean up
 
-	//run the bytecode
+	//finally
+	return tb;
+}
+
+void runBinary(unsigned char* tb, size_t size) {
+	Interpreter interpreter;
 	initInterpreter(&interpreter, tb, size);
 	runInterpreter(&interpreter);
 	freeInterpreter(&interpreter);
 }
 
-void runFile(char* fname) {
-	char* source = readFile(fname);
-	runString(source);
+void runBinaryFile(char* fname) {
+	size_t size = 0; //not used
+	unsigned char* tb = (unsigned char*)readFile(fname, &size);
+	runBinary(tb, size);
+	//interpreter takes ownership of the binary data
+}
+
+void runSource(char* source) {
+	size_t size;
+	unsigned char* tb = compileString(source, &size);
+	runBinary(tb, size);
+}
+
+void runSourceFile(char* fname) {
+	size_t size = 0; //not used
+	char* source = readFile(fname, &size);
+	runSource(source);
 	free((void*)source);
 }
 
 void repl() {
+	//repl does it's own thing for now
 	bool error = false;
 
 	const int size = 2048;
@@ -205,13 +240,30 @@ int main(int argc, const char* argv[]) {
 		printf("Warning! This interpreter is a work in progress, it does not yet meet the %d.%d.%d specification.\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH);
 	}
 
-	if (command.filename) {
-		runFile(command.filename);
+	//run binary
+	if (command.binaryfile) {
+		runBinaryFile(command.binaryfile);
 		return 0;
 	}
 
+	//run source file
+	if (command.sourcefile) {
+		runSourceFile(command.sourcefile);
+		return 0;
+	}
+
+	//compile source file
+	if (command.compilefile) {
+		size_t size = 0;
+		char* source = readFile(command.compilefile, &size);
+		unsigned char* tb = compileString(source, &size);
+		writeFile(command.outfile, tb, size);
+		return 0;
+	}
+
+	//run from stdin
 	if (command.source) {
-		runString(command.source);
+		runSource(command.source);
 		return 0;
 	}
 

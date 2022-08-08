@@ -22,6 +22,7 @@ out/
 *.log
 out
 *.stackdump
+*.tb
 
 #Shell files
 *.bat
