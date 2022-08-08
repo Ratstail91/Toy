@@ -85,7 +85,6 @@ int findLiteralIndex(LiteralArray* array, Literal literal) {
 				if (strncmp(AS_STRING(array->literals[i]), AS_STRING(literal), STRLEN(literal)) == 0) {
 					return i;
 				}
-
 			continue;
 
 			default:

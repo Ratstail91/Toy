@@ -73,3 +73,5 @@ Literal _toStringLiteral(char* cstr);
 
 //utils
 char* copyString(char* original, int length);
+bool literalsAreEqual(Literal lhs, Literal rhs);
+int hashLiteral(Literal lit);

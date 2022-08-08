@@ -70,3 +70,84 @@ char* copyString(char* original, int length) {
 	buffer[length] = '\0';
 	return buffer;
 }
+
+bool literalsAreEqual(Literal lhs, Literal rhs) {
+	if (lhs.type != rhs.type) {
+		// ints and floats are compatible
+		if ((IS_INTEGER(lhs) || IS_FLOAT(lhs)) && (IS_INTEGER(rhs) || IS_FLOAT(rhs))) {
+			if (IS_INTEGER(lhs)) {
+				return AS_INTEGER(lhs) + AS_FLOAT(rhs);
+			}
+			else {
+				return AS_FLOAT(lhs) + AS_INTEGER(rhs);
+			}
+		}
+
+		return false;
+	}
+
+	switch(lhs.type) {
+		case LITERAL_BOOLEAN:
+			return AS_BOOLEAN(lhs) == AS_BOOLEAN(rhs);
+
+		case LITERAL_INTEGER:
+			return AS_INTEGER(lhs) == AS_INTEGER(rhs);
+
+		case LITERAL_FLOAT:
+			return AS_FLOAT(lhs) == AS_FLOAT(rhs);
+
+		case LITERAL_STRING:
+			if (STRLEN(lhs) != STRLEN(rhs)) {
+				return false;
+			}
+			return !strncmp(AS_STRING(lhs), AS_STRING(rhs), STRLEN(lhs));
+
+		default:
+			//should never bee seen
+			fprintf(stderr, "[Internal] Unrecognized literal type: %d", lhs.type);
+			return false;
+	}
+}
+
+//hash functions
+static unsigned int hashString(const char* string, int length) {
+	unsigned int hash = 2166136261u;
+
+	for (int i = 0; i < length; i++) {
+		hash *= string[i];
+		hash *= 16777619;
+	}
+
+	return hash;
+}
+
+static unsigned int hash(unsigned int x) {
+    x = ((x >> 16) ^ x) * 0x45d9f3b;
+    x = ((x >> 16) ^ x) * 0x45d9f3b;
+    x = (x >> 16) ^ x;
+    return x;
+}
+
+int hashLiteral(Literal lit) {
+	switch(lit.type) {
+		case LITERAL_NULL:
+			return 0;
+
+		case LITERAL_BOOLEAN:
+			return AS_BOOLEAN(lit) ? 1 : 0;
+
+		case LITERAL_INTEGER:
+			return hash((unsigned int)AS_INTEGER(lit));
+
+		case LITERAL_FLOAT:
+			return hash( *(unsigned int*)(&AS_FLOAT(lit)) );
+
+		case LITERAL_STRING:
+			return hashString(AS_STRING(lit), STRLEN(lit));
+
+		default:
+			//should never bee seen
+			fprintf(stderr, "[Internal] Unrecognized literal type in hash: %d", lit.type);
+			return 0;
+	}
+}

@@ -3,6 +3,7 @@
 #include "opcodes.h"
 
 #include "literal_array.h"
+#include "literal_dictionary.h"
 
 typedef void (*PrintFn)(const char*);
 

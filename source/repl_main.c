@@ -154,6 +154,32 @@ void repl() {
 	freeInterpreter(&interpreter);
 }
 
+void debug() {
+	LiteralDictionary dictionary;
+
+	initLiteralDictionary(&dictionary);
+
+	for (int i = 0; i < 100; i++) {
+		setLiteralDictionary(&dictionary, TO_INTEGER_LITERAL(i), TO_INTEGER_LITERAL(i * 2));
+	}
+
+	for (int i = 0; i < 100; i++) {
+		printf("%d: ", i);
+		printLiteral( getLiteralDictionary(&dictionary, TO_INTEGER_LITERAL(i)) );
+		printf("\n");
+	}
+
+	printf("-------------");
+
+	for (int i = 0; i < dictionary.capacity; i++) {
+		printf("%d: ", i);
+		printLiteral(dictionary.entries[i].key);
+		printf("\n");
+	}
+
+	freeLiteralDictionary(&dictionary);
+}
+
 //entry point
 int main(int argc, const char* argv[]) {
 	initCommand(argc, argv);
@@ -189,6 +215,7 @@ int main(int argc, const char* argv[]) {
 		return 0;
 	}
 
+	// debug();
 	repl();
 
 	return 0;

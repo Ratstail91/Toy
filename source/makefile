@@ -1,10 +1,10 @@
 CC=gcc
 
-IDIR =.
-CFLAGS=$(addprefix -I,$(IDIR)) -g # -Wall -W -pedantic -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
-LIBS=
+IDIR +=.
+CFLAGS +=$(addprefix -I,$(IDIR)) -g -Wall -W -pedantic -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
+LIBS +=
 
-ODIR=obj
+ODIR = obj
 SRC = $(wildcard *.c)
 OBJ = $(addprefix $(ODIR)/,$(SRC:.c=.o))
 
