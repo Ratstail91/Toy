@@ -20,6 +20,8 @@ typedef enum Opcode {
 	OP_MODULO,
 	OP_GROUPING_BEGIN,
 	OP_GROUPING_END,
+	OP_SCOPE_BEGIN,
+	OP_SCOPE_END,
 
 	//meta
 	OP_SECTION_END,

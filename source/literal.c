@@ -43,9 +43,16 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 		}
 		break;
 
+		case LITERAL_IDENTIFIER: {
+			char buffer[256];
+			snprintf(buffer, 256, "%.*s", STRLEN_I(literal), AS_IDENTIFIER(literal));
+			printFn(buffer);
+		}
+		break;
+
 		default:
 			//should never bee seen
-			fprintf(stderr, "[Internal] Unrecognized literal type: %d", literal.type);
+			fprintf(stderr, "[Internal] Unrecognized literal type in print: %d\n", literal.type);
 	}
 }
 
@@ -60,8 +67,12 @@ bool _isTruthy(Literal x) {
 	return (IS_NULL(x) || (IS_BOOLEAN(x) && AS_BOOLEAN(x)) || (IS_INTEGER(x) && AS_INTEGER(x) != 0) || (IS_FLOAT(x) && AS_FLOAT(x) != 0));
 }
 
-Literal _toStringLiteral(char* cstr) {
-	return ((Literal){LITERAL_STRING, { .string.ptr = (char*)cstr, .string.length = strlen((char*)cstr) }});
+Literal _toStringLiteral(char* str) {
+	return ((Literal){LITERAL_STRING, {.string.ptr = (char*)str, .string.length = strlen((char*)str)}});
+}
+
+Literal _toIdentifierLiteral(char* str, unsigned char types) {
+	return ((Literal){LITERAL_IDENTIFIER,{.identifier.ptr = (char*)str,.identifier.length = strlen((char*)str),.identifier.types = types}});
 }
 
 char* copyString(char* original, int length) {
@@ -102,9 +113,15 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 			}
 			return !strncmp(AS_STRING(lhs), AS_STRING(rhs), STRLEN(lhs));
 
+		case LITERAL_IDENTIFIER:
+			if (STRLEN_I(lhs) != STRLEN_I(rhs)) {
+				return false;
+			}
+			return !strncmp(AS_IDENTIFIER(lhs), AS_IDENTIFIER(rhs), STRLEN_I(lhs));
+
 		default:
 			//should never bee seen
-			fprintf(stderr, "[Internal] Unrecognized literal type: %d", lhs.type);
+			fprintf(stderr, "[Internal] Unrecognized literal type: %d\n", lhs.type);
 			return false;
 	}
 }
@@ -140,14 +157,17 @@ int hashLiteral(Literal lit) {
 			return hash((unsigned int)AS_INTEGER(lit));
 
 		case LITERAL_FLOAT:
-			return hash( *(unsigned int*)(&AS_FLOAT(lit)) );
+			return hash(*(unsigned int*)(&AS_FLOAT(lit)));
 
 		case LITERAL_STRING:
 			return hashString(AS_STRING(lit), STRLEN(lit));
 
+		case LITERAL_IDENTIFIER:
+			return hashString(AS_IDENTIFIER(lit), STRLEN_I(lit));
+
 		default:
 			//should never bee seen
-			fprintf(stderr, "[Internal] Unrecognized literal type in hash: %d", lit.type);
+			fprintf(stderr, "[Internal] Unrecognized literal type in hash: %d\n", lit.type);
 			return 0;
 	}
 }

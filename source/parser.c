@@ -111,6 +111,7 @@ typedef struct {
 ParseRule parseRules[];
 
 //forward declarations
+static void declaration(Parser* parser, Node** nodeHandle);
 static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule rule);
 
 //the expression rules
@@ -523,6 +524,37 @@ static void expression(Parser* parser, Node** nodeHandle) {
 }
 
 //statements
+static void blockStmt(Parser* parser, Node* node) {
+	//init
+	node->type = NODE_BLOCK;
+	node->block.nodes = NULL;
+	node->block.capacity = 0;
+	node->block.count = 0;
+
+	//sub-scope, compile it and push it up in a node
+	while (!match(parser, TOKEN_BRACE_RIGHT)) {
+		if (node->block.capacity < node->block.count + 1) {
+			int oldCapacity = node->block.capacity;
+
+			node->block.capacity = GROW_CAPACITY(oldCapacity);
+			node->block.nodes = GROW_ARRAY(Node, node->block.nodes, oldCapacity, node->block.capacity);
+		}
+
+		//use the next node in sequence
+		node->block.nodes[node->block.count].type = NODE_ERROR; //BUGFIX: so freeing won't break the damn thing
+
+		Node* ptr = &(node->block.nodes[node->block.count++]);
+
+		//process the grammar rule for this line
+		declaration(parser, &ptr);
+
+		// Ground floor: perfumery / Stationery and leather goods / Wigs and haberdashery / Kitchenware and food / Going up!
+		if (parser->panic) {
+			return;
+		}
+	}
+}
+
 static void printStmt(Parser* parser, Node* node) {
 	//set the node info
 	node->type = NODE_UNARY;
@@ -550,6 +582,12 @@ static void expressionStmt(Parser* parser, Node* node) {
 }
 
 static void statement(Parser* parser, Node* node) {
+	//block
+	if (match(parser, TOKEN_BRACE_LEFT)) {
+		blockStmt(parser, node);
+		return;
+	}
+
 	//print
 	if (match(parser, TOKEN_PRINT)) {
 		printStmt(parser, node);
@@ -567,14 +605,9 @@ static void statement(Parser* parser, Node* node) {
 }
 
 static void declaration(Parser* parser, Node** nodeHandle) {
-	statement(parser, *nodeHandle);
+	//TODO: variable declarations
 
-	if (parser->panic) {
-		synchronize(parser);
-		//return an error node for this iteration
-		*nodeHandle = ALLOCATE(Node, 1);
-		(*nodeHandle)->type = NODE_ERROR;
-	}
+	statement(parser, *nodeHandle);
 }
 
 //exposed functions
@@ -609,6 +642,13 @@ Node* scanParser(Parser* parser) {
 
 	//process the grammar rule for this line
 	declaration(parser, &node);
+
+	if (parser->panic) {
+		synchronize(parser);
+		//return an error node for this iteration
+		node = ALLOCATE(Node, 1);
+		node->type = NODE_ERROR;
+	}
 
 	return node;
 }

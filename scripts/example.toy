@@ -14,7 +14,16 @@ print -69;
 print -4.20;
 print 2 + (3 * 3);
 
-assert true, "This won't be seen";
+//test scopes
+{
+	print "This statement is within a scope.";
+	{
+		print "This is a deeper scope.";
+	}
+}
+print "Back to the outer scope.";
 
+//test asserts
+assert true, "This won't be seen";
 assert false, "This is an error";
 

@@ -12,6 +12,7 @@ typedef enum NodeType {
 	NODE_UNARY, //one child
 	NODE_BINARY, //two children, left and right
 	NODE_GROUPING, //one child
+	NODE_BLOCK, //contains bytecode
 	// NODE_CONDITIONAL, //three children: conditional, then path, else path
 } NodeType;
 
@@ -38,12 +39,20 @@ typedef struct NodeGrouping {
 	Node* child;
 } NodeGrouping;
 
+typedef struct NodeBlock {
+	NodeType type;
+	Node* nodes;
+	int capacity;
+	int count;
+} NodeBlock;
+
 union _node {
 	NodeType type;
 	NodeLiteral atomic;
 	NodeUnary unary;
 	NodeBinary binary;
 	NodeGrouping grouping;
+	NodeBlock block;
 };
 
 void freeNode(Node* node);
@@ -51,6 +60,7 @@ void emitNodeLiteral(Node** nodeHandle, Literal literal);
 void emitNodeUnary(Node** nodeHandle, Opcode opcode);
 void emitNodeBinary(Node** nodeHandle, Node* rhs, Opcode opcode);
 void emitNodeGrouping(Node** nodeHandle);
+void emitNodeBlock(Node** nodeHandle);
 
 void printNode(Node* node);
 

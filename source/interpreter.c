@@ -19,6 +19,7 @@ static void stderrWrapper(const char* output) {
 
 void initInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length) {
 	initLiteralArray(&interpreter->literalCache);
+	interpreter->scope = pushScope(NULL);
 	interpreter->bytecode = bytecode;
 	interpreter->length = length;
 	interpreter->count = 0;
@@ -31,6 +32,7 @@ void initInterpreter(Interpreter* interpreter, unsigned char* bytecode, int leng
 
 void freeInterpreter(Interpreter* interpreter) {
 	freeLiteralArray(&interpreter->literalCache);
+	interpreter->scope = popScope(interpreter->scope);
 	FREE_ARRAY(char, interpreter->bytecode, interpreter->length);
 	freeLiteralArray(&interpreter->stack);
 }
@@ -282,6 +284,15 @@ static void execInterpreter(Interpreter* interpreter) {
 
 			case OP_GROUPING_END:
 				return;
+
+			//scope
+			case OP_SCOPE_BEGIN:
+				interpreter->scope = pushScope(interpreter->scope);
+			break;
+
+			case OP_SCOPE_END:
+				interpreter->scope = popScope(interpreter->scope);
+			break;
 
 			default:
 				printf("Unknown opcode found %d, terminating\n", opcode);

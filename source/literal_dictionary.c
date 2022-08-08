@@ -199,3 +199,8 @@ void removeLiteralDictionary(LiteralDictionary* dictionary, Literal key) {
 	}
 }
 
+bool existsLiteralDictionary(LiteralDictionary* dictionary, Literal key) {
+	//null & not tombstoned
+	_entry* entry = getEntryArray(dictionary->entries, dictionary->capacity, key, hashLiteral(key), false);
+	return !(IS_NULL(entry->key) && IS_NULL(entry->value));
+}

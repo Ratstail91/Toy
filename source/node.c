@@ -3,6 +3,7 @@
 #include "memory.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 void freeNode(Node* node) {
 	//don't free a NULL node
@@ -13,24 +14,30 @@ void freeNode(Node* node) {
 	switch(node->type) {
 		case NODE_ERROR:
 			//NO-OP
-			break;
+		break;
 
 		case NODE_LITERAL:
 			freeLiteral(node->atomic.literal);
-			break;
+		break;
 
 		case NODE_UNARY:
 			freeNode(node->unary.child);
-			break;
+		break;
 
 		case NODE_BINARY:
 			freeNode(node->binary.left);
 			freeNode(node->binary.right);
-			break;
+		break;
 
 		case NODE_GROUPING:
 			freeNode(node->grouping.child);
-			break;
+		break;
+
+		case NODE_BLOCK:
+			for (int i = 0; i < node->block.count; i++) {
+				freeNode(node->block.nodes + i);
+			}
+		break;
 	}
 
 	FREE(Node, node);
@@ -73,6 +80,17 @@ void emitNodeGrouping(Node** nodeHandle) {
 	*nodeHandle = tmp;
 }
 
+void emitNodeBlock(Node** nodeHandle) {
+	Node* tmp = ALLOCATE(Node, 1);
+
+	tmp->type = NODE_BLOCK;
+	tmp->block.nodes = NULL;
+	tmp->block.capacity = 0;
+	tmp->block.count = 0;
+
+	*nodeHandle = tmp;
+}
+
 void printNode(Node* node) {
 	if (node == NULL) {
 		return;
@@ -81,17 +99,17 @@ void printNode(Node* node) {
 	switch(node->type) {
 		case NODE_ERROR:
 			printf("error");
-			break;
+		break;
 
 		case NODE_LITERAL:
 			printf("literal:");
 			printLiteral(node->atomic.literal);
-			break;
+		break;
 
 		case NODE_UNARY:
 			printf("unary:");
 			printNode(node->unary.child);
-			break;
+		break;
 
 		case NODE_BINARY:
 			printf("binary-left:");
@@ -99,12 +117,22 @@ void printNode(Node* node) {
 			printf(";binary-right:");
 			printNode(node->binary.right);
 			printf(";");
-			break;
+		break;
 
 		case NODE_GROUPING:
 			printf("(");
 			printNode(node->grouping.child);
 			printf(")");
-			break;
+		break;
+
+		case NODE_BLOCK:
+			printf("{\n");
+
+			for (int i = 0; i < node->block.count; i++) {
+				printNode(&(node->block.nodes[i]));
+			}
+
+			printf("}\n");
+		break;
 	}
 }

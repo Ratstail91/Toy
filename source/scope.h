@@ -1,0 +1,21 @@
+#pragma once
+
+#include "common.h"
+#include "literal_dictionary.h"
+
+typedef struct Scope {
+	LiteralDictionary variables;
+	struct Scope* ancestor;
+	int references; //how many scopes point here
+} Scope;
+
+Scope* pushScope(Scope* scope);
+Scope* popScope(Scope* scope);
+
+//returns false if error
+bool declareScopeVariable(Scope* scope, Literal key);
+
+//return false if undefined
+bool setScopeVariable(Scope* scope, Literal key, Literal value);
+bool getScopeVariable(Scope* scope, Literal key, Literal* value);
+

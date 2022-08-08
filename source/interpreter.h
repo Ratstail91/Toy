@@ -4,12 +4,14 @@
 
 #include "literal_array.h"
 #include "literal_dictionary.h"
+#include "scope.h"
 
 typedef void (*PrintFn)(const char*);
 
 //the interpreter acts depending on the bytecode instructions
 typedef struct Interpreter {
 	LiteralArray literalCache; //generally doesn't change after initialization
+	Scope* scope;
 	unsigned char* bytecode;
 	int length;
 	int count;

@@ -33,7 +33,7 @@ void writeCompiler(Compiler* compiler, Node* node) {
 	switch(node->type) {
 		//TODO: more types, like variables, etc.
 		case NODE_ERROR: {
-			printf("[internal] NODE_ERROR encountered in writeCompiler()");
+			fprintf(stderr, "[Internal] NODE_ERROR encountered in writeCompiler()");
 			compiler->bytecode[compiler->count++] = OP_EOF; //1 byte
 		}
 		break;
@@ -78,6 +78,16 @@ void writeCompiler(Compiler* compiler, Node* node) {
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_GROUPING_BEGIN; //1 byte
 			writeCompiler(compiler, node->grouping.child);
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_GROUPING_END; //1 byte
+		break;
+
+		case NODE_BLOCK:
+			compiler->bytecode[compiler->count++] = (unsigned char)OP_SCOPE_BEGIN; //1 byte
+
+			for (int i = 0; i < node->block.count; i++) {
+				writeCompiler(compiler, &(node->block.nodes[i]));
+			}
+
+			compiler->bytecode[compiler->count++] = (unsigned char)OP_SCOPE_END; //1 byte
 		break;
 
 		//TODO: conditional
@@ -202,6 +212,10 @@ unsigned char* collateCompiler(Compiler* compiler, int* size) {
 				emitByte(&collation, &capacity, &count, '\0'); //terminate the string
 			}
 			break;
+
+			default:
+				fprintf(stderr, "[Internal] Unknown literal type encountered within literal cache\n");
+				return NULL;
 		}
 	}
 
