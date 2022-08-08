@@ -298,14 +298,17 @@ void runInterpreter(Interpreter* interpreter) {
 	const unsigned char major = readByte(interpreter->bytecode, &interpreter->count);
 	const unsigned char minor = readByte(interpreter->bytecode, &interpreter->count);
 	const unsigned char patch = readByte(interpreter->bytecode, &interpreter->count);
-	const char* build = readString(interpreter->bytecode, &interpreter->count);
 
 	if (command.verbose) {
 		if (major != TOY_VERSION_MAJOR || minor != TOY_VERSION_MINOR || patch != TOY_VERSION_PATCH) {
 			printf("Warning: interpreter/bytecode version mismatch\n");
 		}
+	}
 
-		if (!strncmp(build, TOY_VERSION_BUILD, strlen(TOY_VERSION_BUILD))) {
+	const char* build = readString(interpreter->bytecode, &interpreter->count);
+
+	if (command.verbose) {
+		if (strncmp(build, TOY_VERSION_BUILD, strlen(TOY_VERSION_BUILD))) {
 			printf("Warning: interpreter/bytecode build mismatch\n");
 		}
 	}
