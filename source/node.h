@@ -12,6 +12,7 @@ typedef enum NodeType {
 	NODE_UNARY, //one child
 	NODE_BINARY, //two children, left and right
 	NODE_GROUPING, //one child
+	// NODE_CONDITIONAL, //three children: conditional, then path, else path
 } NodeType;
 
 typedef struct NodeLiteral {

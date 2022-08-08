@@ -62,7 +62,7 @@ static void synchronize(Parser* parser) {
 			//these tokens can start a line
 			case TOKEN_ASSERT:
 			case TOKEN_BREAK:
-			case TOKEN_CONST:
+			case TOKEN_CLASS:
 			case TOKEN_CONTINUE:
 			case TOKEN_DO:
 			case TOKEN_EXPORT:
@@ -72,6 +72,7 @@ static void synchronize(Parser* parser) {
 			case TOKEN_IMPORT:
 			case TOKEN_PRINT:
 			case TOKEN_RETURN:
+			case TOKEN_TYPE:
 			case TOKEN_VAR:
 			case TOKEN_WHILE:
 				parser->panic = false;

@@ -79,6 +79,8 @@ void writeCompiler(Compiler* compiler, Node* node) {
 			writeCompiler(compiler, node->grouping.child);
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_GROUPING_END; //1 byte
 		break;
+
+		//TODO: conditional
 	}
 }
 

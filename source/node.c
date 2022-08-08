@@ -74,6 +74,10 @@ void emitNodeGrouping(Node** nodeHandle) {
 }
 
 void printNode(Node* node) {
+	if (node == NULL) {
+		return;
+	}
+
 	switch(node->type) {
 		case NODE_ERROR:
 			printf("error");
@@ -92,7 +96,7 @@ void printNode(Node* node) {
 		case NODE_BINARY:
 			printf("binary-left:");
 			printNode(node->binary.left);
-			printf("binary-right:");
+			printf(";binary-right:");
 			printNode(node->binary.right);
 			printf(";");
 			break;
