@@ -1,8 +1,10 @@
 #include "lexer.h"
+#include "console_colors.h"
 #include "keyword_types.h"
 
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 //static generic utility functions
 static void cleanLexer(Lexer* lexer) {
@@ -122,6 +124,7 @@ static Token makeToken(Lexer* lexer, TokenType type) {
 	token.length = 1;
 	token.line = lexer->line;
 
+	//BUG #10: this shows TOKEN_EOF twice due to the overarching structure of the program - can't be fixed
 	if (command.verbose) {
 		printf("tok:");
 		printToken(&token);
@@ -297,9 +300,15 @@ Token scanLexer(Lexer* lexer) {
 	}
 }
 
+static void trim(char** s, int* l) { //all this to remove a newline?
+	*l = strlen(*s);
+	while( isspace(( (*((unsigned char**)(s)))[(*l) - 1] )) ) (*l)--;
+	while(**s && isspace( **(unsigned char**)(s)) ) { (*s)++; (*l)--; }
+}
+
 void printToken(Token* token) {
 	if (token->type == TOKEN_ERROR) {
-		printf("Error\t%d\t%.*s\n", token->line, token->length, token->lexeme);
+		printf(ERROR "Error\t%d\t%.*s\n" RESET, token->line, token->length, token->lexeme);
 		return;
 	}
 
@@ -313,7 +322,10 @@ void printToken(Token* token) {
 		if (keyword != NULL) {
 			printf("%s", keyword);
 		} else {
-			printf("-");
+			char* str = token->lexeme;
+			int length = 0;
+			trim(&str, &length);
+			printf("%.*s", length, token->lexeme);
 		}
 	}
 

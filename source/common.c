@@ -20,78 +20,90 @@ void initCommand(int argc, const char* argv[]) {
 	command.optimize = 1;
 
 	for (int i = 1; i < argc; i++) { //start at 1 to skip the program name
+		command.error = true; //error state by default, set to false by successful flags
+
 		if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
 			command.help = true;
+			command.error = false;
 			continue;
 		}
 
 		if (!strcmp(argv[i], "-v") || !strcmp(argv[i], "--version")) {
 			command.version = true;
+			command.error = false;
 			continue;
 		}
 
-		//binary file check at the end
+		if (!strcmp(argv[i], "-d") || !strcmp(argv[i], "--debug")) {
+			command.verbose = true;
+			command.error = false;
+			continue;
+		}
+
+		if (!strncmp(argv[i], "-O", 2)) {
+			sscanf(argv[i], "-O%d", &command.optimize);
+			command.error = false;
+			continue;
+		}
 
 		if ((!strcmp(argv[i], "-f") || !strcmp(argv[i], "--sourcefile")) && i + 1 < argc) {
 			command.sourcefile = (char*)argv[i + 1];
 			i++;
-			continue;
-		}
-
-		if ((!strcmp(argv[i], "-c") || !strcmp(argv[i], "--compile")) && i + 1 < argc) {
-			command.compilefile = (char*)argv[i + 1];
-			i++;
-			continue;
-		}
-
-		if ((!strcmp(argv[i], "-o") || !strcmp(argv[i], "--output")) && i + 1 < argc) {
-			command.outfile = (char*)argv[i + 1];
-			i++;
+			command.error = false;
 			continue;
 		}
 
 		if ((!strcmp(argv[i], "-i") || !strcmp(argv[i], "--input")) && i + 1 < argc) {
 			command.source = (char*)argv[i + 1];
 			i++;
+			command.error = false;
 			continue;
 		}
 
-		if (!strcmp(argv[i], "-d") || !strcmp(argv[i], "--debug")) {
-			command.verbose = true;
+		if ((!strcmp(argv[i], "-c") || !strcmp(argv[i], "--compile")) && i + 1 < argc) {
+			command.compilefile = (char*)argv[i + 1];
+			i++;
+			command.error = false;
 			continue;
 		}
 
-		if (!strncmp(argv[i], "-O", 2)) {
-			sscanf(argv[i], "-O%d", &command.optimize);
+		if ((!strcmp(argv[i], "-o") || !strcmp(argv[i], "--output")) && i + 1 < argc) {
+			command.outfile = (char*)argv[i + 1];
+			i++;
+			command.error = false;
 			continue;
 		}
 
-		//option without a flag = binary input
+		//option without a flag + ending in .tb = binary input
 		if (i < argc) {
-			command.binaryfile = (char*)argv[i];
-			continue;
+			if (strncmp(&(argv[i][strlen(argv[i]) - 3]), ".tb", 3) == 0) {
+				command.binaryfile = (char*)argv[i];
+				command.error = false;
+				continue;
+			}
 		}
 
-		command.error = true;
+		//don't keep reading in an error state
+		return;
 	}
 }
 
 void usageCommand(int argc, const char* argv[]) {
-	printf("Usage: %s [<filename> | -h | -v | [-OX][-d][-f file | -i source | -c file [-o outfile]]]\n\n", argv[0]);
+	printf("Usage: %s [<file.tb> | -h | -v | [-d][-OX][-f file | -i source | -c file [-o outfile]]]\n\n", argv[0]);
 }
 
 void helpCommand(int argc, const char* argv[]) {
 	usageCommand(argc, argv);
 
-	printf("<filename>\t\t\tBinary input file in tb format, must be version %d.%d.%d.\n\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH);
+	printf("<file.tb>\t\t\tBinary input file in tb format, must be version %d.%d.%d.\n\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH);
 	printf("-h\t| --help\t\tShow this help then exit.\n\n");
 	printf("-v\t| --version\t\tShow version and copyright information then exit.\n\n");
-	printf("-f\t| --file filename\tParse, compile and execute the source file.\n\n");
-	printf("-c\t| --compile filename\tParse and compile the specified source file into an output file.\n\n");
-	printf("-o\t| --output filename\tName of the file compiled with --compile (default: out.tb).\n\n");
-	printf("-i\t| --input source\tParse, compile and execute this given string of source code.\n\n");
 	printf("-d\t| --debug\t\tBe verbose when operating.\n\n");
 	printf("-OX\t\t\t\tUse level X optimization (default 1)\n\n");
+	printf("-f\t| --file filename\tParse, compile and execute the source file.\n\n");
+	printf("-i\t| --input source\tParse, compile and execute this given string of source code.\n\n");
+	printf("-c\t| --compile filename\tParse and compile the specified source file into an output file.\n\n");
+	printf("-o\t| --output filename\tName of the file compiled with --compile (default: out.tb).\n\n");
 }
 
 void copyrightCommand(int argc, const char* argv[]) {

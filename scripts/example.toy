@@ -27,3 +27,10 @@ print "Back to the outer scope.";
 assert true, "This won't be seen";
 assert false, "This is an error";
 
+
+
+
+
+
+//var arr : [int] = [1, 2, 3, 42];
+//var dict : [string, int] = ["hello": 1, "world":2];

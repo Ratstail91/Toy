@@ -1,4 +1,5 @@
 #include "interpreter.h"
+#include "console_colors.h"
 
 #include "common.h"
 #include "memory.h"
@@ -310,17 +311,15 @@ void runInterpreter(Interpreter* interpreter) {
 	const unsigned char minor = readByte(interpreter->bytecode, &interpreter->count);
 	const unsigned char patch = readByte(interpreter->bytecode, &interpreter->count);
 
-	if (command.verbose) {
-		if (major != TOY_VERSION_MAJOR || minor != TOY_VERSION_MINOR || patch != TOY_VERSION_PATCH) {
-			printf("Warning: interpreter/bytecode version mismatch\n");
-		}
+	if (major != TOY_VERSION_MAJOR || minor != TOY_VERSION_MINOR || patch != TOY_VERSION_PATCH) {
+		printf(ERROR "Error: interpreter/bytecode version mismatch\n" RESET);
 	}
 
 	const char* build = readString(interpreter->bytecode, &interpreter->count);
 
 	if (command.verbose) {
 		if (strncmp(build, TOY_VERSION_BUILD, strlen(TOY_VERSION_BUILD))) {
-			printf("Warning: interpreter/bytecode build mismatch\n");
+			printf(WARN "Warning: interpreter/bytecode build mismatch\n" RESET);
 		}
 	}
 
@@ -330,7 +329,7 @@ void runInterpreter(Interpreter* interpreter) {
 	const short literalCount = readShort(interpreter->bytecode, &interpreter->count);
 
 	if (command.verbose) {
-		printf("Reading %d literals\n", literalCount);
+		printf(NOTICE "Reading %d literals\n" RESET, literalCount);
 	}
 
 	for (int i = 0; i < literalCount; i++) {
@@ -393,7 +392,7 @@ void runInterpreter(Interpreter* interpreter) {
 
 	//code section
 	if (command.verbose) {
-		printf("executing bytecode\n");
+		printf(NOTICE "executing bytecode\n" RESET);
 	}
 
 	execInterpreter(interpreter);

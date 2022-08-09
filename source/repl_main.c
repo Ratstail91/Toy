@@ -1,4 +1,5 @@
 #include "debug.h"
+#include "console_colors.h"
 
 #include "lexer.h"
 #include "parser.h"
@@ -189,17 +190,6 @@ void repl() {
 	freeInterpreter(&interpreter);
 }
 
-void debug() {
-	LiteralDictionary dictionary;
-
-	initLiteralDictionary(&dictionary);
-
-	setLiteralDictionary(&dictionary, TO_IDENTIFIER_LITERAL("variable", MASK_INTEGER), TO_INTEGER_LITERAL(2));
-	printLiteral( getLiteralDictionary(&dictionary, TO_IDENTIFIER_LITERAL("variable", MASK_INTEGER)) );
-
-	freeLiteralDictionary(&dictionary);
-}
-
 //entry point
 int main(int argc, const char* argv[]) {
 	initCommand(argc, argv);
@@ -220,29 +210,14 @@ int main(int argc, const char* argv[]) {
 		return 0;
 	}
 
-	//print this until the interpreter meets the specification
+	//TODO: remove this when the interpreter meets the specification
 	if (command.verbose) {
-		printf("Warning! This interpreter is a work in progress, it does not yet meet the %d.%d.%d specification.\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH);
-	}
-
-	//run binary
-	if (command.binaryfile) {
-		runBinaryFile(command.binaryfile);
-		return 0;
+		printf(WARN "Warning! This interpreter is a work in progress, it does not yet meet the %d.%d.%d specification.\n" RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH);
 	}
 
 	//run source file
 	if (command.sourcefile) {
 		runSourceFile(command.sourcefile);
-		return 0;
-	}
-
-	//compile source file
-	if (command.compilefile) {
-		size_t size = 0;
-		char* source = readFile(command.compilefile, &size);
-		unsigned char* tb = compileString(source, &size);
-		writeFile(command.outfile, tb, size);
 		return 0;
 	}
 
@@ -252,7 +227,24 @@ int main(int argc, const char* argv[]) {
 		return 0;
 	}
 
-	// debug();
+	//compile source file
+	if (command.compilefile && command.outfile) {
+		size_t size = 0;
+		char* source = readFile(command.compilefile, &size);
+		unsigned char* tb = compileString(source, &size);
+		if (!tb) {
+			return 1;
+		}
+		writeFile(command.outfile, tb, size);
+		return 0;
+	}
+
+	//run binary
+	if (command.binaryfile) {
+		runBinaryFile(command.binaryfile);
+		return 0;
+	}
+
 	repl();
 
 	return 0;
