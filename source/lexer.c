@@ -256,7 +256,7 @@ Token scanLexer(Lexer* lexer) {
 		case ')': return makeToken(lexer, TOKEN_PAREN_RIGHT);
 		case '{': return makeToken(lexer, TOKEN_BRACE_LEFT);
 		case '}': return makeToken(lexer, TOKEN_BRACE_RIGHT);
-		case '[': return makeToken(lexer, match(lexer, ']') ? TOKEN_ARRAY : TOKEN_BRACKET_LEFT);
+		case '[': return makeToken(lexer, TOKEN_BRACKET_LEFT);
 		case ']': return makeToken(lexer, TOKEN_BRACKET_RIGHT);
 
 		case '+': return makeToken(lexer, match(lexer, '=') ? TOKEN_PLUS_ASSIGN : match(lexer, '+') ? TOKEN_PLUS_PLUS: TOKEN_PLUS);

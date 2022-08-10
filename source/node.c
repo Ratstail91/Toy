@@ -115,10 +115,11 @@ void emitNodeBlock(Node** nodeHandle) {
 	*nodeHandle = tmp;
 }
 
-void emitNodeCompound(Node** nodeHandle) {
+void emitNodeCompound(Node** nodeHandle, LiteralType literalType) {
 	Node* tmp = ALLOCATE(Node, 1);
 
 	tmp->type = NODE_COMPOUND;
+	tmp->compound.literalType = literalType;
 	tmp->compound.nodes = NULL;
 	tmp->compound.capacity = 0;
 	tmp->compound.count = 0;

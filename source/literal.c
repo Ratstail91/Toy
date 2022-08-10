@@ -129,6 +129,12 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 				printToBuffer(":");
 				printLiteralCustom(ptr->entries[i].value, printToBuffer);
 			}
+
+			//empty dicts MUST have a ":" printed
+			if (ptr->count == 0) {
+				printToBuffer(":");
+			}
+
 			printToBuffer("]");
 
 			//swap the parent-call buffer back into place

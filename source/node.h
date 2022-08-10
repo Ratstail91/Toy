@@ -52,6 +52,7 @@ typedef struct NodeBlock {
 
 typedef struct NodeCompound {
 	NodeType type;
+	LiteralType literalType;
 	Node* nodes;
 	int capacity;
 	int count;
@@ -97,7 +98,7 @@ void emitNodeUnary(Node** nodeHandle, Opcode opcode);
 void emitNodeBinary(Node** nodeHandle, Node* rhs, Opcode opcode);
 void emitNodeGrouping(Node** nodeHandle);
 void emitNodeBlock(Node** nodeHandle);
-void emitNodeCompound(Node** nodeHandle);
+void emitNodeCompound(Node** nodeHandle, LiteralType literalType);
 void emitNodePair(Node** nodeHandle, Node* left, Node* right);
 void emitNodeVarTypes(Node** nodeHandle, unsigned char mask);
 void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Node* varType, Node* expression);

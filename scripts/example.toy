@@ -27,7 +27,13 @@ print "Back to the outer scope.";
 print [1, 2, 3];
 print [4, 5];
 print ["key":"value"];
+print [1, 2, 3];
+print [4, 5];
+print ["key":"value"];
 
+//empties
+print [];
+print [:];
 
 //var arr : [int] = [1, 2, 3, 42];
 //var dict : [string, int] = ["hello": 1, "world":2];

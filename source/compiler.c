@@ -102,7 +102,7 @@ void writeCompiler(Compiler* compiler, Node* node) {
 			initLiteralArray(store);
 
 			//emit an array or a dictionary definition
-			if (node->compound.nodes->type == NODE_PAIR) {
+			if (node->compound.literalType == LITERAL_DICTIONARY) {
 				//ensure each literal key and value are in the cache, individually
 				for (int i = 0; i < node->compound.count; i++) {
 					//keys
@@ -124,7 +124,7 @@ void writeCompiler(Compiler* compiler, Node* node) {
 				//push the store to the cache, with instructions about how pack it
 				index = pushLiteralArray(&compiler->literalCache, TO_DICTIONARY_LITERAL(store));
 			}
-			else {
+			else if (node->compound.literalType == LITERAL_ARRAY) {
 				//ensure each literal value is in the cache, individually
 				for (int i = 0; i < node->compound.count; i++) {
 					//values
@@ -138,6 +138,9 @@ void writeCompiler(Compiler* compiler, Node* node) {
 
 				//push the store to the cache, with instructions about how pack it
 				index = pushLiteralArray(&compiler->literalCache, TO_ARRAY_LITERAL(store));
+			}
+			else {
+				fprintf(stderr, "[Internal] Unrecognized compound type in writeCompiler()");
 			}
 
 			//push the node opcode to the bytecode
@@ -325,7 +328,7 @@ unsigned char* collateCompiler(Compiler* compiler, int* size) {
 			break;
 
 			default:
-				fprintf(stderr, "[Internal] Unknown literal type encountered within literal cache\n");
+				fprintf(stderr, "[Internal] Unknown literal type encountered within literal cache: %d\n", compiler->literalCache.literals[i].type);
 				return NULL;
 		}
 	}

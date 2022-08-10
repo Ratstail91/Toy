@@ -128,7 +128,9 @@ static Opcode compound(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	while (!match(parser, TOKEN_BRACKET_RIGHT)) {
 		//if empty dictionary, there will be a colon between the brackets
 		if (iterations == 0 && match(parser, TOKEN_COLON)) {
-			consume(parser, TOKEN_BRACE_RIGHT, "Expected ']' at the end of empty dictionary definition");
+			consume(parser, TOKEN_BRACKET_RIGHT, "Expected ']' at the end of empty dictionary definition");
+			//emit an empty dictionary and finish
+			emitNodeCompound(&dictionary, LITERAL_DICTIONARY);
 			break;
 		}
 
@@ -157,7 +159,7 @@ static Opcode compound(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 
 			//init the dictionary
 			if (!dictionary) {
-				emitNodeCompound(&dictionary);
+				emitNodeCompound(&dictionary, LITERAL_DICTIONARY);
 			}
 
 			//grow the node if needed
@@ -184,7 +186,7 @@ static Opcode compound(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 
 			//init the array
 			if (!array) {
-				emitNodeCompound(&array);
+				emitNodeCompound(&array, LITERAL_ARRAY);
 			}
 
 			//grow the node if needed
@@ -208,7 +210,9 @@ static Opcode compound(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 		(*nodeHandle) = dictionary;
 	}
 	else {
-		error(parser, parser->current, "[internal] Couldn't determine if should save an array or dictionary");
+		//both are null, must be an array (because reasons)
+		emitNodeCompound(&array, LITERAL_ARRAY);
+		(*nodeHandle) = array;
 	}
 
 
