@@ -36,6 +36,7 @@ static void advance(Parser* parser) {
 
 	if (parser->current.type == TOKEN_ERROR) {
 		error(parser, parser->current, "Lexer error");
+		printf(parser->lexer->source);
 	}
 }
 
@@ -115,6 +116,106 @@ static void declaration(Parser* parser, Node** nodeHandle);
 static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule rule);
 
 //the expression rules
+static Opcode compound(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
+	//read either an array or a dictionary into a literal node
+
+	int iterations = 0; //count the number of entries iterated over
+
+	//compound nodes to store what is read
+	Node* array = NULL;
+	Node* dictionary = NULL;
+
+	while (!match(parser, TOKEN_BRACKET_RIGHT)) {
+		//if empty dictionary, there will be a colon between the brackets
+		if (iterations == 0 && match(parser, TOKEN_COLON)) {
+			consume(parser, TOKEN_BRACE_RIGHT, "Expected ']' at the end of empty dictionary definition");
+			break;
+		}
+
+		if (iterations > 0) {
+			consume(parser, TOKEN_COMMA, "Expected ',' in array or dictionary");
+		}
+
+		iterations++;
+
+		Node* left = NULL;
+		Node* right = NULL;
+
+		//store the left
+		parsePrecedence(parser, &left, PREC_PRIMARY);
+
+		//detect a dictionary
+		if (match(parser, TOKEN_COLON)) {
+			parsePrecedence(parser, &right, PREC_PRIMARY);
+
+			//check we ARE defining a dictionary
+			if (array) {
+				error(parser, parser->previous, "Incorrect detection between array and dictionary");
+				freeNode(array);
+				return OP_EOF;
+			}
+
+			//init the dictionary
+			if (!dictionary) {
+				emitNodeCompound(&dictionary);
+			}
+
+			//grow the node if needed
+			if (dictionary->compound.capacity < dictionary->compound.count + 1) {
+				int oldCapacity = dictionary->compound.capacity;
+
+				dictionary->compound.capacity = GROW_CAPACITY(oldCapacity);
+				dictionary->compound.nodes = GROW_ARRAY(Node, dictionary->compound.nodes, oldCapacity, dictionary->compound.capacity);
+			}
+
+			//store the left and right in the node
+			Node* pair = NULL;
+			emitNodePair(&pair, left, right);
+			dictionary->compound.nodes[dictionary->compound.count++] = *pair;
+		}
+		//detect an array
+		else {
+			//check we ARE defining an array
+			if (dictionary) {
+				error(parser, parser->current, "Incorrect detection between array and dictionary");
+				freeNode(dictionary);
+				return OP_EOF;
+			}
+
+			//init the array
+			if (!array) {
+				emitNodeCompound(&array);
+			}
+
+			//grow the node if needed
+			if (array->compound.capacity < array->compound.count + 1) {
+				int oldCapacity = array->compound.capacity;
+
+				array->compound.capacity = GROW_CAPACITY(oldCapacity);
+				array->compound.nodes = GROW_ARRAY(Node, array->compound.nodes, oldCapacity, array->compound.capacity);
+			}
+
+			//store the left in the array
+			array->compound.nodes[array->compound.count++] = *left;
+		}
+	}
+
+	//save the result
+	if (array) {
+		(*nodeHandle) = array;
+	}
+	else if (dictionary) {
+		(*nodeHandle) = dictionary;
+	}
+	else {
+		error(parser, parser->current, "[internal] Couldn't determine if should save an array or dictionary");
+	}
+
+
+	//ignored
+	return OP_EOF;
+}
+
 static Opcode string(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	//handle strings
 	switch(parser->previous.type) {
@@ -330,7 +431,7 @@ ParseRule parseRules[] = { //must match the token types
 	//logical operators
 	{grouping, NULL, PREC_CALL},// TOKEN_PAREN_LEFT,
 	{NULL, NULL, PREC_NONE},// TOKEN_PAREN_RIGHT,
-	{NULL, NULL, PREC_NONE},// TOKEN_BRACKET_LEFT,
+	{compound, NULL, PREC_CALL},// TOKEN_BRACKET_LEFT,
 	{NULL, NULL, PREC_NONE},// TOKEN_BRACKET_RIGHT,
 	{NULL, NULL, PREC_NONE},// TOKEN_BRACE_LEFT,
 	{NULL, NULL, PREC_NONE},// TOKEN_BRACE_RIGHT,
@@ -348,7 +449,7 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_ASSIGN,
 	{NULL, NULL, PREC_NONE},// TOKEN_COLON,
 	{NULL, NULL, PREC_NONE},// TOKEN_SEMICOLON,
-	{NULL, NULL, PREC_NONE},// TOKEN_COMMA,
+	{NULL, NULL, PREC_CALL},// TOKEN_COMMA,
 	{NULL, NULL, PREC_NONE},// TOKEN_DOT,
 	{NULL, NULL, PREC_NONE},// TOKEN_PIPE,
 	{NULL, NULL, PREC_NONE},// TOKEN_REST,
@@ -570,9 +671,9 @@ static void assertStmt(Parser* parser, Node* node) {
 	node->type = NODE_BINARY;
 	node->unary.opcode = OP_ASSERT;
 
-	expression(parser, &(node->binary.left));
+	parsePrecedence(parser, &(node->binary.left), PREC_PRIMARY);
 	consume(parser, TOKEN_COMMA, "Expected ',' in assert statement");
-	expression(parser, &(node->binary.right));
+	parsePrecedence(parser, &(node->binary.right), PREC_PRIMARY);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of assert statement");
 }
@@ -607,7 +708,7 @@ static void statement(Parser* parser, Node* node) {
 
 //declarations and definitions
 static void readVarType(Parser* parser, Node** nodeHandle) {
-	//TODO: compound types with the "type" keyword
+	//TODO: custom types with the "type" keyword
 	advance(parser);
 
 	unsigned char typeMask = 0;

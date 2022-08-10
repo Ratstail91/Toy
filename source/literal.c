@@ -1,13 +1,35 @@
 #include "literal.h"
 #include "memory.h"
 
+#include "literal_array.h"
+#include "literal_dictionary.h"
+
 #include <stdio.h>
 #include <string.h>
 
+//utils
 static void stdoutWrapper(const char* output) {
 	fprintf(stdout, output);
 }
 
+//buffer the prints
+static char* globalPrintBuffer = NULL;
+static size_t globalPrintCapacity = 0;
+static size_t globalPrintCount = 0;
+
+static void printToBuffer(const char* str) {
+	while (strlen(str) + globalPrintCount > globalPrintCapacity) {
+		int oldCapacity = globalPrintCapacity;
+
+		globalPrintCapacity = GROW_CAPACITY(globalPrintCapacity);
+		globalPrintBuffer = GROW_ARRAY(char, globalPrintBuffer, oldCapacity, globalPrintCapacity);
+	}
+
+	snprintf(globalPrintBuffer + globalPrintCount, strlen(str) + 1, "%s", str);
+	globalPrintCount += strlen(str);
+}
+
+//exposed functions
 void printLiteral(Literal literal) {
 	printLiteralCustom(literal, stdoutWrapper);
 }
@@ -37,9 +59,90 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 		break;
 
 		case LITERAL_STRING: {
-			char buffer[256];
-			snprintf(buffer, 256, "%.*s", STRLEN(literal), AS_STRING(literal));
+			char buffer[4096];
+			snprintf(buffer, 4096, "\"%.*s\"", STRLEN(literal), AS_STRING(literal));
 			printFn(buffer);
+		}
+		break;
+
+		case LITERAL_ARRAY: {
+			LiteralArray* ptr = AS_ARRAY(literal);
+
+			//hold potential parent-call buffers
+			char* cacheBuffer = globalPrintBuffer;
+			globalPrintBuffer = NULL;
+			int cacheCapacity = globalPrintCapacity;
+			globalPrintCapacity = 0;
+			int cacheCount = globalPrintCount;
+			globalPrintCount = 0;
+
+			//print the contents to the global buffer
+			printToBuffer("[");
+			for (int i = 0; i < ptr->count; i++) {
+				printLiteralCustom(ptr->literals[i], printToBuffer);
+
+				if (i + 1 < ptr->count) {
+					printToBuffer(",");
+				}
+			}
+			printToBuffer("]");
+
+			//swap the parent-call buffer back into place
+			char* printBuffer = globalPrintBuffer;
+			int printCapacity = globalPrintCapacity;
+			int printCount = globalPrintCount;
+
+			globalPrintBuffer = cacheBuffer;
+			globalPrintCapacity = cacheCapacity;
+			globalPrintCount = cacheCount;
+
+			//finally, output and cleanup
+			printFn(printBuffer);
+			FREE_ARRAY(char, printBuffer, printCapacity);
+		}
+		break;
+
+		case LITERAL_DICTIONARY: {
+			LiteralDictionary* ptr = AS_DICTIONARY(literal);
+
+			//hold potential parent-call buffers
+			char* cacheBuffer = globalPrintBuffer;
+			globalPrintBuffer = NULL;
+			int cacheCapacity = globalPrintCapacity;
+			globalPrintCapacity = 0;
+			int cacheCount = globalPrintCount;
+			globalPrintCount = 0;
+
+			//print the contents to the global buffer
+			int delimCount = 0;
+			printToBuffer("[");
+			for (int i = 0; i < ptr->capacity; i++) {
+				if (ptr->entries[i].key.type == LITERAL_NULL) {
+					continue;
+				}
+
+				if (delimCount++ > 0) {
+					printToBuffer(",");
+				}
+
+				printLiteralCustom(ptr->entries[i].key, printToBuffer);
+				printToBuffer(":");
+				printLiteralCustom(ptr->entries[i].value, printToBuffer);
+			}
+			printToBuffer("]");
+
+			//swap the parent-call buffer back into place
+			char* printBuffer = globalPrintBuffer;
+			int printCapacity = globalPrintCapacity;
+			int printCount = globalPrintCount;
+
+			globalPrintBuffer = cacheBuffer;
+			globalPrintCapacity = cacheCapacity;
+			globalPrintCount = cacheCount;
+
+			//finally, output and cleanup
+			printFn(printBuffer);
+			FREE_ARRAY(char, printBuffer, printCapacity);
 		}
 		break;
 

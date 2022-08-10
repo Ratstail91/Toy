@@ -10,10 +10,11 @@ typedef enum {
 	LITERAL_INTEGER,
 	LITERAL_FLOAT,
 	LITERAL_STRING,
-	// LITERAL_ARRAY,
-	// LITERAL_DICTIONARY,
+	LITERAL_ARRAY,
+	LITERAL_DICTIONARY,
 	// LITERAL_FUNCTION,
 	LITERAL_IDENTIFIER,
+	// LITERAL_TYPE,
 } LiteralType;
 
 typedef struct {
@@ -27,15 +28,17 @@ typedef struct {
 			int length;
 		} string;
 
-		// //experimental
-		// void* array;
-		// void* dictionary;
+		void* array;
+		void* dictionary;
+
 		// void* function;
 
 		struct { //for variable names
             char* ptr;
             int length;
         } identifier;
+
+		//TODO: type
 	} as;
 } Literal;
 
@@ -53,8 +56,8 @@ typedef struct {
 #define AS_INTEGER(value)					((value).as.integer)
 #define AS_FLOAT(value)						((value).as.number)
 #define AS_STRING(value)					((value).as.string.ptr)
-// #define AS_ARRAY(value)
-// #define AS_DICTIONARY(value)
+#define AS_ARRAY(value)						((value).as.array)
+#define AS_DICTIONARY(value)				((value).as.dictionary)
 // #define AS_FUNCTION(value)
 #define AS_IDENTIFIER(value)				((value).as.identifier.ptr)
 
@@ -63,8 +66,8 @@ typedef struct {
 #define TO_INTEGER_LITERAL(value)			((Literal){LITERAL_INTEGER,		{ .integer = value }})
 #define TO_FLOAT_LITERAL(value)				((Literal){LITERAL_FLOAT,		{ .number = value }})
 #define TO_STRING_LITERAL(value)			_toStringLiteral(value)
-// #define TO_ARRAY_LITERAL
-// #define TO_DICTIONARY_LITERAL
+#define TO_ARRAY_LITERAL(value)				((Literal){LITERAL_ARRAY,		{ .array = value }})
+#define TO_DICTIONARY_LITERAL(value)		((Literal){LITERAL_DICTIONARY,	{ .dictionary = value }})
 // #define TO_FUNCTION_LITERAL
 #define TO_IDENTIFIER_LITERAL(value)		_toIdentifierLiteral(value)
 

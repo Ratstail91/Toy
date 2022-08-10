@@ -1,0 +1,2 @@
+print ["foo", "bar"];
+print ["foo":1, "bar":2];

@@ -9,10 +9,12 @@ typedef union _node Node;
 typedef enum NodeType {
 	NODE_ERROR,
 	NODE_LITERAL, //a simple value
-	NODE_UNARY, //one child
-	NODE_BINARY, //two children, left and right
+	NODE_UNARY, //one child + opcode
+	NODE_BINARY, //two children, left and right + opcode
 	NODE_GROUPING, //one child
-	NODE_BLOCK, //contains sub-node array
+	NODE_BLOCK, //contains a sub-node array
+	NODE_COMPOUND, //contains a sub-node array
+	NODE_PAIR, //contains a left and right
 	NODE_VAR_TYPES, //contains a type mask and a sub-node array for compound types
 	NODE_VAR_DECL, //contains identifier literal, typenode, expression definition
 	// NODE_CONDITIONAL, //three children: conditional, then path, else path
@@ -48,6 +50,19 @@ typedef struct NodeBlock {
 	int count;
 } NodeBlock;
 
+typedef struct NodeCompound {
+	NodeType type;
+	Node* nodes;
+	int capacity;
+	int count;
+} NodeCompound;
+
+typedef struct NodePair {
+	NodeType type;
+	Node* left;
+	Node* right;
+} NodePair;
+
 typedef struct NodeVarTypes {
 	NodeType type;
 	unsigned char mask;
@@ -70,6 +85,8 @@ union _node {
 	NodeBinary binary;
 	NodeGrouping grouping;
 	NodeBlock block;
+	NodeCompound compound;
+	NodePair pair;
 	NodeVarTypes varTypes;
 	NodeVarDecl varDecl;
 };
@@ -80,6 +97,8 @@ void emitNodeUnary(Node** nodeHandle, Opcode opcode);
 void emitNodeBinary(Node** nodeHandle, Node* rhs, Opcode opcode);
 void emitNodeGrouping(Node** nodeHandle);
 void emitNodeBlock(Node** nodeHandle);
+void emitNodeCompound(Node** nodeHandle);
+void emitNodePair(Node** nodeHandle, Node* left, Node* right);
 void emitNodeVarTypes(Node** nodeHandle, unsigned char mask);
 void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Node* varType, Node* expression);
 

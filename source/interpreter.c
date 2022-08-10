@@ -306,6 +306,11 @@ static void execInterpreter(Interpreter* interpreter) {
 }
 
 void runInterpreter(Interpreter* interpreter) {
+	if (!interpreter->bytecode) {
+		printf(ERROR "Error: No valid bytecode given\n" RESET);
+		return;
+	}
+
 	//header section
 	const unsigned char major = readByte(interpreter->bytecode, &interpreter->count);
 	const unsigned char minor = readByte(interpreter->bytecode, &interpreter->count);
@@ -383,6 +388,53 @@ void runInterpreter(Interpreter* interpreter) {
 				if (command.verbose) {
 					printf("(string \"%s\")\n", s);
 				}
+			}
+			break;
+
+			case LITERAL_ARRAY: {
+				LiteralArray* array = ALLOCATE(LiteralArray, 1);
+				initLiteralArray(array);
+
+				unsigned short length = readShort(interpreter->bytecode, &interpreter->count);
+
+				//read each index, then unpack the value from the existing literal cache
+				for (int i = 0; i < length; i++) {
+					int index = readShort(interpreter->bytecode, &interpreter->count);
+					pushLiteralArray(array, interpreter->literalCache.literals[index]);
+				}
+
+				if (command.verbose) {
+					printf("(array ");
+					printLiteral(TO_ARRAY_LITERAL(array));
+					printf(")\n");
+				}
+
+				//finally, push the array proper
+				pushLiteralArray(&interpreter->literalCache, TO_ARRAY_LITERAL(array));
+			}
+			break;
+
+			case LITERAL_DICTIONARY: {
+				LiteralDictionary* dictionary = ALLOCATE(LiteralDictionary, 1);
+				initLiteralDictionary(dictionary);
+
+				unsigned short length = readShort(interpreter->bytecode, &interpreter->count);
+
+				//read each index, then unpack the value from the existing literal cache
+				for (int i = 0; i < length / 2; i++) {
+					int key = readShort(interpreter->bytecode, &interpreter->count);
+					int val = readShort(interpreter->bytecode, &interpreter->count);
+					setLiteralDictionary(dictionary, interpreter->literalCache.literals[key], interpreter->literalCache.literals[val]);
+				}
+
+				if (command.verbose) {
+					printf("(dictionary ");
+					printLiteral(TO_DICTIONARY_LITERAL(dictionary));
+					printf(")\n");
+				}
+
+				//finally, push the dictionary proper
+				pushLiteralArray(&interpreter->literalCache, TO_DICTIONARY_LITERAL(dictionary));
 			}
 			break;
 		}

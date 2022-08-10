@@ -25,7 +25,7 @@ char* readFile(char* path, size_t* fileSize) {
 	*fileSize = ftell(file);
 	rewind(file);
 
-	char* buffer = (char*)malloc(*fileSize);
+	char* buffer = (char*)malloc(*fileSize + 1);
 
 	if (buffer == NULL) {
 		fprintf(stderr, "Not enough memory to read \"%s\"\n", path);
@@ -33,6 +33,8 @@ char* readFile(char* path, size_t* fileSize) {
 	}
 
 	size_t bytesRead = fread(buffer, sizeof(char), *fileSize, file);
+
+	buffer[*fileSize] = '\0'; //NOTE: fread doesn't append this
 
 	if (bytesRead < *fileSize) {
 		fprintf(stderr, "Could not read file \"%s\"\n", path);
@@ -109,13 +111,19 @@ void runBinary(unsigned char* tb, size_t size) {
 void runBinaryFile(char* fname) {
 	size_t size = 0; //not used
 	unsigned char* tb = (unsigned char*)readFile(fname, &size);
+	if (!tb) {
+		return;
+	}
 	runBinary(tb, size);
 	//interpreter takes ownership of the binary data
 }
 
 void runSource(char* source) {
-	size_t size;
+	size_t size = 0;
 	unsigned char* tb = compileString(source, &size);
+	if (!tb) {
+		return;
+	}
 	runBinary(tb, size);
 }
 
@@ -169,11 +177,11 @@ void repl() {
 			int size = 0;
 			unsigned char* tb = collateCompiler(&compiler, &size);
 
-			// for (int i = 0; i < size; i++) {
-			// 	printf("%d ", tb[i]);
-			// }
+			for (int i = 0; i < size; i++) {
+				printf("%d ", tb[i]);
+			}
 
-			// printf("\n");
+			printf("\n");
 
 			//run the bytecode
 			initInterpreter(&interpreter, tb, size);

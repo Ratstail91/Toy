@@ -2,6 +2,10 @@
 
 #include "memory.h"
 
+#include "literal.h"
+#include "literal_array.h"
+#include "literal_dictionary.h"
+
 #include <stdio.h>
 
 void initCompiler(Compiler* compiler) {
@@ -88,6 +92,72 @@ void writeCompiler(Compiler* compiler, Node* node) {
 			}
 
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_SCOPE_END; //1 byte
+		break;
+
+		case NODE_COMPOUND: {
+			int index = -1;
+
+			//for both, stored as an array
+			LiteralArray* store = ALLOCATE(LiteralArray, 1);
+			initLiteralArray(store);
+
+			//emit an array or a dictionary definition
+			if (node->compound.nodes->type == NODE_PAIR) {
+				//ensure each literal key and value are in the cache, individually
+				for (int i = 0; i < node->compound.count; i++) {
+					//keys
+					int key = findLiteralIndex(&compiler->literalCache, node->compound.nodes[i].pair.left->atomic.literal);
+					if (key < 0) {
+						key = pushLiteralArray(&compiler->literalCache, node->compound.nodes[i].pair.left->atomic.literal);
+					}
+
+					//values
+					int val = findLiteralIndex(&compiler->literalCache, node->compound.nodes[i].pair.right->atomic.literal);
+					if (val < 0) {
+						val = pushLiteralArray(&compiler->literalCache, node->compound.nodes[i].pair.right->atomic.literal);
+					}
+
+					pushLiteralArray(store, TO_INTEGER_LITERAL(key));
+					pushLiteralArray(store, TO_INTEGER_LITERAL(val));
+				}
+
+				//push the store to the cache, with instructions about how pack it
+				index = pushLiteralArray(&compiler->literalCache, TO_DICTIONARY_LITERAL(store));
+			}
+			else {
+				//ensure each literal value is in the cache, individually
+				for (int i = 0; i < node->compound.count; i++) {
+					//values
+					int val = findLiteralIndex(&compiler->literalCache, node->compound.nodes[i].atomic.literal);
+					if (val < 0) {
+						val = pushLiteralArray(&compiler->literalCache, node->compound.nodes[i].atomic.literal);
+					}
+
+					pushLiteralArray(store, TO_INTEGER_LITERAL(val));
+				}
+
+				//push the store to the cache, with instructions about how pack it
+				index = pushLiteralArray(&compiler->literalCache, TO_ARRAY_LITERAL(store));
+			}
+
+			//push the node opcode to the bytecode
+			if (index >= 256) {
+				//push a "long" index
+				compiler->bytecode[compiler->count++] = OP_LITERAL_LONG; //1 byte
+				*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)index; //2 bytes
+
+				compiler->count += sizeof(unsigned short);
+			}
+			else {
+				//push the index
+				compiler->bytecode[compiler->count++] = OP_LITERAL; //1 byte
+				compiler->bytecode[compiler->count++] = (unsigned char)index; //1 byte
+			}
+		}
+		break;
+
+		case NODE_PAIR:
+			fprintf(stderr, "[Internal] NODE_PAIR encountered in writeCompiler()");
 		break;
 
 		case NODE_VAR_TYPES:
@@ -219,6 +289,39 @@ unsigned char* collateCompiler(Compiler* compiler, int* size) {
 
 				emitByte(&collation, &capacity, &count, '\0'); //terminate the string
 			}
+			break;
+
+			case LITERAL_ARRAY: {
+				emitByte(&collation, &capacity, &count, LITERAL_ARRAY);
+
+				LiteralArray* ptr = AS_ARRAY(compiler->literalCache.literals[i]);
+
+				//length of the array, as a short
+				emitShort(&collation, &capacity, &count, ptr->count);
+
+				//each element of the array
+				for (int i = 0; i < ptr->count; i++) {
+					emitShort(&collation, &capacity, &count, (unsigned short)AS_INTEGER(ptr->literals[i])); //shorts representing the indexes of the values
+				}
+
+				freeLiteralArray(ptr);
+			}
+			break;
+
+			case LITERAL_DICTIONARY:
+				emitByte(&collation, &capacity, &count, LITERAL_DICTIONARY);
+
+				LiteralArray* ptr = AS_ARRAY(compiler->literalCache.literals[i]); //used an array for storage above
+
+				//length of the array, as a short
+				emitShort(&collation, &capacity, &count, ptr->count); //count is the array size, NOT the dictionary size
+
+				//each element of the array
+				for (int i = 0; i < ptr->count; i++) {
+					emitShort(&collation, &capacity, &count, (unsigned short)AS_INTEGER(ptr->literals[i])); //shorts representing the indexes of the values
+				}
+
+				freeLiteralArray(ptr);
 			break;
 
 			default:

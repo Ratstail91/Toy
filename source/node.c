@@ -37,14 +37,26 @@ void freeNode(Node* node) {
 			for (int i = 0; i < node->block.count; i++) {
 				freeNode(node->block.nodes + i);
 			}
-			//each sub-node gets freed individually
+			FREE_ARRAY(Node, node->block.nodes, node->block.capacity);
+		break;
+
+		case NODE_COMPOUND:
+			for (int i = 0; i < node->compound.count; i++) {
+				freeNode(node->compound.nodes + i);
+			}
+			FREE_ARRAY(Node, node->compound.nodes, node->compound.capacity);
+		break;
+
+		case NODE_PAIR:
+			freeNode(node->pair.left);
+			freeNode(node->pair.right);
 		break;
 
 		case NODE_VAR_TYPES:
 			for (int i = 0; i < node->varTypes.count; i++) {
 				freeNode(node->varTypes.nodes + 1);
 			}
-			//each sub-node gets freed individually
+			FREE_ARRAY(Node, node->varTypes.nodes, node->varTypes.capacity);
 		break;
 
 		case NODE_VAR_DECL:
@@ -53,8 +65,6 @@ void freeNode(Node* node) {
 			freeNode(node->varDecl.expression);
 		break;
 	}
-
-	FREE(Node, node);
 }
 
 void emitNodeLiteral(Node** nodeHandle, Literal literal) {
@@ -101,6 +111,27 @@ void emitNodeBlock(Node** nodeHandle) {
 	tmp->block.nodes = NULL;
 	tmp->block.capacity = 0;
 	tmp->block.count = 0;
+
+	*nodeHandle = tmp;
+}
+
+void emitNodeCompound(Node** nodeHandle) {
+	Node* tmp = ALLOCATE(Node, 1);
+
+	tmp->type = NODE_COMPOUND;
+	tmp->compound.nodes = NULL;
+	tmp->compound.capacity = 0;
+	tmp->compound.count = 0;
+
+	*nodeHandle = tmp;
+}
+
+void emitNodePair(Node** nodeHandle, Node* left, Node* right) {
+	Node* tmp = ALLOCATE(Node, 1);
+
+	tmp->type = NODE_PAIR;
+	tmp->pair.left = left;
+	tmp->pair.right = right;
 
 	*nodeHandle = tmp;
 }
@@ -172,8 +203,26 @@ void printNode(Node* node) {
 			printf("}\n");
 		break;
 
+		case NODE_COMPOUND:
+			printf("compound[\n");
+
+			for (int i = 0; i < node->compound.count; i++) {
+				printNode(&(node->compound.nodes[i]));
+			}
+
+			printf("]\n");
+		break;
+
+		case NODE_PAIR:
+			printf("pair-left:");
+			printNode(node->pair.left);
+			printf(";pair-right:");
+			printNode(node->pair.right);
+			printf(";");
+		break;
+
 		case NODE_VAR_TYPES:
-			printf("[\n");
+			printf("type[\n");
 
 			for (int i = 0; i < node->varTypes.count; i++) {
 				printNode(&(node->varTypes.nodes[i]));

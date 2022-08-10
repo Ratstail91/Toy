@@ -23,14 +23,17 @@ print 2 + (3 * 3);
 }
 print "Back to the outer scope.";
 
-//test asserts
-assert true, "This won't be seen";
-assert false, "This is an error";
 
-
-
-
+print [1, 2, 3];
+print [4, 5];
+print ["key":"value"];
 
 
 //var arr : [int] = [1, 2, 3, 42];
 //var dict : [string, int] = ["hello": 1, "world":2];
+
+
+//test asserts at the end of the file
+assert true, "This won't be seen";
+assert false, "This is a failed assert, and will end execution";
+
