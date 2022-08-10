@@ -363,6 +363,7 @@ ParseRule* getRule(TokenType type) {
 	return &parseRules[type];
 }
 
+//static analasys
 static bool calcStaticBinaryArithmetic(Node** nodeHandle) {
 	switch((*nodeHandle)->binary.opcode) {
 		case OP_ADDITION:
@@ -479,7 +480,7 @@ static bool calcStaticBinaryArithmetic(Node** nodeHandle) {
 }
 
 static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule rule) {
-	//every expression has a prefix rule
+	//every valid expression has a prefix rule
 	advance(parser);
 	ParseFn prefixRule = getRule(parser->previous.type)->prefix;
 
@@ -604,10 +605,119 @@ static void statement(Parser* parser, Node* node) {
 	expressionStmt(parser, node);
 }
 
-static void declaration(Parser* parser, Node** nodeHandle) {
-	//TODO: variable declarations
+//declarations and definitions
+static void readVarType(Parser* parser, Node** nodeHandle) {
+	//TODO: compound types with the "type" keyword
+	advance(parser);
 
-	statement(parser, *nodeHandle);
+	unsigned char typeMask = 0;
+
+	Node* left = NULL;
+	Node* right = NULL;
+
+	switch(parser->previous.type) {
+		case TOKEN_BOOLEAN:
+			typeMask |= MASK_BOOLEAN;
+		break;
+
+		case TOKEN_INTEGER:
+			typeMask |= MASK_INTEGER;
+		break;
+
+		case TOKEN_FLOAT:
+			typeMask |= MASK_FLOAT;
+		break;
+
+		case TOKEN_STRING:
+			typeMask |= MASK_STRING;
+		break;
+
+		//array, dictionary - read the sub-types
+		case TOKEN_BRACKET_LEFT:
+			//at least 1 type required
+			readVarType(parser, &left);
+
+			if (match(parser, TOKEN_COMMA)) {
+				//if there's 2 types, it's a dictionary
+				readVarType(parser, &right);
+				typeMask |= MASK_DICTIONARY;
+			}
+			else {
+				//else it's just an array
+				typeMask |= MASK_ARRAY;
+			}
+			consume(parser, TOKEN_BRACKET_RIGHT, "Expected ']' at end of type definition");
+		break;
+
+		case TOKEN_ANY:
+			typeMask |= MASK_ANY;
+		break;
+
+		//TODO: function
+
+		default:
+			error(parser, parser->previous, "Bad type");
+			return;
+	}
+
+	//const follows the type
+	if (match(parser, TOKEN_CONST)) {
+		typeMask |= MASK_CONST;
+	}
+
+	//generate the node
+	emitNodeVarTypes(nodeHandle, typeMask);
+
+	//check for sub-nodes
+	if (left) {
+		int oldCapacity = (*nodeHandle)->varTypes.capacity;
+
+		(*nodeHandle)->varTypes.capacity = GROW_CAPACITY(oldCapacity);
+		(*nodeHandle)->varTypes.nodes = GROW_ARRAY(Node, (*nodeHandle)->varTypes.nodes, oldCapacity, (*nodeHandle)->varTypes.capacity);
+
+		//push left to the array
+		*((*nodeHandle)->varTypes.nodes) = *left;
+
+		//append the other one too
+		if (right) {
+			*((*nodeHandle)->varTypes.nodes + 1) = *right;
+		}
+	}
+}
+
+static void varDecl(Parser* parser, Node** nodeHandle) {
+	//read the identifier
+	consume(parser, TOKEN_IDENTIFIER, "Expected identifier after var keyword");
+	Token identifierToken = parser->previous;
+
+	//read the type, if present
+	Node* typeNode = NULL;
+	if (match(parser, TOKEN_COLON)) {
+		readVarType(parser, &typeNode);
+	}
+
+	//variable definition is an expression
+	Node* expressionNode = NULL;
+	if (match(parser, TOKEN_ASSIGN)) {
+		expression(parser, &expressionNode);
+	}
+
+	//TODO: compile-time static type check
+
+	//finally
+	emitNodeVarDecl(nodeHandle, TO_IDENTIFIER_LITERAL(identifierToken.lexeme), typeNode, expressionNode);
+
+	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of var declaration");
+}
+
+static void declaration(Parser* parser, Node** nodeHandle) { //assume nodeHandle holds a blank node
+	//variable declarations
+	if (match(parser, TOKEN_VAR)) {
+		varDecl(parser, nodeHandle);
+	}
+	else {
+		statement(parser, *nodeHandle);
+	}
 }
 
 //exposed functions

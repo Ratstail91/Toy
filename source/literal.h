@@ -35,7 +35,6 @@ typedef struct {
 		struct { //for variable names
             char* ptr;
             int length;
-			unsigned char types;
         } identifier;
 	} as;
 } Literal;
@@ -67,7 +66,7 @@ typedef struct {
 // #define TO_ARRAY_LITERAL
 // #define TO_DICTIONARY_LITERAL
 // #define TO_FUNCTION_LITERAL
-#define TO_IDENTIFIER_LITERAL(value, types)	_toIdentifierLiteral(value, types)
+#define TO_IDENTIFIER_LITERAL(value)		_toIdentifierLiteral(value)
 
 #define MASK(x) 			(1 >> (x))
 #define TYPE_CONST			0
@@ -86,6 +85,7 @@ typedef struct {
 #define MASK_ARRAY			(MASK(TYPE_ARRAY))
 #define MASK_DICTIONARY		(MASK(TYPE_DICTIONARY))
 #define MASK_FUNCTION		(MASK(TYPE_FUNCTION))
+#define MASK_ANY			(MASK_BOOLEAN|MASK_INTEGER|MASK_FLOAT|MASK_STRING|MASK_ARRAY|MASK_DICTIONARY|MASK_FUNCTION)
 
 //utils
 void printLiteral(Literal literal);
@@ -101,7 +101,7 @@ void freeLiteral(Literal literal);
 //BUGFIX: macros are not functions
 bool _isTruthy(Literal x);
 Literal _toStringLiteral(char* str);
-Literal _toIdentifierLiteral(char* str, unsigned char types);
+Literal _toIdentifierLiteral(char* str);
 
 //utils
 char* copyString(char* original, int length);

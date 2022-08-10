@@ -12,7 +12,9 @@ typedef enum NodeType {
 	NODE_UNARY, //one child
 	NODE_BINARY, //two children, left and right
 	NODE_GROUPING, //one child
-	NODE_BLOCK, //contains bytecode
+	NODE_BLOCK, //contains sub-node array
+	NODE_VAR_TYPES, //contains a type mask and a sub-node array for compound types
+	NODE_VAR_DECL, //contains identifier literal, typenode, expression definition
 	// NODE_CONDITIONAL, //three children: conditional, then path, else path
 } NodeType;
 
@@ -46,6 +48,21 @@ typedef struct NodeBlock {
 	int count;
 } NodeBlock;
 
+typedef struct NodeVarTypes {
+	NodeType type;
+	unsigned char mask;
+	Node* nodes;
+	int capacity;
+	int count;
+} NodeVarTypes;
+
+typedef struct NodeVarDecl {
+	NodeType type;
+	Literal identifier;
+	Node* varType;
+	Node* expression;
+} NodeVarDecl;
+
 union _node {
 	NodeType type;
 	NodeLiteral atomic;
@@ -53,6 +70,8 @@ union _node {
 	NodeBinary binary;
 	NodeGrouping grouping;
 	NodeBlock block;
+	NodeVarTypes varTypes;
+	NodeVarDecl varDecl;
 };
 
 void freeNode(Node* node);
@@ -61,6 +80,8 @@ void emitNodeUnary(Node** nodeHandle, Opcode opcode);
 void emitNodeBinary(Node** nodeHandle, Node* rhs, Opcode opcode);
 void emitNodeGrouping(Node** nodeHandle);
 void emitNodeBlock(Node** nodeHandle);
+void emitNodeVarTypes(Node** nodeHandle, unsigned char mask);
+void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Node* varType, Node* expression);
 
 void printNode(Node* node);
 

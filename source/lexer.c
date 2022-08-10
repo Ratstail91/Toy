@@ -301,7 +301,6 @@ Token scanLexer(Lexer* lexer) {
 }
 
 static void trim(char** s, int* l) { //all this to remove a newline?
-	*l = strlen(*s);
 	while( isspace(( (*((unsigned char**)(s)))[(*l) - 1] )) ) (*l)--;
 	while(**s && isspace( **(unsigned char**)(s)) ) { (*s)++; (*l)--; }
 }
@@ -323,9 +322,9 @@ void printToken(Token* token) {
 			printf("%s", keyword);
 		} else {
 			char* str = token->lexeme;
-			int length = 0;
+			int length = token->length;
 			trim(&str, &length);
-			printf("%.*s", length, token->lexeme);
+			printf("%.*s", length, str);
 		}
 	}
 

@@ -71,8 +71,8 @@ Literal _toStringLiteral(char* str) {
 	return ((Literal){LITERAL_STRING, {.string.ptr = (char*)str, .string.length = strlen((char*)str)}});
 }
 
-Literal _toIdentifierLiteral(char* str, unsigned char types) {
-	return ((Literal){LITERAL_IDENTIFIER,{.identifier.ptr = (char*)str,.identifier.length = strlen((char*)str),.identifier.types = types}});
+Literal _toIdentifierLiteral(char* str) {
+	return ((Literal){LITERAL_IDENTIFIER,{.identifier.ptr = (char*)str,.identifier.length = strlen((char*)str)}});
 }
 
 char* copyString(char* original, int length) {
@@ -121,7 +121,7 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 
 		default:
 			//should never bee seen
-			fprintf(stderr, "[Internal] Unrecognized literal type: %d\n", lhs.type);
+			fprintf(stderr, "[internal] Unrecognized literal type: %d\n", lhs.type);
 			return false;
 	}
 }

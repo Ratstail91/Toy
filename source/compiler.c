@@ -90,7 +90,15 @@ void writeCompiler(Compiler* compiler, Node* node) {
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_SCOPE_END; //1 byte
 		break;
 
-		//TODO: conditional
+		case NODE_VAR_TYPES:
+			//TODO: OP_TYPE_DECL
+		break;
+
+		case NODE_VAR_DECL:
+			//TODO: OP_VAR_DECL + OP_VAR_ASSIGN
+		break;
+
+		//TODO: more
 	}
 }
 

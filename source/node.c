@@ -37,6 +37,20 @@ void freeNode(Node* node) {
 			for (int i = 0; i < node->block.count; i++) {
 				freeNode(node->block.nodes + i);
 			}
+			//each sub-node gets freed individually
+		break;
+
+		case NODE_VAR_TYPES:
+			for (int i = 0; i < node->varTypes.count; i++) {
+				freeNode(node->varTypes.nodes + 1);
+			}
+			//each sub-node gets freed individually
+		break;
+
+		case NODE_VAR_DECL:
+			freeLiteral(node->varDecl.identifier);
+			freeNode(node->varDecl.varType);
+			freeNode(node->varDecl.expression);
 		break;
 	}
 
@@ -91,6 +105,29 @@ void emitNodeBlock(Node** nodeHandle) {
 	*nodeHandle = tmp;
 }
 
+void emitNodeVarTypes(Node** nodeHandle, unsigned char mask) {
+	Node* tmp = ALLOCATE(Node, 1);
+
+	tmp->type = NODE_VAR_TYPES;
+	tmp->varTypes.mask = mask;
+	tmp->varTypes.nodes = NULL;
+	tmp->varTypes.capacity = 0;
+	tmp->varTypes.count = 0;
+
+	*nodeHandle = tmp;
+}
+
+void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Node* varType, Node* expression) {
+	Node* tmp = ALLOCATE(Node, 1);
+
+	tmp->type = NODE_VAR_DECL;
+	tmp->varDecl.identifier = identifier;
+	tmp->varDecl.varType = varType;
+	tmp->varDecl.expression = expression;
+
+	*nodeHandle = tmp;
+}
+
 void printNode(Node* node) {
 	if (node == NULL) {
 		return;
@@ -133,6 +170,26 @@ void printNode(Node* node) {
 			}
 
 			printf("}\n");
+		break;
+
+		case NODE_VAR_TYPES:
+			printf("[\n");
+
+			for (int i = 0; i < node->varTypes.count; i++) {
+				printNode(&(node->varTypes.nodes[i]));
+			}
+
+			printf("]\n");
+		break;
+
+		case NODE_VAR_DECL:
+			printf("vardecl(");
+			printLiteral(node->varDecl.identifier);
+			printf("; ");
+			printNode(node->varDecl.varType);
+			printf("; ");
+			printNode(node->varDecl.expression);
+			printf(")");
 		break;
 	}
 }

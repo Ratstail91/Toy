@@ -4,7 +4,7 @@
 #include "literal_dictionary.h"
 
 typedef struct Scope {
-	LiteralDictionary variables;
+	LiteralDictionary variables; //only allow identifiers as the keys
 	struct Scope* ancestor;
 	int references; //how many scopes point here
 } Scope;
