@@ -1,6 +1,5 @@
 #pragma once
 
-#include "common.h"
 #include "literal_dictionary.h"
 
 typedef struct Scope {

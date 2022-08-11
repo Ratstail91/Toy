@@ -17,6 +17,9 @@ static char* globalPrintBuffer = NULL;
 static size_t globalPrintCapacity = 0;
 static size_t globalPrintCount = 0;
 
+//BUGFIX: string quotes shouldn't show when just printing strings, but should show when printing them as members of something else
+static char quotes = 0; //set to 0 to not show string quotes
+
 static void printToBuffer(const char* str) {
 	while (strlen(str) + globalPrintCount > globalPrintCapacity) {
 		int oldCapacity = globalPrintCapacity;
@@ -60,7 +63,12 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 
 		case LITERAL_STRING: {
 			char buffer[4096];
-			snprintf(buffer, 4096, "\"%.*s\"", STRLEN(literal), AS_STRING(literal));
+			if (!quotes) {
+				snprintf(buffer, 4096, "%.*s", STRLEN(literal), AS_STRING(literal));
+			}
+			else {
+				snprintf(buffer, 4096, "%c%.*s%c", quotes, STRLEN(literal), AS_STRING(literal), quotes);
+			}
 			printFn(buffer);
 		}
 		break;
@@ -79,6 +87,7 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 			//print the contents to the global buffer
 			printToBuffer("[");
 			for (int i = 0; i < ptr->count; i++) {
+				quotes = '"';
 				printLiteralCustom(ptr->literals[i], printToBuffer);
 
 				if (i + 1 < ptr->count) {
@@ -99,6 +108,7 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 			//finally, output and cleanup
 			printFn(printBuffer);
 			FREE_ARRAY(char, printBuffer, printCapacity);
+			quotes = 0;
 		}
 		break;
 
@@ -125,8 +135,10 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 					printToBuffer(",");
 				}
 
+				quotes = '"';
 				printLiteralCustom(ptr->entries[i].key, printToBuffer);
 				printToBuffer(":");
+				quotes = '"';
 				printLiteralCustom(ptr->entries[i].value, printToBuffer);
 			}
 
@@ -149,6 +161,7 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 			//finally, output and cleanup
 			printFn(printBuffer);
 			FREE_ARRAY(char, printBuffer, printCapacity);
+			quotes = 0;
 		}
 		break;
 

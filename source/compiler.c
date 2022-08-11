@@ -14,14 +14,14 @@ void initCompiler(Compiler* compiler) {
 	compiler->capacity = 0;
 	compiler->count = 0;
 
-	//default atomic literals
-	Literal n = TO_NULL_LITERAL;
-	Literal t = TO_BOOLEAN_LITERAL(true);
-	Literal f = TO_BOOLEAN_LITERAL(false);
+	//default atomic literals (commented out, because not needed atm - might need them later)
+	// Literal n = TO_NULL_LITERAL;
+	// Literal t = TO_BOOLEAN_LITERAL(true);
+	// Literal f = TO_BOOLEAN_LITERAL(false);
 
-	pushLiteralArray(&compiler->literalCache, n);
-	pushLiteralArray(&compiler->literalCache, t);
-	pushLiteralArray(&compiler->literalCache, f);
+	// pushLiteralArray(&compiler->literalCache, n);
+	// pushLiteralArray(&compiler->literalCache, t);
+	// pushLiteralArray(&compiler->literalCache, f);
 }
 
 //separated out, so it can be recursive
