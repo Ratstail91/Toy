@@ -222,6 +222,8 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 			}
 			return !strncmp(AS_STRING(lhs), AS_STRING(rhs), STRLEN(lhs));
 
+		//TODO: literal array and literal dictionary equality checks
+
 		case LITERAL_IDENTIFIER:
 			if (STRLEN_I(lhs) != STRLEN_I(rhs)) {
 				return false;
@@ -230,7 +232,7 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 
 		default:
 			//should never bee seen
-			fprintf(stderr, "[internal] Unrecognized literal type: %d\n", lhs.type);
+			fprintf(stderr, "[Internal] Unrecognized literal type in equality: %d\n", lhs.type);
 			return false;
 	}
 }
@@ -282,8 +284,10 @@ int hashLiteral(Literal lit) {
 		case LITERAL_DICTIONARY: {
 			unsigned int res = 0;
 			for (int i = 0; i < AS_DICTIONARY(lit)->count; i++) {
-				res += hashLiteral(AS_DICTIONARY(lit)->entries[i].key);
-				res += hashLiteral(AS_DICTIONARY(lit)->entries[i].value);
+				if (!IS_NULL(AS_DICTIONARY(lit)->entries[i].key)) { //only hash non-null keys
+					res += hashLiteral(AS_DICTIONARY(lit)->entries[i].key);
+					res += hashLiteral(AS_DICTIONARY(lit)->entries[i].value);
+				}
 			}
 			return hash(res);
 		}
