@@ -254,7 +254,33 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 			}
 			return !strncmp(AS_STRING(lhs), AS_STRING(rhs), STRLEN(lhs));
 
-		//TODO: literal array and literal dictionary equality checks
+		case LITERAL_ARRAY:
+			if (AS_ARRAY(lhs)->count != AS_ARRAY(rhs)->count) {
+				return false;
+			}
+			for (int i = 0; i < AS_ARRAY(lhs)->count; i++) {
+				if (!literalsAreEqual( AS_ARRAY(lhs)->literals[i], AS_ARRAY(rhs)->literals[i] )) {
+					return false;
+				}
+			}
+			return true;
+
+		case LITERAL_DICTIONARY:
+			//relatively slow, especially when nested
+			for (int i = 0; i < AS_DICTIONARY(lhs)->capacity; i++) {
+				if (!IS_NULL(AS_DICTIONARY(lhs)->entries[i].key)) { //only compare non-null keys
+					//check it exists in rhs
+					if (!existsLiteralDictionary(AS_DICTIONARY(rhs), AS_DICTIONARY(lhs)->entries[i].key)) {
+						return false;
+					}
+
+					//compare the values
+					if (!literalsAreEqual(AS_DICTIONARY(lhs)->entries[i].value, getLiteralDictionary(AS_DICTIONARY(rhs), AS_DICTIONARY(lhs)->entries[i].key) )) {
+						return false;
+					}
+				}
+			}
+			return true;
 
 		case LITERAL_IDENTIFIER:
 			if (HASH_I(lhs) != HASH_I(rhs) && STRLEN_I(lhs) != STRLEN_I(rhs)) {
@@ -296,7 +322,7 @@ int hashLiteral(Literal lit) {
 
 		case LITERAL_DICTIONARY: {
 			unsigned int res = 0;
-			for (int i = 0; i < AS_DICTIONARY(lit)->count; i++) {
+			for (int i = 0; i < AS_DICTIONARY(lit)->capacity; i++) {
 				if (!IS_NULL(AS_DICTIONARY(lit)->entries[i].key)) { //only hash non-null keys
 					res += hashLiteral(AS_DICTIONARY(lit)->entries[i].key);
 					res += hashLiteral(AS_DICTIONARY(lit)->entries[i].value);
