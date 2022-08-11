@@ -476,7 +476,7 @@ ParseRule* getRule(TokenType type) {
 	return &parseRules[type];
 }
 
-//static analasys
+//constant folding
 static bool calcStaticBinaryArithmetic(Node** nodeHandle) {
 	switch((*nodeHandle)->binary.opcode) {
 		case OP_ADDITION:

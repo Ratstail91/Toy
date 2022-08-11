@@ -32,9 +32,9 @@ void initInterpreter(Interpreter* interpreter, unsigned char* bytecode, int leng
 }
 
 void freeInterpreter(Interpreter* interpreter) {
+	FREE_ARRAY(char, interpreter->bytecode, interpreter->length);
 	freeLiteralArray(&interpreter->literalCache);
 	interpreter->scope = popScope(interpreter->scope);
-	FREE_ARRAY(char, interpreter->bytecode, interpreter->length);
 	freeLiteralArray(&interpreter->stack);
 }
 

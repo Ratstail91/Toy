@@ -36,6 +36,7 @@ typedef struct {
 		struct { //for variable names
             char* ptr;
             int length;
+			int hash;
         } identifier;
 
 		//TODO: type
@@ -99,7 +100,7 @@ void freeLiteral(Literal literal);
 
 #define STRLEN(lit)		((lit).as.string.length)
 #define STRLEN_I(lit)	((lit).as.identifier.length)
-#define TYPES(lit)		((lit).as.identifier.types)
+#define HASH_I(lit)		((lit).as.identifier.hash)
 
 //BUGFIX: macros are not functions
 bool _isTruthy(Literal x);

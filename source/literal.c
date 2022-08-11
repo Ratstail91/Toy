@@ -32,6 +32,25 @@ static void printToBuffer(const char* str) {
 	globalPrintCount += strlen(str);
 }
 
+//hash util functions
+static unsigned int hashString(const char* string, int length) {
+	unsigned int hash = 2166136261u;
+
+	for (int i = 0; i < length; i++) {
+		hash *= string[i];
+		hash *= 16777619;
+	}
+
+	return hash;
+}
+
+static unsigned int hash(unsigned int x) {
+    x = ((x >> 16) ^ x) * 0x45d9f3b;
+    x = ((x >> 16) ^ x) * 0x45d9f3b;
+    x = (x >> 16) ^ x;
+    return x;
+}
+
 //exposed functions
 void printLiteral(Literal literal) {
 	printLiteralCustom(literal, stdoutWrapper);
@@ -194,7 +213,7 @@ Literal _toStringLiteral(char* str) {
 }
 
 Literal _toIdentifierLiteral(char* str) {
-	return ((Literal){LITERAL_IDENTIFIER,{.identifier.ptr = (char*)str,.identifier.length = strlen((char*)str)}});
+	return ((Literal){LITERAL_IDENTIFIER,{.identifier.ptr = (char*)str,.identifier.length = strlen((char*)str), .identifier.hash=hashString(str, strlen((char*)str))}});
 }
 
 char* copyString(char* original, int length) {
@@ -238,7 +257,7 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 		//TODO: literal array and literal dictionary equality checks
 
 		case LITERAL_IDENTIFIER:
-			if (STRLEN_I(lhs) != STRLEN_I(rhs)) {
+			if (HASH_I(lhs) != HASH_I(rhs) && STRLEN_I(lhs) != STRLEN_I(rhs)) {
 				return false;
 			}
 			return !strncmp(AS_IDENTIFIER(lhs), AS_IDENTIFIER(rhs), STRLEN_I(lhs));
@@ -248,25 +267,6 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 			fprintf(stderr, "[Internal] Unrecognized literal type in equality: %d\n", lhs.type);
 			return false;
 	}
-}
-
-//hash functions
-static unsigned int hashString(const char* string, int length) {
-	unsigned int hash = 2166136261u;
-
-	for (int i = 0; i < length; i++) {
-		hash *= string[i];
-		hash *= 16777619;
-	}
-
-	return hash;
-}
-
-static unsigned int hash(unsigned int x) {
-    x = ((x >> 16) ^ x) * 0x45d9f3b;
-    x = ((x >> 16) ^ x) * 0x45d9f3b;
-    x = (x >> 16) ^ x;
-    return x;
 }
 
 int hashLiteral(Literal lit) {
@@ -306,7 +306,7 @@ int hashLiteral(Literal lit) {
 		}
 
 		case LITERAL_IDENTIFIER:
-			return hashString(AS_IDENTIFIER(lit), STRLEN_I(lit));
+			return HASH_I(lit); //pre-computed
 
 		default:
 			//should never bee seen

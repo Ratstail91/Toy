@@ -10,12 +10,18 @@ typedef void (*PrintFn)(const char*);
 
 //the interpreter acts depending on the bytecode instructions
 typedef struct Interpreter {
-	LiteralArray literalCache; //generally doesn't change after initialization
-	Scope* scope;
+	//input
 	unsigned char* bytecode;
 	int length;
 	int count;
+	LiteralArray literalCache; //read-only - built from the bytecode
+
+	//operation
+	Scope* scope;
 	LiteralArray stack;
+
+	//output
+	// LiteralDictionary exports; //read-write - interface with Toy from C
 	PrintFn printOutput;
 	PrintFn assertOutput;
 } Interpreter;
