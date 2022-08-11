@@ -56,8 +56,8 @@ typedef struct {
 #define AS_INTEGER(value)					((value).as.integer)
 #define AS_FLOAT(value)						((value).as.number)
 #define AS_STRING(value)					((value).as.string.ptr)
-#define AS_ARRAY(value)						((value).as.array)
-#define AS_DICTIONARY(value)				((value).as.dictionary)
+#define AS_ARRAY(value)						((LiteralArray*)((value).as.array))
+#define AS_DICTIONARY(value)				((LiteralDictionary*)((value).as.dictionary))
 // #define AS_FUNCTION(value)
 #define AS_IDENTIFIER(value)				((value).as.identifier.ptr)
 

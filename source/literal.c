@@ -271,6 +271,23 @@ int hashLiteral(Literal lit) {
 		case LITERAL_STRING:
 			return hashString(AS_STRING(lit), STRLEN(lit));
 
+		case LITERAL_ARRAY: {
+			unsigned int res = 0;
+			for (int i = 0; i < AS_DICTIONARY(lit)->count; i++) {
+				res += hashLiteral(AS_ARRAY(lit)->literals[i]);
+			}
+			return hash(res);
+		}
+
+		case LITERAL_DICTIONARY: {
+			unsigned int res = 0;
+			for (int i = 0; i < AS_DICTIONARY(lit)->count; i++) {
+				res += hashLiteral(AS_DICTIONARY(lit)->entries[i].key);
+				res += hashLiteral(AS_DICTIONARY(lit)->entries[i].value);
+			}
+			return hash(res);
+		}
+
 		case LITERAL_IDENTIFIER:
 			return hashString(AS_IDENTIFIER(lit), STRLEN_I(lit));
 

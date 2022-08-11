@@ -24,6 +24,110 @@ void initCompiler(Compiler* compiler) {
 	pushLiteralArray(&compiler->literalCache, f);
 }
 
+//separated out, so it can be recursive
+static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
+	int index = -1;
+
+	//for both, stored as an array
+	LiteralArray* store = ALLOCATE(LiteralArray, 1);
+	initLiteralArray(store);
+
+	//emit an array or a dictionary definition
+	if (node->compound.literalType == LITERAL_DICTIONARY) {
+		//ensure each literal key and value are in the cache, individually
+		for (int i = 0; i < node->compound.count; i++) {
+			//keys
+			switch(node->compound.nodes[i].pair.left->type) {
+				case NODE_LITERAL: {
+					//keys are literals
+					int key = findLiteralIndex(&compiler->literalCache, node->compound.nodes[i].pair.left->atomic.literal);
+					if (key < 0) {
+						key = pushLiteralArray(&compiler->literalCache, node->compound.nodes[i].pair.left->atomic.literal);
+					}
+
+					pushLiteralArray(store, TO_INTEGER_LITERAL(key));
+				}
+				break;
+
+				case NODE_COMPOUND: {
+						int key = writeNodeCompoundToCache(compiler, node->compound.nodes[i].pair.left);
+
+						pushLiteralArray(store, TO_INTEGER_LITERAL(key));
+				}
+				break;
+
+				default:
+					fprintf(stderr, "[Internal] Unrecognized key node type in writeNodeCompoundToCache()");
+					return -1;
+			}
+
+			//values
+			switch(node->compound.nodes[i].pair.right->type) {
+				case NODE_LITERAL: {
+					//values are literals
+					int val = findLiteralIndex(&compiler->literalCache, node->compound.nodes[i].pair.right->atomic.literal);
+					if (val < 0) {
+						val = pushLiteralArray(&compiler->literalCache, node->compound.nodes[i].pair.right->atomic.literal);
+					}
+
+					pushLiteralArray(store, TO_INTEGER_LITERAL(val));
+				}
+				break;
+
+				case NODE_COMPOUND: {
+						int val = writeNodeCompoundToCache(compiler, node->compound.nodes[i].pair.right);
+
+						pushLiteralArray(store, TO_INTEGER_LITERAL(val));
+				}
+				break;
+
+				default:
+					fprintf(stderr, "[Internal] Unrecognized value node type in writeNodeCompoundToCache()");
+					return -1;
+			}
+		}
+
+		//push the store to the cache, with instructions about how pack it
+		index = pushLiteralArray(&compiler->literalCache, TO_DICTIONARY_LITERAL(store));
+	}
+	else if (node->compound.literalType == LITERAL_ARRAY) {
+		//ensure each literal value is in the cache, individually
+		for (int i = 0; i < node->compound.count; i++) {
+			switch(node->compound.nodes[i].type) {
+				case NODE_LITERAL: {
+					//values
+					int val = findLiteralIndex(&compiler->literalCache, node->compound.nodes[i].atomic.literal);
+					if (val < 0) {
+						val = pushLiteralArray(&compiler->literalCache, node->compound.nodes[i].atomic.literal);
+					}
+
+					pushLiteralArray(store, TO_INTEGER_LITERAL(val));
+				}
+				break;
+
+				case NODE_COMPOUND: {
+					int val = writeNodeCompoundToCache(compiler, &node->compound.nodes[i]);
+
+					index = pushLiteralArray(store, TO_INTEGER_LITERAL(val));
+				}
+				break;
+
+				default:
+					fprintf(stderr, "[Internal] Unrecognized node type in writeNodeCompoundToCache()");
+					return -1;
+			}
+		}
+
+		//push the store to the cache, with instructions about how pack it
+		index = pushLiteralArray(&compiler->literalCache, TO_ARRAY_LITERAL(store));
+	}
+	else {
+		fprintf(stderr, "[Internal] Unrecognized compound type in writeNodeCompoundToCache()");
+	}
+
+	return index;
+}
+
 void writeCompiler(Compiler* compiler, Node* node) {
 	//grow if the bytecode space is too small
 	if (compiler->capacity < compiler->count + 1) {
@@ -95,53 +199,7 @@ void writeCompiler(Compiler* compiler, Node* node) {
 		break;
 
 		case NODE_COMPOUND: {
-			int index = -1;
-
-			//for both, stored as an array
-			LiteralArray* store = ALLOCATE(LiteralArray, 1);
-			initLiteralArray(store);
-
-			//emit an array or a dictionary definition
-			if (node->compound.literalType == LITERAL_DICTIONARY) {
-				//ensure each literal key and value are in the cache, individually
-				for (int i = 0; i < node->compound.count; i++) {
-					//keys
-					int key = findLiteralIndex(&compiler->literalCache, node->compound.nodes[i].pair.left->atomic.literal);
-					if (key < 0) {
-						key = pushLiteralArray(&compiler->literalCache, node->compound.nodes[i].pair.left->atomic.literal);
-					}
-
-					//values
-					int val = findLiteralIndex(&compiler->literalCache, node->compound.nodes[i].pair.right->atomic.literal);
-					if (val < 0) {
-						val = pushLiteralArray(&compiler->literalCache, node->compound.nodes[i].pair.right->atomic.literal);
-					}
-
-					pushLiteralArray(store, TO_INTEGER_LITERAL(key));
-					pushLiteralArray(store, TO_INTEGER_LITERAL(val));
-				}
-
-				//push the store to the cache, with instructions about how pack it
-				index = pushLiteralArray(&compiler->literalCache, TO_DICTIONARY_LITERAL(store));
-			}
-			else if (node->compound.literalType == LITERAL_ARRAY) {
-				//ensure each literal value is in the cache, individually
-				for (int i = 0; i < node->compound.count; i++) {
-					//values
-					int val = findLiteralIndex(&compiler->literalCache, node->compound.nodes[i].atomic.literal);
-					if (val < 0) {
-						val = pushLiteralArray(&compiler->literalCache, node->compound.nodes[i].atomic.literal);
-					}
-
-					pushLiteralArray(store, TO_INTEGER_LITERAL(val));
-				}
-
-				//push the store to the cache, with instructions about how pack it
-				index = pushLiteralArray(&compiler->literalCache, TO_ARRAY_LITERAL(store));
-			}
-			else {
-				fprintf(stderr, "[Internal] Unrecognized compound type in writeCompiler()");
-			}
+			int index = writeNodeCompoundToCache(compiler, node);
 
 			//push the node opcode to the bytecode
 			if (index >= 256) {

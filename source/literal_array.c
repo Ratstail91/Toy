@@ -87,6 +87,14 @@ int findLiteralIndex(LiteralArray* array, Literal literal) {
 				}
 			continue;
 
+			// case LITERAL_ARRAY:
+			// 	//
+			// continue;
+
+			// case LITERAL_DICTIONARY:
+			// 	//
+			// continue;
+
 			default:
 				fprintf(stderr, "[Internal] Unexpected literal type in findLiteralIndex(): %d\n", literal.type);
 		}
