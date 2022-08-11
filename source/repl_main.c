@@ -177,12 +177,6 @@ void repl() {
 			int size = 0;
 			unsigned char* tb = collateCompiler(&compiler, &size);
 
-			for (int i = 0; i < size; i++) {
-				printf("%d ", tb[i]);
-			}
-
-			printf("\n");
-
 			//run the bytecode
 			initInterpreter(&interpreter, tb, size);
 			runInterpreter(&interpreter);
