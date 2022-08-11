@@ -4,6 +4,7 @@
 multi line comment
 */
 
+//test primitive literals
 print "hello world";
 print null;
 print true;
@@ -23,7 +24,7 @@ print 2 + (3 * 3);
 }
 print "Back to the outer scope.";
 
-
+//test compounds
 print [1, 2, 3];
 print [4, 5];
 print ["key":"value"];
@@ -31,16 +32,23 @@ print [1, 2, 3];
 print [4, 5];
 print ["key":"value"];
 
-//empties
+//test empties
 print [];
 print [:];
 
-//recursive
+//test nested compounds
 print [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
 
+//not ready yet
+//var x = 31;
+//var y : int = 42;
 //var arr : [int] = [1, 2, 3, 42];
 //var dict : [string, int] = ["hello": 1, "world":2];
 
+//print x;
+//print x + y;
+//print arr;
+//print dict;
 
 //test asserts at the end of the file
 assert true, "This won't be seen";

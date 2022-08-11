@@ -574,7 +574,7 @@ static bool calcStaticBinaryArithmetic(Node** nodeHandle) {
 		return true;
 	}
 
-	//optimize by converting this node into a literal
+	//optimize by converting this node into a literal node
 	freeNode((*nodeHandle)->binary.left);
 	freeNode((*nodeHandle)->binary.right);
 
