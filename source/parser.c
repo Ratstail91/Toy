@@ -36,7 +36,6 @@ static void advance(Parser* parser) {
 
 	if (parser->current.type == TOKEN_ERROR) {
 		error(parser, parser->current, "Lexer error");
-		printf(parser->lexer->source);
 	}
 }
 
@@ -146,9 +145,18 @@ static Opcode compound(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 		//store the left
 		parsePrecedence(parser, &left, PREC_PRIMARY);
 
+		if (!left) { //error
+			return OP_EOF;
+		}
+
 		//detect a dictionary
 		if (match(parser, TOKEN_COLON)) {
 			parsePrecedence(parser, &right, PREC_PRIMARY);
+
+			if (!right) { //error
+				freeNode(left);
+				return OP_EOF;
+			}
 
 			//check we ARE defining a dictionary
 			if (array) {
