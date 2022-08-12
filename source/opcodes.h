@@ -25,7 +25,7 @@ typedef enum Opcode {
 	OP_SCOPE_BEGIN,
 	OP_SCOPE_END,
 
-	OP_TYPE_DECL,  //declare a compound type to be used
+	OP_TYPE_DECL,  //declare a type to be used
 	OP_VAR_DECL,   //stack: literal name, literal type (referenced by array index)
 	OP_VAR_ASSIGN, //stack: literal name, literal value
 

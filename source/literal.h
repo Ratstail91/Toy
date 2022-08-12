@@ -14,7 +14,7 @@ typedef enum {
 	LITERAL_DICTIONARY,
 	// LITERAL_FUNCTION,
 	LITERAL_IDENTIFIER,
-	// LITERAL_TYPE,
+	LITERAL_TYPE,
 } LiteralType;
 
 typedef struct {
@@ -39,7 +39,12 @@ typedef struct {
 			int hash;
         } identifier;
 
-		//TODO: type
+		struct {
+			unsigned char mask;
+			void* subtypes; //for nested types caused by compounds
+			int capacity;
+			int count;
+		} type;
 	} as;
 } Literal;
 
@@ -52,6 +57,7 @@ typedef struct {
 #define IS_DICTIONARY(value)				((value).type == LITERAL_DICTIONARY)
 #define IS_FUNCTION(value)					((value).type == LITERAL_FUNCTION)
 #define IS_IDENTIFIER(value)				((value).type == LITERAL_IDENTIFIER)
+#define IS_TYPE(value)						((value).type == LITERAL_TYPE)
 
 #define AS_BOOLEAN(value)					((value).as.boolean)
 #define AS_INTEGER(value)					((value).as.integer)
@@ -61,6 +67,7 @@ typedef struct {
 #define AS_DICTIONARY(value)				((LiteralDictionary*)((value).as.dictionary))
 // #define AS_FUNCTION(value)
 #define AS_IDENTIFIER(value)				((value).as.identifier.ptr)
+#define AS_TYPE(value)						((value).as.type)
 
 #define TO_NULL_LITERAL						((Literal){LITERAL_NULL,		{ .integer = 0 }})
 #define TO_BOOLEAN_LITERAL(value)			((Literal){LITERAL_BOOLEAN,		{ .boolean = value }})
@@ -71,8 +78,9 @@ typedef struct {
 #define TO_DICTIONARY_LITERAL(value)		((Literal){LITERAL_DICTIONARY,	{ .dictionary = value }})
 // #define TO_FUNCTION_LITERAL
 #define TO_IDENTIFIER_LITERAL(value)		_toIdentifierLiteral(value)
+#define TO_TYPE_LITERAL(value)				((Literal){ LITERAL_TYPE,		{ .type.mask = value, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
 
-#define MASK(x) 			(1 >> (x))
+#define MASK(x) 			(1 << (x))
 #define TYPE_CONST			0
 #define TYPE_BOOLEAN		1
 #define TYPE_INTEGER		2
@@ -98,14 +106,16 @@ void freeLiteral(Literal literal);
 
 #define IS_TRUTHY(x) _isTruthy(x)
 
-#define STRLEN(lit)		((lit).as.string.length)
-#define STRLEN_I(lit)	((lit).as.identifier.length)
-#define HASH_I(lit)		((lit).as.identifier.hash)
+#define STRLEN(lit)							((lit).as.string.length)
+#define STRLEN_I(lit)						((lit).as.identifier.length)
+#define HASH_I(lit)							((lit).as.identifier.hash)
+#define TYPE_PUSH_SUBTYPE(lit, submask)		_typePushSubtype(&(lit), submask)
 
 //BUGFIX: macros are not functions
 bool _isTruthy(Literal x);
 Literal _toStringLiteral(char* str);
 Literal _toIdentifierLiteral(char* str);
+void _typePushSubtype(Literal* lit, unsigned char submask);
 
 //utils
 char* copyString(char* original, int length);

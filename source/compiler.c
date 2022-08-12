@@ -221,13 +221,15 @@ void writeCompiler(Compiler* compiler, Node* node) {
 			fprintf(stderr, "[Internal] NODE_PAIR encountered in writeCompiler()");
 		break;
 
-		case NODE_VAR_TYPES:
-			//TODO: OP_TYPE_DECL
-		break;
+		// case NODE_VAR_TYPES:
+		// 	//TODO: OP_TYPE_DECL
 
-		case NODE_VAR_DECL:
-			//TODO: OP_VAR_DECL + OP_VAR_ASSIGN
-		break;
+		// 	//find the type declaration in the cache, or create it if it doesn't exist
+		// break;
+
+		// case NODE_VAR_DECL:
+		// 	//TODO: OP_VAR_DECL + OP_VAR_ASSIGN
+		// break;
 
 		//TODO: more
 	}

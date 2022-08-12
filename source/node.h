@@ -66,7 +66,7 @@ typedef struct NodePair {
 
 typedef struct NodeVarTypes {
 	NodeType type;
-	unsigned char mask;
+	unsigned char mask; //the type mask
 	Node* nodes;
 	int capacity;
 	int count;

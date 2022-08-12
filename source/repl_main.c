@@ -247,7 +247,38 @@ int main(int argc, const char* argv[]) {
 		return 0;
 	}
 
-	repl();
+	// repl();
+
+	// Literal t = TO_TYPE_LITERAL(MASK_INTEGER | MASK_FLOAT | MASK_CONST);
+	// printLiteral(t);
+	// printf("\n");
+
+	// Literal c = TO_TYPE_LITERAL( MASK_ARRAY );
+	// c.as.type.subtypes = ALLOCATE(Literal, 8);
+	// ((Literal*)(c.as.type.subtypes))[0] = TO_TYPE_LITERAL( MASK_INTEGER );
+	// c.as.type.capacity = 8;
+	// c.as.type.count = 1;
+	// printLiteral(c);
+	// printf("\n");
+
+	// freeLiteral(c);
+
+	// Literal d = TO_TYPE_LITERAL( MASK_DICTIONARY );
+	// d.as.type.subtypes = ALLOCATE(Literal, 8);
+	// ((Literal*)(d.as.type.subtypes))[0] = TO_TYPE_LITERAL( MASK_STRING );
+	// ((Literal*)(d.as.type.subtypes))[1] = TO_TYPE_LITERAL( MASK_INTEGER );
+	// d.as.type.capacity = 8;
+	// d.as.type.count = 2;
+	// printLiteral(d);
+	// printf("\n");
+
+	// freeLiteral(d);
+
+	Literal e = TO_TYPE_LITERAL( MASK_DICTIONARY | MASK_CONST );
+	TYPE_PUSH_SUBTYPE(e, MASK_STRING | MASK_CONST );
+	TYPE_PUSH_SUBTYPE(e, MASK_INTEGER);
+
+	printLiteral(e);
 
 	return 0;
 }

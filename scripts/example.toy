@@ -15,6 +15,19 @@ print -69;
 print -4.20;
 print 2 + (3 * 3);
 
+//test operators (integers)
+print 1 + 1;
+print 1 - 1;
+print 2 * 2;
+print 1 / 2;
+print 4 % 2;
+
+//test operators (floats)
+print 1.0 + 1.0;
+print 1.0 - 1.0;
+print 2.0 * 2.0;
+print 1.0 / 2.0;
+
 //test scopes
 {
 	print "This statement is within a scope.";
@@ -24,7 +37,7 @@ print 2 + (3 * 3);
 }
 print "Back to the outer scope.";
 
-//test compounds
+//test compounds, repeatedly
 print [1, 2, 3];
 print [4, 5];
 print ["key":"value"];

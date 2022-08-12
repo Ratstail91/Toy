@@ -827,7 +827,7 @@ static void varDecl(Parser* parser, Node** nodeHandle) {
 		expression(parser, &expressionNode);
 	}
 
-	//TODO: compile-time static type check
+	//TODO: compile-time static type check?
 
 	//finally
 	emitNodeVarDecl(nodeHandle, TO_IDENTIFIER_LITERAL(identifierToken.lexeme), typeNode, expressionNode);
