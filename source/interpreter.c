@@ -80,14 +80,14 @@ static char* readString(unsigned char* tb, int* count) {
 
 static void consumeByte(unsigned char byte, unsigned char* tb, int* count) {
 	if (byte != tb[*count]) {
-		printf("Failed to consume the correct byte\n");
+		printf("[internal] Failed to consume the correct byte\n");
 	}
 	*count += 1;
 }
 
 static void consumeShort(unsigned short bytes, unsigned char* tb, int* count) {
 	if (bytes != *(unsigned short*)(tb + *count)) {
-		printf("Failed to consume the correct bytes\n");
+		printf("[internal] Failed to consume the correct bytes\n");
 	}
 	*count += 2;
 }
@@ -190,10 +190,18 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 				return true;
 
 			case OP_DIVISION:
+				if (AS_INTEGER(rhs) == 0) {
+					printf("Can't divide by zero (error found in interpreter)");
+					return false;
+				}
 				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) / AS_INTEGER(rhs) ));
 				return true;
 
 			case OP_MODULO:
+				if (AS_INTEGER(rhs) == 0) {
+					printf("Can't modulo by zero (error found in interpreter)");
+					return false;
+				}
 				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) % AS_INTEGER(rhs) ));
 				return true;
 
@@ -224,6 +232,10 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 				return true;
 
 			case OP_DIVISION:
+				if (AS_FLOAT(rhs) == 0) {
+					printf("Can't divide by zero (error found in interpreter)");
+					return false;
+				}
 				pushLiteralArray(&interpreter->stack, TO_FLOAT_LITERAL( AS_FLOAT(lhs) / AS_FLOAT(rhs) ));
 				return true;
 

@@ -477,7 +477,7 @@ ParseRule* getRule(TokenType type) {
 }
 
 //constant folding
-static bool calcStaticBinaryArithmetic(Node** nodeHandle) {
+static bool calcStaticBinaryArithmetic(Parser* parser, Node** nodeHandle) {
 	switch((*nodeHandle)->binary.opcode) {
 		case OP_ADDITION:
 		case OP_SUBTRACTION:
@@ -492,11 +492,11 @@ static bool calcStaticBinaryArithmetic(Node** nodeHandle) {
 
 	//recurse to the left and right
 	if ((*nodeHandle)->binary.left->type == NODE_BINARY) {
-		calcStaticBinaryArithmetic(&(*nodeHandle)->binary.left);
+		calcStaticBinaryArithmetic(parser, &(*nodeHandle)->binary.left);
 	}
 
 	if ((*nodeHandle)->binary.right->type == NODE_BINARY) {
-		calcStaticBinaryArithmetic(&(*nodeHandle)->binary.right);
+		calcStaticBinaryArithmetic(parser, &(*nodeHandle)->binary.right);
 	}
 
 	//make sure left and right are both literals
@@ -534,10 +534,18 @@ static bool calcStaticBinaryArithmetic(Node** nodeHandle) {
 			break;
 
 			case OP_DIVISION:
+				if (AS_INTEGER(rhs) == 0) {
+					error(parser, parser->previous, "Can't divide by zero (error found in constant folding)");
+					return false;
+				}
 				result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) / AS_INTEGER(rhs) );
 			break;
 
 			case OP_MODULO:
+				if (AS_INTEGER(rhs) == 0) {
+					error(parser, parser->previous, "Can't modulo by zero (error found in constant folding)");
+					return false;
+				}
 				result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) % AS_INTEGER(rhs) );
 			break;
 
@@ -568,6 +576,10 @@ static bool calcStaticBinaryArithmetic(Node** nodeHandle) {
 			break;
 
 			case OP_DIVISION:
+				if (AS_FLOAT(rhs) == 0) {
+					error(parser, parser->previous, "Can't divide by zero (error found in constant folding)");
+					return false;
+				}
 				result = TO_FLOAT_LITERAL( AS_FLOAT(lhs) / AS_FLOAT(rhs) );
 			break;
 
@@ -620,7 +632,7 @@ static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule ru
 		const Opcode opcode = infixRule(parser, &rhsNode, canBeAssigned); //NOTE: infix rule must advance the parser
 		emitNodeBinary(nodeHandle, rhsNode, opcode);
 
-		if (command.optimize >= 1 && !calcStaticBinaryArithmetic(nodeHandle)) {
+		if (command.optimize >= 1 && !calcStaticBinaryArithmetic(parser, nodeHandle)) {
 			return;
 		}
 	}

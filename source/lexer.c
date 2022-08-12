@@ -69,7 +69,7 @@ static void eatWhitespace(Lexer* lexer) {
 				advance(lexer);
 				break;
 			}
-		break;
+		return;
 
 		default:
 			return;
