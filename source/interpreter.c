@@ -250,6 +250,34 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 	return false;
 }
 
+static bool execVarDecl(Interpreter* interpreter, bool lng) {
+	//read the index in the cache
+	int identifierIndex = 0;
+	int typeIndex = 0;
+
+	if (lng) {
+		identifierIndex = (int)readShort(interpreter->bytecode, &interpreter->count);
+		typeIndex = (int)readShort(interpreter->bytecode, &interpreter->count);
+	}
+	else {
+		identifierIndex = (int)readByte(interpreter->bytecode, &interpreter->count);
+		typeIndex = (int)readByte(interpreter->bytecode, &interpreter->count);
+	}
+
+	Literal identifier = interpreter->literalCache.literals[identifierIndex];
+	Literal type = interpreter->literalCache.literals[typeIndex];
+
+	if (!declareScopeVariable(interpreter->scope, identifier, type)) {
+		return false;
+	}
+
+	if (!setScopeVariable(interpreter->scope, identifier, popLiteralArray(&interpreter->stack) )) {
+		return false;
+	}
+
+	return true;
+}
+
 //the heart of toy
 static void execInterpreter(Interpreter* interpreter) {
 	unsigned char opcode = readByte(interpreter->bytecode, &interpreter->count);
@@ -305,6 +333,15 @@ static void execInterpreter(Interpreter* interpreter) {
 
 			case OP_SCOPE_END:
 				interpreter->scope = popScope(interpreter->scope);
+			break;
+
+			//TODO: type declarations
+
+			case OP_VAR_DECL:
+			case OP_VAR_DECL_LONG:
+				if (!execVarDecl(interpreter, opcode == OP_LITERAL_LONG)) {
+					return;
+				}
 			break;
 
 			default:
@@ -447,6 +484,43 @@ void runInterpreter(Interpreter* interpreter) {
 
 				//finally, push the dictionary proper
 				pushLiteralArray(&interpreter->literalCache, TO_DICTIONARY_LITERAL(dictionary));
+			}
+			break;
+
+			//TODO: functions
+
+			case LITERAL_IDENTIFIER: {
+				char* str = readString(interpreter->bytecode, &interpreter->count);
+
+				Literal identifier = TO_IDENTIFIER_LITERAL(str);
+
+				pushLiteralArray(&interpreter->literalCache, identifier);
+
+				if (command.verbose) {
+					printf("(identifier %s)\n", AS_IDENTIFIER(identifier));
+				}
+			}
+			break;
+
+			case LITERAL_TYPE: {
+				Literal typeLiteral;
+
+				// read the mask
+				unsigned char mask = readByte(interpreter->bytecode, &interpreter->count);
+
+				typeLiteral = TO_TYPE_LITERAL(mask);
+
+				AS_TYPE(typeLiteral).count = readShort(interpreter->bytecode, &interpreter->count);
+
+				//if it's got subtypes, grab them from the existing cache
+				if (AS_TYPE(typeLiteral).count > 0) {
+					AS_TYPE(typeLiteral).subtypes = ALLOCATE(Literal, AS_TYPE(typeLiteral).count);
+					for (int i = 0; i < AS_TYPE(typeLiteral).count; i++) {
+						//read each index
+						int index = readShort(interpreter->bytecode, &interpreter->count);
+						((Literal*)(AS_TYPE(typeLiteral).subtypes))[i] = interpreter->literalCache.literals[index];
+					}
+				}
 			}
 			break;
 		}

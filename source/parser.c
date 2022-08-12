@@ -801,25 +801,18 @@ static Literal readTypeToLiteral(Parser* parser) {
 	return literal;
 }
 
-static void readVarType(Parser* parser, Node** nodeHandle) {
-	//TODO: custom types with the "type" keyword
-
-	//get the type literal
-	Literal type = readTypeToLiteral(parser);
-
-	//generate the node
-	emitNodeVarTypes(nodeHandle, type);
-}
-
 static void varDecl(Parser* parser, Node** nodeHandle) {
 	//read the identifier
 	consume(parser, TOKEN_IDENTIFIER, "Expected identifier after var keyword");
 	Token identifierToken = parser->previous;
 
+	Literal identifier = TO_IDENTIFIER_LITERAL(identifierToken.lexeme);
+	identifier.as.identifier.length = identifierToken.length; //BUGFIX
+
 	//read the type, if present
-	Node* typeNode = NULL;
+	Literal typeLiteral;
 	if (match(parser, TOKEN_COLON)) {
-		readVarType(parser, &typeNode);
+		typeLiteral = readTypeToLiteral(parser);
 	}
 
 	//variable definition is an expression
@@ -830,8 +823,8 @@ static void varDecl(Parser* parser, Node** nodeHandle) {
 
 	//TODO: static type checking?
 
-	//finally
-	// emitNodeVarDecl(nodeHandle, TO_IDENTIFIER_LITERAL(identifierToken.lexeme), typeNode, expressionNode);
+	//declare it
+	emitNodeVarDecl(nodeHandle, identifier, typeLiteral, expressionNode);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of var declaration");
 }

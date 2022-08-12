@@ -88,7 +88,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 		}
 
 		//push the store to the cache, with instructions about how pack it
-		index = pushLiteralArray(&compiler->literalCache, TO_DICTIONARY_LITERAL(store));
+		index = pushLiteralArray(&compiler->literalCache, TO_DICTIONARY_LITERAL(store)); //pushed as an array, so below can recognize it
 	}
 	else if (node->compound.literalType == LITERAL_ARRAY) {
 		//ensure each literal value is in the cache, individually
@@ -128,7 +128,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 	return index;
 }
 
-static int writeLiteralTypeToCache(Compiler* compiler, Literal literal) {
+static int writeLiteralTypeToCache(LiteralArray* parent, Literal literal) {
 	int index = -1;
 
 	//for now, stored as an array
@@ -136,9 +136,9 @@ static int writeLiteralTypeToCache(Compiler* compiler, Literal literal) {
 	initLiteralArray(store);
 
 	//save the mask to the store
-	int maskIndex = findLiteralIndex(store, TO_INTEGER_LITERAL(AS_TYPE(literal).mask));
+	int maskIndex = findLiteralIndex(parent, TO_INTEGER_LITERAL(AS_TYPE(literal).mask));
 	if (maskIndex < 0) {
-		maskIndex = pushLiteralArray(store, TO_INTEGER_LITERAL(AS_TYPE(literal).mask));
+		maskIndex = pushLiteralArray(parent, TO_INTEGER_LITERAL(AS_TYPE(literal).mask));
 	}
 
 	pushLiteralArray(store, TO_INTEGER_LITERAL(maskIndex));
@@ -146,13 +146,13 @@ static int writeLiteralTypeToCache(Compiler* compiler, Literal literal) {
 	//if it's a compound type, recurse
 	if (AS_TYPE(literal).mask & (MASK_ARRAY|MASK_DICTIONARY)) {
 		for (int i = 0; i < AS_TYPE(literal).count; i++) {
-			int subIndex = writeLiteralTypeToCache(compiler, ((Literal*)(AS_TYPE(literal).subtypes))[i]);
+			int subIndex = writeLiteralTypeToCache(parent, ((Literal*)(AS_TYPE(literal).subtypes))[i]);
 			pushLiteralArray(store, TO_INTEGER_LITERAL(subIndex));
 		}
 	}
 
-	//push the store to the compiler
-	index = pushLiteralArray(&compiler->literalCache, TO_ARRAY_LITERAL(store));
+	//push the store to the parent
+	index = pushLiteralArray(parent, TO_ARRAY_LITERAL(store));
 
 	return index;
 }
@@ -250,8 +250,8 @@ void writeCompiler(Compiler* compiler, Node* node) {
 			fprintf(stderr, "[Internal] NODE_PAIR encountered in writeCompiler()");
 		break;
 
-		case NODE_VAR_TYPES: {
-			int index = writeLiteralTypeToCache(compiler, node->varTypes.typeLiteral);
+		case NODE_VAR_TYPES: { //TODO: the "type" keyword
+			int index = writeLiteralTypeToCache(&compiler->literalCache, node->varTypes.typeLiteral);
 
 			//embed the info into the bytecode
 			if (index >= 256) {
@@ -269,9 +269,39 @@ void writeCompiler(Compiler* compiler, Node* node) {
 		}
 		break;
 
-		// case NODE_VAR_DECL:
-		// 	//TODO: OP_VAR_DECL + OP_VAR_ASSIGN
-		// break;
+		case NODE_VAR_DECL: {
+			//first, embed the expression (leaves it on the stack)
+			writeCompiler(compiler, node->varDecl.expression);
+
+			//write each piece of the declaration to the bytecode
+			int identifierIndex = findLiteralIndex(&compiler->literalCache, node->varDecl.identifier);
+			if (identifierIndex < 0) {
+				identifierIndex = pushLiteralArray(&compiler->literalCache, node->varDecl.identifier);
+			}
+
+			int typeIndex = writeLiteralTypeToCache(&compiler->literalCache, node->varDecl.typeLiteral);
+
+			//embed the info into the bytecode
+			if (identifierIndex >= 256 || typeIndex >= 256) {
+				//push a "long" declaration
+				compiler->bytecode[compiler->count++] = OP_VAR_DECL_LONG; //1 byte
+
+				*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)identifierIndex; //2 bytes
+				compiler->count += sizeof(unsigned short);
+
+				*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)typeIndex; //2 bytes
+				compiler->count += sizeof(unsigned short);
+			}
+			else {
+				//push a declaration
+				compiler->bytecode[compiler->count++] = OP_VAR_DECL; //1 byte
+				compiler->bytecode[compiler->count++] = (unsigned char)identifierIndex; //1 byte
+				compiler->bytecode[compiler->count++] = (unsigned char)typeIndex; //1 byte
+			}
+		}
+		break;
+
+		//TODO: OP_VAR_ASSIGN
 	}
 }
 
@@ -425,6 +455,19 @@ unsigned char* collateCompiler(Compiler* compiler, int* size) {
 				}
 
 				freeLiteralArray(ptr);
+			}
+			break;
+
+			case LITERAL_IDENTIFIER: {
+				emitByte(&collation, &capacity, &count, LITERAL_IDENTIFIER);
+
+				Literal identifier = compiler->literalCache.literals[i];
+
+				for (int c = 0; c < STRLEN_I(identifier); c++) {
+					emitByte(&collation, &capacity, &count, AS_IDENTIFIER(identifier)[c]);
+				}
+
+				emitByte(&collation, &capacity, &count, '\0'); //terminate the string
 			}
 			break;
 

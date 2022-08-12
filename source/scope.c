@@ -44,7 +44,10 @@ Scope* popScope(Scope* scope) {
 }
 
 //returns false if error
-bool declareScopeVariable(Scope* scope, Literal key) {
+bool declareScopeVariable(Scope* scope, Literal key, Literal type) {
+	//store the type, for later checking on assignment
+	//TODO
+
 	//don't redefine a variable within this scope
 	if (existsLiteralDictionary(&scope->variables, key)) {
 		return false;

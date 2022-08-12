@@ -1,1 +1,1 @@
-var a : [string const, int] = 42;
+var name : [string const, int] = ["foo" : 42];

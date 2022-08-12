@@ -105,6 +105,19 @@ void runBinary(unsigned char* tb, size_t size) {
 	Interpreter interpreter;
 	initInterpreter(&interpreter, tb, size);
 	runInterpreter(&interpreter);
+
+	//DEBUG
+	Literal lit;
+
+	printf("DEBUG> ");
+	if (getScopeVariable(interpreter.scope, TO_IDENTIFIER_LITERAL("name"), &lit)) {
+		printLiteral(lit);
+	}
+	else {
+		printf("Failed");
+	}
+	printf("\n");
+
 	freeInterpreter(&interpreter);
 }
 

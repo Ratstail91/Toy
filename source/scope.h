@@ -12,7 +12,7 @@ Scope* pushScope(Scope* scope);
 Scope* popScope(Scope* scope);
 
 //returns false if error
-bool declareScopeVariable(Scope* scope, Literal key);
+bool declareScopeVariable(Scope* scope, Literal key, Literal type);
 
 //return false if undefined
 bool setScopeVariable(Scope* scope, Literal key, Literal value);
