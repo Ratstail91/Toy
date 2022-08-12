@@ -763,12 +763,20 @@ static Literal readTypeToLiteral(Parser* parser) {
 				//dictionary
 				Literal* dict = TYPE_PUSH_SUBTYPE(&literal, MASK_DICTIONARY);
 
+				AS_TYPE(*dict).subtypes = ALLOCATE(Literal, 2);
+				AS_TYPE(*dict).capacity = 2;
+				AS_TYPE(*dict).count = 2;
+
 				((Literal*)(AS_TYPE(*dict).subtypes))[0] = l;
 				((Literal*)(AS_TYPE(*dict).subtypes))[1] = r;
 			}
 			else {
 				//array
 				Literal* arr = TYPE_PUSH_SUBTYPE(&literal, MASK_ARRAY);
+
+				AS_TYPE(*arr).subtypes = ALLOCATE(Literal, 1);
+				AS_TYPE(*arr).capacity = 1;
+				AS_TYPE(*arr).count = 1;
 
 				//append the "l" literal
 				((Literal*)(AS_TYPE(*arr).subtypes))[0] = l;
