@@ -66,16 +66,13 @@ typedef struct NodePair {
 
 typedef struct NodeVarTypes {
 	NodeType type;
-	unsigned char mask; //the type mask
-	Node* nodes;
-	int capacity;
-	int count;
+	Literal typeLiteral;
 } NodeVarTypes;
 
 typedef struct NodeVarDecl {
 	NodeType type;
 	Literal identifier;
-	Node* varType;
+	Literal typeLiteral;
 	Node* expression;
 } NodeVarDecl;
 
@@ -100,8 +97,8 @@ void emitNodeGrouping(Node** nodeHandle);
 void emitNodeBlock(Node** nodeHandle);
 void emitNodeCompound(Node** nodeHandle, LiteralType literalType);
 void emitNodePair(Node** nodeHandle, Node* left, Node* right);
-void emitNodeVarTypes(Node** nodeHandle, unsigned char mask);
-void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Node* varType, Node* expression);
+void emitNodeVarTypes(Node** nodeHandle, Literal literal);
+void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal type, Node* expression);
 
 void printNode(Node* node);
 

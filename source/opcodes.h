@@ -25,9 +25,11 @@ typedef enum Opcode {
 	OP_SCOPE_BEGIN,
 	OP_SCOPE_END,
 
-	OP_TYPE_DECL,  //declare a type to be used
-	OP_VAR_DECL,   //stack: literal name, literal type (referenced by array index)
-	OP_VAR_ASSIGN, //stack: literal name, literal value
+	OP_TYPE_DECL,		//declare a type to be used (as a literal)
+	OP_TYPE_DECL_LONG,	//declare a type to be used (as a long literal)
+
+	// OP_VAR_DECL,   //stack: literal name, literal type (referenced by array index)
+	// OP_VAR_ASSIGN, //stack: literal name, literal value
 
 	//meta
 	OP_SECTION_END,

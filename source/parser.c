@@ -731,83 +731,76 @@ static void statement(Parser* parser, Node* node) {
 }
 
 //declarations and definitions
-static void readVarType(Parser* parser, Node** nodeHandle) {
-	//TODO: custom types with the "type" keyword
+static Literal readTypeToLiteral(Parser* parser) {
 	advance(parser);
 
-	unsigned char typeMask = 0;
-
-	Node* left = NULL;
-	Node* right = NULL;
+	Literal literal = TO_TYPE_LITERAL(MASK_ANY);
 
 	switch(parser->previous.type) {
 		case TOKEN_BOOLEAN:
-			typeMask |= MASK_BOOLEAN;
+			AS_TYPE(literal).mask |= MASK_BOOLEAN;
 		break;
 
 		case TOKEN_INTEGER:
-			typeMask |= MASK_INTEGER;
+			AS_TYPE(literal).mask |= MASK_INTEGER;
 		break;
 
 		case TOKEN_FLOAT:
-			typeMask |= MASK_FLOAT;
+			AS_TYPE(literal).mask |= MASK_FLOAT;
 		break;
 
 		case TOKEN_STRING:
-			typeMask |= MASK_STRING;
+			AS_TYPE(literal).mask |= MASK_STRING;
 		break;
 
 		//array, dictionary - read the sub-types
-		case TOKEN_BRACKET_LEFT:
-			//at least 1 type required
-			readVarType(parser, &left);
+		case TOKEN_BRACKET_LEFT: {
+			Literal l = readTypeToLiteral(parser);
 
 			if (match(parser, TOKEN_COMMA)) {
-				//if there's 2 types, it's a dictionary
-				readVarType(parser, &right);
-				typeMask |= MASK_DICTIONARY;
+				Literal r = readTypeToLiteral(parser);
+
+				//dictionary
+				Literal* dict = TYPE_PUSH_SUBTYPE(&literal, MASK_DICTIONARY);
+
+				((Literal*)(AS_TYPE(*dict).subtypes))[0] = l;
+				((Literal*)(AS_TYPE(*dict).subtypes))[1] = r;
 			}
 			else {
-				//else it's just an array
-				typeMask |= MASK_ARRAY;
-			}
-			consume(parser, TOKEN_BRACKET_RIGHT, "Expected ']' at end of type definition");
-		break;
+				//array
+				Literal* arr = TYPE_PUSH_SUBTYPE(&literal, MASK_ARRAY);
 
-		case TOKEN_ANY:
-			typeMask |= MASK_ANY;
+				//append the "l" literal
+				((Literal*)(AS_TYPE(*arr).subtypes))[0] = l;
+			}
+
+			consume(parser, TOKEN_BRACKET_RIGHT, "Expected ']' at end of type definition");
+		}
 		break;
 
 		//TODO: function
 
 		default:
-			error(parser, parser->previous, "Bad type");
-			return;
+			error(parser, parser->previous, "Bad type signature");
+			return TO_NULL_LITERAL;
 	}
 
 	//const follows the type
 	if (match(parser, TOKEN_CONST)) {
-		typeMask |= MASK_CONST;
+		AS_TYPE(literal).mask |= MASK_CONST;
 	}
+
+	return literal;
+}
+
+static void readVarType(Parser* parser, Node** nodeHandle) {
+	//TODO: custom types with the "type" keyword
+
+	//get the type literal
+	Literal type = readTypeToLiteral(parser);
 
 	//generate the node
-	emitNodeVarTypes(nodeHandle, typeMask);
-
-	//check for sub-nodes
-	if (left) {
-		int oldCapacity = (*nodeHandle)->varTypes.capacity;
-
-		(*nodeHandle)->varTypes.capacity = GROW_CAPACITY(oldCapacity);
-		(*nodeHandle)->varTypes.nodes = GROW_ARRAY(Node, (*nodeHandle)->varTypes.nodes, oldCapacity, (*nodeHandle)->varTypes.capacity);
-
-		//push left to the array
-		*((*nodeHandle)->varTypes.nodes) = *left;
-
-		//append the other one too
-		if (right) {
-			*((*nodeHandle)->varTypes.nodes + 1) = *right;
-		}
-	}
+	emitNodeVarTypes(nodeHandle, type);
 }
 
 static void varDecl(Parser* parser, Node** nodeHandle) {
@@ -827,10 +820,10 @@ static void varDecl(Parser* parser, Node** nodeHandle) {
 		expression(parser, &expressionNode);
 	}
 
-	//TODO: compile-time static type check?
+	//TODO: static type checking?
 
 	//finally
-	emitNodeVarDecl(nodeHandle, TO_IDENTIFIER_LITERAL(identifierToken.lexeme), typeNode, expressionNode);
+	// emitNodeVarDecl(nodeHandle, TO_IDENTIFIER_LITERAL(identifierToken.lexeme), typeNode, expressionNode);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of var declaration");
 }

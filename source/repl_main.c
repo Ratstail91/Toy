@@ -247,27 +247,34 @@ int main(int argc, const char* argv[]) {
 		return 0;
 	}
 
-	// repl();
+	repl();
 
-	//testing the types, improving on them as I go
-	Literal root = TO_TYPE_LITERAL( MASK_ARRAY | MASK_DICTIONARY );
-	Literal* arr = TYPE_PUSH_SUBTYPE(&root, MASK_ARRAY );
-	Literal* dict = TYPE_PUSH_SUBTYPE(&root, MASK_DICTIONARY );
+	// //testing the types, improving on them as I go
+	// Literal root = TO_TYPE_LITERAL( MASK_ARRAY | MASK_DICTIONARY | MASK_INTEGER | MASK_FLOAT );
+	// Literal* arr = TYPE_PUSH_SUBTYPE(&root, MASK_ARRAY );
+	// Literal* dict = TYPE_PUSH_SUBTYPE(&root, MASK_DICTIONARY );
 
-	TYPE_PUSH_SUBTYPE(arr, MASK_INTEGER );
-	TYPE_PUSH_SUBTYPE(arr, MASK_FLOAT );
-	TYPE_PUSH_SUBTYPE(arr, MASK_INTEGER | MASK_FLOAT );
+	// TYPE_PUSH_SUBTYPE(arr, MASK_INTEGER );
+	// TYPE_PUSH_SUBTYPE(arr, MASK_FLOAT );
+	// TYPE_PUSH_SUBTYPE(arr, MASK_INTEGER | MASK_FLOAT );
 
-	TYPE_PUSH_SUBTYPE(dict, MASK_STRING | MASK_CONST );
-	TYPE_PUSH_SUBTYPE(dict, MASK_BOOLEAN );
+	// TYPE_PUSH_SUBTYPE(dict, MASK_STRING | MASK_CONST );
+	// TYPE_PUSH_SUBTYPE(dict, MASK_FLOAT );
 
-	TYPE_PUSH_SUBTYPE(dict, MASK_STRING | MASK_CONST );
-	TYPE_PUSH_SUBTYPE(dict, MASK_INTEGER );
+	// TYPE_PUSH_SUBTYPE(dict, MASK_STRING | MASK_CONST );
+	// TYPE_PUSH_SUBTYPE(dict, MASK_INTEGER );
 
-	printLiteral(root);
-	printf("\n");
+	// TYPE_PUSH_SUBTYPE(dict, MASK_STRING | MASK_CONST );
+	// TYPE_PUSH_SUBTYPE(dict, MASK_INTEGER | MASK_FLOAT );
 
-	//output: <[int] | [float] | [int | float] | [string const:bool] | [string const:int]>
+	// printLiteral(root);
+	// printf("\n");
+
+	// Literal any = TO_TYPE_LITERAL(MASK_ANY);
+
+	// printLiteral(any);
+
+	//output: <int | float | [int] | [float] | [int | float] | [string const:float] | [string const:int] | [string const:int | float]>
 
 	return 0;
 }

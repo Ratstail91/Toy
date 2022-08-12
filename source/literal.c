@@ -210,6 +210,12 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 			}
 
 			for (int i = 1; i < 8; i ++) { //0th bit is const
+				//zero mask = any type, anys can't be const
+				if (AS_TYPE(literal).mask == 0) {
+					printToBuffer("any");
+					break;
+				}
+
 				if (AS_TYPE(literal).mask & MASK(i)) {
 					//pretty print
 					if (iterations++ > 0) {

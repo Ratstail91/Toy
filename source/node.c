@@ -53,15 +53,12 @@ void freeNode(Node* node) {
 		break;
 
 		case NODE_VAR_TYPES:
-			for (int i = 0; i < node->varTypes.count; i++) {
-				freeNode(node->varTypes.nodes + 1);
-			}
-			FREE_ARRAY(Node, node->varTypes.nodes, node->varTypes.capacity);
+			freeLiteral(node->varTypes.typeLiteral);
 		break;
 
 		case NODE_VAR_DECL:
 			freeLiteral(node->varDecl.identifier);
-			freeNode(node->varDecl.varType);
+			freeLiteral(node->varDecl.typeLiteral);
 			freeNode(node->varDecl.expression);
 		break;
 	}
@@ -137,24 +134,21 @@ void emitNodePair(Node** nodeHandle, Node* left, Node* right) {
 	*nodeHandle = tmp;
 }
 
-void emitNodeVarTypes(Node** nodeHandle, unsigned char mask) {
+void emitNodeVarTypes(Node** nodeHandle, Literal literal) {
 	Node* tmp = ALLOCATE(Node, 1);
 
 	tmp->type = NODE_VAR_TYPES;
-	tmp->varTypes.mask = mask;
-	tmp->varTypes.nodes = NULL;
-	tmp->varTypes.capacity = 0;
-	tmp->varTypes.count = 0;
+	tmp->varTypes.typeLiteral = literal;
 
 	*nodeHandle = tmp;
 }
 
-void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Node* varType, Node* expression) {
+void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal type, Node* expression) {
 	Node* tmp = ALLOCATE(Node, 1);
 
 	tmp->type = NODE_VAR_DECL;
 	tmp->varDecl.identifier = identifier;
-	tmp->varDecl.varType = varType;
+	tmp->varDecl.typeLiteral = type;
 	tmp->varDecl.expression = expression;
 
 	*nodeHandle = tmp;
@@ -223,20 +217,14 @@ void printNode(Node* node) {
 		break;
 
 		case NODE_VAR_TYPES:
-			printf("type[\n");
-
-			for (int i = 0; i < node->varTypes.count; i++) {
-				printNode(&(node->varTypes.nodes[i]));
-			}
-
-			printf("]\n");
+			printLiteral(node->varTypes.typeLiteral);
 		break;
 
 		case NODE_VAR_DECL:
 			printf("vardecl(");
 			printLiteral(node->varDecl.identifier);
 			printf("; ");
-			printNode(node->varDecl.varType);
+			printLiteral(node->varDecl.typeLiteral);
 			printf("; ");
 			printNode(node->varDecl.expression);
 			printf(")");
