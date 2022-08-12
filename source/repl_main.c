@@ -249,36 +249,25 @@ int main(int argc, const char* argv[]) {
 
 	// repl();
 
-	// Literal t = TO_TYPE_LITERAL(MASK_INTEGER | MASK_FLOAT | MASK_CONST);
-	// printLiteral(t);
-	// printf("\n");
+	//testing the types, improving on them as I go
+	Literal root = TO_TYPE_LITERAL( MASK_ARRAY | MASK_DICTIONARY );
+	Literal* arr = TYPE_PUSH_SUBTYPE(&root, MASK_ARRAY );
+	Literal* dict = TYPE_PUSH_SUBTYPE(&root, MASK_DICTIONARY );
 
-	// Literal c = TO_TYPE_LITERAL( MASK_ARRAY );
-	// c.as.type.subtypes = ALLOCATE(Literal, 8);
-	// ((Literal*)(c.as.type.subtypes))[0] = TO_TYPE_LITERAL( MASK_INTEGER );
-	// c.as.type.capacity = 8;
-	// c.as.type.count = 1;
-	// printLiteral(c);
-	// printf("\n");
+	TYPE_PUSH_SUBTYPE(arr, MASK_INTEGER );
+	TYPE_PUSH_SUBTYPE(arr, MASK_FLOAT );
+	TYPE_PUSH_SUBTYPE(arr, MASK_INTEGER | MASK_FLOAT );
 
-	// freeLiteral(c);
+	TYPE_PUSH_SUBTYPE(dict, MASK_STRING | MASK_CONST );
+	TYPE_PUSH_SUBTYPE(dict, MASK_BOOLEAN );
 
-	// Literal d = TO_TYPE_LITERAL( MASK_DICTIONARY );
-	// d.as.type.subtypes = ALLOCATE(Literal, 8);
-	// ((Literal*)(d.as.type.subtypes))[0] = TO_TYPE_LITERAL( MASK_STRING );
-	// ((Literal*)(d.as.type.subtypes))[1] = TO_TYPE_LITERAL( MASK_INTEGER );
-	// d.as.type.capacity = 8;
-	// d.as.type.count = 2;
-	// printLiteral(d);
-	// printf("\n");
+	TYPE_PUSH_SUBTYPE(dict, MASK_STRING | MASK_CONST );
+	TYPE_PUSH_SUBTYPE(dict, MASK_INTEGER );
 
-	// freeLiteral(d);
+	printLiteral(root);
+	printf("\n");
 
-	Literal e = TO_TYPE_LITERAL( MASK_DICTIONARY | MASK_CONST );
-	TYPE_PUSH_SUBTYPE(e, MASK_STRING | MASK_CONST );
-	TYPE_PUSH_SUBTYPE(e, MASK_INTEGER);
-
-	printLiteral(e);
+	//output: <[int] | [float] | [int | float] | [string const:bool] | [string const:int]>
 
 	return 0;
 }

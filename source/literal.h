@@ -109,13 +109,13 @@ void freeLiteral(Literal literal);
 #define STRLEN(lit)							((lit).as.string.length)
 #define STRLEN_I(lit)						((lit).as.identifier.length)
 #define HASH_I(lit)							((lit).as.identifier.hash)
-#define TYPE_PUSH_SUBTYPE(lit, submask)		_typePushSubtype(&(lit), submask)
+#define TYPE_PUSH_SUBTYPE(lit, submask)		_typePushSubtype(lit, submask)
 
 //BUGFIX: macros are not functions
 bool _isTruthy(Literal x);
 Literal _toStringLiteral(char* str);
 Literal _toIdentifierLiteral(char* str);
-void _typePushSubtype(Literal* lit, unsigned char submask);
+Literal* _typePushSubtype(Literal* lit, unsigned char submask);
 
 //utils
 char* copyString(char* original, int length);
