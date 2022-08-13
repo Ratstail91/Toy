@@ -88,7 +88,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 		}
 
 		//push the store to the cache, with instructions about how pack it
-		index = pushLiteralArray(&compiler->literalCache, TO_ARRAY_LITERAL(store)); //WARNING: pushed as a dictionary, so below can recognize it
+		index = pushLiteralArray(&compiler->literalCache, TO_DICTIONARY_LITERAL(store)); //WARNING: pushed as a dictionary, so below can recognize it
 	}
 	else if (node->compound.literalType == LITERAL_ARRAY) {
 		//ensure each literal value is in the cache, individually
@@ -439,6 +439,7 @@ unsigned char* collateCompiler(Compiler* compiler, int* size) {
 				}
 
 				freeLiteralArray(ptr);
+				FREE(LiteralArray, ptr);
 			}
 			break;
 
