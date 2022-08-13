@@ -105,42 +105,6 @@ void runBinary(unsigned char* tb, size_t size) {
 	Interpreter interpreter;
 	initInterpreter(&interpreter, tb, size);
 	runInterpreter(&interpreter);
-
-	// //DEBUG
-	// {
-	// 	printf("testing name\n");
-	// 	Literal lit;
-
-	// 	printf("VALUE: ");
-	// 	if (getScopeVariable(interpreter.scope, TO_IDENTIFIER_LITERAL("name"), &lit)) {
-	// 		printLiteral(lit);
-
-	// 		printf("\nTYPE: ");
-	// 		printLiteral(getLiteralDictionary(&interpreter.scope->types, TO_IDENTIFIER_LITERAL("name")));
-	// 	}
-	// 	else {
-	// 		printf("Failed");
-	// 	}
-	// 	printf("\n\n");
-	// }
-
-	// 	{
-	// 	printf("testing something\n");
-	// 	Literal lit;
-
-	// 	printf("VALUE: ");
-	// 	if (getScopeVariable(interpreter.scope, TO_IDENTIFIER_LITERAL("something"), &lit)) {
-	// 		printLiteral(lit);
-
-	// 		printf("\nTYPE: ");
-	// 		printLiteral(getLiteralDictionary(&interpreter.scope->types, TO_IDENTIFIER_LITERAL("something")));
-	// 	}
-	// 	else {
-	// 		printf("Failed");
-	// 	}
-	// 	printf("\n\n");
-	// }
-
 	freeInterpreter(&interpreter);
 }
 
