@@ -67,3 +67,4 @@ var dict : [string, int] = ["hello": 1, "world":2];
 assert true, "This won't be seen";
 assert false, "This is a failed assert, and will end execution";
 
+print "This will not be printed because of the above assert";
