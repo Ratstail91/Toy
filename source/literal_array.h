@@ -3,9 +3,9 @@
 #include "literal.h"
 
 typedef struct LiteralArray {
+	Literal* literals;
 	int capacity;
 	int count;
-	Literal* literals;
 } LiteralArray;
 
 void initLiteralArray(LiteralArray* array);

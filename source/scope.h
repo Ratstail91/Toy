@@ -4,6 +4,7 @@
 
 typedef struct Scope {
 	LiteralDictionary variables; //only allow identifiers as the keys
+	LiteralDictionary types; //the types, indexed by identifiers
 	struct Scope* ancestor;
 	int references; //how many scopes point here
 } Scope;

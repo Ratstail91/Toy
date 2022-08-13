@@ -16,6 +16,7 @@ static void freeAncestorChain(Scope* scope) {
 	}
 
 	freeLiteralDictionary(&scope->variables);
+	freeLiteralDictionary(&scope->types);
 
 	FREE(Scope, scope);
 }
@@ -25,6 +26,7 @@ Scope* pushScope(Scope* ancestor) {
 	Scope* scope = ALLOCATE(Scope, 1);
 	scope->ancestor = ancestor;
 	initLiteralDictionary(&scope->variables);
+	initLiteralDictionary(&scope->types);
 
 	//tick up all scope reference counts
 	scope->references = 0;
@@ -46,7 +48,7 @@ Scope* popScope(Scope* scope) {
 //returns false if error
 bool declareScopeVariable(Scope* scope, Literal key, Literal type) {
 	//store the type, for later checking on assignment
-	//TODO
+	setLiteralDictionary(&scope->types, key, type);
 
 	//don't redefine a variable within this scope
 	if (existsLiteralDictionary(&scope->variables, key)) {
@@ -63,6 +65,8 @@ bool setScopeVariable(Scope* scope, Literal key, Literal value) {
 	if (scope == NULL) {
 		return false;
 	}
+
+	//TODO: type checking
 
 	//if it's not in this scope, keep searching up the chain
 	if (!existsLiteralDictionary(&scope->variables, key)) {

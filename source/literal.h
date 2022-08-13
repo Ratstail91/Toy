@@ -77,7 +77,7 @@ typedef struct {
 #define TO_ARRAY_LITERAL(value)				((Literal){LITERAL_ARRAY,		{ .array = value }})
 #define TO_DICTIONARY_LITERAL(value)		((Literal){LITERAL_DICTIONARY,	{ .dictionary = value }})
 // #define TO_FUNCTION_LITERAL
-#define TO_IDENTIFIER_LITERAL(value)		_toIdentifierLiteral(value)
+#define TO_IDENTIFIER_LITERAL(value)		_toIdentifierLiteral(value, strlen(value))
 #define TO_TYPE_LITERAL(value)				((Literal){ LITERAL_TYPE,		{ .type.mask = value, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
 
 #define MASK(x) 			(1 << (x))
@@ -114,7 +114,7 @@ void freeLiteral(Literal literal);
 //BUGFIX: macros are not functions
 bool _isTruthy(Literal x);
 Literal _toStringLiteral(char* str);
-Literal _toIdentifierLiteral(char* str);
+Literal _toIdentifierLiteral(char* str, int length);
 Literal* _typePushSubtype(Literal* lit, unsigned char submask);
 
 //utils

@@ -80,14 +80,14 @@ static char* readString(unsigned char* tb, int* count) {
 
 static void consumeByte(unsigned char byte, unsigned char* tb, int* count) {
 	if (byte != tb[*count]) {
-		printf("[internal] Failed to consume the correct byte\n");
+		printf("[internal] Failed to consume the correct byte  (expected %u, found %u)\n", byte, tb[*count]);
 	}
 	*count += 1;
 }
 
 static void consumeShort(unsigned short bytes, unsigned char* tb, int* count) {
 	if (bytes != *(unsigned short*)(tb + *count)) {
-		printf("[internal] Failed to consume the correct bytes\n");
+		printf("[internal] Failed to consume the correct bytes (expected %u, found %u)\n", bytes, *(unsigned short*)(tb + *count));
 	}
 	*count += 2;
 }
@@ -497,7 +497,7 @@ void runInterpreter(Interpreter* interpreter) {
 				pushLiteralArray(&interpreter->literalCache, identifier);
 
 				if (command.verbose) {
-					printf("(identifier %s)\n", AS_IDENTIFIER(identifier));
+					printf("(identifier %s (%d))\n", AS_IDENTIFIER(identifier), identifier.as.identifier.hash);
 				}
 			}
 			break;
@@ -505,21 +505,35 @@ void runInterpreter(Interpreter* interpreter) {
 			case LITERAL_TYPE: {
 				Literal typeLiteral;
 
-				// read the mask
-				unsigned char mask = readByte(interpreter->bytecode, &interpreter->count);
+				//read the array count (subtract 1, because mask is always present)
+				unsigned short count = readShort(interpreter->bytecode, &interpreter->count) - 1;
 
+				// read the mask
+				unsigned char mask = readShort(interpreter->bytecode, &interpreter->count);
+
+				//create the literal
 				typeLiteral = TO_TYPE_LITERAL(mask);
 
-				AS_TYPE(typeLiteral).count = readShort(interpreter->bytecode, &interpreter->count);
-
 				//if it's got subtypes, grab them from the existing cache
-				if (AS_TYPE(typeLiteral).count > 0) {
-					AS_TYPE(typeLiteral).subtypes = ALLOCATE(Literal, AS_TYPE(typeLiteral).count);
+				if (count > 0) {
+					AS_TYPE(typeLiteral).subtypes = ALLOCATE(Literal, count);
+					AS_TYPE(typeLiteral).capacity = count;
+					AS_TYPE(typeLiteral).count = count;
+
 					for (int i = 0; i < AS_TYPE(typeLiteral).count; i++) {
 						//read each index
 						int index = readShort(interpreter->bytecode, &interpreter->count);
 						((Literal*)(AS_TYPE(typeLiteral).subtypes))[i] = interpreter->literalCache.literals[index];
 					}
+				}
+
+				//save the type
+				pushLiteralArray(&interpreter->literalCache, typeLiteral);
+
+				if (command.verbose) {
+					printf("(type ");
+					printLiteral(typeLiteral);
+					printf(")\n");
 				}
 			}
 			break;

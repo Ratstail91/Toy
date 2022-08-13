@@ -106,17 +106,40 @@ void runBinary(unsigned char* tb, size_t size) {
 	initInterpreter(&interpreter, tb, size);
 	runInterpreter(&interpreter);
 
-	//DEBUG
-	Literal lit;
+	// //DEBUG
+	// {
+	// 	printf("testing name\n");
+	// 	Literal lit;
 
-	printf("DEBUG> ");
-	if (getScopeVariable(interpreter.scope, TO_IDENTIFIER_LITERAL("name"), &lit)) {
-		printLiteral(lit);
-	}
-	else {
-		printf("Failed");
-	}
-	printf("\n");
+	// 	printf("VALUE: ");
+	// 	if (getScopeVariable(interpreter.scope, TO_IDENTIFIER_LITERAL("name"), &lit)) {
+	// 		printLiteral(lit);
+
+	// 		printf("\nTYPE: ");
+	// 		printLiteral(getLiteralDictionary(&interpreter.scope->types, TO_IDENTIFIER_LITERAL("name")));
+	// 	}
+	// 	else {
+	// 		printf("Failed");
+	// 	}
+	// 	printf("\n\n");
+	// }
+
+	// 	{
+	// 	printf("testing something\n");
+	// 	Literal lit;
+
+	// 	printf("VALUE: ");
+	// 	if (getScopeVariable(interpreter.scope, TO_IDENTIFIER_LITERAL("something"), &lit)) {
+	// 		printLiteral(lit);
+
+	// 		printf("\nTYPE: ");
+	// 		printLiteral(getLiteralDictionary(&interpreter.scope->types, TO_IDENTIFIER_LITERAL("something")));
+	// 	}
+	// 	else {
+	// 		printf("Failed");
+	// 	}
+	// 	printf("\n\n");
+	// }
 
 	freeInterpreter(&interpreter);
 }
@@ -261,33 +284,6 @@ int main(int argc, const char* argv[]) {
 	}
 
 	repl();
-
-	// //testing the types, improving on them as I go
-	// Literal root = TO_TYPE_LITERAL( MASK_ARRAY | MASK_DICTIONARY | MASK_INTEGER | MASK_FLOAT );
-	// Literal* arr = TYPE_PUSH_SUBTYPE(&root, MASK_ARRAY );
-	// Literal* dict = TYPE_PUSH_SUBTYPE(&root, MASK_DICTIONARY );
-
-	// TYPE_PUSH_SUBTYPE(arr, MASK_INTEGER );
-	// TYPE_PUSH_SUBTYPE(arr, MASK_FLOAT );
-	// TYPE_PUSH_SUBTYPE(arr, MASK_INTEGER | MASK_FLOAT );
-
-	// TYPE_PUSH_SUBTYPE(dict, MASK_STRING | MASK_CONST );
-	// TYPE_PUSH_SUBTYPE(dict, MASK_FLOAT );
-
-	// TYPE_PUSH_SUBTYPE(dict, MASK_STRING | MASK_CONST );
-	// TYPE_PUSH_SUBTYPE(dict, MASK_INTEGER );
-
-	// TYPE_PUSH_SUBTYPE(dict, MASK_STRING | MASK_CONST );
-	// TYPE_PUSH_SUBTYPE(dict, MASK_INTEGER | MASK_FLOAT );
-
-	// printLiteral(root);
-	// printf("\n");
-
-	// Literal any = TO_TYPE_LITERAL(MASK_ANY);
-
-	// printLiteral(any);
-
-	//output: <int | float | [int] | [float] | [int | float] | [string const:float] | [string const:int] | [string const:int | float]>
 
 	return 0;
 }

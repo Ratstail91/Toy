@@ -107,6 +107,21 @@ static bool setEntryArray(_entry** dictionaryHandle, int* capacityPtr, int count
 
 	_entry* entry = getEntryArray(*dictionaryHandle, *capacityPtr, key, hash, false);
 
+	//if it's a string or an identifier, make a local copy
+	if (IS_STRING(key)) {
+		key = TO_STRING_LITERAL(copyString(AS_STRING(key), STRLEN(key)));
+	}
+	if (IS_IDENTIFIER(key)) {
+		key = TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(key), STRLEN_I(key)));
+	}
+
+	if (IS_STRING(value)) {
+		value = TO_STRING_LITERAL(copyString(AS_STRING(value), STRLEN(value)));
+	}
+	if (IS_IDENTIFIER(value)) {
+		value = TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(value), STRLEN_I(value)));
+	}
+
 	//true = count increase
 	if (IS_NULL(entry->key)) {
 		setEntryValues(entry, key, value);

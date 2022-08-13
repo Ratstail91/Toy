@@ -88,7 +88,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 		}
 
 		//push the store to the cache, with instructions about how pack it
-		index = pushLiteralArray(&compiler->literalCache, TO_DICTIONARY_LITERAL(store)); //pushed as an array, so below can recognize it
+		index = pushLiteralArray(&compiler->literalCache, TO_ARRAY_LITERAL(store)); //WARNING: pushed as a dictionary, so below can recognize it
 	}
 	else if (node->compound.literalType == LITERAL_ARRAY) {
 		//ensure each literal value is in the cache, individually
@@ -135,24 +135,25 @@ static int writeLiteralTypeToCache(LiteralArray* parent, Literal literal) {
 	LiteralArray* store = ALLOCATE(LiteralArray, 1);
 	initLiteralArray(store);
 
-	//save the mask to the store
-	int maskIndex = findLiteralIndex(parent, TO_INTEGER_LITERAL(AS_TYPE(literal).mask));
+	//save the mask to the store, at index 0
+	int maskIndex = findLiteralIndex(store, TO_INTEGER_LITERAL(AS_TYPE(literal).mask));
 	if (maskIndex < 0) {
-		maskIndex = pushLiteralArray(parent, TO_INTEGER_LITERAL(AS_TYPE(literal).mask));
+		maskIndex = pushLiteralArray(store, TO_INTEGER_LITERAL(AS_TYPE(literal).mask));
 	}
-
-	pushLiteralArray(store, TO_INTEGER_LITERAL(maskIndex));
 
 	//if it's a compound type, recurse
 	if (AS_TYPE(literal).mask & (MASK_ARRAY|MASK_DICTIONARY)) {
 		for (int i = 0; i < AS_TYPE(literal).count; i++) {
+			//write the values to the cache, and the indexes to the store
 			int subIndex = writeLiteralTypeToCache(parent, ((Literal*)(AS_TYPE(literal).subtypes))[i]);
 			pushLiteralArray(store, TO_INTEGER_LITERAL(subIndex));
 		}
 	}
 
-	//push the store to the parent
-	index = pushLiteralArray(parent, TO_ARRAY_LITERAL(store));
+	//push the store to the cache, tweaking the type
+	Literal lit = TO_ARRAY_LITERAL(store);
+	lit.type = LITERAL_TYPE; //TODO: tweaking the type isn't a good idea
+	index = pushLiteralArray(parent, lit);
 
 	return index;
 }

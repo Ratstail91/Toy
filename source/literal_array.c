@@ -20,9 +20,12 @@ int pushLiteralArray(LiteralArray* array, Literal literal) {
 		array->literals = GROW_ARRAY(Literal, array->literals, oldCapacity, array->capacity);
 	}
 
-	//if it's a string, make a local copy
+	//if it's a string or an identifier, make a local copy
 	if (IS_STRING(literal)) {
 		literal = TO_STRING_LITERAL(copyString(AS_STRING(literal), STRLEN(literal)));
+	}
+	if (IS_IDENTIFIER(literal)) {
+		literal = TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(literal), STRLEN_I(literal)));
 	}
 
 	array->literals[array->count] = literal;
@@ -58,45 +61,9 @@ int findLiteralIndex(LiteralArray* array, Literal literal) {
 			continue;
 		}
 
-		//matching type, compare values
-		switch(array->literals[i].type) {
-			case LITERAL_NULL:
-				return i;
-
-			case LITERAL_BOOLEAN:
-				if (AS_BOOLEAN(array->literals[i]) == AS_BOOLEAN(literal)) {
-					return i;
-				}
-			continue;
-
-			case LITERAL_INTEGER:
-				if (AS_INTEGER(array->literals[i]) == AS_INTEGER(literal)) {
-					return i;
-				}
-			continue;
-
-			case LITERAL_FLOAT:
-				if (AS_FLOAT(array->literals[i]) == AS_FLOAT(literal)) {
-					return i;
-				}
-			continue;
-
-			case LITERAL_STRING:
-				if (strncmp(AS_STRING(array->literals[i]), AS_STRING(literal), STRLEN(literal)) == 0) {
-					return i;
-				}
-			continue;
-
-			// case LITERAL_ARRAY:
-			// 	//
-			// continue;
-
-			// case LITERAL_DICTIONARY:
-			// 	//
-			// continue;
-
-			default:
-				fprintf(stderr, "[Internal] Unexpected literal type in findLiteralIndex(): %d\n", literal.type);
+		//types match?
+		if (literalsAreEqual(array->literals[i], literal)) {
+			return i;
 		}
 	}
 

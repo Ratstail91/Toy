@@ -760,26 +760,24 @@ static Literal readTypeToLiteral(Parser* parser) {
 			if (match(parser, TOKEN_COMMA)) {
 				Literal r = readTypeToLiteral(parser);
 
-				//dictionary
-				Literal* dict = TYPE_PUSH_SUBTYPE(&literal, MASK_DICTIONARY);
+				AS_TYPE(literal).subtypes = ALLOCATE(Literal, 2);
+				AS_TYPE(literal).capacity = 2;
+				AS_TYPE(literal).count = 2;
 
-				AS_TYPE(*dict).subtypes = ALLOCATE(Literal, 2);
-				AS_TYPE(*dict).capacity = 2;
-				AS_TYPE(*dict).count = 2;
+				((Literal*)(AS_TYPE(literal).subtypes))[0] = l;
+				((Literal*)(AS_TYPE(literal).subtypes))[1] = r;
 
-				((Literal*)(AS_TYPE(*dict).subtypes))[0] = l;
-				((Literal*)(AS_TYPE(*dict).subtypes))[1] = r;
+				AS_TYPE(literal).mask |= MASK_DICTIONARY;
 			}
 			else {
-				//array
-				Literal* arr = TYPE_PUSH_SUBTYPE(&literal, MASK_ARRAY);
-
-				AS_TYPE(*arr).subtypes = ALLOCATE(Literal, 1);
-				AS_TYPE(*arr).capacity = 1;
-				AS_TYPE(*arr).count = 1;
+				AS_TYPE(literal).subtypes = ALLOCATE(Literal, 1);
+				AS_TYPE(literal).capacity = 1;
+				AS_TYPE(literal).count = 1;
 
 				//append the "l" literal
-				((Literal*)(AS_TYPE(*arr).subtypes))[0] = l;
+				((Literal*)(AS_TYPE(literal).subtypes))[0] = l;
+
+				AS_TYPE(literal).mask |= MASK_ARRAY;
 			}
 
 			consume(parser, TOKEN_BRACKET_RIGHT, "Expected ']' at end of type definition");
@@ -806,13 +804,16 @@ static void varDecl(Parser* parser, Node** nodeHandle) {
 	consume(parser, TOKEN_IDENTIFIER, "Expected identifier after var keyword");
 	Token identifierToken = parser->previous;
 
-	Literal identifier = TO_IDENTIFIER_LITERAL(identifierToken.lexeme);
-	identifier.as.identifier.length = identifierToken.length; //BUGFIX
+	char* cpy = copyString(identifierToken.lexeme, identifierToken.length);
+	Literal identifier = _toIdentifierLiteral(cpy, strlen(cpy)); //BUGFIX: use this instead of the macro
 
 	//read the type, if present
 	Literal typeLiteral;
 	if (match(parser, TOKEN_COLON)) {
 		typeLiteral = readTypeToLiteral(parser);
+	}
+	else {
+		typeLiteral = TO_TYPE_LITERAL(MASK_ANY);
 	}
 
 	//variable definition is an expression

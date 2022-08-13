@@ -149,7 +149,7 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 			int delimCount = 0;
 			printToBuffer("[");
 			for (int i = 0; i < ptr->capacity; i++) {
-				if (ptr->entries[i].key.type == LITERAL_NULL) {
+				if (IS_NULL(ptr->entries[i].key)) {
 					continue;
 				}
 
@@ -211,7 +211,7 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 
 			for (int i = 1; i < 8; i ++) { //0th bit is const
 				//zero mask = any type, anys can't be const
-				if (AS_TYPE(literal).mask == 0) {
+				if (AS_TYPE(literal).mask == MASK_ANY) {
 					printToBuffer("any");
 					break;
 				}
@@ -222,7 +222,7 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 						printToBuffer(" | ");
 					}
 
-					//special case for array & dictionary
+					//special case for array AND dictionary
 					if (i == TYPE_ARRAY) {
 						if ((AS_TYPE(literal).mask & (MASK_ARRAY|MASK_DICTIONARY)) == (MASK_ARRAY|MASK_DICTIONARY)) {
 							int pCache = printTypeMarker;
@@ -357,8 +357,8 @@ Literal _toStringLiteral(char* str) {
 	return ((Literal){LITERAL_STRING, {.string.ptr = (char*)str, .string.length = strlen((char*)str)}});
 }
 
-Literal _toIdentifierLiteral(char* str) {
-	return ((Literal){LITERAL_IDENTIFIER,{.identifier.ptr = (char*)str,.identifier.length = strlen((char*)str), .identifier.hash=hashString(str, strlen((char*)str))}});
+Literal _toIdentifierLiteral(char* str, int length) {
+	return ((Literal){LITERAL_IDENTIFIER,{.identifier.ptr = (char*)str,.identifier.length = length, .identifier.hash = hashString(str, length)}});
 }
 
 Literal* _typePushSubtype(Literal* lit, unsigned char submask) {
