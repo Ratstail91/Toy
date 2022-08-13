@@ -21,16 +21,16 @@ typedef struct Interpreter {
 	LiteralArray stack;
 
 	//output
-	// LiteralDictionary exports; //read-write - interface with Toy from C
+	// LiteralDictionary exports; //TODO: read-write - interface with Toy from C
 	PrintFn printOutput;
 	PrintFn assertOutput;
 } Interpreter;
 
-void initInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length);
+void initInterpreter(Interpreter* interpreter);
 void freeInterpreter(Interpreter* interpreter);
 
 //utilities for the host program
 void setInterpreterPrint(Interpreter* interpreter, PrintFn printOutput);
 void setInterpreterAssert(Interpreter* interpreter, PrintFn assertOutput);
 
-void runInterpreter(Interpreter* interpreter);
+void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length);

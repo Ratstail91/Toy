@@ -103,8 +103,8 @@ unsigned char* compileString(char* source, size_t* size) {
 
 void runBinary(unsigned char* tb, size_t size) {
 	Interpreter interpreter;
-	initInterpreter(&interpreter, tb, size);
-	runInterpreter(&interpreter);
+	initInterpreter(&interpreter);
+	runInterpreter(&interpreter, tb, size);
 	freeInterpreter(&interpreter);
 }
 
@@ -143,6 +143,7 @@ void repl() {
 	memset(input, 0, size);
 
 	Interpreter interpreter; //persist the interpreter for the scopes
+	initInterpreter(&interpreter);
 
 	for(;;) {
 		printf("> ");
@@ -178,9 +179,7 @@ void repl() {
 			unsigned char* tb = collateCompiler(&compiler, &size);
 
 			//run the bytecode
-			initInterpreter(&interpreter, tb, size);
-			runInterpreter(&interpreter);
-			freeInterpreter(&interpreter); //TODO: option to retain the scopes
+			runInterpreter(&interpreter, tb, size);
 		}
 
 		//clean up this iteration

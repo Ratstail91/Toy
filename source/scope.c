@@ -44,16 +44,16 @@ Scope* popScope(Scope* scope) {
 
 	return ret;
 }
-
+#include <stdio.h>
 //returns false if error
 bool declareScopeVariable(Scope* scope, Literal key, Literal type) {
-	//store the type, for later checking on assignment
-	setLiteralDictionary(&scope->types, key, type);
-
 	//don't redefine a variable within this scope
 	if (existsLiteralDictionary(&scope->variables, key)) {
 		return false;
 	}
+
+	//store the type, for later checking on assignment
+	setLiteralDictionary(&scope->types, key, type);
 
 	setLiteralDictionary(&scope->variables, key, TO_NULL_LITERAL);
 	return true;

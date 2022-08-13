@@ -821,6 +821,10 @@ static void varDecl(Parser* parser, Node** nodeHandle) {
 	if (match(parser, TOKEN_ASSIGN)) {
 		expression(parser, &expressionNode);
 	}
+	else {
+		//values are null by default
+		emitNodeLiteral(&expressionNode, TO_NULL_LITERAL);
+	}
 
 	//TODO: static type checking?
 

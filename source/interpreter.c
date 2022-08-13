@@ -18,11 +18,11 @@ static void stderrWrapper(const char* output) {
 	fprintf(stderr, "\n"); //default new line
 }
 
-void initInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length) {
+void initInterpreter(Interpreter* interpreter) {
 	initLiteralArray(&interpreter->literalCache);
 	interpreter->scope = pushScope(NULL);
-	interpreter->bytecode = bytecode;
-	interpreter->length = length;
+	interpreter->bytecode = NULL;
+	interpreter->length = 0;
 	interpreter->count = 0;
 
 	initLiteralArray(&interpreter->stack);
@@ -286,6 +286,9 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 	Literal type = interpreter->literalCache.literals[typeIndex];
 
 	if (!declareScopeVariable(interpreter->scope, identifier, type)) {
+		printf("Can't redefine the  variable \"");;
+		printLiteral(identifier);
+		printf("\"\n");
 		return false;
 	}
 
@@ -353,7 +356,7 @@ static void execInterpreter(Interpreter* interpreter) {
 				interpreter->scope = popScope(interpreter->scope);
 			break;
 
-			//TODO: type declarations
+			//TODO: custom type declarations
 
 			case OP_VAR_DECL:
 			case OP_VAR_DECL_LONG:
@@ -372,10 +375,20 @@ static void execInterpreter(Interpreter* interpreter) {
 	}
 }
 
-void runInterpreter(Interpreter* interpreter) {
+void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length) {
+	//prep the bytecode
+	interpreter->bytecode = bytecode;
+	interpreter->length = length;
+	interpreter->count = 0;
+
 	if (!interpreter->bytecode) {
 		printf(ERROR "Error: No valid bytecode given\n" RESET);
 		return;
+	}
+
+	//prep the literal cache
+	if (interpreter->literalCache.count > 0) {
+		freeLiteralArray(&interpreter->literalCache); //automatically inits
 	}
 
 	//header section
@@ -515,7 +528,7 @@ void runInterpreter(Interpreter* interpreter) {
 				pushLiteralArray(&interpreter->literalCache, identifier);
 
 				if (command.verbose) {
-					printf("(identifier %s (%d))\n", AS_IDENTIFIER(identifier), identifier.as.identifier.hash);
+					printf("(identifier %s (hash: %x))\n", AS_IDENTIFIER(identifier), identifier.as.identifier.hash);
 				}
 			}
 			break;
