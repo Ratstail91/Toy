@@ -456,6 +456,7 @@ unsigned char* collateCompiler(Compiler* compiler, int* size) {
 				}
 
 				freeLiteralArray(ptr);
+				FREE(LiteralArray, ptr);
 			}
 			break;
 
@@ -486,6 +487,7 @@ unsigned char* collateCompiler(Compiler* compiler, int* size) {
 				}
 
 				freeLiteralArray(ptr);
+				FREE(LiteralArray, ptr);
 			}
 			break;
 

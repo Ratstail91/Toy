@@ -53,10 +53,10 @@ print [:];
 print [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
 
 //not ready yet
-//var x = 31;
-//var y : int = 42;
-//var arr : [int] = [1, 2, 3, 42];
-//var dict : [string, int] = ["hello": 1, "world":2];
+var x = 31;
+var y : int = 42;
+var arr : [int] = [1, 2, 3, 42];
+var dict : [string, int] = ["hello": 1, "world":2];
 
 //print x;
 //print x + y;

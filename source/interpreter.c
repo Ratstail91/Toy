@@ -33,8 +33,26 @@ void initInterpreter(Interpreter* interpreter, unsigned char* bytecode, int leng
 
 void freeInterpreter(Interpreter* interpreter) {
 	FREE_ARRAY(char, interpreter->bytecode, interpreter->length);
+
+	//since these are dynamically allocated, free them manually
+	for (int i = 0; i < interpreter->literalCache.count; i++) {
+		if (IS_ARRAY(interpreter->literalCache.literals[i]) || IS_DICTIONARY(interpreter->literalCache.literals[i]) || IS_TYPE(interpreter->literalCache.literals[i])) {
+
+			if (IS_TYPE(interpreter->literalCache.literals[i]) && AS_TYPE(interpreter->literalCache.literals[i]).capacity > 0) {
+				FREE_ARRAY(Literal, AS_TYPE(interpreter->literalCache.literals[i]).subtypes, AS_TYPE(interpreter->literalCache.literals[i]).capacity);
+			}
+
+			freeLiteral(interpreter->literalCache.literals[i]);
+
+			interpreter->literalCache.literals[i] = TO_NULL_LITERAL;
+		}
+	}
 	freeLiteralArray(&interpreter->literalCache);
-	interpreter->scope = popScope(interpreter->scope);
+
+	while (interpreter->scope) {
+		interpreter->scope = popScope(interpreter->scope);
+	}
+
 	freeLiteralArray(&interpreter->stack);
 }
 

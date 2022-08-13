@@ -344,7 +344,6 @@ void freeLiteral(Literal literal) {
 		for (int i = 0; i < AS_TYPE(literal).count; i++) {
 			freeLiteral(((Literal*)(AS_TYPE(literal).subtypes))[i]);
 		}
-		FREE_ARRAY(Literal, AS_TYPE(literal).subtypes, AS_TYPE(literal).capacity);
 		return;
 	}
 }
