@@ -195,7 +195,7 @@ void printNode(Node* node) {
 				printNode(&(node->block.nodes[i]));
 			}
 
-			printf("}\n");
+			printf("\n}\n");
 		break;
 
 		case NODE_COMPOUND:
@@ -229,5 +229,8 @@ void printNode(Node* node) {
 			printNode(node->varDecl.expression);
 			printf(")");
 		break;
+
+		default:
+			printf("[internal] unkown node type in printNode: %d\n", node->type);
 	}
 }

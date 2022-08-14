@@ -37,6 +37,22 @@ print 1.0 / 2.0;
 }
 print "Back to the outer scope.";
 
+//test scope will delegate to higher scope
+var a = 1;
+{
+	a = 2;
+	print a;
+}
+print a;
+
+//test scope will shadow higher scope on redefine
+var b = 3;
+{
+	var b = 4;
+	print b;
+}
+print b;
+
 //test compounds, repeatedly
 print [1, 2, 3];
 print [4, 5];
@@ -70,3 +86,5 @@ assert true, "This won't be seen";
 assert false, "This is a failed assert, and will end execution";
 
 print "This will not be printed because of the above assert";
+
+//TODO: use a proper assert-based version of this file

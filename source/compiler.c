@@ -6,6 +6,8 @@
 #include "literal_array.h"
 #include "literal_dictionary.h"
 
+#include "console_colors.h"
+
 #include <stdio.h>
 
 void initCompiler(Compiler* compiler) {
@@ -171,7 +173,7 @@ void writeCompiler(Compiler* compiler, Node* node) {
 	switch(node->type) {
 		//TODO: more types, like variables, etc.
 		case NODE_ERROR: {
-			fprintf(stderr, "[Internal] NODE_ERROR encountered in writeCompiler()");
+			fprintf(stderr, ERROR "[Internal] NODE_ERROR encountered in writeCompiler()\n" RESET);
 			compiler->bytecode[compiler->count++] = OP_EOF; //1 byte
 		}
 		break;
@@ -248,7 +250,7 @@ void writeCompiler(Compiler* compiler, Node* node) {
 		break;
 
 		case NODE_PAIR:
-			fprintf(stderr, "[Internal] NODE_PAIR encountered in writeCompiler()");
+			fprintf(stderr, ERROR "[Internal] NODE_PAIR encountered in writeCompiler()\n" RESET);
 		break;
 
 		case NODE_VAR_TYPES: { //TODO: the "type" keyword

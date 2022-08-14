@@ -57,6 +57,10 @@ static void consume(Parser* parser, TokenType tokenType, const char* msg) {
 }
 
 static void synchronize(Parser* parser) {
+	if (command.verbose) {
+		printf(ERROR "synchronizing\n" RESET);
+	}
+
 	while (parser->current.type != TOKEN_EOF) {
 		switch(parser->current.type) {
 			//these tokens can start a line
@@ -244,7 +248,7 @@ static Opcode string(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 }
 
 static Opcode grouping(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
-	//handle three diffent types of groupings: (), {}, []
+	//handle groupings with ()
 	switch(parser->previous.type) {
 		case TOKEN_PAREN_LEFT: {
 			Node* tmpNode = NULL;
@@ -685,10 +689,18 @@ static void blockStmt(Parser* parser, Node** nodeHandle) {
 		//use the next node in sequence
 		(*nodeHandle)->block.nodes[(*nodeHandle)->block.count].type = NODE_ERROR; //BUGFIX: so freeing won't break the damn thing
 
-		Node* ptr = &((*nodeHandle)->block.nodes[(*nodeHandle)->block.count++]);
+		Node* ptr = &((*nodeHandle)->block.nodes[(*nodeHandle)->block.count]);
 
 		//process the grammar rule for this line
 		declaration(parser, &ptr);
+
+		//BUGFIX: if ptr has been re-assigned, copy the new value into the block's child
+		if (&((*nodeHandle)->block.nodes[(*nodeHandle)->block.count]) != ptr) {
+			((*nodeHandle)->block.nodes[(*nodeHandle)->block.count]) = *ptr;
+			FREE(Node, ptr);
+		}
+
+		(*nodeHandle)->block.count++;
 
 		// Ground floor: perfumery / Stationery and leather goods / Wigs and haberdashery / Kitchenware and food / Going up!
 		if (parser->panic) {
@@ -720,7 +732,13 @@ static void assertStmt(Parser* parser, Node** nodeHandle) {
 
 //precedence functions
 static void expressionStmt(Parser* parser, Node** nodeHandle) {
-	expression(parser, nodeHandle);
+	//BUGFIX: statements assume the node exists, expressions assume it doens't
+	Node* ptr = NULL;
+	expression(parser, &ptr);
+
+	**nodeHandle = *ptr;
+	FREE(Node, ptr); //BUGFIX: this thread of execution is nuts
+
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at the end of expression statement");
 }
 
