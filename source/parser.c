@@ -300,6 +300,11 @@ static Opcode binary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 			return OP_MODULO;
 		}
 
+		case TOKEN_ASSIGN: {
+			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
+			return OP_VAR_ASSIGN;
+		}
+
 		default:
 			error(parser, parser->previous, "Unexpected token passed to binary precedence rule");
 			return OP_EOF;
@@ -384,6 +389,17 @@ static Opcode atomic(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	}
 }
 
+static Opcode identifier(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
+	//make a copy of the string
+	Token identifierToken = parser->previous;
+	char* cpy = copyString(identifierToken.lexeme, identifierToken.length);
+	Literal identifier = _toIdentifierLiteral(cpy, strlen(cpy)); //BUGFIX: use this instead of the macro
+
+	emitNodeLiteral(nodeHandle, identifier);
+
+	return OP_EOF;
+}
+
 ParseRule parseRules[] = { //must match the token types
 	//types
 	{atomic, NULL, PREC_PRIMARY},// TOKEN_NULL,
@@ -419,7 +435,7 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_WHILE,
 
 	//literal values
-	{NULL, NULL, PREC_NONE},// TOKEN_IDENTIFIER,
+	{identifier, NULL, PREC_PRIMARY},// TOKEN_IDENTIFIER,
 	{atomic, NULL, PREC_PRIMARY},// TOKEN_LITERAL_TRUE,
 	{atomic, NULL, PREC_PRIMARY},// TOKEN_LITERAL_FALSE,
 	{atomic, NULL, PREC_PRIMARY},// TOKEN_LITERAL_INTEGER,
@@ -439,6 +455,7 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_MODULO_ASSIGN,
 	{NULL, NULL, PREC_NONE},// TOKEN_PLUS_PLUS,
 	{NULL, NULL, PREC_NONE},// TOKEN_MINUS_MINUS,
+	{NULL, binary, PREC_ASSIGNMENT},// TOKEN_ASSIGN,
 
 	//logical operators
 	{grouping, NULL, PREC_CALL},// TOKEN_PAREN_LEFT,
@@ -458,7 +475,6 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_OR,
 
 	//other operators
-	{NULL, NULL, PREC_NONE},// TOKEN_ASSIGN,
 	{NULL, NULL, PREC_NONE},// TOKEN_COLON,
 	{NULL, NULL, PREC_NONE},// TOKEN_SEMICOLON,
 	{NULL, NULL, PREC_CALL},// TOKEN_COMMA,
@@ -650,26 +666,26 @@ static void expression(Parser* parser, Node** nodeHandle) {
 }
 
 //statements
-static void blockStmt(Parser* parser, Node* node) {
+static void blockStmt(Parser* parser, Node** nodeHandle) {
 	//init
-	node->type = NODE_BLOCK;
-	node->block.nodes = NULL;
-	node->block.capacity = 0;
-	node->block.count = 0;
+	(*nodeHandle)->type = NODE_BLOCK;
+	(*nodeHandle)->block.nodes = NULL;
+	(*nodeHandle)->block.capacity = 0;
+	(*nodeHandle)->block.count = 0;
 
 	//sub-scope, compile it and push it up in a node
 	while (!match(parser, TOKEN_BRACE_RIGHT)) {
-		if (node->block.capacity < node->block.count + 1) {
-			int oldCapacity = node->block.capacity;
+		if ((*nodeHandle)->block.capacity < (*nodeHandle)->block.count + 1) {
+			int oldCapacity = (*nodeHandle)->block.capacity;
 
-			node->block.capacity = GROW_CAPACITY(oldCapacity);
-			node->block.nodes = GROW_ARRAY(Node, node->block.nodes, oldCapacity, node->block.capacity);
+			(*nodeHandle)->block.capacity = GROW_CAPACITY(oldCapacity);
+			(*nodeHandle)->block.nodes = GROW_ARRAY(Node, (*nodeHandle)->block.nodes, oldCapacity, (*nodeHandle)->block.capacity);
 		}
 
 		//use the next node in sequence
-		node->block.nodes[node->block.count].type = NODE_ERROR; //BUGFIX: so freeing won't break the damn thing
+		(*nodeHandle)->block.nodes[(*nodeHandle)->block.count].type = NODE_ERROR; //BUGFIX: so freeing won't break the damn thing
 
-		Node* ptr = &(node->block.nodes[node->block.count++]);
+		Node* ptr = &((*nodeHandle)->block.nodes[(*nodeHandle)->block.count++]);
 
 		//process the grammar rule for this line
 		declaration(parser, &ptr);
@@ -681,53 +697,54 @@ static void blockStmt(Parser* parser, Node* node) {
 	}
 }
 
-static void printStmt(Parser* parser, Node* node) {
+static void printStmt(Parser* parser, Node** nodeHandle) {
 	//set the node info
-	node->type = NODE_UNARY;
-	node->unary.opcode = OP_PRINT;
-	expression(parser, &(node->unary.child));
+	(*nodeHandle)->type = NODE_UNARY;
+	(*nodeHandle)->unary.opcode = OP_PRINT;
+	expression(parser, &((*nodeHandle)->unary.child));
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of print statement");
 }
 
-static void assertStmt(Parser* parser, Node* node) {
+static void assertStmt(Parser* parser, Node** nodeHandle) {
 	//set the node info
-	node->type = NODE_BINARY;
-	node->unary.opcode = OP_ASSERT;
+	(*nodeHandle)->type = NODE_BINARY;
+	(*nodeHandle)->unary.opcode = OP_ASSERT;
 
-	parsePrecedence(parser, &(node->binary.left), PREC_PRIMARY);
+	parsePrecedence(parser, &((*nodeHandle)->binary.left), PREC_PRIMARY);
 	consume(parser, TOKEN_COMMA, "Expected ',' in assert statement");
-	parsePrecedence(parser, &(node->binary.right), PREC_PRIMARY);
+	parsePrecedence(parser, &((*nodeHandle)->binary.right), PREC_PRIMARY);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of assert statement");
 }
 
 //precedence functions
-static void expressionStmt(Parser* parser, Node* node) {
-	error(parser, parser->previous, "Expression statements not yet implemented");
+static void expressionStmt(Parser* parser, Node** nodeHandle) {
+	expression(parser, nodeHandle);
+	consume(parser, TOKEN_SEMICOLON, "Expected ';' at the end of expression statement");
 }
 
-static void statement(Parser* parser, Node* node) {
+static void statement(Parser* parser, Node** nodeHandle) {
 	//block
 	if (match(parser, TOKEN_BRACE_LEFT)) {
-		blockStmt(parser, node);
+		blockStmt(parser, nodeHandle);
 		return;
 	}
 
 	//print
 	if (match(parser, TOKEN_PRINT)) {
-		printStmt(parser, node);
+		printStmt(parser, nodeHandle);
 		return;
 	}
 
 	//assert
 	if (match(parser, TOKEN_ASSERT)) {
-		assertStmt(parser, node);
+		assertStmt(parser, nodeHandle);
 		return;
 	}
 
 	//default
-	expressionStmt(parser, node);
+	expressionStmt(parser, nodeHandle);
 }
 
 //declarations and definitions
@@ -840,7 +857,7 @@ static void declaration(Parser* parser, Node** nodeHandle) { //assume nodeHandle
 		varDecl(parser, nodeHandle);
 	}
 	else {
-		statement(parser, *nodeHandle);
+		statement(parser, nodeHandle);
 	}
 }
 

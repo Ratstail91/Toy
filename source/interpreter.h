@@ -14,7 +14,7 @@ typedef struct Interpreter {
 	unsigned char* bytecode;
 	int length;
 	int count;
-	LiteralArray literalCache; //read-only - built from the bytecode
+	LiteralArray literalCache; //read-only - built from the bytecode, refreshed each time new bytecode is provided
 
 	//operation
 	Scope* scope;

@@ -55,6 +55,7 @@ typedef enum TokenType {
 	TOKEN_MODULO_ASSIGN,
 	TOKEN_PLUS_PLUS,
 	TOKEN_MINUS_MINUS,
+	TOKEN_ASSIGN,
 
 	//logical operators
 	TOKEN_PAREN_LEFT,
@@ -74,7 +75,6 @@ typedef enum TokenType {
 	TOKEN_OR,
 
 	//other operators
-	TOKEN_ASSIGN,
 	TOKEN_COLON,
 	TOKEN_SEMICOLON,
 	TOKEN_COMMA,

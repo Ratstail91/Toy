@@ -28,9 +28,10 @@ typedef enum Opcode {
 	OP_TYPE_DECL,		//declare a type to be used (as a literal)
 	OP_TYPE_DECL_LONG,	//declare a type to be used (as a long literal)
 
-	OP_VAR_DECL,
-	OP_VAR_DECL_LONG,
-	// OP_VAR_ASSIGN, //stack: literal name, literal value
+	OP_VAR_DECL,		//declare a variable to be used (as a literal)
+	OP_VAR_DECL_LONG,	//declare a variable to be used (as a long literal)
+
+	OP_VAR_ASSIGN,		//assign to a literal
 
 	//meta
 	OP_SECTION_END,

@@ -110,13 +110,27 @@ static void consumeShort(unsigned short bytes, unsigned char* tb, int* count) {
 	*count += 2;
 }
 
+static Literal parseIdentifierToValue(Interpreter* interpreter, Literal literal) {
+	//this converts identifiers to values
+	if (IS_IDENTIFIER(literal)) {
+		if (!getScopeVariable(interpreter->scope, literal, &literal)) {
+			printf("Undeclared variable \"");;
+			printLiteral(literal);
+			printf("\"\n");
+			return TO_NULL_LITERAL;
+		}
+	}
+
+	return literal;
+}
+
 //each available statement
 static bool execAssert(Interpreter* interpreter) {
 	Literal rhs = popLiteralArray(&interpreter->stack);
-	Literal lhs = popLiteralArray(&interpreter->stack);
+	Literal lhs = parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack));
 
 	if (!IS_STRING(rhs)) {
-		printf("[internal] The interpreter's assert keyword needs a string as the second argument, received: ");
+		printf("The assert keyword needs a string as the second argument, received: ");
 		printLiteral(rhs);
 		printf("\n");
 		return false;
@@ -132,7 +146,7 @@ static bool execAssert(Interpreter* interpreter) {
 
 static bool execPrint(Interpreter* interpreter) {
 	//print what is on top of the stack, then pop it
-	Literal lit = popLiteralArray(&interpreter->stack);
+	Literal lit = parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack));
 
 	printLiteralCustom(lit, interpreter->printOutput);
 
@@ -152,7 +166,7 @@ static bool execPushLiteral(Interpreter* interpreter, bool lng) {
 		index = (int)readByte(interpreter->bytecode, &interpreter->count);
 	}
 
-	//push from cache to stack
+	//push from cache to stack (DO NOT account for identifiers - will do that later)
 	pushLiteralArray(&interpreter->stack, interpreter->literalCache.literals[index]);
 
 	return true;
@@ -160,7 +174,7 @@ static bool execPushLiteral(Interpreter* interpreter, bool lng) {
 
 static bool execNegate(Interpreter* interpreter) {
 	//negate the top literal on the stack
-	Literal lit = popLiteralArray(&interpreter->stack);
+	Literal lit = parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack));
 
 	if (IS_INTEGER(lit)) {
 		lit = TO_INTEGER_LITERAL(-AS_INTEGER(lit));
@@ -180,8 +194,8 @@ static bool execNegate(Interpreter* interpreter) {
 }
 
 static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
-	Literal rhs = popLiteralArray(&interpreter->stack);
-	Literal lhs = popLiteralArray(&interpreter->stack);
+	Literal rhs = parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack));
+	Literal lhs = parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack));
 
 	//type coersion
 	if (IS_FLOAT(lhs) && IS_INTEGER(rhs)) {
@@ -264,7 +278,11 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 	}
 
 	//wrong types
-	printf("Bad arithmetic argument\n");
+	printf("Bad arithmetic argument ");
+	printLiteral(lhs);
+	printf(" and ");
+	printLiteral(rhs);
+	printf("\n");
 	return false;
 }
 
@@ -286,15 +304,31 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 	Literal type = interpreter->literalCache.literals[typeIndex];
 
 	if (!declareScopeVariable(interpreter->scope, identifier, type)) {
-		printf("Can't redefine the  variable \"");;
+		printf("Can't redefine the variable \"");;
 		printLiteral(identifier);
 		printf("\"\n");
 		return false;
 	}
 
-	if (!setScopeVariable(interpreter->scope, identifier, popLiteralArray(&interpreter->stack) )) {
+	if (!setScopeVariable(interpreter->scope, identifier, parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack)) )) {
 		return false;
 	}
+
+	return true;
+}
+
+static bool execVarAssign(Interpreter* interpreter) {
+	Literal rhs = parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack));
+	Literal lhs = popLiteralArray(&interpreter->stack);
+
+	if (!IS_IDENTIFIER(lhs)) {
+		printf("Can't assign to a non-variable \"");;
+		printLiteral(lhs);
+		printf("\"\n");
+		return false;
+	}
+
+	setScopeVariable(interpreter->scope, lhs, rhs);
 
 	return true;
 }
@@ -361,6 +395,12 @@ static void execInterpreter(Interpreter* interpreter) {
 			case OP_VAR_DECL:
 			case OP_VAR_DECL_LONG:
 				if (!execVarDecl(interpreter, opcode == OP_LITERAL_LONG)) {
+					return;
+				}
+			break;
+
+			case OP_VAR_ASSIGN:
+				if (!execVarAssign(interpreter)) {
 					return;
 				}
 			break;

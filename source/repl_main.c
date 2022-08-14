@@ -78,6 +78,7 @@ unsigned char* compileString(char* source, size_t* size) {
 	while(node != NULL) {
 		//pack up and leave
 		if (node->type == NODE_ERROR) {
+			printf(ERROR "error node detected\n" RESET);
 			freeNode(node);
 			freeCompiler(&compiler);
 			freeParser(&parser);
@@ -163,6 +164,7 @@ void repl() {
 		while(node != NULL) {
 			//pack up and restart
 			if (node->type == NODE_ERROR) {
+				printf(ERROR "error node detected\n" RESET);
 				error = true;
 				freeNode(node);
 				break;
