@@ -6,6 +6,8 @@
 #include "literal.h"
 #include "opcodes.h"
 
+#include "console_colors.h"
+
 #include <stdio.h>
 
 //utility functions
@@ -235,9 +237,18 @@ static Opcode compound(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 static Opcode string(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	//handle strings
 	switch(parser->previous.type) {
-		case TOKEN_LITERAL_STRING:
-			emitNodeLiteral(nodeHandle, TO_STRING_LITERAL(copyString(parser->previous.lexeme, parser->previous.length)));
+		case TOKEN_LITERAL_STRING: {
+			int length = parser->previous.length;
+
+			//for safety
+			if (length > 4096) {
+				length = 4096;
+				error(parser, parser->previous, "Strings can only be a maximum of 4096 characters long");
+			}
+
+			emitNodeLiteral(nodeHandle, TO_STRING_LITERAL(copyString(parser->previous.lexeme, length)));
 			return OP_EOF;
+		}
 
 		//TODO: interpolated strings
 
@@ -396,7 +407,16 @@ static Opcode atomic(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 static Opcode identifier(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	//make a copy of the string
 	Token identifierToken = parser->previous;
-	char* cpy = copyString(identifierToken.lexeme, identifierToken.length);
+
+	int length = identifierToken.length;
+
+	//for safety
+	if (length > 256) {
+		length = 256;
+		error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
+	}
+
+	char* cpy = copyString(identifierToken.lexeme, length);
 	Literal identifier = _toIdentifierLiteral(cpy, strlen(cpy)); //BUGFIX: use this instead of the macro
 
 	emitNodeLiteral(nodeHandle, identifier);
@@ -732,6 +752,13 @@ static void assertStmt(Parser* parser, Node** nodeHandle) {
 
 //precedence functions
 static void expressionStmt(Parser* parser, Node** nodeHandle) {
+	//BUGFIX: check for empty statements
+	if (match(parser, TOKEN_SEMICOLON)) {
+		(*nodeHandle)->type = NODE_LITERAL;
+		(*nodeHandle)->atomic.literal = TO_NULL_LITERAL;
+		return;
+	}
+
 	//BUGFIX: statements assume the node exists, expressions assume it doens't
 	Node* ptr = NULL;
 	expression(parser, &ptr);
