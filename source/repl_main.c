@@ -1,4 +1,3 @@
-#include "debug.h"
 #include "console_colors.h"
 
 #include "lexer.h"

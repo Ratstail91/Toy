@@ -361,7 +361,7 @@ export hello as world;
 
 ## String
 
-Strings are a series of characters, and are created by surrounding said characters with a pair of double quotation marks `"`.
+Strings are a series of characters, and are created by surrounding said characters with a pair of double quotation marks `"`. Strings cannot exceed 4096 bytes in length.
 
 ```
 var greeting: string = "Hello world";
