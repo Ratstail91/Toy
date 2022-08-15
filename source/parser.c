@@ -763,8 +763,10 @@ static void expressionStmt(Parser* parser, Node** nodeHandle) {
 	Node* ptr = NULL;
 	expression(parser, &ptr);
 
-	**nodeHandle = *ptr;
-	FREE(Node, ptr); //BUGFIX: this thread of execution is nuts
+	if (ptr != NULL) {
+		**nodeHandle = *ptr;
+		FREE(Node, ptr); //BUGFIX: this thread of execution is nuts
+	}
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at the end of expression statement");
 }

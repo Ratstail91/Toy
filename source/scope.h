@@ -14,6 +14,7 @@ Scope* popScope(Scope* scope);
 
 //returns false if error
 bool declareScopeVariable(Scope* scope, Literal key, Literal type);
+bool isDelcaredScopeVariable(Scope* scope, Literal key);
 
 //return false if undefined
 bool setScopeVariable(Scope* scope, Literal key, Literal value);

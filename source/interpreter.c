@@ -311,6 +311,9 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 	}
 
 	if (!setScopeVariable(interpreter->scope, identifier, parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack)) )) {
+		printf("Incorrect type assigned to variable \"");
+		printLiteral(identifier);
+		printf("\"\n");
 		return false;
 	}
 
@@ -328,7 +331,19 @@ static bool execVarAssign(Interpreter* interpreter) {
 		return false;
 	}
 
-	setScopeVariable(interpreter->scope, lhs, rhs);
+	if (!isDelcaredScopeVariable(interpreter->scope, lhs)) {
+		printf("Undeclared variable \"");;
+		printLiteral(lhs);
+		printf("\"\n");
+		return false;
+	}
+
+	if (!setScopeVariable(interpreter->scope, lhs, rhs)) {
+		printf("Incorrect type assigned to variable \"");
+		printLiteral(lhs);
+		printf("\"\n");
+		return false;
+	}
 
 	return true;
 }

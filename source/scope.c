@@ -59,7 +59,11 @@ bool declareScopeVariable(Scope* scope, Literal key, Literal type) {
 	return true;
 }
 
-//return false if undefined
+bool isDelcaredScopeVariable(Scope* scope, Literal key) {
+	return existsLiteralDictionary(&scope->variables, key);
+}
+
+//return false if undefined, or can't be assigned
 bool setScopeVariable(Scope* scope, Literal key, Literal value) {
 	//dead end
 	if (scope == NULL) {
