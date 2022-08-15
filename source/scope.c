@@ -59,11 +59,11 @@ static bool checkType(Literal typeLiteral, Literal value) {
 		for (int i = 0; i < AS_DICTIONARY(value)->capacity; i++) {
 			//only assigned and non-tombstoned keys
 			if (!IS_NULL(AS_DICTIONARY(value)->entries[i].key)) {
-				if (checkType(((Literal*)(AS_TYPE(typeLiteral).subtypes))[0], AS_DICTIONARY(value)->entries[i].key)) {
+				if (!checkType(((Literal*)(AS_TYPE(typeLiteral).subtypes))[0], AS_DICTIONARY(value)->entries[i].key)) {
 					return false;
 				}
 
-				if (checkType(((Literal*)(AS_TYPE(typeLiteral).subtypes))[1], AS_DICTIONARY(value)->entries[i].value)) {
+				if (!checkType(((Literal*)(AS_TYPE(typeLiteral).subtypes))[1], AS_DICTIONARY(value)->entries[i].value)) {
 					return false;
 				}
 			}
@@ -112,7 +112,16 @@ bool declareScopeVariable(Scope* scope, Literal key, Literal type) {
 }
 
 bool isDelcaredScopeVariable(Scope* scope, Literal key) {
-	return existsLiteralDictionary(&scope->variables, key);
+	if (scope == NULL) {
+		return false;
+	}
+
+	//if it's not in this scope, keep searching up the chain
+	if (!existsLiteralDictionary(&scope->variables, key)) {
+		return isDelcaredScopeVariable(scope->ancestor, key);
+	}
+
+	return true;
 }
 
 //return false if undefined, or can't be assigned

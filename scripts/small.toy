@@ -2,3 +2,4 @@
 
 
 
+var dict : [string, int] = ["hello" : 1, "world" : 2];

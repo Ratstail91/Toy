@@ -304,7 +304,7 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 	Literal type = interpreter->literalCache.literals[typeIndex];
 
 	if (!declareScopeVariable(interpreter->scope, identifier, type)) {
-		printf("Can't redefine the variable \"");;
+		printf("Can't redefine the variable \"");
 		printLiteral(identifier);
 		printf("\"\n");
 		return false;
@@ -325,14 +325,14 @@ static bool execVarAssign(Interpreter* interpreter) {
 	Literal lhs = popLiteralArray(&interpreter->stack);
 
 	if (!IS_IDENTIFIER(lhs)) {
-		printf("Can't assign to a non-variable \"");;
+		printf("Can't assign to a non-variable \"");
 		printLiteral(lhs);
 		printf("\"\n");
 		return false;
 	}
 
 	if (!isDelcaredScopeVariable(interpreter->scope, lhs)) {
-		printf("Undeclared variable \"");;
+		printf("Undeclared variable \"");
 		printLiteral(lhs);
 		printf("\"\n");
 		return false;
