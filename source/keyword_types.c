@@ -11,7 +11,7 @@ KeywordType keywordTypes[] = {
 	{TOKEN_STRING,     "string"},
 	{TOKEN_ARRAY,      "array"},
 	{TOKEN_DICTIONARY, "dictionary"},
-	{TOKEN_FUNCTION,   "function"},
+	{TOKEN_FUNCTION,   "fn"},
 	{TOKEN_ANY,        "any"},
 
 	//other keywords

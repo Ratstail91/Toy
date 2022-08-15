@@ -1,0 +1,17 @@
+TODO: type casting
+TODO: const without a type
+TODO: increment & decrement operators
+TODO: var decl with a type, but no value
+TODO: a = b = c = 1;
+TODO: are compounds shallow or deep copies?
+TODO: conditionals
+TODO: if-then-else
+TODO: chained if-then-else
+TODO: optional block around a path if it's only one statement
+TODO: while-then
+TODO: for-then
+TODO: break and continue statements
+TODO: functions, and all of their features
+TODO: Assertion-based test scripts
+TODO: standard library
+TODO: external runner library
