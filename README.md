@@ -12,6 +12,39 @@ Special thanks to http://craftinginterpreters.com/ for their fantastic book that
 
 Simply run make in the root directory.
 
+## Syntax
+
+```
+import "standard"; //for a bunch of utility functions
+
+
+print "Hello world"; //"print" is a keyword
+
+var msg = "foobar"; //declare a variable like this
+
+assert true, "This message won't be seen"; //assert is another keyword
+
+//-------------------------
+
+fn makeCounter() { //declare a function like this
+	var total: int = 0; //declare a variable with a type like this
+
+	fn counter(): int { //declare a return type like this
+		return ++total;
+	}
+
+	return counter; //closures are explicitly supported
+}
+
+var counter = makeCounter();
+
+print counter(); //1
+print counter(); //2
+print counter(); //3
+
+export makeCounter; //export this variable to the host program
+```
+
 # License
 
 Copyright (c) 2020-2022 Kayne Ruse, KR Game Studios
