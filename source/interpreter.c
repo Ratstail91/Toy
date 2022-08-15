@@ -310,7 +310,7 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 		return false;
 	}
 
-	if (!setScopeVariable(interpreter->scope, identifier, parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack)) )) {
+	if (!setScopeVariable(interpreter->scope, identifier, parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack)), false)) {
 		printf("Incorrect type assigned to variable \"");
 		printLiteral(identifier);
 		printf("\"\n");
@@ -338,7 +338,7 @@ static bool execVarAssign(Interpreter* interpreter) {
 		return false;
 	}
 
-	if (!setScopeVariable(interpreter->scope, lhs, rhs)) {
+	if (!setScopeVariable(interpreter->scope, lhs, rhs, true)) {
 		printf("Incorrect type assigned to variable \"");
 		printLiteral(lhs);
 		printf("\"\n");

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "literal_array.h"
 #include "literal_dictionary.h"
 
 typedef struct Scope {
@@ -17,6 +18,6 @@ bool declareScopeVariable(Scope* scope, Literal key, Literal type);
 bool isDelcaredScopeVariable(Scope* scope, Literal key);
 
 //return false if undefined
-bool setScopeVariable(Scope* scope, Literal key, Literal value);
+bool setScopeVariable(Scope* scope, Literal key, Literal value, bool constCheck);
 bool getScopeVariable(Scope* scope, Literal key, Literal* value);
 
