@@ -589,28 +589,25 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 			break;
 
 			case LITERAL_TYPE: {
-				Literal typeLiteral;
+				//what the literal represents
+				LiteralType literalType = (LiteralType)readByte(interpreter->bytecode, &interpreter->count);
+				unsigned char constant = readByte(interpreter->bytecode, &interpreter->count);
 
-				//read the array count (subtract 1, because mask is always present)
-				unsigned short count = readShort(interpreter->bytecode, &interpreter->count) - 1;
+				Literal typeLiteral = TO_TYPE_LITERAL(literalType, constant);
 
-				// read the mask
-				unsigned char mask = readShort(interpreter->bytecode, &interpreter->count);
+				//if it's an array type
+				if (AS_TYPE(typeLiteral).typeOf == LITERAL_ARRAY) {
+					unsigned short vt = readShort(interpreter->bytecode, &interpreter->count);
 
-				//create the literal
-				typeLiteral = TO_TYPE_LITERAL(mask);
+					TYPE_PUSH_SUBTYPE(&typeLiteral, interpreter->literalCache.literals[vt]);
+				}
 
-				//if it's got subtypes, grab them from the existing cache
-				if (count > 0) {
-					AS_TYPE(typeLiteral).subtypes = ALLOCATE(Literal, count);
-					AS_TYPE(typeLiteral).capacity = count;
-					AS_TYPE(typeLiteral).count = count;
+				if (AS_TYPE(typeLiteral).typeOf == LITERAL_DICTIONARY) {
+					unsigned short kt = readShort(interpreter->bytecode, &interpreter->count);
+					unsigned short vt = readShort(interpreter->bytecode, &interpreter->count);
 
-					for (int i = 0; i < AS_TYPE(typeLiteral).count; i++) {
-						//read each index
-						int index = readShort(interpreter->bytecode, &interpreter->count);
-						((Literal*)(AS_TYPE(typeLiteral).subtypes))[i] = interpreter->literalCache.literals[index];
-					}
+					TYPE_PUSH_SUBTYPE(&typeLiteral, interpreter->literalCache.literals[kt]);
+					TYPE_PUSH_SUBTYPE(&typeLiteral, interpreter->literalCache.literals[vt]);
 				}
 
 				//save the type

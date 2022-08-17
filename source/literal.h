@@ -12,9 +12,12 @@ typedef enum {
 	LITERAL_STRING,
 	LITERAL_ARRAY,
 	LITERAL_DICTIONARY,
-	// LITERAL_FUNCTION,
+	LITERAL_FUNCTION, //TODO: to be implemented later; the type is still handled for the most part
+
+	//these are meta-level types
 	LITERAL_IDENTIFIER,
 	LITERAL_TYPE,
+	LITERAL_ANY, //used by the type system only
 } LiteralType;
 
 typedef struct {
@@ -40,7 +43,8 @@ typedef struct {
         } identifier;
 
 		struct {
-			unsigned char mask;
+			LiteralType typeOf; //no longer a mask
+			bool constant;
 			void* subtypes; //for nested types caused by compounds
 			int capacity;
 			int count;
@@ -78,26 +82,7 @@ typedef struct {
 #define TO_DICTIONARY_LITERAL(value)		((Literal){LITERAL_DICTIONARY,	{ .dictionary = value }})
 // #define TO_FUNCTION_LITERAL
 #define TO_IDENTIFIER_LITERAL(value)		_toIdentifierLiteral(value, strlen(value))
-#define TO_TYPE_LITERAL(value)				((Literal){ LITERAL_TYPE,		{ .type.mask = value, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
-
-#define MASK(x) 			(1 << (x))
-#define TYPE_CONST			0
-#define TYPE_BOOLEAN		1
-#define TYPE_INTEGER		2
-#define TYPE_FLOAT			3
-#define TYPE_STRING			4
-#define TYPE_ARRAY			5
-#define TYPE_DICTIONARY		6
-#define TYPE_FUNCTION		7
-#define MASK_CONST			(MASK(TYPE_CONST))
-#define MASK_BOOLEAN		(MASK(TYPE_BOOLEAN))
-#define MASK_INTEGER		(MASK(TYPE_INTEGER))
-#define MASK_FLOAT			(MASK(TYPE_FLOAT))
-#define MASK_STRING			(MASK(TYPE_STRING))
-#define MASK_ARRAY			(MASK(TYPE_ARRAY))
-#define MASK_DICTIONARY		(MASK(TYPE_DICTIONARY))
-#define MASK_FUNCTION		(MASK(TYPE_FUNCTION))
-#define MASK_ANY			0
+#define TO_TYPE_LITERAL(value, c)			((Literal){ LITERAL_TYPE,		{ .type.typeOf = value, .type.constant = c, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
 
 //utils
 void printLiteral(Literal literal);
@@ -109,13 +94,13 @@ void freeLiteral(Literal literal);
 #define STRLEN(lit)							((lit).as.string.length)
 #define STRLEN_I(lit)						((lit).as.identifier.length)
 #define HASH_I(lit)							((lit).as.identifier.hash)
-#define TYPE_PUSH_SUBTYPE(lit, submask)		_typePushSubtype(lit, submask)
+#define TYPE_PUSH_SUBTYPE(lit, subtype)		_typePushSubtype(lit, subtype)
 
 //BUGFIX: macros are not functions
 bool _isTruthy(Literal x);
 Literal _toStringLiteral(char* str);
 Literal _toIdentifierLiteral(char* str, int length);
-Literal* _typePushSubtype(Literal* lit, unsigned char submask);
+Literal* _typePushSubtype(Literal* lit, Literal subtype);
 
 //utils
 char* copyString(char* original, int length);

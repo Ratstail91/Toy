@@ -1,3 +1,5 @@
+DONE: rework type system
+
 TODO: type casting
 TODO: const without a type
 TODO: increment & decrement operators

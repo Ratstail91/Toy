@@ -15,15 +15,6 @@ void initCompiler(Compiler* compiler) {
 	compiler->bytecode = NULL;
 	compiler->capacity = 0;
 	compiler->count = 0;
-
-	//default atomic literals (commented out, because not needed atm - might need them later)
-	// Literal n = TO_NULL_LITERAL;
-	// Literal t = TO_BOOLEAN_LITERAL(true);
-	// Literal f = TO_BOOLEAN_LITERAL(false);
-
-	// pushLiteralArray(&compiler->literalCache, n);
-	// pushLiteralArray(&compiler->literalCache, t);
-	// pushLiteralArray(&compiler->literalCache, f);
 }
 
 //separated out, so it can be recursive
@@ -130,34 +121,27 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 	return index;
 }
 
-static int writeLiteralTypeToCache(LiteralArray* parent, Literal literal) {
-	int index = -1;
-
-	//for now, stored as an array
+static int writeLiteralTypeToCache(LiteralArray* literalCache, Literal literal) {
+	//I don't like storing types in an array, but it's the easiest and most straight forward method
 	LiteralArray* store = ALLOCATE(LiteralArray, 1);
 	initLiteralArray(store);
 
-	//save the mask to the store, at index 0
-	int maskIndex = findLiteralIndex(store, TO_INTEGER_LITERAL(AS_TYPE(literal).mask));
-	if (maskIndex < 0) {
-		maskIndex = pushLiteralArray(store, TO_INTEGER_LITERAL(AS_TYPE(literal).mask));
-	}
+	//store the base literal in the store
+	pushLiteralArray(store, literal);
 
-	//if it's a compound type, recurse
-	if (AS_TYPE(literal).mask & (MASK_ARRAY|MASK_DICTIONARY)) {
+	//if it's a compound type, recurse and store the results
+	if (AS_TYPE(literal).typeOf == LITERAL_ARRAY || AS_TYPE(literal).typeOf == LITERAL_DICTIONARY) {
 		for (int i = 0; i < AS_TYPE(literal).count; i++) {
 			//write the values to the cache, and the indexes to the store
-			int subIndex = writeLiteralTypeToCache(parent, ((Literal*)(AS_TYPE(literal).subtypes))[i]);
+			int subIndex = writeLiteralTypeToCache(literalCache, ((Literal*)(AS_TYPE(literal).subtypes))[i]);
 			pushLiteralArray(store, TO_INTEGER_LITERAL(subIndex));
 		}
 	}
 
 	//push the store to the cache, tweaking the type
 	Literal lit = TO_ARRAY_LITERAL(store);
-	lit.type = LITERAL_TYPE; //TODO: tweaking the type isn't a good idea
-	index = pushLiteralArray(parent, lit);
-
-	return index;
+	lit.type = LITERAL_TYPE; //NOTE: tweaking the type usually isn't a good idea
+	return pushLiteralArray(literalCache, lit);
 }
 
 void writeCompiler(Compiler* compiler, Node* node) {
@@ -463,6 +447,8 @@ unsigned char* collateCompiler(Compiler* compiler, int* size) {
 			}
 			break;
 
+			//TODO: function
+
 			case LITERAL_IDENTIFIER: {
 				emitByte(&collation, &capacity, &count, LITERAL_IDENTIFIER);
 
@@ -481,12 +467,19 @@ unsigned char* collateCompiler(Compiler* compiler, int* size) {
 
 				LiteralArray* ptr = AS_ARRAY(compiler->literalCache.literals[i]); //used an array for storage above
 
-				//length of the array, as a short
-				emitShort(&collation, &capacity, &count, ptr->count); //count is the array size
+				//the base literal
+				Literal typeLiteral = ptr->literals[0];
 
-				//each element of the array
-				for (int i = 0; i < ptr->count; i++) {
-					emitShort(&collation, &capacity, &count, (unsigned short)AS_INTEGER(ptr->literals[i])); //shorts representing the indexes of the values
+				//what type this literal represents
+				emitByte(&collation, &capacity, &count, AS_TYPE(typeLiteral).typeOf);
+				emitByte(&collation, &capacity, &count, AS_TYPE(typeLiteral).constant); //if it's constant
+
+				//each element of the array, If they exist, representing sub-types already in the cache
+				if (AS_TYPE(typeLiteral).typeOf == LITERAL_ARRAY || AS_TYPE(typeLiteral).typeOf == LITERAL_DICTIONARY) {
+					//the type will represent how many to expect in the array
+					for (int i = 1; i < ptr->count; i++) {
+						emitShort(&collation, &capacity, &count, (unsigned short)AS_INTEGER(ptr->literals[i])); //shorts representing the indexes of the types
+					}
 				}
 
 				freeLiteralArray(ptr);

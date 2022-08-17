@@ -15,7 +15,7 @@ typedef enum NodeType {
 	NODE_BLOCK, //contains a sub-node array
 	NODE_COMPOUND, //contains a sub-node array
 	NODE_PAIR, //contains a left and right
-	NODE_VAR_TYPES, //contains a type mask and a sub-node array for compound types
+	NODE_VAR_TYPES, //contains a type and a sub-node array for compound types
 	NODE_VAR_DECL, //contains identifier literal, typenode, expression definition
 	// NODE_CONDITIONAL, //three children: conditional, then path, else path
 } NodeType;

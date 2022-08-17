@@ -24,28 +24,33 @@ static void freeAncestorChain(Scope* scope) {
 //return false if invalid type
 static bool checkType(Literal typeLiteral, Literal value) {
 	//for any types
-	if (AS_TYPE(typeLiteral).mask == MASK_ANY) {
+	if (AS_TYPE(typeLiteral).typeOf == LITERAL_ANY) {
 		return true;
 	}
 
 	//for each type, if a mismatch is found, return false
-	if ((AS_TYPE(typeLiteral).mask & MASK_BOOLEAN) && !IS_BOOLEAN(value)) {
+	if (AS_TYPE(typeLiteral).typeOf == LITERAL_BOOLEAN && !IS_BOOLEAN(value)) {
 		return false;
 	}
 
-	if ((AS_TYPE(typeLiteral).mask & MASK_INTEGER) && !IS_INTEGER(value)) {
+	if (AS_TYPE(typeLiteral).typeOf == LITERAL_INTEGER && !IS_INTEGER(value)) {
 		return false;
 	}
 
-	if ((AS_TYPE(typeLiteral).mask & MASK_FLOAT) && !IS_FLOAT(value)) {
+	if (AS_TYPE(typeLiteral).typeOf == LITERAL_FLOAT && !IS_FLOAT(value)) {
 		return false;
 	}
 
-	if ((AS_TYPE(typeLiteral).mask & MASK_STRING) && !IS_STRING(value)) {
+	if (AS_TYPE(typeLiteral).typeOf == LITERAL_STRING && !IS_STRING(value)) {
 		return false;
 	}
 
-	if ((AS_TYPE(typeLiteral).mask & MASK_ARRAY) && IS_ARRAY(value)) {
+	if (IS_ARRAY(value)) {
+		//check value's type
+		if (AS_TYPE(typeLiteral).typeOf != LITERAL_ARRAY) {
+			return false;
+		}
+
 		//check children
 		for (int i = 0; i < AS_ARRAY(value)->count; i++) {
 			if (!checkType(((Literal*)(AS_TYPE(typeLiteral).subtypes))[0], AS_ARRAY(value)->literals[i])) {
@@ -54,7 +59,12 @@ static bool checkType(Literal typeLiteral, Literal value) {
 		}
 	}
 
-	if ((AS_TYPE(typeLiteral).mask & MASK_DICTIONARY) && IS_DICTIONARY(value)) {
+	if (IS_DICTIONARY(value)) {
+		//check value's type
+		if (AS_TYPE(typeLiteral).typeOf != LITERAL_DICTIONARY) {
+			return false;
+		}
+
 		//check children
 		for (int i = 0; i < AS_DICTIONARY(value)->capacity; i++) {
 			//only assigned and non-tombstoned keys
@@ -69,6 +79,8 @@ static bool checkType(Literal typeLiteral, Literal value) {
 			}
 		}
 	}
+
+	//TODO: functions
 
 	return true;
 }
@@ -144,7 +156,7 @@ bool setScopeVariable(Scope* scope, Literal key, Literal value, bool constCheck)
 	}
 
 	//const check
-	if (constCheck && (AS_TYPE(typeLiteral).mask & MASK_CONST)) {
+	if (constCheck && (AS_TYPE(typeLiteral).constant)) {
 		return false;
 	}
 

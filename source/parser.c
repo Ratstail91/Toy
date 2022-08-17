@@ -798,23 +798,23 @@ static void statement(Parser* parser, Node** nodeHandle) {
 static Literal readTypeToLiteral(Parser* parser) {
 	advance(parser);
 
-	Literal literal = TO_TYPE_LITERAL(MASK_ANY);
+	Literal literal = TO_NULL_LITERAL;
 
 	switch(parser->previous.type) {
 		case TOKEN_BOOLEAN:
-			AS_TYPE(literal).mask |= MASK_BOOLEAN;
+			AS_TYPE(literal).typeOf = LITERAL_BOOLEAN;
 		break;
 
 		case TOKEN_INTEGER:
-			AS_TYPE(literal).mask |= MASK_INTEGER;
+			AS_TYPE(literal).typeOf = LITERAL_INTEGER;
 		break;
 
 		case TOKEN_FLOAT:
-			AS_TYPE(literal).mask |= MASK_FLOAT;
+			AS_TYPE(literal).typeOf = LITERAL_FLOAT;
 		break;
 
 		case TOKEN_STRING:
-			AS_TYPE(literal).mask |= MASK_STRING;
+			AS_TYPE(literal).typeOf = LITERAL_STRING;
 		break;
 
 		//array, dictionary - read the sub-types
@@ -824,24 +824,15 @@ static Literal readTypeToLiteral(Parser* parser) {
 			if (match(parser, TOKEN_COMMA)) {
 				Literal r = readTypeToLiteral(parser);
 
-				AS_TYPE(literal).subtypes = ALLOCATE(Literal, 2);
-				AS_TYPE(literal).capacity = 2;
-				AS_TYPE(literal).count = 2;
+				TYPE_PUSH_SUBTYPE(&literal, l);
+				TYPE_PUSH_SUBTYPE(&literal, r);
 
-				((Literal*)(AS_TYPE(literal).subtypes))[0] = l;
-				((Literal*)(AS_TYPE(literal).subtypes))[1] = r;
-
-				AS_TYPE(literal).mask |= MASK_DICTIONARY;
+				AS_TYPE(literal).typeOf = LITERAL_DICTIONARY;
 			}
 			else {
-				AS_TYPE(literal).subtypes = ALLOCATE(Literal, 1);
-				AS_TYPE(literal).capacity = 1;
-				AS_TYPE(literal).count = 1;
+				TYPE_PUSH_SUBTYPE(&literal, l);
 
-				//append the "l" literal
-				((Literal*)(AS_TYPE(literal).subtypes))[0] = l;
-
-				AS_TYPE(literal).mask |= MASK_ARRAY;
+				AS_TYPE(literal).typeOf = LITERAL_ARRAY;
 			}
 
 			consume(parser, TOKEN_BRACKET_RIGHT, "Expected ']' at end of type definition");
@@ -850,6 +841,10 @@ static Literal readTypeToLiteral(Parser* parser) {
 
 		//TODO: function
 
+		case TOKEN_ANY:
+			AS_TYPE(literal).typeOf = LITERAL_ANY;
+		break;
+
 		default:
 			error(parser, parser->previous, "Bad type signature");
 			return TO_NULL_LITERAL;
@@ -857,7 +852,7 @@ static Literal readTypeToLiteral(Parser* parser) {
 
 	//const follows the type
 	if (match(parser, TOKEN_CONST)) {
-		AS_TYPE(literal).mask |= MASK_CONST;
+		AS_TYPE(literal).constant = true;
 	}
 
 	return literal;
@@ -877,7 +872,8 @@ static void varDecl(Parser* parser, Node** nodeHandle) {
 		typeLiteral = readTypeToLiteral(parser);
 	}
 	else {
-		typeLiteral = TO_TYPE_LITERAL(MASK_ANY);
+		//default any
+		typeLiteral = TO_TYPE_LITERAL(LITERAL_ANY, false);
 	}
 
 	//variable definition is an expression

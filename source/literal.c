@@ -32,9 +32,6 @@ static void printToBuffer(const char* str) {
 	globalPrintCount += strlen(str);
 }
 
-//BUGFIX: <array | dictionary> is handled oddly for specific reasons, so this flag is for the debug output of the type
-bool printTypeMarker = true;
-
 //hash util functions
 static unsigned int hashString(const char* string, int length) {
 	unsigned int hash = 2166136261u;
@@ -98,7 +95,7 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 		case LITERAL_ARRAY: {
 			LiteralArray* ptr = AS_ARRAY(literal);
 
-			//hold potential parent-call buffers
+			//hold potential parent-call buffers on the C stack
 			char* cacheBuffer = globalPrintBuffer;
 			globalPrintBuffer = NULL;
 			int cacheCapacity = globalPrintCapacity;
@@ -137,7 +134,7 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 		case LITERAL_DICTIONARY: {
 			LiteralDictionary* ptr = AS_DICTIONARY(literal);
 
-			//hold potential parent-call buffers
+			//hold potential parent-call buffers on the C stack
 			char* cacheBuffer = globalPrintBuffer;
 			globalPrintBuffer = NULL;
 			int cacheCapacity = globalPrintCapacity;
@@ -186,6 +183,8 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 			quotes = 0;
 		}
 		break;
+		
+		//TODO: functions
 
 		case LITERAL_IDENTIFIER: {
 			char buffer[256];
@@ -195,7 +194,7 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 		break;
 
 		case LITERAL_TYPE: {
-			//hold potential parent-call buffers
+			//hold potential parent-call buffers on the C stack
 			char* cacheBuffer = globalPrintBuffer;
 			globalPrintBuffer = NULL;
 			int cacheCapacity = globalPrintCapacity;
@@ -203,109 +202,74 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 			int cacheCount = globalPrintCount;
 			globalPrintCount = 0;
 
-			//print the type
-			int iterations = 0;
-			if (printTypeMarker) {
-				printToBuffer("<");
-			}
+			//print the type correctly
+			printToBuffer("<");
 
-			for (int i = 1; i < 8; i ++) { //0th bit is const
-				//zero mask = any type, anys can't be const
-				if (AS_TYPE(literal).mask == MASK_ANY) {
+			switch(AS_TYPE(literal).typeOf) {
+				case LITERAL_BOOLEAN:
+					printToBuffer("bool");
+				break;
+
+				case LITERAL_INTEGER:
+					printToBuffer("int");
+				break;
+
+				case LITERAL_FLOAT:
+					printToBuffer("float");
+				break;
+
+				case LITERAL_STRING:
+					printToBuffer("string");
+				break;
+
+				case LITERAL_ARRAY:
+					//print all in the array
+					printToBuffer("[");
+					for (int i = 0; i < AS_TYPE(literal).count; i++) {
+						printLiteralCustom(((Literal*)(AS_TYPE(literal).subtypes))[i], printToBuffer);
+					}
+					printToBuffer("]");
+				break;
+
+				case LITERAL_DICTIONARY:
+					printToBuffer("[");
+
+					for (int i = 0; i < AS_TYPE(literal).count; i += 2) {
+						printLiteralCustom(((Literal*)(AS_TYPE(literal).subtypes))[i], printToBuffer);
+						printToBuffer(":");
+						printLiteralCustom(((Literal*)(AS_TYPE(literal).subtypes))[i + 1], printToBuffer);
+					}
+					printToBuffer("]");
+				break;
+
+				case LITERAL_FUNCTION:
+					printToBuffer("function");
+					//TODO
+				break;
+
+				case LITERAL_IDENTIFIER:
+					printToBuffer("identifier");
+				break;
+
+				case LITERAL_TYPE:
+					printToBuffer("type");
+				break;
+
+				case LITERAL_ANY:
 					printToBuffer("any");
-					break;
-				}
+				break;
 
-				if (AS_TYPE(literal).mask & MASK(i)) {
-					//pretty print
-					if (iterations++ > 0) {
-						printToBuffer(" | ");
-					}
-
-					//special case for array AND dictionary
-					if (i == TYPE_ARRAY) {
-						if ((AS_TYPE(literal).mask & (MASK_ARRAY|MASK_DICTIONARY)) == (MASK_ARRAY|MASK_DICTIONARY)) {
-							int pCache = printTypeMarker;
-							printTypeMarker = false;
-							printLiteralCustom(((Literal*)(AS_TYPE(literal).subtypes))[0], printToBuffer);
-							printTypeMarker = pCache;
-							continue;
-						}
-					}
-
-					if (i == TYPE_DICTIONARY) {
-						if ((AS_TYPE(literal).mask & (MASK_ARRAY|MASK_DICTIONARY)) == (MASK_ARRAY|MASK_DICTIONARY)) {
-							int pCache = printTypeMarker;
-							printTypeMarker = false;
-							printLiteralCustom(((Literal*)(AS_TYPE(literal).subtypes))[1], printToBuffer);
-							printTypeMarker = pCache;
-							continue;
-						}
-					}
-
-					switch(i) {
-						case TYPE_BOOLEAN:
-							printToBuffer("bool");
-						break;
-
-						case TYPE_INTEGER:
-							printToBuffer("int");
-						break;
-
-						case TYPE_FLOAT:
-							printToBuffer("float");
-						break;
-
-						case TYPE_STRING:
-							printToBuffer("string");
-						break;
-
-						case TYPE_ARRAY: {
-							//print all in the array
-							printToBuffer("[");
-							int it = 0;
-							for (int a = 0; a < AS_TYPE(literal).count; a++) {
-								if (it++ > 0) {
-									printToBuffer("] | [");
-								}
-								printLiteralCustom(((Literal*)(AS_TYPE(literal).subtypes))[a], printToBuffer);
-							}
-							printToBuffer("]");
-						}
-						break;
-
-						case TYPE_DICTIONARY: {
-							printToBuffer("[");
-
-							int it = 0;
-							for (int a = 0; a < AS_TYPE(literal).count; a += 2) {
-								if (it++ > 0) {
-									printToBuffer("] | [");
-								}
-								printLiteralCustom(((Literal*)(AS_TYPE(literal).subtypes))[a], printToBuffer);
-								printToBuffer(":");
-								printLiteralCustom(((Literal*)(AS_TYPE(literal).subtypes))[a + 1], printToBuffer);
-							}
-							printToBuffer("]");
-						}
-						break;
-
-						//TODO: function
-					}
-				}
+				default:
+					//should never be seen
+					fprintf(stderr, "[Internal] Unrecognized literal type in print type: %d\n", literal.type);
 			}
 
 			//const (printed last)
-			if (AS_TYPE(literal).mask & MASK_CONST) {
-				if (iterations++ > 0) {
-					printToBuffer(" ");
-				}
-				printToBuffer("const");
+			if (AS_TYPE(literal).constant) {
+				printToBuffer(" const");
 			}
 
-			if (printTypeMarker) {
-				printToBuffer(">");
-			}
+			printToBuffer(">");
 
 			//swap the parent-call buffer back into place
 			char* printBuffer = globalPrintBuffer;
@@ -335,6 +299,15 @@ void freeLiteral(Literal literal) {
 		return;
 	}
 
+	//TODO: are these needed? I wish i had valgrind
+	// if (IS_ARRAY(literal)) {
+	// 	freeLiteralArray(((LiteralArray*)(AS_ARRAY(literal))));
+	// }
+
+	// if (IS_DICTIONARY(literal)) {
+	// 	freeLiteralDictionary(((LiteralDictionary*)(AS_DICTIONARY(literal))));
+	// }
+
 	if (IS_IDENTIFIER(literal)) {
 		FREE_ARRAY(char, AS_IDENTIFIER(literal), STRLEN_I(literal));
 		return;
@@ -353,14 +326,15 @@ bool _isTruthy(Literal x) {
 }
 
 Literal _toStringLiteral(char* str) {
-	return ((Literal){LITERAL_STRING, {.string.ptr = (char*)str, .string.length = strlen((char*)str)}});
+	return ((Literal){LITERAL_STRING, { .string.ptr = (char*)str, .string.length = strlen((char*)str) }});
 }
 
 Literal _toIdentifierLiteral(char* str, int length) {
-	return ((Literal){LITERAL_IDENTIFIER,{.identifier.ptr = (char*)str,.identifier.length = length, .identifier.hash = hashString(str, length)}});
+	return ((Literal){LITERAL_IDENTIFIER,{ .identifier.ptr = (char*)str, .identifier.length = length, .identifier.hash = hashString(str, length) }});
 }
 
-Literal* _typePushSubtype(Literal* lit, unsigned char submask) {
+Literal* _typePushSubtype(Literal* lit, Literal subtype) {
+	//grow the subtype array
 	if (AS_TYPE(*lit).count + 1 > AS_TYPE(*lit).capacity) {
 		int oldCapacity = AS_TYPE(*lit).capacity;
 
@@ -369,11 +343,12 @@ Literal* _typePushSubtype(Literal* lit, unsigned char submask) {
 	}
 
 	//actually push
-	((Literal*)(AS_TYPE(*lit).subtypes))[ AS_TYPE(*lit).count++ ] = TO_TYPE_LITERAL( submask );
+	((Literal*)(AS_TYPE(*lit).subtypes))[ AS_TYPE(*lit).count++ ] = subtype;
 	return &((Literal*)(AS_TYPE(*lit).subtypes))[ AS_TYPE(*lit).count - 1 ];
 }
 
 char* copyString(char* original, int length) {
+	//make a local copy of the char array
 	char* buffer = ALLOCATE(char, length + 1);
 	strncpy(buffer, original, length);
 	buffer[length] = '\0';
@@ -381,6 +356,7 @@ char* copyString(char* original, int length) {
 }
 
 bool literalsAreEqual(Literal lhs, Literal rhs) {
+	//utility for other things
 	if (lhs.type != rhs.type) {
 		// ints and floats are compatible
 		if ((IS_INTEGER(lhs) || IS_FLOAT(lhs)) && (IS_INTEGER(rhs) || IS_FLOAT(rhs))) {
@@ -396,6 +372,8 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 	}
 
 	switch(lhs.type) {
+		//NOTE: null covered by check at the top of the function
+
 		case LITERAL_BOOLEAN:
 			return AS_BOOLEAN(lhs) == AS_BOOLEAN(rhs);
 
@@ -412,9 +390,12 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 			return !strncmp(AS_STRING(lhs), AS_STRING(rhs), STRLEN(lhs));
 
 		case LITERAL_ARRAY:
+			//mismatched sizes
 			if (AS_ARRAY(lhs)->count != AS_ARRAY(rhs)->count) {
 				return false;
 			}
+
+			//mismatched elements (in order)
 			for (int i = 0; i < AS_ARRAY(lhs)->count; i++) {
 				if (!literalsAreEqual( AS_ARRAY(lhs)->literals[i], AS_ARRAY(rhs)->literals[i] )) {
 					return false;
@@ -437,75 +418,46 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 					}
 				}
 			}
+
 			return true;
 
 		//TODO: functions
 
 		case LITERAL_IDENTIFIER:
+			//check shortcuts
 			if (HASH_I(lhs) != HASH_I(rhs) && STRLEN_I(lhs) != STRLEN_I(rhs)) {
 				return false;
 			}
+
 			return !strncmp(AS_IDENTIFIER(lhs), AS_IDENTIFIER(rhs), STRLEN_I(lhs));
 
 		case LITERAL_TYPE:
-			if (AS_TYPE(lhs).mask != AS_TYPE(rhs).mask) {
+			//check types
+			if (AS_TYPE(lhs).typeOf != AS_TYPE(rhs).typeOf) {
 				return false;
 			}
 
+			//const don't match
+			if (AS_TYPE(lhs).constant != AS_TYPE(rhs).constant) {
+				return false;
+			}
+
+			//check subtypes
 			if (AS_TYPE(lhs).count != AS_TYPE(rhs).count) {
 				return false;
 			}
 
-			//TODO: array & dictionaries (slot 0 is an array collection, slot 1 is a dictionary collection)
-			if ((AS_TYPE(lhs).mask & (MASK_ARRAY|MASK_DICTIONARY)) == (MASK_ARRAY|MASK_DICTIONARY)) {
-				//check arrays
-				if (!literalsAreEqual(((Literal*)(AS_TYPE(lhs).subtypes))[0], ((Literal*)(AS_TYPE(rhs).subtypes))[0])) {
-					return false;
-				}
-
-				//check dictionaries
-				if (!literalsAreEqual(((Literal*)(AS_TYPE(lhs).subtypes))[1], ((Literal*)(AS_TYPE(rhs).subtypes))[1])) {
-					return false;
-				}
-			}
-
-			//TODO: arrays (out of order)
-			if (AS_TYPE(lhs).mask & MASK_ARRAY) {
+			//check array|dictionary signatures are the same (in order)
+			if (AS_TYPE(lhs).typeOf == LITERAL_ARRAY || AS_TYPE(lhs).typeOf == LITERAL_DICTIONARY) {
 				for (int i = 0; i < AS_TYPE(lhs).count; i++) {
-					bool match = false;
-					for (int j = 0; j < AS_TYPE(rhs).count; j++) {
-						//compare
-						if (literalsAreEqual( ((Literal*)(AS_TYPE(lhs).subtypes))[i], ((Literal*)(AS_TYPE(rhs).subtypes))[j] )) {
-							match = true;
-							break;
-						}
-					}
-
-					if (!match) {
+					if (!literalsAreEqual(((Literal*)(AS_TYPE(lhs).subtypes))[i], ((Literal*)(AS_TYPE(rhs).subtypes))[i])) {
 						return false;
 					}
 				}
 			}
-
-			//TODO: dictionaries (out of order)
-			if (AS_TYPE(lhs).mask & MASK_DICTIONARY) {
-				for (int i = 0; i < AS_TYPE(lhs).count; i += 2) {
-					bool match = false;
-					for (int j = 0; j < AS_TYPE(rhs).count; j += 2) {
-						//compare
-						if (literalsAreEqual( ((Literal*)(AS_TYPE(lhs).subtypes))[i], ((Literal*)(AS_TYPE(rhs).subtypes))[j] ) && literalsAreEqual( ((Literal*)(AS_TYPE(lhs).subtypes))[i + 1], ((Literal*)(AS_TYPE(rhs).subtypes))[j + 1] )) {
-							match = true;
-							break;
-						}
-					}
-
-					if (!match) {
-						return false;
-					}
-				}
-			}
-
 			return true;
+
+		//NOTE: any covered by check at the top of the function
 
 		default:
 			//should never bee seen
@@ -550,8 +502,17 @@ int hashLiteral(Literal lit) {
 			return hash(res);
 		}
 
+		// case LITERAL_FUNCTION:
+		// 	//
+
 		case LITERAL_IDENTIFIER:
 			return HASH_I(lit); //pre-computed
+
+		// case LITERAL_TYPE:
+		// 	//not needed
+
+		// case LITERAL_ANY:
+		// 	//not needed
 
 		default:
 			//should never bee seen
