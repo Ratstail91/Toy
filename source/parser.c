@@ -839,7 +839,7 @@ static Literal readTypeToLiteral(Parser* parser) {
 		}
 		break;
 
-		//TODO: function
+		//TODO: function?
 
 		case TOKEN_ANY:
 			AS_TYPE(literal).typeOf = LITERAL_ANY;
@@ -872,7 +872,7 @@ static void varDecl(Parser* parser, Node** nodeHandle) {
 		typeLiteral = readTypeToLiteral(parser);
 	}
 	else {
-		//default any
+		//default to non-const any
 		typeLiteral = TO_TYPE_LITERAL(LITERAL_ANY, false);
 	}
 

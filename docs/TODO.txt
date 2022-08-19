@@ -1,9 +1,8 @@
 DONE: rework type system
+DONE: var decl with a type, but no value
 
 TODO: type casting
-TODO: const without a type
 TODO: increment & decrement operators
-TODO: var decl with a type, but no value
 TODO: a = b = c = 1;
 TODO: are compounds shallow or deep copies?
 TODO: conditionals

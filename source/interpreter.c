@@ -110,24 +110,25 @@ static void consumeShort(unsigned short bytes, unsigned char* tb, int* count) {
 	*count += 2;
 }
 
-static Literal parseIdentifierToValue(Interpreter* interpreter, Literal literal) {
+static bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr) {
 	//this converts identifiers to values
-	if (IS_IDENTIFIER(literal)) {
-		if (!getScopeVariable(interpreter->scope, literal, &literal)) {
+	if (IS_IDENTIFIER(*literalPtr)) {
+		if (!getScopeVariable(interpreter->scope, *literalPtr, literalPtr)) {
 			printf("Undeclared variable \"");;
-			printLiteral(literal);
+			printLiteral(*literalPtr);
 			printf("\"\n");
-			return TO_NULL_LITERAL;
+			return false;
 		}
 	}
 
-	return literal;
+	return true;
 }
 
 //each available statement
 static bool execAssert(Interpreter* interpreter) {
 	Literal rhs = popLiteralArray(&interpreter->stack);
-	Literal lhs = parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack));
+	Literal lhs = popLiteralArray(&interpreter->stack);
+	parseIdentifierToValue(interpreter, &lhs);
 
 	if (!IS_STRING(rhs)) {
 		printf("The assert keyword needs a string as the second argument, received: ");
@@ -146,7 +147,10 @@ static bool execAssert(Interpreter* interpreter) {
 
 static bool execPrint(Interpreter* interpreter) {
 	//print what is on top of the stack, then pop it
-	Literal lit = parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack));
+	Literal lit = popLiteralArray(&interpreter->stack);
+	if (!parseIdentifierToValue(interpreter, &lit)) {
+		return false;
+	}
 
 	printLiteralCustom(lit, interpreter->printOutput);
 
@@ -174,7 +178,8 @@ static bool execPushLiteral(Interpreter* interpreter, bool lng) {
 
 static bool execNegate(Interpreter* interpreter) {
 	//negate the top literal on the stack
-	Literal lit = parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack));
+	Literal lit = popLiteralArray(&interpreter->stack);
+	parseIdentifierToValue(interpreter, &lit);
 
 	if (IS_INTEGER(lit)) {
 		lit = TO_INTEGER_LITERAL(-AS_INTEGER(lit));
@@ -194,8 +199,11 @@ static bool execNegate(Interpreter* interpreter) {
 }
 
 static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
-	Literal rhs = parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack));
-	Literal lhs = parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack));
+	Literal rhs = popLiteralArray(&interpreter->stack);
+	Literal lhs = popLiteralArray(&interpreter->stack);
+
+	parseIdentifierToValue(interpreter, &rhs);
+	parseIdentifierToValue(interpreter, &lhs);
 
 	//type coersion
 	if (IS_FLOAT(lhs) && IS_INTEGER(rhs)) {
@@ -310,7 +318,10 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 		return false;
 	}
 
-	if (!setScopeVariable(interpreter->scope, identifier, parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack)), false)) {
+	Literal val = popLiteralArray(&interpreter->stack);
+	parseIdentifierToValue(interpreter, &val);
+
+	if (!IS_NULL(val) && !setScopeVariable(interpreter->scope, identifier, val, false)) {
 		printf("Incorrect type assigned to variable \"");
 		printLiteral(identifier);
 		printf("\"\n");
@@ -321,8 +332,10 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 }
 
 static bool execVarAssign(Interpreter* interpreter) {
-	Literal rhs = parseIdentifierToValue(interpreter, popLiteralArray(&interpreter->stack));
+	Literal rhs = popLiteralArray(&interpreter->stack);
 	Literal lhs = popLiteralArray(&interpreter->stack);
+
+	parseIdentifierToValue(interpreter, &rhs);
 
 	if (!IS_IDENTIFIER(lhs)) {
 		printf("Can't assign to a non-variable \"");
