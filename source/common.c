@@ -17,7 +17,6 @@ void initCommand(int argc, const char* argv[]) {
 	command.outfile = "out.tb";
 	command.source = NULL;
 	command.verbose = false;
-	command.optimize = 1;
 
 	for (int i = 1; i < argc; i++) { //start at 1 to skip the program name
 		command.error = true; //error state by default, set to false by successful flags
@@ -36,12 +35,6 @@ void initCommand(int argc, const char* argv[]) {
 
 		if (!strcmp(argv[i], "-d") || !strcmp(argv[i], "--debug")) {
 			command.verbose = true;
-			command.error = false;
-			continue;
-		}
-
-		if (!strncmp(argv[i], "-O", 2)) {
-			sscanf(argv[i], "-O%d", &command.optimize);
 			command.error = false;
 			continue;
 		}
@@ -89,7 +82,7 @@ void initCommand(int argc, const char* argv[]) {
 }
 
 void usageCommand(int argc, const char* argv[]) {
-	printf("Usage: %s [<file.tb> | -h | -v | [-d][-OX][-f file | -i source | -c file [-o outfile]]]\n\n", argv[0]);
+	printf("Usage: %s [<file.tb> | -h | -v | [-d][-f file | -i source | -c file [-o outfile]]]\n\n", argv[0]);
 }
 
 void helpCommand(int argc, const char* argv[]) {
@@ -99,7 +92,6 @@ void helpCommand(int argc, const char* argv[]) {
 	printf("-h\t| --help\t\tShow this help then exit.\n\n");
 	printf("-v\t| --version\t\tShow version and copyright information then exit.\n\n");
 	printf("-d\t| --debug\t\tBe verbose when operating.\n\n");
-	printf("-OX\t\t\t\tUse level X optimization (default 1)\n\n");
 	printf("-f\t| --file filename\tParse, compile and execute the source file.\n\n");
 	printf("-i\t| --input source\tParse, compile and execute this given string of source code.\n\n");
 	printf("-c\t| --compile filename\tParse and compile the specified source file into an output file.\n\n");

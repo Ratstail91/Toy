@@ -20,7 +20,6 @@ typedef struct {
 	char* outfile; //defaults to out.tb
 	char* source;
 	bool verbose;
-	int optimize;
 } Command;
 
 extern Command command;

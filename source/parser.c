@@ -328,7 +328,7 @@ static Opcode unary(Parser* parser, Node** nodeHandle) {
 			parsePrecedence(parser, &tmpNode, PREC_TERNARY); //can be a literal
 
 			//check for negative literals (optimisation)
-			if (command.optimize >= 1 && tmpNode->type == NODE_LITERAL) {
+			if (tmpNode->type == NODE_LITERAL) {
 				//negate directly, if int or float
 				Literal lit = tmpNode->atomic.literal;
 
@@ -725,7 +725,7 @@ static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule ru
 		const Opcode opcode = infixRule(parser, &rhsNode); //NOTE: infix rule must advance the parser
 		emitNodeBinary(nodeHandle, rhsNode, opcode);
 
-		if (command.optimize >= 1 && !calcStaticBinaryArithmetic(parser, nodeHandle)) {
+		if (!calcStaticBinaryArithmetic(parser, nodeHandle)) {
 			return;
 		}
 	}

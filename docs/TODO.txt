@@ -1,10 +1,10 @@
 DONE: rework type system
 DONE: var decl with a type, but no value
 DONE: type casting
+DONE: remove optimization option
 
 TODO: string concat with the + operator
 TODO: empty string as falsy?
-TODO: remove optimization option
 TODO: increment & decrement operators
 TODO: a = b = c = 1;
 TODO: are compounds shallow or deep copies?
