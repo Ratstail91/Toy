@@ -33,6 +33,8 @@ typedef enum Opcode {
 
 	OP_VAR_ASSIGN,		//assign to a literal
 
+	OP_TYPE_CAST,		//temporarily change a type of an atomic value
+
 	//meta
 	OP_SECTION_END,
 	//TODO: add more

@@ -17,6 +17,7 @@ typedef enum {
 	//these are meta-level types
 	LITERAL_IDENTIFIER,
 	LITERAL_TYPE,
+	LITERAL_TYPE_INTERMEDIATE, //used to process types in the compiler only
 	LITERAL_ANY, //used by the type system only
 } LiteralType;
 

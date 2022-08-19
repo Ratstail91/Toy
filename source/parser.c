@@ -266,12 +266,6 @@ static Opcode grouping(Parser* parser, Node** nodeHandle) {
 			parsePrecedence(parser, &tmpNode, PREC_TERNARY);
 			consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of grouping");
 
-			//if it's just a literal, don't need a grouping
-			if (command.optimize >= 1 && tmpNode->type == NODE_LITERAL) {
-				(*nodeHandle) = tmpNode;
-				return OP_EOF;
-			}
-
 			//process the result without optimisations
 			emitNodeGrouping(nodeHandle);
 			nodeHandle = &((*nodeHandle)->unary.child); //re-align after append
@@ -424,13 +418,72 @@ static Opcode identifier(Parser* parser, Node** nodeHandle) {
 	return OP_EOF;
 }
 
+static Opcode castingPrefix(Parser* parser, Node** nodeHandle) {
+	switch(parser->previous.type) {
+		case TOKEN_BOOLEAN:
+			emitNodeLiteral(nodeHandle, TO_TYPE_LITERAL(LITERAL_BOOLEAN, false));
+		break;
+
+		case TOKEN_INTEGER:
+			emitNodeLiteral(nodeHandle, TO_TYPE_LITERAL(LITERAL_INTEGER, false));
+		break;
+
+		case TOKEN_FLOAT:
+			emitNodeLiteral(nodeHandle, TO_TYPE_LITERAL(LITERAL_FLOAT, false));
+		break;
+
+		case TOKEN_STRING:
+			emitNodeLiteral(nodeHandle, TO_TYPE_LITERAL(LITERAL_STRING, false));
+		break;
+
+		default:
+			error(parser, parser->previous, "Unexpected token passed to casting precedence rule");
+			return OP_EOF;
+	}
+
+	return OP_EOF;
+}
+
+static Opcode castingInfix(Parser* parser, Node** nodeHandle) {
+	advance(parser);
+
+	switch(parser->previous.type) {
+		case TOKEN_IDENTIFIER:
+			identifier(parser, nodeHandle);
+		break;
+
+		case TOKEN_LITERAL_TRUE:
+		case TOKEN_LITERAL_FALSE:
+			atomic(parser, nodeHandle);
+		break;
+
+		case TOKEN_LITERAL_INTEGER:
+			atomic(parser, nodeHandle);
+		break;
+
+		case TOKEN_LITERAL_FLOAT:
+			atomic(parser, nodeHandle);
+		break;
+
+		case TOKEN_LITERAL_STRING:
+			atomic(parser, nodeHandle);
+		break;
+
+		default:
+			error(parser, parser->previous, "Unexpected token passed to casting infix precedence rule");
+			return OP_EOF;
+	}
+
+	return OP_TYPE_CAST;
+}
+
 ParseRule parseRules[] = { //must match the token types
 	//types
 	{atomic, NULL, PREC_PRIMARY},// TOKEN_NULL,
-	{NULL, NULL, PREC_NONE},// TOKEN_BOOLEAN,
-	{NULL, NULL, PREC_NONE},// TOKEN_INTEGER,
-	{NULL, NULL, PREC_NONE},// TOKEN_FLOAT,
-	{NULL, NULL, PREC_NONE},// TOKEN_STRING,
+	{castingPrefix, NULL, PREC_CALL},// TOKEN_BOOLEAN,
+	{castingPrefix, NULL, PREC_CALL},// TOKEN_INTEGER,
+	{castingPrefix, NULL, PREC_CALL},// TOKEN_FLOAT,
+	{castingPrefix, NULL, PREC_CALL},// TOKEN_STRING,
 	{NULL, NULL, PREC_NONE},// TOKEN_ARRAY,
 	{NULL, NULL, PREC_NONE},// TOKEN_DICTIONARY,
 	{NULL, NULL, PREC_NONE},// TOKEN_FUNCTION,
@@ -459,12 +512,12 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_WHILE,
 
 	//literal values
-	{identifier, NULL, PREC_PRIMARY},// TOKEN_IDENTIFIER,
-	{atomic, NULL, PREC_PRIMARY},// TOKEN_LITERAL_TRUE,
-	{atomic, NULL, PREC_PRIMARY},// TOKEN_LITERAL_FALSE,
-	{atomic, NULL, PREC_PRIMARY},// TOKEN_LITERAL_INTEGER,
-	{atomic, NULL, PREC_PRIMARY},// TOKEN_LITERAL_FLOAT,
-	{string, NULL, PREC_PRIMARY},// TOKEN_LITERAL_STRING,
+	{identifier, castingInfix, PREC_PRIMARY},// TOKEN_IDENTIFIER,
+	{atomic, castingInfix, PREC_PRIMARY},// TOKEN_LITERAL_TRUE,
+	{atomic, castingInfix, PREC_PRIMARY},// TOKEN_LITERAL_FALSE,
+	{atomic, castingInfix, PREC_PRIMARY},// TOKEN_LITERAL_INTEGER,
+	{atomic, castingInfix, PREC_PRIMARY},// TOKEN_LITERAL_FLOAT,
+	{string, castingInfix, PREC_PRIMARY},// TOKEN_LITERAL_STRING,
 
 	//math operators
 	{NULL, binary, PREC_TERM},// TOKEN_PLUS,

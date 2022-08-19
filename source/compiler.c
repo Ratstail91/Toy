@@ -140,7 +140,7 @@ static int writeLiteralTypeToCache(LiteralArray* literalCache, Literal literal) 
 
 	//push the store to the cache, tweaking the type
 	Literal lit = TO_ARRAY_LITERAL(store);
-	lit.type = LITERAL_TYPE; //NOTE: tweaking the type usually isn't a good idea
+	lit.type = LITERAL_TYPE_INTERMEDIATE; //NOTE: tweaking the type usually isn't a good idea
 	return pushLiteralArray(literalCache, lit);
 }
 
@@ -463,7 +463,19 @@ unsigned char* collateCompiler(Compiler* compiler, int* size) {
 			break;
 
 			case LITERAL_TYPE: {
+				//push a raw type
 				emitByte(&collation, &capacity, &count, LITERAL_TYPE);
+
+				Literal typeLiteral = compiler->literalCache.literals[i];
+
+				//what type this literal represents
+				emitByte(&collation, &capacity, &count, AS_TYPE(typeLiteral).typeOf);
+				emitByte(&collation, &capacity, &count, AS_TYPE(typeLiteral).constant); //if it's constant
+			}
+			break;
+
+			case LITERAL_TYPE_INTERMEDIATE: {
+				emitByte(&collation, &capacity, &count, LITERAL_TYPE_INTERMEDIATE);
 
 				LiteralArray* ptr = AS_ARRAY(compiler->literalCache.literals[i]); //used an array for storage above
 

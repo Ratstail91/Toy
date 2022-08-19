@@ -361,6 +361,80 @@ static bool execVarAssign(Interpreter* interpreter) {
 	return true;
 }
 
+static bool execValCast(Interpreter* interpreter) {
+	Literal value = popLiteralArray(&interpreter->stack);
+	Literal type = popLiteralArray(&interpreter->stack);
+
+	parseIdentifierToValue(interpreter, &value);
+
+	Literal result = TO_NULL_LITERAL;
+
+	//cast the rhs to the type represented by lhs
+	switch(AS_TYPE(type).typeOf) {
+		case LITERAL_BOOLEAN:
+			result = TO_BOOLEAN_LITERAL(IS_TRUTHY(value));
+		break;
+
+		case LITERAL_INTEGER:
+			if (IS_BOOLEAN(value)) {
+				result = TO_INTEGER_LITERAL(AS_BOOLEAN(value) ? 1 : 0);
+			}
+
+			if (IS_FLOAT(value)) {
+				result = TO_INTEGER_LITERAL(AS_FLOAT(value));
+			}
+
+			if (IS_STRING(value)) {
+				int val = 0;
+				sscanf(AS_STRING(value), "%d", &val);
+				result = TO_INTEGER_LITERAL(val);
+			}
+		break;
+
+		case LITERAL_FLOAT:
+			if (IS_BOOLEAN(value)) {
+				result = TO_FLOAT_LITERAL(AS_BOOLEAN(value) ? 1 : 0);
+			}
+
+			if (IS_INTEGER(value)) {
+				result = TO_FLOAT_LITERAL(AS_INTEGER(value));
+			}
+
+			if (IS_STRING(value)) {
+				float val = 0;
+				sscanf(AS_STRING(value), "%f", &val);
+				result = TO_FLOAT_LITERAL(val);
+			}
+		break;
+
+		case LITERAL_STRING:
+			if (IS_BOOLEAN(value)) {
+				result = TO_STRING_LITERAL(AS_BOOLEAN(value) ? "true" : "false");
+			}
+
+			if (IS_INTEGER(value)) {
+				char buffer[128];
+				snprintf(buffer, 128, "%d", AS_INTEGER(value));
+				result = TO_STRING_LITERAL(buffer);
+			}
+
+			if (IS_FLOAT(value)) {
+				char buffer[128];
+				snprintf(buffer, 128, "%g", AS_FLOAT(value));
+				result = TO_STRING_LITERAL(buffer);
+			}
+		break;
+
+		default:
+			printf("Unknown cast type found %d, terminating\n", AS_TYPE(type).typeOf);
+			return false;
+	}
+
+	//leave the new value on the stack
+	pushLiteralArray(&interpreter->stack, result);
+	return true;
+}
+
 //the heart of toy
 static void execInterpreter(Interpreter* interpreter) {
 	unsigned char opcode = readByte(interpreter->bytecode, &interpreter->count);
@@ -429,6 +503,12 @@ static void execInterpreter(Interpreter* interpreter) {
 
 			case OP_VAR_ASSIGN:
 				if (!execVarAssign(interpreter)) {
+					return;
+				}
+			break;
+
+			case OP_TYPE_CAST:
+				if (!execValCast(interpreter)) {
 					return;
 				}
 			break;
@@ -602,6 +682,24 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 			break;
 
 			case LITERAL_TYPE: {
+				//what the literal is
+				LiteralType literalType = (LiteralType)readByte(interpreter->bytecode, &interpreter->count);
+				unsigned char constant = readByte(interpreter->bytecode, &interpreter->count);
+
+				Literal typeLiteral = TO_TYPE_LITERAL(literalType, constant);
+
+				//save the type
+				pushLiteralArray(&interpreter->literalCache, typeLiteral);
+
+				if (command.verbose) {
+					printf("(type ");
+					printLiteral(typeLiteral);
+					printf(")\n");
+				}
+			}
+			break;
+
+			case LITERAL_TYPE_INTERMEDIATE: {
 				//what the literal represents
 				LiteralType literalType = (LiteralType)readByte(interpreter->bytecode, &interpreter->count);
 				unsigned char constant = readByte(interpreter->bytecode, &interpreter->count);

@@ -322,7 +322,25 @@ void freeLiteral(Literal literal) {
 }
 
 bool _isTruthy(Literal x) {
-	return (IS_NULL(x) || (IS_BOOLEAN(x) && AS_BOOLEAN(x)) || (IS_INTEGER(x) && AS_INTEGER(x) != 0) || (IS_FLOAT(x) && AS_FLOAT(x) != 0));
+	if (IS_NULL(x)) {
+		return false;
+	}
+
+	if (IS_BOOLEAN(x)) {
+		return AS_BOOLEAN(x);
+	}
+
+	if (IS_INTEGER(x)) {
+		return AS_INTEGER(x) != 0;
+	}
+
+	if (IS_FLOAT(x)) {
+		return AS_FLOAT(x) != 0;
+	}
+
+	//TODO: empty string as falsy?
+
+	return true;
 }
 
 Literal _toStringLiteral(char* str) {
