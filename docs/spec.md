@@ -513,6 +513,7 @@ The following functions are available in the standard library.
 * filter(self: any, cb: fn(k: any, v: any)(bool)): any - This function calls "cb" once for every entry in the array or dictionary (self), with that key and value passed in as "k" and "v", respectfully. This returns a new array or dictionary that contains every key-value pair for which the call to "cb" returned true.
 * indexOf(self: string, str: string): int - This function returns the position of the first instance of "str" in the string "self".
 * insert(self: any, key: any, x: any) - This function inserts "value" at the index/key "key", shifting the remaining entry up 1 index if it's an array. This alters the memory.
+* isEmpty(self: any): bool - returns true of the array, dictionary or string is empty.
 * keys(self: any): [type] - This function returns an array containing each key in the dictionary. The order of the keys is undefined.
 * lastIndexOf(self: string, str: string): int - This function returns the position of the last instance of "str" in the calling string "self".
 * length(self: any): int - This function returns the length of the array, dictionary or string.
