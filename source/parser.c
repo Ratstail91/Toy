@@ -106,7 +106,7 @@ typedef enum {
 	PREC_PRIMARY,
 } PrecedenceRule;
 
-typedef Opcode (*ParseFn)(Parser* parser, Node** nodeHandle, bool canBeAssigned);
+typedef Opcode (*ParseFn)(Parser* parser, Node** nodeHandle);
 
 typedef struct {
 	ParseFn prefix;
@@ -121,7 +121,7 @@ static void declaration(Parser* parser, Node** nodeHandle);
 static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule rule);
 
 //the expression rules
-static Opcode compound(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
+static Opcode compound(Parser* parser, Node** nodeHandle) {
 	//read either an array or a dictionary into a literal node
 
 	int iterations = 0; //count the number of entries iterated over
@@ -234,7 +234,7 @@ static Opcode compound(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	return OP_EOF;
 }
 
-static Opcode string(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
+static Opcode string(Parser* parser, Node** nodeHandle) {
 	//handle strings
 	switch(parser->previous.type) {
 		case TOKEN_LITERAL_STRING: {
@@ -258,7 +258,7 @@ static Opcode string(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	}
 }
 
-static Opcode grouping(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
+static Opcode grouping(Parser* parser, Node** nodeHandle) {
 	//handle groupings with ()
 	switch(parser->previous.type) {
 		case TOKEN_PAREN_LEFT: {
@@ -285,7 +285,7 @@ static Opcode grouping(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	}
 }
 
-static Opcode binary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
+static Opcode binary(Parser* parser, Node** nodeHandle) {
 	advance(parser);
 
 	//binary() is an infix rule - so only get the RHS of the operator
@@ -326,7 +326,7 @@ static Opcode binary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	}
 }
 
-static Opcode unary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
+static Opcode unary(Parser* parser, Node** nodeHandle) {
 	switch(parser->previous.type) {
 		case TOKEN_MINUS: {
 			//temp handle to potentially negate values
@@ -370,7 +370,7 @@ static Opcode unary(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	}
 }
 
-static Opcode atomic(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
+static Opcode atomic(Parser* parser, Node** nodeHandle) {
 	switch(parser->previous.type) {
 		case TOKEN_NULL:
 			emitNodeLiteral(nodeHandle, TO_NULL_LITERAL);
@@ -404,7 +404,7 @@ static Opcode atomic(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
 	}
 }
 
-static Opcode identifier(Parser* parser, Node** nodeHandle, bool canBeAssigned) {
+static Opcode identifier(Parser* parser, Node** nodeHandle) {
 	//make a copy of the string
 	Token identifierToken = parser->previous;
 
@@ -656,7 +656,7 @@ static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule ru
 	}
 
 	bool canBeAssigned = rule <= PREC_ASSIGNMENT;
-	prefixRule(parser, nodeHandle, canBeAssigned); //ignore the returned opcode
+	prefixRule(parser, nodeHandle); //ignore the returned opcode
 
 	//infix rules are left-recursive
 	while (rule <= getRule(parser->current.type)->precedence) {
@@ -669,7 +669,7 @@ static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule ru
 		}
 
 		Node* rhsNode = NULL;
-		const Opcode opcode = infixRule(parser, &rhsNode, canBeAssigned); //NOTE: infix rule must advance the parser
+		const Opcode opcode = infixRule(parser, &rhsNode); //NOTE: infix rule must advance the parser
 		emitNodeBinary(nodeHandle, rhsNode, opcode);
 
 		if (command.optimize >= 1 && !calcStaticBinaryArithmetic(parser, nodeHandle)) {
