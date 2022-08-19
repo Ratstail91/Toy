@@ -179,7 +179,10 @@ static bool execPushLiteral(Interpreter* interpreter, bool lng) {
 static bool execNegate(Interpreter* interpreter) {
 	//negate the top literal on the stack
 	Literal lit = popLiteralArray(&interpreter->stack);
-	parseIdentifierToValue(interpreter, &lit);
+
+	if (parseIdentifierToValue(interpreter, &lit)) {
+		return false;
+	}
 
 	if (IS_INTEGER(lit)) {
 		lit = TO_INTEGER_LITERAL(-AS_INTEGER(lit));
@@ -365,7 +368,9 @@ static bool execValCast(Interpreter* interpreter) {
 	Literal value = popLiteralArray(&interpreter->stack);
 	Literal type = popLiteralArray(&interpreter->stack);
 
-	parseIdentifierToValue(interpreter, &value);
+	if (!parseIdentifierToValue(interpreter, &value)) {
+		return false;
+	}
 
 	Literal result = TO_NULL_LITERAL;
 
