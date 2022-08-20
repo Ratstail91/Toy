@@ -21,6 +21,8 @@ typedef enum NodeType {
 	NODE_PATH_IF, //for control flow
 	NODE_PATH_WHILE, //for control flow
 	NODE_PATH_FOR, //for control flow
+	NODE_PATH_BREAK,
+	NODE_PATH_CONTINUE,
 } NodeType;
 
 typedef struct NodeLiteral {

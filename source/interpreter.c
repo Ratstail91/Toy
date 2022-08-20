@@ -588,7 +588,7 @@ static bool execFalseJump(Interpreter* interpreter) {
 	int target = (int)readShort(interpreter->bytecode, &interpreter->count);
 
 	if (target + interpreter->codeStart > interpreter->length) {
-		printf("Jump out of range\n");
+		printf("Jump out of range (false jump)\n");
 		return false;
 	}
 

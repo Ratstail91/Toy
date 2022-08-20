@@ -65,6 +65,8 @@ void freeNode(Node* node) {
 		case NODE_PATH_IF:
 		case NODE_PATH_WHILE:
 		case NODE_PATH_FOR:
+		case NODE_PATH_BREAK:
+		case NODE_PATH_CONTINUE:
 			freeNode(node->path.preClause);
 			freeNode(node->path.postClause);
 			freeNode(node->path.condition);

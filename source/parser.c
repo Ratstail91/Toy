@@ -985,6 +985,20 @@ static void forStmt(Parser* parser, Node** nodeHandle) {
 	emitNodePath(nodeHandle, NODE_PATH_FOR, preClause, postClause, condition, thenPath, NULL);
 }
 
+static void breakStmt(Parser* parser, Node** nodeHandle) {
+	freeNode(*nodeHandle);
+	emitNodePath(nodeHandle, NODE_PATH_BREAK, NULL, NULL, NULL, NULL, NULL);
+
+	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of break statement");
+}
+
+static void continueStmt(Parser* parser, Node** nodeHandle) {
+	freeNode(*nodeHandle);
+	emitNodePath(nodeHandle, NODE_PATH_CONTINUE, NULL, NULL, NULL, NULL, NULL);
+
+	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of continue statement");
+}
+
 //precedence functions
 static void expressionStmt(Parser* parser, Node** nodeHandle) {
 	//BUGFIX: check for empty statements
@@ -1040,6 +1054,18 @@ static void statement(Parser* parser, Node** nodeHandle) {
 	//for-pre-clause-post-then
 	if (match(parser, TOKEN_FOR)) {
 		forStmt(parser, nodeHandle);
+		return;
+	}
+
+	//break
+	if (match(parser, TOKEN_BREAK)) {
+		breakStmt(parser, nodeHandle);
+		return;
+	}
+
+	//continue
+	if (match(parser, TOKEN_CONTINUE)) {
+		continueStmt(parser, nodeHandle);
 		return;
 	}
 

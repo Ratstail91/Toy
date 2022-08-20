@@ -8,12 +8,12 @@ DONE: chained if-then-else
 DONE: optional block around a path if it's only one statement
 DONE: while-then
 DONE: for-then
+DONE: break and continue statements
 
 TODO: string concat with the + operator
 TODO: increment & decrement operators
 TODO: a = b = c = 1;
 TODO: are compounds shallow or deep copies?
-TODO: break and continue statements
 TODO: functions, and all of their features
 TODO: Assertion-based test scripts
 TODO: standard library
