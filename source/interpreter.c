@@ -230,6 +230,22 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 	parseIdentifierToValue(interpreter, &rhs);
 	parseIdentifierToValue(interpreter, &lhs);
 
+	//special case for string concatenation ONLY
+	if (IS_STRING(lhs) && IS_STRING(rhs)) {
+		//check for overflow
+		if (STRLEN(lhs) + STRLEN(rhs) > MAX_STRING_LENGTH) {
+			printf("Can't concatenate these strings (result is too long)\n");
+			return false;
+		}
+
+		//concat the strings
+		char buffer[MAX_STRING_LENGTH];
+		snprintf(buffer, MAX_STRING_LENGTH, "%s%s", AS_STRING(lhs), AS_STRING(rhs));
+		pushLiteralArray(&interpreter->stack, TO_STRING_LITERAL(buffer));
+
+		return true;
+	}
+
 	//type coersion
 	if (IS_FLOAT(lhs) && IS_INTEGER(rhs)) {
 		rhs = TO_FLOAT_LITERAL(AS_INTEGER(rhs));

@@ -241,9 +241,11 @@ static Opcode string(Parser* parser, Node** nodeHandle) {
 			int length = parser->previous.length;
 
 			//for safety
-			if (length > 4096) {
-				length = 4096;
-				error(parser, parser->previous, "Strings can only be a maximum of 4096 characters long");
+			if (length > MAX_STRING_LENGTH) {
+				length = MAX_STRING_LENGTH;
+				char buffer[256];
+				snprintf(buffer, 256, "Strings can only be a maximum of %d characters long", MAX_STRING_LENGTH);
+				error(parser, parser->previous, buffer);
 			}
 
 			emitNodeLiteral(nodeHandle, TO_STRING_LITERAL(copyString(parser->previous.lexeme, length)));

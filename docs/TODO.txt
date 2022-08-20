@@ -10,8 +10,8 @@ DONE: while-then
 DONE: for-then
 DONE: break and continue statements
 DONE: truthiness rethink
+DONE: string concat with the + operator
 
-TODO: string concat with the + operator
 TODO: increment & decrement operators
 TODO: a = b = c = 1;
 TODO: are compounds shallow or deep copies?

@@ -81,12 +81,12 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 		break;
 
 		case LITERAL_STRING: {
-			char buffer[4096];
+			char buffer[MAX_STRING_LENGTH];
 			if (!quotes) {
-				snprintf(buffer, 4096, "%.*s", STRLEN(literal), AS_STRING(literal));
+				snprintf(buffer, MAX_STRING_LENGTH, "%.*s", STRLEN(literal), AS_STRING(literal));
 			}
 			else {
-				snprintf(buffer, 4096, "%c%.*s%c", quotes, STRLEN(literal), AS_STRING(literal), quotes);
+				snprintf(buffer, MAX_STRING_LENGTH, "%c%.*s%c", quotes, STRLEN(literal), AS_STRING(literal), quotes);
 			}
 			printFn(buffer);
 		}
