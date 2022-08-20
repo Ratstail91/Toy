@@ -8,13 +8,13 @@
 #include <string.h>
 
 static void stdoutWrapper(const char* output) {
-	fprintf(stdout, output);
+	fprintf(stdout, "%s", output);
 	fprintf(stdout, "\n"); //default new line
 }
 
 static void stderrWrapper(const char* output) {
 	fprintf(stderr, "Assertion failure: ");
-	fprintf(stderr, output);
+	fprintf(stderr, "%s", output);
 	fprintf(stderr, "\n"); //default new line
 }
 
@@ -177,7 +177,32 @@ static bool execPushLiteral(Interpreter* interpreter, bool lng) {
 }
 
 static bool execNegate(Interpreter* interpreter) {
-	//negate the top literal on the stack
+	//negate the top literal on the stack (numbers only)
+	Literal lit = popLiteralArray(&interpreter->stack);
+
+	if (!parseIdentifierToValue(interpreter, &lit)) {
+		return false;
+	}
+
+	else if (IS_INTEGER(lit)) {
+		lit = TO_INTEGER_LITERAL(-AS_INTEGER(lit));
+	}
+	else if (IS_FLOAT(lit)) {
+		lit = TO_FLOAT_LITERAL(-AS_FLOAT(lit));
+	}
+	else {
+		printf("[internal] The interpreter can't negate that literal: ");
+		printLiteral(lit);
+		printf("\n");
+		return false;
+	}
+
+	pushLiteralArray(&interpreter->stack, lit);
+	return true;
+}
+
+static bool execInvert(Interpreter* interpreter) {
+	//negate the top literal on the stack (booleans only)
 	Literal lit = popLiteralArray(&interpreter->stack);
 
 	if (!parseIdentifierToValue(interpreter, &lit)) {
@@ -187,14 +212,8 @@ static bool execNegate(Interpreter* interpreter) {
 	if (IS_BOOLEAN(lit)) {
 		lit = TO_BOOLEAN_LITERAL(!AS_BOOLEAN(lit));
 	}
-	else if (IS_INTEGER(lit)) {
-		lit = TO_INTEGER_LITERAL(-AS_INTEGER(lit));
-	}
-	else if (IS_FLOAT(lit)) {
-		lit = TO_FLOAT_LITERAL(-AS_FLOAT(lit));
-	}
 	else {
-		printf("[internal] The interpreter can't negate that literal: ");
+		printf("[internal] The interpreter can't invert that literal: ");
 		printLiteral(lit);
 		printf("\n");
 		return false;
@@ -661,6 +680,12 @@ static void execInterpreter(Interpreter* interpreter) {
 
 			case OP_COMPARE_GREATER_EQUAL:
 				if (!execCompareLessEqual(interpreter, true)) {
+					return;
+				}
+			break;
+
+			case OP_INVERT:
+				if (!execInvert(interpreter)) {
 					return;
 				}
 			break;

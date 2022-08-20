@@ -361,7 +361,7 @@ static Opcode unary(Parser* parser, Node** nodeHandle) {
 		parsePrecedence(parser, &tmpNode, PREC_TERNARY); //can be a literal
 
 		//check for negative literals (optimisation)
-		if (tmpNode->type == NODE_LITERAL) {
+		if (tmpNode->type == NODE_LITERAL && (IS_INTEGER(tmpNode->atomic.literal) || IS_FLOAT(tmpNode->atomic.literal))) {
 			//negate directly, if int or float
 			Literal lit = tmpNode->atomic.literal;
 
@@ -378,37 +378,50 @@ static Opcode unary(Parser* parser, Node** nodeHandle) {
 
 			return OP_EOF;
 		}
+
+		//check for negated boolean errors
+		if (tmpNode->type == NODE_LITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {
+			error(parser, parser->previous, "Negative booleans are not allowed");
+			return OP_EOF;
+		}
+
+		//actually emit the negation
+		emitNodeUnary(nodeHandle, OP_NEGATE);
+		(*nodeHandle)->unary.child = tmpNode; //set negate's child to the literal
 	}
 
 	else if (parser->previous.type == TOKEN_NOT) {
 		//temp handle to potentially negate values
 		parsePrecedence(parser, &tmpNode, PREC_TERNARY); //can be a literal
 
-		//check for negative literals (optimisation)
-		if (tmpNode->type == NODE_LITERAL && !IS_IDENTIFIER(tmpNode->atomic.literal)) {
+		//check for inverted booleans
+		if (tmpNode->type == NODE_LITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {
 			//negate directly, if int or float
 			Literal lit = tmpNode->atomic.literal;
 
-			if (IS_BOOLEAN(lit)) {
-				lit = TO_BOOLEAN_LITERAL(!AS_BOOLEAN(lit));
-			}
+			lit = TO_BOOLEAN_LITERAL(!AS_BOOLEAN(lit));
 
 			tmpNode->atomic.literal = lit;
 			*nodeHandle = tmpNode;
 
 			return OP_EOF;
 		}
+
+		//check for inverted number errors
+		if (tmpNode->type == NODE_LITERAL && (IS_INTEGER(tmpNode->atomic.literal) || IS_FLOAT(tmpNode->atomic.literal))) {
+			error(parser, parser->previous, "Inverted numbers are not allowed");
+			return OP_EOF;
+		}
+
+		//actually emit the negation
+		emitNodeUnary(nodeHandle, OP_INVERT);
+		(*nodeHandle)->unary.child = tmpNode; //set negate's child to the literal
 	}
 
 	else {
 		error(parser, parser->previous, "Unexpected token passed to unary precedence rule");
 		return OP_EOF;
 	}
-
-
-	//actually emit the negation
-	emitNodeUnary(nodeHandle, OP_NEGATE);
-	(*nodeHandle)->unary.child = tmpNode; //set negate's child to the literal
 
 	return OP_EOF;
 }

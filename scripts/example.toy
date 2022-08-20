@@ -87,4 +87,3 @@ assert false, "This is a failed assert, and will end execution";
 
 print "This will not be printed because of the above assert";
 
-//TODO: use a proper assert-based version of this file

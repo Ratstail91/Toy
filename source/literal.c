@@ -9,7 +9,7 @@
 
 //utils
 static void stdoutWrapper(const char* output) {
-	fprintf(stdout, output);
+	fprintf(stdout, "%s", output);
 }
 
 //buffer the prints

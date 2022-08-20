@@ -1,0 +1,33 @@
+//boolean origin
+var b: bool = true;
+
+assert (int)b == 1, "bool -> int";
+assert (float)b == 1, "bool -> float";
+assert (string)b == "true", "bool -> string";
+
+
+//integer origin
+var i: int = 42;
+
+assert (bool)i == true, "int -> bool";
+assert (float)i == 42, "int -> float";
+assert (string)i == "42", "int -> string";
+
+
+//float origin
+var f: float = 3.14;
+
+assert (bool)f == true, "float -> bool";
+assert (int)f == 3, "float -> int";
+assert (string)f == "3.14", "float -> string";
+
+
+//string origin
+var s: string = "78.9";
+
+assert (bool)s == true, "string -> bool";
+assert (int)s == 78, "string -> int";
+assert (float)s == 78.9, "string -> float";
+
+
+print "All good";

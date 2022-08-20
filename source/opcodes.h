@@ -42,6 +42,7 @@ typedef enum Opcode {
 	OP_COMPARE_LESS_EQUAL,
 	OP_COMPARE_GREATER,
 	OP_COMPARE_GREATER_EQUAL,
+	OP_INVERT, //for booleans
 
 	//meta
 	OP_SECTION_END,
