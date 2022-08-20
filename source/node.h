@@ -101,4 +101,3 @@ void emitNodeVarTypes(Node** nodeHandle, Literal literal);
 void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal type, Node* expression);
 
 void printNode(Node* node);
-

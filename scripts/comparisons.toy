@@ -1,0 +1,28 @@
+
+//test numbers
+assert 1 < 2, "1 < 2";
+assert 1 == 1, "1 == 1";
+assert 2 > 1, "2 > 1";
+assert 1 <= 2, "1 <= 2";
+assert 2 >= 1, "2 >= 1";
+
+
+//test variables
+var a = 1;
+var b = 2;
+
+assert a < b, "a < b";
+assert a == a, "a == a";
+assert b > a, "b > a";
+assert a <= b, "a <= b";
+assert b >= a, "b >= a";
+
+
+//test negation
+assert !false, "!false";
+
+var c = false;
+assert !c, "!c";
+
+
+print "All good";

@@ -121,8 +121,8 @@ static Token makeToken(Lexer* lexer, TokenType type) {
 	Token token;
 
 	token.type = type;
-	token.lexeme = &lexer->source[lexer->current - 1];
-	token.length = 1;
+	token.length = lexer->current - lexer->start;
+	token.lexeme = &lexer->source[lexer->current - token.length];
 	token.line = lexer->line;
 
 	//BUG #10: this shows TOKEN_EOF twice due to the overarching structure of the program - can't be fixed

@@ -35,6 +35,14 @@ typedef enum Opcode {
 
 	OP_TYPE_CAST,		//temporarily change a type of an atomic value
 
+	//comparion of values
+	OP_COMPARE_EQUAL,
+	OP_COMPARE_NOT_EQUAL,
+	OP_COMPARE_LESS,
+	OP_COMPARE_LESS_EQUAL,
+	OP_COMPARE_GREATER,
+	OP_COMPARE_GREATER_EQUAL,
+
 	//meta
 	OP_SECTION_END,
 	//TODO: add more

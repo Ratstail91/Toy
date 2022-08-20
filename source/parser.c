@@ -97,7 +97,7 @@ typedef enum {
 	PREC_TERNARY,
 	PREC_OR,
 	PREC_AND,
-	PREC_EQUALITY,
+	// PREC_EQUALITY,
 	PREC_COMPARISON,
 	PREC_TERM,
 	PREC_FACTOR,
@@ -284,6 +284,7 @@ static Opcode binary(Parser* parser, Node** nodeHandle) {
 
 	//binary() is an infix rule - so only get the RHS of the operator
 	switch(parser->previous.type) {
+		//arithmetic
 		case TOKEN_PLUS: {
 			parsePrecedence(parser, nodeHandle, PREC_TERM);
 			return OP_ADDITION;
@@ -309,9 +310,41 @@ static Opcode binary(Parser* parser, Node** nodeHandle) {
 			return OP_MODULO;
 		}
 
+		//assignment
 		case TOKEN_ASSIGN: {
 			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
 			return OP_VAR_ASSIGN;
+		}
+
+		//comparison
+		case TOKEN_EQUAL: {
+			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
+			return OP_COMPARE_EQUAL;
+		}
+
+		case TOKEN_NOT_EQUAL: {
+			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
+			return OP_COMPARE_NOT_EQUAL;
+		}
+
+		case TOKEN_LESS: {
+			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
+			return OP_COMPARE_LESS;
+		}
+
+		case TOKEN_LESS_EQUAL: {
+			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
+			return OP_COMPARE_LESS_EQUAL;
+		}
+
+		case TOKEN_GREATER: {
+			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
+			return OP_COMPARE_GREATER;
+		}
+
+		case TOKEN_GREATER_EQUAL: {
+			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
+			return OP_COMPARE_GREATER_EQUAL;
 		}
 
 		default:
@@ -321,47 +354,63 @@ static Opcode binary(Parser* parser, Node** nodeHandle) {
 }
 
 static Opcode unary(Parser* parser, Node** nodeHandle) {
-	switch(parser->previous.type) {
-		case TOKEN_MINUS: {
-			//temp handle to potentially negate values
-			Node* tmpNode = NULL;
-			parsePrecedence(parser, &tmpNode, PREC_TERNARY); //can be a literal
+	Node* tmpNode = NULL;
 
-			//check for negative literals (optimisation)
-			if (tmpNode->type == NODE_LITERAL) {
-				//negate directly, if int or float
-				Literal lit = tmpNode->atomic.literal;
+	if (parser->previous.type == TOKEN_MINUS) {
+		//temp handle to potentially negate values
+		parsePrecedence(parser, &tmpNode, PREC_TERNARY); //can be a literal
 
-				if (IS_INTEGER(lit)) {
-					lit = TO_INTEGER_LITERAL(-AS_INTEGER(lit));
-				}
+		//check for negative literals (optimisation)
+		if (tmpNode->type == NODE_LITERAL) {
+			//negate directly, if int or float
+			Literal lit = tmpNode->atomic.literal;
 
-				if (IS_FLOAT(lit)) {
-					lit = TO_FLOAT_LITERAL(-AS_FLOAT(lit));
-				}
-
-				tmpNode->atomic.literal = lit;
-				*nodeHandle = tmpNode;
-
-				return OP_EOF;
+			if (IS_INTEGER(lit)) {
+				lit = TO_INTEGER_LITERAL(-AS_INTEGER(lit));
 			}
 
-			//process the literal without optimizations
-			if (tmpNode->type == NODE_LITERAL) {
-				emitNodeUnary(nodeHandle, OP_NEGATE);
-				nodeHandle = &((*nodeHandle)->unary.child); //re-align after append
-				(*nodeHandle) = tmpNode; //set negate's child to the literal
-				return OP_EOF;
+			if (IS_FLOAT(lit)) {
+				lit = TO_FLOAT_LITERAL(-AS_FLOAT(lit));
 			}
 
-			error(parser, parser->previous, "Unexpected token passed to unary minus precedence rule");
+			tmpNode->atomic.literal = lit;
+			*nodeHandle = tmpNode;
+
 			return OP_EOF;
 		}
-
-		default:
-			error(parser, parser->previous, "Unexpected token passed to unary precedence rule");
-			return OP_EOF;
 	}
+
+	else if (parser->previous.type == TOKEN_NOT) {
+		//temp handle to potentially negate values
+		parsePrecedence(parser, &tmpNode, PREC_TERNARY); //can be a literal
+
+		//check for negative literals (optimisation)
+		if (tmpNode->type == NODE_LITERAL && !IS_IDENTIFIER(tmpNode->atomic.literal)) {
+			//negate directly, if int or float
+			Literal lit = tmpNode->atomic.literal;
+
+			if (IS_BOOLEAN(lit)) {
+				lit = TO_BOOLEAN_LITERAL(!AS_BOOLEAN(lit));
+			}
+
+			tmpNode->atomic.literal = lit;
+			*nodeHandle = tmpNode;
+
+			return OP_EOF;
+		}
+	}
+
+	else {
+		error(parser, parser->previous, "Unexpected token passed to unary precedence rule");
+		return OP_EOF;
+	}
+
+
+	//actually emit the negation
+	emitNodeUnary(nodeHandle, OP_NEGATE);
+	(*nodeHandle)->unary.child = tmpNode; //set negate's child to the literal
+
+	return OP_EOF;
 }
 
 static Opcode atomic(Parser* parser, Node** nodeHandle) {
@@ -522,9 +571,9 @@ ParseRule parseRules[] = { //must match the token types
 	//math operators
 	{NULL, binary, PREC_TERM},// TOKEN_PLUS,
 	{unary, binary, PREC_TERM},// TOKEN_MINUS,
-	{NULL, binary, PREC_TERM},// TOKEN_MULTIPLY,
-	{NULL, binary, PREC_TERM},// TOKEN_DIVIDE,
-	{NULL, binary, PREC_TERM},// TOKEN_MODULO,
+	{NULL, binary, PREC_FACTOR},// TOKEN_MULTIPLY,
+	{NULL, binary, PREC_FACTOR},// TOKEN_DIVIDE,
+	{NULL, binary, PREC_FACTOR},// TOKEN_MODULO,
 	{NULL, NULL, PREC_NONE},// TOKEN_PLUS_ASSIGN,
 	{NULL, NULL, PREC_NONE},// TOKEN_MINUS_ASSIGN,
 	{NULL, NULL, PREC_NONE},// TOKEN_MULTIPLY_ASSIGN,
@@ -541,20 +590,20 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_BRACKET_RIGHT,
 	{NULL, NULL, PREC_NONE},// TOKEN_BRACE_LEFT,
 	{NULL, NULL, PREC_NONE},// TOKEN_BRACE_RIGHT,
-	{NULL, NULL, PREC_NONE},// TOKEN_NOT,
-	{NULL, NULL, PREC_NONE},// TOKEN_NOT_EQUAL,
-	{NULL, NULL, PREC_NONE},// TOKEN_EQUAL,
-	{NULL, NULL, PREC_NONE},// TOKEN_LESS,
-	{NULL, NULL, PREC_NONE},// TOKEN_GREATER,
-	{NULL, NULL, PREC_NONE},// TOKEN_LESS_EQUAL,
-	{NULL, NULL, PREC_NONE},// TOKEN_GREATER_EQUAL,
+	{unary, NULL, PREC_CALL},// TOKEN_NOT,
+	{NULL, binary, PREC_COMPARISON},// TOKEN_NOT_EQUAL,
+	{NULL, binary, PREC_COMPARISON},// TOKEN_EQUAL,
+	{NULL, binary, PREC_COMPARISON},// TOKEN_LESS,
+	{NULL, binary, PREC_COMPARISON},// TOKEN_GREATER,
+	{NULL, binary, PREC_COMPARISON},// TOKEN_LESS_EQUAL,
+	{NULL, binary, PREC_COMPARISON},// TOKEN_GREATER_EQUAL,
 	{NULL, NULL, PREC_NONE},// TOKEN_AND,
 	{NULL, NULL, PREC_NONE},// TOKEN_OR,
 
 	//other operators
 	{NULL, NULL, PREC_NONE},// TOKEN_COLON,
 	{NULL, NULL, PREC_NONE},// TOKEN_SEMICOLON,
-	{NULL, NULL, PREC_CALL},// TOKEN_COMMA,
+	{NULL, NULL, PREC_NONE},// TOKEN_COMMA,
 	{NULL, NULL, PREC_NONE},// TOKEN_DOT,
 	{NULL, NULL, PREC_NONE},// TOKEN_PIPE,
 	{NULL, NULL, PREC_NONE},// TOKEN_REST,
@@ -577,6 +626,12 @@ static bool calcStaticBinaryArithmetic(Parser* parser, Node** nodeHandle) {
 		case OP_MULTIPLICATION:
 		case OP_DIVISION:
 		case OP_MODULO:
+		case OP_COMPARE_EQUAL:
+		case OP_COMPARE_NOT_EQUAL:
+		case OP_COMPARE_LESS:
+		case OP_COMPARE_LESS_EQUAL:
+		case OP_COMPARE_GREATER:
+		case OP_COMPARE_GREATER_EQUAL:
 			break;
 
 		default:
@@ -642,6 +697,30 @@ static bool calcStaticBinaryArithmetic(Parser* parser, Node** nodeHandle) {
 				result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) % AS_INTEGER(rhs) );
 			break;
 
+			case OP_COMPARE_EQUAL:
+				result = TO_BOOLEAN_LITERAL( AS_INTEGER(lhs) == AS_INTEGER(rhs) );
+			break;
+
+			case OP_COMPARE_NOT_EQUAL:
+				result = TO_BOOLEAN_LITERAL( AS_INTEGER(lhs) != AS_INTEGER(rhs) );
+			break;
+
+			case OP_COMPARE_LESS:
+				result = TO_BOOLEAN_LITERAL( AS_INTEGER(lhs) < AS_INTEGER(rhs) );
+			break;
+
+			case OP_COMPARE_LESS_EQUAL:
+				result = TO_BOOLEAN_LITERAL( AS_INTEGER(lhs) <= AS_INTEGER(rhs) );
+			break;
+
+			case OP_COMPARE_GREATER:
+				result = TO_BOOLEAN_LITERAL( AS_INTEGER(lhs) > AS_INTEGER(rhs) );
+			break;
+
+			case OP_COMPARE_GREATER_EQUAL:
+				result = TO_BOOLEAN_LITERAL( AS_INTEGER(lhs) >= AS_INTEGER(rhs) );
+			break;
+
 			default:
 				printf("[internal] bad opcode argument passed to calcStaticBinaryArithmetic()");
 				return false;
@@ -674,6 +753,30 @@ static bool calcStaticBinaryArithmetic(Parser* parser, Node** nodeHandle) {
 					return false;
 				}
 				result = TO_FLOAT_LITERAL( AS_FLOAT(lhs) / AS_FLOAT(rhs) );
+			break;
+
+			case OP_COMPARE_EQUAL:
+				result = TO_BOOLEAN_LITERAL( AS_FLOAT(lhs) == AS_FLOAT(rhs) );
+			break;
+
+			case OP_COMPARE_NOT_EQUAL:
+				result = TO_BOOLEAN_LITERAL( AS_FLOAT(lhs) != AS_FLOAT(rhs) );
+			break;
+
+			case OP_COMPARE_LESS:
+				result = TO_BOOLEAN_LITERAL( AS_FLOAT(lhs) < AS_FLOAT(rhs) );
+			break;
+
+			case OP_COMPARE_LESS_EQUAL:
+				result = TO_BOOLEAN_LITERAL( AS_FLOAT(lhs) <= AS_FLOAT(rhs) );
+			break;
+
+			case OP_COMPARE_GREATER:
+				result = TO_BOOLEAN_LITERAL( AS_FLOAT(lhs) > AS_FLOAT(rhs) );
+			break;
+
+			case OP_COMPARE_GREATER_EQUAL:
+				result = TO_BOOLEAN_LITERAL( AS_FLOAT(lhs) >= AS_FLOAT(rhs) );
 			break;
 
 			default:
@@ -794,11 +897,11 @@ static void printStmt(Parser* parser, Node** nodeHandle) {
 static void assertStmt(Parser* parser, Node** nodeHandle) {
 	//set the node info
 	(*nodeHandle)->type = NODE_BINARY;
-	(*nodeHandle)->unary.opcode = OP_ASSERT;
+	(*nodeHandle)->binary.opcode = OP_ASSERT;
 
-	parsePrecedence(parser, &((*nodeHandle)->binary.left), PREC_PRIMARY);
+	parsePrecedence(parser, &((*nodeHandle)->binary.left), PREC_TERNARY);
 	consume(parser, TOKEN_COMMA, "Expected ',' in assert statement");
-	parsePrecedence(parser, &((*nodeHandle)->binary.right), PREC_PRIMARY);
+	parsePrecedence(parser, &((*nodeHandle)->binary.right), PREC_TERNARY);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of assert statement");
 }

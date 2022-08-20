@@ -180,11 +180,14 @@ static bool execNegate(Interpreter* interpreter) {
 	//negate the top literal on the stack
 	Literal lit = popLiteralArray(&interpreter->stack);
 
-	if (parseIdentifierToValue(interpreter, &lit)) {
+	if (!parseIdentifierToValue(interpreter, &lit)) {
 		return false;
 	}
 
-	if (IS_INTEGER(lit)) {
+	if (IS_BOOLEAN(lit)) {
+		lit = TO_BOOLEAN_LITERAL(!AS_BOOLEAN(lit));
+	}
+	else if (IS_INTEGER(lit)) {
 		lit = TO_INTEGER_LITERAL(-AS_INTEGER(lit));
 	}
 	else if (IS_FLOAT(lit)) {
@@ -440,6 +443,114 @@ static bool execValCast(Interpreter* interpreter) {
 	return true;
 }
 
+static bool execCompareEqual(Interpreter* interpreter, bool invert) {
+	Literal rhs = popLiteralArray(&interpreter->stack);
+	Literal lhs = popLiteralArray(&interpreter->stack);
+
+	parseIdentifierToValue(interpreter, &rhs);
+	parseIdentifierToValue(interpreter, &lhs);
+
+	bool result = literalsAreEqual(lhs, rhs);
+
+	if (invert) {
+		result = !result;
+	}
+
+	pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(result));
+
+	return true;
+}
+
+static bool execCompareLess(Interpreter* interpreter, bool invert) {
+	Literal rhs = popLiteralArray(&interpreter->stack);
+	Literal lhs = popLiteralArray(&interpreter->stack);
+
+	parseIdentifierToValue(interpreter, &rhs);
+	parseIdentifierToValue(interpreter, &lhs);
+
+	//not a number, return falure
+	if (!(IS_INTEGER(lhs) || IS_FLOAT(lhs))) {
+		printf("Incorrect type in comparison, value \"");
+		printLiteral(lhs);
+		printf("\"\n");
+		return false;
+	}
+
+	if (!(IS_INTEGER(rhs) || IS_FLOAT(rhs))) {
+		printf("Incorrect type in comparison, value \"");
+		printLiteral(rhs);
+		printf("\"\n");
+		return false;
+	}
+
+	//convert to floats - easier
+	if (IS_INTEGER(lhs)) {
+		lhs = TO_FLOAT_LITERAL(AS_INTEGER(lhs));
+	}
+
+	if (IS_INTEGER(rhs)) {
+		rhs = TO_FLOAT_LITERAL(AS_INTEGER(rhs));
+	}
+
+	bool result;
+
+	if (!invert) {
+		result = (AS_FLOAT(lhs) < AS_FLOAT(rhs));
+	}
+	else {
+		result = (AS_FLOAT(lhs) > AS_FLOAT(rhs));
+	}
+
+	pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(result));
+
+	return true;
+}
+
+static bool execCompareLessEqual(Interpreter* interpreter, bool invert) {
+	Literal rhs = popLiteralArray(&interpreter->stack);
+	Literal lhs = popLiteralArray(&interpreter->stack);
+
+	parseIdentifierToValue(interpreter, &rhs);
+	parseIdentifierToValue(interpreter, &lhs);
+
+	//not a number, return falure
+	if (!(IS_INTEGER(lhs) || IS_FLOAT(lhs))) {
+		printf("Incorrect type in comparison, value \"");
+		printLiteral(lhs);
+		printf("\"\n");
+		return false;
+	}
+
+	if (!(IS_INTEGER(rhs) || IS_FLOAT(rhs))) {
+		printf("Incorrect type in comparison, value \"");
+		printLiteral(rhs);
+		printf("\"\n");
+		return false;
+	}
+
+	//convert to floats - easier
+	if (IS_INTEGER(lhs)) {
+		lhs = TO_FLOAT_LITERAL(AS_INTEGER(lhs));
+	}
+
+	if (IS_INTEGER(rhs)) {
+		rhs = TO_FLOAT_LITERAL(AS_INTEGER(rhs));
+	}
+
+	bool result;
+
+	if (!invert) {
+		result = (AS_FLOAT(lhs) < AS_FLOAT(rhs)) || literalsAreEqual(lhs, rhs);
+	}
+	else {
+		result = (AS_FLOAT(lhs) > AS_FLOAT(rhs)) || literalsAreEqual(lhs, rhs);
+	}
+
+	pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(result));
+
+	return true;
+}
+
 //the heart of toy
 static void execInterpreter(Interpreter* interpreter) {
 	unsigned char opcode = readByte(interpreter->bytecode, &interpreter->count);
@@ -514,6 +625,42 @@ static void execInterpreter(Interpreter* interpreter) {
 
 			case OP_TYPE_CAST:
 				if (!execValCast(interpreter)) {
+					return;
+				}
+			break;
+
+			case OP_COMPARE_EQUAL:
+				if (!execCompareEqual(interpreter, false)) {
+					return;
+				}
+			break;
+
+			case OP_COMPARE_NOT_EQUAL:
+				if (!execCompareEqual(interpreter, true)) {
+					return;
+				}
+			break;
+
+			case OP_COMPARE_LESS:
+				if (!execCompareLess(interpreter, false)) {
+					return;
+				}
+			break;
+
+			case OP_COMPARE_LESS_EQUAL:
+				if (!execCompareLessEqual(interpreter, false)) {
+					return;
+				}
+			break;
+
+			case OP_COMPARE_GREATER:
+				if (!execCompareLess(interpreter, true)) {
+					return;
+				}
+			break;
+
+			case OP_COMPARE_GREATER_EQUAL:
+				if (!execCompareLessEqual(interpreter, true)) {
 					return;
 				}
 			break;
