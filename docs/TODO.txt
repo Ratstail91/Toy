@@ -10,6 +10,7 @@ DONE: while-then
 DONE: for-then
 DONE: break and continue statements
 
+TODO: truthiness rethink
 TODO: string concat with the + operator
 TODO: increment & decrement operators
 TODO: a = b = c = 1;
