@@ -2,6 +2,7 @@
 
 #include "literal.h"
 #include "opcodes.h"
+#include "token_types.h"
 
 //nodes are the intermediaries between parsers and compilers
 typedef union _node Node;
@@ -17,7 +18,9 @@ typedef enum NodeType {
 	NODE_PAIR, //contains a left and right
 	NODE_VAR_TYPES, //contains a type and a sub-node array for compound types
 	NODE_VAR_DECL, //contains identifier literal, typenode, expression definition
-	// NODE_CONDITIONAL, //three children: conditional, then path, else path
+	NODE_PATH_IF, //for control flow
+	NODE_PATH_WHILE, //for control flow
+	NODE_PATH_FOR, //for control flow
 } NodeType;
 
 typedef struct NodeLiteral {
@@ -76,6 +79,15 @@ typedef struct NodeVarDecl {
 	Node* expression;
 } NodeVarDecl;
 
+typedef struct NodePath {
+	NodeType type;
+	Node* preClause;
+	Node* postClause;
+	Node* condition;
+	Node* thenPath;
+	Node* elsePath;
+} NodePath;
+
 union _node {
 	NodeType type;
 	NodeLiteral atomic;
@@ -87,6 +99,7 @@ union _node {
 	NodePair pair;
 	NodeVarTypes varTypes;
 	NodeVarDecl varDecl;
+	NodePath path;
 };
 
 void freeNode(Node* node);
@@ -99,5 +112,6 @@ void emitNodeCompound(Node** nodeHandle, LiteralType literalType);
 void emitNodePair(Node** nodeHandle, Node* left, Node* right);
 void emitNodeVarTypes(Node** nodeHandle, Literal literal);
 void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal type, Node* expression);
+void emitNodePath(Node** nodeHandle, NodeType type, Node* preClause, Node* postClause, Node* condition, Node* thenPath, Node* elsePath);
 
 void printNode(Node* node);

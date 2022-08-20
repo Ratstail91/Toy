@@ -288,7 +288,47 @@ void writeCompiler(Compiler* compiler, Node* node) {
 		}
 		break;
 
-		//TODO: OP_VAR_ASSIGN
+		case NODE_PATH_IF: {
+			//process the condition
+			writeCompiler(compiler, node->path.condition);
+
+			//cache the point to insert the jump distance at
+			compiler->bytecode[compiler->count++] = OP_IF_FALSE_JUMP; //1 byte
+			int jumpToElse = compiler->count;
+			compiler->count += sizeof(unsigned short); //2 bytes
+
+			//write the then path
+			writeCompiler(compiler, node->path.thenPath);
+
+			int jumpToEnd = 0;
+
+			if (node->path.elsePath) {
+				//insert jump to end
+				compiler->bytecode[compiler->count++] = OP_JUMP; //1 byte
+				jumpToEnd = compiler->count;
+				compiler->count += sizeof(unsigned short); //2 bytes
+			}
+
+			//update the jumpToElse to point here
+			compiler->bytecode[jumpToElse] = compiler->count;
+
+			if (node->path.elsePath) {
+				//if there's an else path, write it and 
+				writeCompiler(compiler, node->path.elsePath);
+
+				//update the jumpToEnd to point here
+				compiler->bytecode[jumpToEnd] = compiler->count;
+			}
+		}
+		break;
+
+		// case NODE_PATH_WHILE: {
+		// 	//cache the jump point
+		// 	int jumpToBeginning = compiler->count;
+		// 	compiler->count += sizeof(unsigned short); //2 bytes
+
+		// 	//
+		// }
 	}
 }
 

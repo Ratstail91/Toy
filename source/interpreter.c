@@ -570,6 +570,42 @@ static bool execCompareLessEqual(Interpreter* interpreter, bool invert) {
 	return true;
 }
 
+static bool execJump(Interpreter* interpreter) {
+	int target = (int)readShort(interpreter->bytecode, &interpreter->count);
+
+	if (target >= interpreter->length) {
+		printf("Jump out of range\n");
+		return false;
+	}
+
+	//actually jump
+	interpreter->count = target + interpreter->codeStart;
+
+	return true;
+}
+
+static bool execFalseJump(Interpreter* interpreter) {
+	int target = (int)readShort(interpreter->bytecode, &interpreter->count);
+
+	if (target >= interpreter->length) {
+		printf("Jump out of range\n");
+		return false;
+	}
+
+	//actually jump
+	Literal lit = popLiteralArray(&interpreter->stack);
+
+	if (!parseIdentifierToValue(interpreter, &lit)) {
+		return false;
+	}
+
+	if (!IS_TRUTHY(lit)) {
+		interpreter->count = target + interpreter->codeStart;
+	}
+
+	return true;
+}
+
 //the heart of toy
 static void execInterpreter(Interpreter* interpreter) {
 	unsigned char opcode = readByte(interpreter->bytecode, &interpreter->count);
@@ -686,6 +722,18 @@ static void execInterpreter(Interpreter* interpreter) {
 
 			case OP_INVERT:
 				if (!execInvert(interpreter)) {
+					return;
+				}
+			break;
+
+			case OP_JUMP:
+				if (!execJump(interpreter)) {
+					return;
+				}
+			break;
+
+			case OP_IF_FALSE_JUMP:
+				if (!execFalseJump(interpreter)) {
 					return;
 				}
 			break;
@@ -912,6 +960,9 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 	}
 
 	consumeByte(OP_SECTION_END, interpreter->bytecode, &interpreter->count);
+
+	//set the starting point for the interpreter
+	interpreter->codeStart = interpreter->count;
 
 	//code section
 	if (command.verbose) {

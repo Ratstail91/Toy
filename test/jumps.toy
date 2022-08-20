@@ -1,0 +1,21 @@
+
+
+//test true jump
+if (true) {
+	assert true, "if-then failed";
+}
+else {
+	assert false, "if-then failed";
+}
+
+
+//test false jump
+if (false) {
+	assert false, "if-then failed";
+}
+else {
+	assert true, "if-then failed";
+}
+
+
+print "All good";

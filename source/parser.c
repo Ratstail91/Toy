@@ -919,6 +919,38 @@ static void assertStmt(Parser* parser, Node** nodeHandle) {
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of assert statement");
 }
 
+static void ifStmt(Parser* parser, Node** nodeHandle) {
+	Node* condition = NULL;
+	Node* thenPath = NULL;
+	Node* elsePath = NULL;
+
+	//read the condition
+	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' at end of if statement");
+	parsePrecedence(parser, &condition, PREC_TERNARY);
+
+	//read the then path
+	consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of if statement");
+	thenPath = ALLOCATE(Node, 1);
+	declaration(parser, &thenPath);
+
+	//read the optional else path
+	if (match(parser, TOKEN_ELSE)) {
+		elsePath = ALLOCATE(Node, 1);
+		declaration(parser, &elsePath);
+	}
+
+	freeNode(*nodeHandle); //free the initial node
+	emitNodePath(nodeHandle, NODE_PATH_IF, NULL, NULL, condition, thenPath, elsePath);
+}
+
+static void whileStmt(Parser* parser, Node** nodeHandle) {
+	//
+}
+
+static void forStmt(Parser* parser, Node** nodeHandle) {
+	//
+}
+
 //precedence functions
 static void expressionStmt(Parser* parser, Node** nodeHandle) {
 	//BUGFIX: check for empty statements
@@ -956,6 +988,24 @@ static void statement(Parser* parser, Node** nodeHandle) {
 	//assert
 	if (match(parser, TOKEN_ASSERT)) {
 		assertStmt(parser, nodeHandle);
+		return;
+	}
+
+	//if-then-else
+	if (match(parser, TOKEN_IF)) {
+		ifStmt(parser, nodeHandle);
+		return;
+	}
+
+	//while-then
+	if (match(parser, TOKEN_WHILE)) {
+		whileStmt(parser, nodeHandle);
+		return;
+	}
+
+	//for-pre-clause-post-then
+	if (match(parser, TOKEN_FOR)) {
+		forStmt(parser, nodeHandle);
 		return;
 	}
 
@@ -1058,6 +1108,7 @@ static void varDecl(Parser* parser, Node** nodeHandle) {
 	//TODO: static type checking?
 
 	//declare it
+	freeNode(*nodeHandle); //free the initial node
 	emitNodeVarDecl(nodeHandle, identifier, typeLiteral, expressionNode);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of var declaration");

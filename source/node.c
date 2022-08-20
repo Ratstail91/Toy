@@ -61,6 +61,16 @@ void freeNode(Node* node) {
 			freeLiteral(node->varDecl.typeLiteral);
 			freeNode(node->varDecl.expression);
 		break;
+
+		case NODE_PATH_IF:
+		case NODE_PATH_WHILE:
+		case NODE_PATH_FOR:
+			freeNode(node->path.preClause);
+			freeNode(node->path.postClause);
+			freeNode(node->path.condition);
+			freeNode(node->path.thenPath);
+			freeNode(node->path.elsePath);
+		break;
 	}
 }
 
@@ -154,6 +164,19 @@ void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal type, Node* 
 	*nodeHandle = tmp;
 }
 
+void emitNodePath(Node** nodeHandle, NodeType type, Node* preClause, Node* postClause, Node* condition, Node* thenPath, Node* elsePath) {
+	Node* tmp = ALLOCATE(Node, 1);
+
+	tmp->type = type;
+	tmp->path.preClause = preClause;
+	tmp->path.postClause = postClause;
+	tmp->path.condition = condition;
+	tmp->path.thenPath = thenPath;
+	tmp->path.elsePath = elsePath;
+
+	*nodeHandle = tmp;
+}
+
 void printNode(Node* node) {
 	if (node == NULL) {
 		return;
@@ -227,6 +250,22 @@ void printNode(Node* node) {
 			printLiteral(node->varDecl.typeLiteral);
 			printf("; ");
 			printNode(node->varDecl.expression);
+			printf(")");
+		break;
+
+		case NODE_PATH_IF:
+		case NODE_PATH_WHILE:
+		case NODE_PATH_FOR:
+			printf("path(");
+			printNode(node->path.preClause);
+			printf("; ");
+			printNode(node->path.condition);
+			printf("; ");
+			printNode(node->path.postClause);
+			printf("):(");
+			printNode(node->path.thenPath);
+			printf(")else(");
+			printNode(node->path.elsePath);
 			printf(")");
 		break;
 

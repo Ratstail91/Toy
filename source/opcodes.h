@@ -44,6 +44,10 @@ typedef enum Opcode {
 	OP_COMPARE_GREATER_EQUAL,
 	OP_INVERT, //for booleans
 
+	//jumps, and conditional jumps (absolute)
+	OP_JUMP,
+	OP_IF_FALSE_JUMP,
+
 	//meta
 	OP_SECTION_END,
 	//TODO: add more
