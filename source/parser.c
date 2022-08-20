@@ -541,6 +541,50 @@ static Opcode castingInfix(Parser* parser, Node** nodeHandle) {
 	return OP_TYPE_CAST;
 }
 
+static Opcode incrementPrefix(Parser* parser, Node** nodeHandle) {
+	advance(parser);
+
+	Node* node = NULL;
+	identifier(parser, &node);
+
+	emiteNodePrefixIncrement(nodeHandle, node->atomic.literal, 1);
+
+	return OP_EOF;
+}
+
+static Opcode incrementInfix(Parser* parser, Node** nodeHandle) {
+	Node* node = NULL;
+	identifier(parser, &node);
+
+	advance(parser);
+
+	emiteNodePostfixIncrement(nodeHandle, node->atomic.literal, 1);
+
+	return OP_EOF;
+}
+
+static Opcode decrementPrefix(Parser* parser, Node** nodeHandle) {
+	advance(parser);
+
+	Node* node = NULL;
+	identifier(parser, &node);
+
+	emiteNodePrefixIncrement(nodeHandle, node->atomic.literal, -1);
+
+	return OP_EOF;
+}
+
+static Opcode decrementInfix(Parser* parser, Node** nodeHandle) {
+	Node* node = NULL;
+	identifier(parser, &node);
+
+	advance(parser);
+
+	emiteNodePostfixIncrement(nodeHandle, node->atomic.literal, -1);
+
+	return OP_EOF;
+}
+
 ParseRule parseRules[] = { //must match the token types
 	//types
 	{atomic, NULL, PREC_PRIMARY},// TOKEN_NULL,
@@ -594,8 +638,8 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_MULTIPLY_ASSIGN,
 	{NULL, NULL, PREC_NONE},// TOKEN_DIVIDE_ASSIGN,
 	{NULL, NULL, PREC_NONE},// TOKEN_MODULO_ASSIGN,
-	{NULL, NULL, PREC_NONE},// TOKEN_PLUS_PLUS,
-	{NULL, NULL, PREC_NONE},// TOKEN_MINUS_MINUS,
+	{incrementPrefix, incrementInfix, PREC_CALL},// TOKEN_PLUS_PLUS,
+	{decrementPrefix, decrementInfix, PREC_CALL},// TOKEN_MINUS_MINUS,
 	{NULL, binary, PREC_ASSIGNMENT},// TOKEN_ASSIGN,
 
 	//logical operators
@@ -841,6 +885,13 @@ static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule ru
 
 		Node* rhsNode = NULL;
 		const Opcode opcode = infixRule(parser, &rhsNode); //NOTE: infix rule must advance the parser
+
+		if (opcode == OP_EOF) {
+			freeNode(*nodeHandle);
+			*nodeHandle = rhsNode;
+			return; //we're done here
+		}
+
 		emitNodeBinary(nodeHandle, rhsNode, opcode);
 
 		if (!calcStaticBinaryArithmetic(parser, nodeHandle)) {

@@ -27,7 +27,7 @@ assert whileCounter == 10, "while-loop failed";
 
 //test for loop
 var forCache = 0;
-for (var i = 0; i < 20; i = i + 1) {
+for (var i = 0; i < 20; i++) {
 	forCache = i;
 }
 
@@ -61,7 +61,7 @@ while (continueWhileCache < 10) {
 
 
 //test break - for
-for (var i = 0; i < 10; i = i + 1) {
+for (var i = 0; i < 10; i++) {
 	if (i >= 7) {
 		break;
 	}
@@ -71,7 +71,7 @@ for (var i = 0; i < 10; i = i + 1) {
 
 
 //test break - continue
-for (var i = 0; i < 10; i = i + 1) {
+for (var i = 0; i < 10; i++) {
 	if (i >= 7) {
 		continue;
 	}

@@ -176,6 +176,18 @@ static bool execPushLiteral(Interpreter* interpreter, bool lng) {
 	return true;
 }
 
+static bool rawLiteral(Interpreter* interpreter) {
+	Literal lit = popLiteralArray(&interpreter->stack);
+
+	if (!parseIdentifierToValue(interpreter, &lit)) {
+		return false;
+	}
+
+	pushLiteralArray(&interpreter->stack, lit);
+
+	return true;
+}
+
 static bool execNegate(Interpreter* interpreter) {
 	//negate the top literal on the stack (numbers only)
 	Literal lit = popLiteralArray(&interpreter->stack);
@@ -653,6 +665,12 @@ static void execInterpreter(Interpreter* interpreter) {
 			case OP_LITERAL:
 			case OP_LITERAL_LONG:
 				if (!execPushLiteral(interpreter, opcode == OP_LITERAL_LONG)) {
+					return;
+				}
+			break;
+
+			case OP_LITERAL_RAW:
+				if (!rawLiteral(interpreter)) {
 					return;
 				}
 			break;

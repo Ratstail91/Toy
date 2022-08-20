@@ -23,6 +23,8 @@ typedef enum NodeType {
 	NODE_PATH_FOR, //for control flow
 	NODE_PATH_BREAK,
 	NODE_PATH_CONTINUE,
+	NODE_INCREMENT_PREFIX,
+	NODE_INCREMENT_POSTFIX,
 } NodeType;
 
 typedef struct NodeLiteral {
@@ -90,6 +92,12 @@ typedef struct NodePath {
 	Node* elsePath;
 } NodePath;
 
+typedef struct NodeIncrement {
+	NodeType type;
+	Literal identifier;
+	int increment;
+} NodeIncrement;
+
 union _node {
 	NodeType type;
 	NodeLiteral atomic;
@@ -102,6 +110,7 @@ union _node {
 	NodeVarTypes varTypes;
 	NodeVarDecl varDecl;
 	NodePath path;
+	NodeIncrement increment;
 };
 
 void freeNode(Node* node);
@@ -115,5 +124,7 @@ void emitNodePair(Node** nodeHandle, Node* left, Node* right);
 void emitNodeVarTypes(Node** nodeHandle, Literal literal);
 void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal type, Node* expression);
 void emitNodePath(Node** nodeHandle, NodeType type, Node* preClause, Node* postClause, Node* condition, Node* thenPath, Node* elsePath);
+void emiteNodePrefixIncrement(Node** nodeHandle, Literal identifier, int increment);
+void emiteNodePostfixIncrement(Node** nodeHandle, Literal identifier, int increment);
 
 void printNode(Node* node);

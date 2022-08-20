@@ -147,6 +147,30 @@ static int writeLiteralTypeToCache(LiteralArray* literalCache, Literal literal) 
 	return pushLiteralArray(literalCache, lit);
 }
 
+static int writeLiteralToCompiler(Compiler* compiler, Literal literal) {
+	//get the index
+	int index = findLiteralIndex(&compiler->literalCache, literal);
+	if (index < 0) {
+		index = pushLiteralArray(&compiler->literalCache, literal);
+	}
+
+	//push the literal to the bytecode
+	if (index >= 256) {
+		//push a "long" index
+		compiler->bytecode[compiler->count++] = OP_LITERAL_LONG; //1 byte
+		*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)index; //2 bytes
+
+		compiler->count += sizeof(unsigned short);
+	}
+	else {
+		//push the index
+		compiler->bytecode[compiler->count++] = OP_LITERAL; //1 byte
+		compiler->bytecode[compiler->count++] = (unsigned char)index; //1 byte
+	}
+
+	return index;
+}
+
 static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAddressesPtr, void* continueAddressesPtr) {
 	//grow if the bytecode space is too small
 	if (compiler->capacity < compiler->count + 1) {
@@ -166,25 +190,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 		break;
 
 		case NODE_LITERAL: {
-			//ensure the literal is in the cache
-			int index = findLiteralIndex(&compiler->literalCache, node->atomic.literal);
-			if (index < 0) {
-				index = pushLiteralArray(&compiler->literalCache, node->atomic.literal);
-			}
-
-			//push the node opcode to the bytecode
-			if (index >= 256) {
-				//push a "long" index
-				compiler->bytecode[compiler->count++] = OP_LITERAL_LONG; //1 byte
-				*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)index; //2 bytes
-
-				compiler->count += sizeof(unsigned short);
-			}
-			else {
-				//push the index
-				compiler->bytecode[compiler->count++] = OP_LITERAL; //1 byte
-				compiler->bytecode[compiler->count++] = (unsigned char)index; //1 byte
-			}
+			writeLiteralToCompiler(compiler, node->atomic.literal);
 		}
 		break;
 
@@ -459,6 +465,48 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			pushLiteralArray((LiteralArray*)continueAddressesPtr, TO_INTEGER_LITERAL(compiler->count));
 
 			compiler->count += sizeof(unsigned short); //2 bytes
+		}
+		break;
+
+		case NODE_INCREMENT_PREFIX: {
+			//push the literal to the stack (twice)
+			writeLiteralToCompiler(compiler, node->increment.identifier);
+			writeLiteralToCompiler(compiler, node->increment.identifier);
+
+			//push the increment / decrement
+			Literal increment = TO_INTEGER_LITERAL(node->increment.increment);
+			writeLiteralToCompiler(compiler, increment);
+
+			//push the add opcode
+			compiler->bytecode[compiler->count++] = (unsigned char)OP_ADDITION; //1 byte
+
+			//push the assign
+			compiler->bytecode[compiler->count++] = (unsigned char)OP_VAR_ASSIGN; //1 byte
+
+			//leave the result on the stack
+			writeLiteralToCompiler(compiler, node->increment.identifier);
+			compiler->bytecode[compiler->count++] = (unsigned char)OP_LITERAL_RAW; //1 byte
+		}
+		break;
+
+		case NODE_INCREMENT_POSTFIX: {
+			//push the identifier's VALUE to the stack
+			writeLiteralToCompiler(compiler, node->increment.identifier);
+			compiler->bytecode[compiler->count++] = (unsigned char)OP_LITERAL_RAW; //1 byte
+
+			//push the identifier (twice)
+			writeLiteralToCompiler(compiler, node->increment.identifier);
+			writeLiteralToCompiler(compiler, node->increment.identifier);
+
+			//push the increment / decrement
+			Literal increment = TO_INTEGER_LITERAL(node->increment.increment);
+			writeLiteralToCompiler(compiler, increment);
+
+			//push the add opcode
+			compiler->bytecode[compiler->count++] = (unsigned char)OP_ADDITION; //1 byte
+
+			//push the assign
+			compiler->bytecode[compiler->count++] = (unsigned char)OP_VAR_ASSIGN; //1 byte
 		}
 		break;
 	}

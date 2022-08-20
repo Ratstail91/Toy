@@ -73,6 +73,11 @@ void freeNode(Node* node) {
 			freeNode(node->path.thenPath);
 			freeNode(node->path.elsePath);
 		break;
+
+		case NODE_INCREMENT_PREFIX:
+		case NODE_INCREMENT_POSTFIX:
+			freeLiteral(node->increment.identifier);
+		break;
 	}
 }
 
@@ -179,6 +184,26 @@ void emitNodePath(Node** nodeHandle, NodeType type, Node* preClause, Node* postC
 	*nodeHandle = tmp;
 }
 
+void emiteNodePrefixIncrement(Node** nodeHandle, Literal identifier, int increment) {
+	Node* tmp = ALLOCATE(Node, 1);
+
+	tmp->type = NODE_INCREMENT_PREFIX;
+	tmp->increment.identifier = identifier;
+	tmp->increment.increment = increment;
+
+	*nodeHandle = tmp;
+}
+
+void emiteNodePostfixIncrement(Node** nodeHandle, Literal identifier, int increment) {
+	Node* tmp = ALLOCATE(Node, 1);
+
+	tmp->type = NODE_INCREMENT_POSTFIX;
+	tmp->increment.identifier = identifier;
+	tmp->increment.increment = increment;
+
+	*nodeHandle = tmp;
+}
+
 void printNode(Node* node) {
 	if (node == NULL) {
 		return;
@@ -270,6 +295,11 @@ void printNode(Node* node) {
 			printNode(node->path.elsePath);
 			printf(")");
 		break;
+
+		// case NODE_INCREMENT_PREFIX:
+		// case NODE_INCREMENT_POSTFIX:
+		// 	//TODO
+		// break;
 
 		default:
 			printf("[internal] unkown node type in printNode: %d\n", node->type);
