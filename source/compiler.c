@@ -144,7 +144,14 @@ static int writeLiteralTypeToCache(LiteralArray* literalCache, Literal literal) 
 	//push the store to the cache, tweaking the type
 	Literal lit = TO_ARRAY_LITERAL(store);
 	lit.type = LITERAL_TYPE_INTERMEDIATE; //NOTE: tweaking the type usually isn't a good idea
-	return pushLiteralArray(literalCache, lit);
+
+	//BUGFIX: check if exactly this literal array exists
+	int index = findLiteralIndex(literalCache, lit);
+	if (index < 0) {
+		index = pushLiteralArray(literalCache, lit);
+	}
+
+	return index;
 }
 
 static int writeLiteralToCompiler(Compiler* compiler, Literal literal) {

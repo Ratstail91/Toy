@@ -46,7 +46,7 @@ var a = 1;
 print a;
 
 //test scope will shadow higher scope on redefine
-var b = 3;
+var b: int = 3;
 {
 	var b = 4;
 	print b;

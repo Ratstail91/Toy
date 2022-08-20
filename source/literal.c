@@ -400,6 +400,7 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 			return !strncmp(AS_STRING(lhs), AS_STRING(rhs), STRLEN(lhs));
 
 		case LITERAL_ARRAY:
+		case LITERAL_TYPE_INTERMEDIATE: //BUGFIX: used for storing types as an array
 			//mismatched sizes
 			if (AS_ARRAY(lhs)->count != AS_ARRAY(rhs)->count) {
 				return false;
