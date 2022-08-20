@@ -573,7 +573,7 @@ static bool execCompareLessEqual(Interpreter* interpreter, bool invert) {
 static bool execJump(Interpreter* interpreter) {
 	int target = (int)readShort(interpreter->bytecode, &interpreter->count);
 
-	if (target >= interpreter->length) {
+	if (target + interpreter->codeStart > interpreter->length) {
 		printf("Jump out of range\n");
 		return false;
 	}
@@ -587,7 +587,7 @@ static bool execJump(Interpreter* interpreter) {
 static bool execFalseJump(Interpreter* interpreter) {
 	int target = (int)readShort(interpreter->bytecode, &interpreter->count);
 
-	if (target >= interpreter->length) {
+	if (target + interpreter->codeStart > interpreter->length) {
 		printf("Jump out of range\n");
 		return false;
 	}
