@@ -149,7 +149,7 @@ void writeCompiler(Compiler* compiler, Node* node) {
 	if (compiler->capacity < compiler->count + 1) {
 		int oldCapacity = compiler->capacity;
 
-		compiler->capacity = GROW_CAPACITY(oldCapacity);
+		compiler->capacity = GROW_CAPACITY_FAST(oldCapacity);
 		compiler->bytecode = GROW_ARRAY(unsigned char, compiler->bytecode, oldCapacity, compiler->capacity);
 	}
 
@@ -322,13 +322,63 @@ void writeCompiler(Compiler* compiler, Node* node) {
 		}
 		break;
 
-		// case NODE_PATH_WHILE: {
-		// 	//cache the jump point
-		// 	int jumpToBeginning = compiler->count;
-		// 	compiler->count += sizeof(unsigned short); //2 bytes
+		case NODE_PATH_WHILE: {
+			//cache the jump point
+			unsigned short jumpFromEnd = compiler->count;
 
-		// 	//
-		// }
+			//process the condition
+			writeCompiler(compiler, node->path.condition);
+
+			//if false, jump to end
+			compiler->bytecode[compiler->count++] = OP_IF_FALSE_JUMP; //1 byte
+			unsigned short jumpToEnd = compiler->count;
+			compiler->count += sizeof(unsigned short); //2 bytes
+
+			//write the body
+			writeCompiler(compiler, node->path.thenPath);
+
+			//jump to condition
+			compiler->bytecode[compiler->count++] = OP_JUMP; //1 byte
+			compiler->bytecode[compiler->count] = jumpFromEnd;
+			compiler->count += sizeof(unsigned short); //2 bytes
+
+			//jump from condition
+			compiler->bytecode[jumpToEnd] = compiler->count;
+		}
+		break;
+
+		case NODE_PATH_FOR: {
+			compiler->bytecode[compiler->count++] = OP_SCOPE_BEGIN; //1 byte
+
+			//initial setup
+			writeCompiler(compiler, node->path.preClause);
+
+			//conditional
+			unsigned short jumpFromEnd = compiler->count;
+			writeCompiler(compiler, node->path.condition);
+
+			//if false jump to end
+			compiler->bytecode[compiler->count++] = OP_IF_FALSE_JUMP; //1 byte
+			unsigned short jumpToEnd = compiler->count;
+			compiler->count += sizeof(unsigned short); //2 bytes
+
+			//write the body
+			compiler->bytecode[compiler->count++] = OP_SCOPE_BEGIN; //1 byte
+			writeCompiler(compiler, node->path.thenPath);
+			compiler->bytecode[compiler->count++] = OP_SCOPE_END; //1 byte
+
+			//evaluate third clause, restart
+			writeCompiler(compiler, node->path.postClause);
+
+			compiler->bytecode[compiler->count++] = OP_JUMP; //1 byte
+			compiler->bytecode[compiler->count] = jumpFromEnd;
+			compiler->count += sizeof(unsigned short); //2 bytes
+
+			compiler->bytecode[jumpToEnd] = compiler->count;
+
+			compiler->bytecode[compiler->count++] = OP_SCOPE_END; //1 byte
+		}
+		break;
 	}
 }
 

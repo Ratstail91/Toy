@@ -925,11 +925,11 @@ static void ifStmt(Parser* parser, Node** nodeHandle) {
 	Node* elsePath = NULL;
 
 	//read the condition
-	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' at end of if statement");
+	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' at beginning of if clause");
 	parsePrecedence(parser, &condition, PREC_TERNARY);
 
 	//read the then path
-	consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of if statement");
+	consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of if clause");
 	thenPath = ALLOCATE(Node, 1);
 	declaration(parser, &thenPath);
 
@@ -944,11 +944,45 @@ static void ifStmt(Parser* parser, Node** nodeHandle) {
 }
 
 static void whileStmt(Parser* parser, Node** nodeHandle) {
-	//
+	Node* condition = NULL;
+	Node* thenPath = NULL;
+
+	//read the condition
+	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' at beginning of while clause");
+	parsePrecedence(parser, &condition, PREC_TERNARY);
+
+	//read the then path
+	consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of while clause");
+	thenPath = ALLOCATE(Node, 1);
+	declaration(parser, &thenPath);
+
+	freeNode(*nodeHandle); //free the initial node
+	emitNodePath(nodeHandle, NODE_PATH_WHILE, NULL, NULL, condition, thenPath, NULL);
 }
 
 static void forStmt(Parser* parser, Node** nodeHandle) {
-	//
+	Node* preClause = ALLOCATE(Node, 1);
+	Node* postClause = NULL;
+	Node* condition = NULL;
+	Node* thenPath = ALLOCATE(Node, 1);
+
+	//read the clauses
+	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' at beginning of for clause");
+	declaration(parser, &preClause);
+
+	parsePrecedence(parser, &condition, PREC_TERNARY);
+
+	consume(parser, TOKEN_SEMICOLON, "Expected ';' after condition of for clause");
+	parsePrecedence(parser, &postClause, PREC_ASSIGNMENT);
+
+	consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of for clause");
+
+	//read the path
+	thenPath = ALLOCATE(Node, 1);
+	declaration(parser, &thenPath);
+
+	freeNode(*nodeHandle); //free the initial node
+	emitNodePath(nodeHandle, NODE_PATH_FOR, preClause, postClause, condition, thenPath, NULL);
 }
 
 //precedence functions

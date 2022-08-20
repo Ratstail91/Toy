@@ -18,4 +18,23 @@ else {
 }
 
 
+//test while loop
+var whileCounter = 0;
+while (whileCounter < 10) {
+	whileCounter = whileCounter + 1;
+}
+
+assert whileCounter == 10, "while-loop failed";
+
+
+//test for loop
+var forCache = 0;
+for (var i = 0; i < 20; i = i + 1) {
+	forCache = i;
+}
+
+assert forCache == 19, "for-loop failed";
+
+
 print "All good";
+
