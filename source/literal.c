@@ -381,7 +381,8 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 	}
 
 	switch(lhs.type) {
-		//NOTE: null covered by check at the top of the function
+		case LITERAL_NULL:
+			return true; //can only be true because of the check above
 
 		case LITERAL_BOOLEAN:
 			return AS_BOOLEAN(lhs) == AS_BOOLEAN(rhs);

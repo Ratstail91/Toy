@@ -1,9 +1,5 @@
 
 
 //BUG: this causes a strange error message
-if (true) {
-	;
-}
-else {
-	;
-}
+if (true);
+else;
