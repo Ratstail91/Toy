@@ -123,11 +123,7 @@ Otherwise, constants act just like normal variables.
 
 ## Truthyness
 
-Everything is considered "truthy" except:
-
-* the value `null`
-* the value `false`
-* the integer and float value `0`
+Everything is considered "truthy" except the value `false`. Trying to use `null` in a conditional (except assert) will give an error.
 
 ## Print
 
@@ -324,7 +320,7 @@ fn omitFirstInteger(arg1: int, ...rest: [int]) {
 
 ## Assert
 
-The `assert` keyword takes 2 parameters, separated by a comma. If the first parameter resolves to be falsy, then the program terminates, and the value of the second parameter is displayed to the user as an error. By default, the error is printed to stderr, but this can be overwritten by the host program.
+The `assert` keyword takes 2 parameters, separated by a comma. If the first parameter resolves to be false or is null, then the program terminates, and the value of the second parameter is displayed to the user as an error. By default, the error is printed to stderr, but this can be overwritten by the host program.
 
 ```
 assert true, "This is fine"; //Good!

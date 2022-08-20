@@ -9,8 +9,8 @@ DONE: optional block around a path if it's only one statement
 DONE: while-then
 DONE: for-then
 DONE: break and continue statements
+DONE: truthiness rethink
 
-TODO: truthiness rethink
 TODO: string concat with the + operator
 TODO: increment & decrement operators
 TODO: a = b = c = 1;

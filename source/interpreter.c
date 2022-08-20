@@ -137,7 +137,7 @@ static bool execAssert(Interpreter* interpreter) {
 		return false;
 	}
 
-	if (!IS_TRUTHY(lhs)) {
+	if (IS_NULL(lhs) || !IS_TRUTHY(lhs)) {
 		(*interpreter->assertOutput)(AS_STRING(rhs));
 		return false;
 	}
@@ -396,6 +396,11 @@ static bool execValCast(Interpreter* interpreter) {
 
 	Literal result = TO_NULL_LITERAL;
 
+	if (IS_NULL(value)) {
+		printf("Can't cast a null value\n");
+		return false;
+	}
+
 	//cast the rhs to the type represented by lhs
 	switch(AS_TYPE(type).typeOf) {
 		case LITERAL_BOOLEAN:
@@ -596,6 +601,11 @@ static bool execFalseJump(Interpreter* interpreter) {
 	Literal lit = popLiteralArray(&interpreter->stack);
 
 	if (!parseIdentifierToValue(interpreter, &lit)) {
+		return false;
+	}
+
+	if (IS_NULL(lit)) {
+		printf("Null detected in comparison\n");
 		return false;
 	}
 
