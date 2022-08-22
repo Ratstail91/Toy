@@ -1,0 +1,24 @@
+//basic types
+var t: type = int;
+var u: t = 42;
+
+assert t == int, "types are not first class";
+assert u == 42, "first-class types are screwing with values";
+
+
+//differentiate by the "type" value
+var v: type = [int]; //TODO: still can't check for this
+var w = [int];
+
+assert w == [int], "defining an array of types failed";
+
+
+//complex type
+var complex: type = [string, [int]];
+var dict: complex = [
+	"first array": [1, 2, 3],
+	"second array": [4, 5, 6],
+	"third array": [7, 8, 9]
+];
+
+print "All good";

@@ -1,7 +1,0 @@
-var t: type = int;
-var u: t = 42;
-
-assert t == int, "types are not first class";
-assert u == 42, "first-class types are screwing with values";
-
-print "All good";

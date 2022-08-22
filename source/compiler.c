@@ -157,8 +157,15 @@ static int writeLiteralTypeToCache(LiteralArray* literalCache, Literal literal) 
 static int writeLiteralToCompiler(Compiler* compiler, Literal literal) {
 	//get the index
 	int index = findLiteralIndex(&compiler->literalCache, literal);
+
 	if (index < 0) {
-		index = pushLiteralArray(&compiler->literalCache, literal);
+		if (IS_TYPE(literal)) {
+			//check for the type literal as value
+			index = writeLiteralTypeToCache(&compiler->literalCache, literal);
+		}
+		else {
+			index = pushLiteralArray(&compiler->literalCache, literal);
+		}
 	}
 
 	//push the literal to the bytecode

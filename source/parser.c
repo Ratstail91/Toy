@@ -1231,7 +1231,14 @@ static void varDecl(Parser* parser, Node** nodeHandle) {
 	//variable definition is an expression
 	Node* expressionNode = NULL;
 	if (match(parser, TOKEN_ASSIGN)) {
-		expression(parser, &expressionNode);
+		//BUGFIX: if reading into a "type" variable, expect a type value
+		if (AS_TYPE(typeLiteral).typeOf == LITERAL_TYPE) { //This may cause issues when reading function returns
+			Literal val = readTypeToLiteral(parser);
+
+			emitNodeLiteral(&expressionNode, val);
+		} else {
+			expression(parser, &expressionNode);
+		}
 	}
 	else {
 		//values are null by default
