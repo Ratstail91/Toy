@@ -8,20 +8,23 @@
 
 //util functions
 static void setEntryValues(_entry* entry, Literal key, Literal value) {
-	//free the original string and overwrite it
-	if (IS_STRING(entry->key)) {
+	//free the original string/identifier and overwrite it
+	if (IS_STRING(entry->key) || IS_IDENTIFIER(entry->key)) {
 		freeLiteral(entry->key);
 	}
 
 	//take ownership of the copied string
 	if (IS_STRING(key)) {
-		char* buffer = ALLOCATE(char, STRLEN(key) + 1);
-		strncpy(buffer, AS_STRING(key), STRLEN(key));
-		buffer[STRLEN(key)] = '\0';
-		entry->key = TO_STRING_LITERAL(buffer); //buffer becomes a part of the key literal
+		entry->key = TO_STRING_LITERAL( copyString(AS_STRING(key), STRLEN(key)) );
+	}
+
+	//OR take ownership of the copied identifier
+	else if (IS_IDENTIFIER(key)) {
+		entry->key = TO_IDENTIFIER_LITERAL( copyString(AS_IDENTIFIER(key), STRLEN_I(key)) );
 	}
 	
 	else {
+		freeLiteral(entry->key); //for types
 		entry->key = key;
 	}
 
