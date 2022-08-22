@@ -301,7 +301,7 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 
 void freeLiteral(Literal literal) {
 	if (IS_STRING(literal)) {
-		FREE_ARRAY(char, AS_STRING(literal), STRLEN(literal));
+		FREE_ARRAY(char, AS_STRING(literal), STRLEN(literal) + 1);
 		return;
 	}
 
@@ -315,7 +315,7 @@ void freeLiteral(Literal literal) {
 	// }
 
 	if (IS_IDENTIFIER(literal)) {
-		FREE_ARRAY(char, AS_IDENTIFIER(literal), STRLEN_I(literal));
+		FREE_ARRAY(char, AS_IDENTIFIER(literal), STRLEN_I(literal) + 1);
 		return;
 	}
 

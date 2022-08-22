@@ -79,6 +79,8 @@ void freeNode(Node* node) {
 			freeLiteral(node->increment.identifier);
 		break;
 	}
+
+	FREE(Node, node);
 }
 
 void emitNodeLiteral(Node** nodeHandle, Literal literal) {

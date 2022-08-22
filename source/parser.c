@@ -1301,6 +1301,7 @@ Node* scanParser(Parser* parser) {
 	if (parser->panic) {
 		synchronize(parser);
 		//return an error node for this iteration
+		freeNode(node);
 		node = ALLOCATE(Node, 1);
 		node->type = NODE_ERROR;
 	}

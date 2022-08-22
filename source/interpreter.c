@@ -32,8 +32,6 @@ void initInterpreter(Interpreter* interpreter) {
 }
 
 void freeInterpreter(Interpreter* interpreter) {
-	FREE_ARRAY(char, interpreter->bytecode, interpreter->length);
-
 	//since these are dynamically allocated, free them manually
 	for (int i = 0; i < interpreter->literalCache.count; i++) {
 		if (IS_ARRAY(interpreter->literalCache.literals[i]) || IS_DICTIONARY(interpreter->literalCache.literals[i]) || IS_TYPE(interpreter->literalCache.literals[i])) {
@@ -1016,4 +1014,7 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 	}
 
 	execInterpreter(interpreter);
+
+	//free the bytecode immediately after use
+	FREE_ARRAY(unsigned char, interpreter->bytecode, interpreter->length);
 }

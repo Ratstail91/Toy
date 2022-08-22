@@ -531,7 +531,7 @@ void writeCompiler(Compiler* compiler, Node* node) {
 
 void freeCompiler(Compiler* compiler) {
 	freeLiteralArray(&compiler->literalCache);
-	FREE(unsigned char, compiler->bytecode);
+	FREE_ARRAY(unsigned char, compiler->bytecode, compiler->capacity);
 	compiler->bytecode = NULL;
 	compiler->capacity = 0;
 	compiler->count = 0;
