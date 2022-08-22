@@ -16,7 +16,7 @@ char* readFile(char* path, size_t* fileSize) {
 	FILE* file = fopen(path, "rb");
 
 	if (file == NULL) {
-		fprintf(stderr, "Could not open file \"%s\"\n", path);
+		fprintf(stderr, ERROR "Could not open file \"%s\"\n" RESET, path);
 		exit(-1);
 	}
 
@@ -27,7 +27,7 @@ char* readFile(char* path, size_t* fileSize) {
 	char* buffer = (char*)malloc(*fileSize + 1);
 
 	if (buffer == NULL) {
-		fprintf(stderr, "Not enough memory to read \"%s\"\n", path);
+		fprintf(stderr, ERROR "Not enough memory to read \"%s\"\n" RESET, path);
 		exit(-1);
 	}
 
@@ -36,7 +36,7 @@ char* readFile(char* path, size_t* fileSize) {
 	buffer[*fileSize] = '\0'; //NOTE: fread doesn't append this
 
 	if (bytesRead < *fileSize) {
-		fprintf(stderr, "Could not read file \"%s\"\n", path);
+		fprintf(stderr, ERROR "Could not read file \"%s\"\n" RESET, path);
 		exit(-1);
 	}
 
@@ -49,14 +49,14 @@ void writeFile(char* path, unsigned char* bytes, size_t size) {
 	FILE* file = fopen(path, "wb");
 
 	if (file == NULL) {
-		fprintf(stderr, "Could not open file \"%s\"\n", path);
+		fprintf(stderr, ERROR "Could not open file \"%s\"\n" RESET, path);
 		exit(-1);
 	}
 
 	int written = fwrite(bytes, size, 1, file);
 
 	if (written != 1) {
-		fprintf(stderr, "Could not write file \"%s\"\n", path);
+		fprintf(stderr, ERROR "Could not write file \"%s\"\n" RESET, path);
 		exit(-1);
 	}
 

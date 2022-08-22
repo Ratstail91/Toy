@@ -2,6 +2,8 @@
 
 #include "memory.h"
 
+#include "console_colors.h"
+
 #include <stdio.h>
 
 //util functions
@@ -173,7 +175,7 @@ void freeLiteralDictionary(LiteralDictionary* dictionary) {
 
 void setLiteralDictionary(LiteralDictionary* dictionary, Literal key, Literal value) {
 	if (IS_NULL(key)) {
-		fprintf(stderr, "[Internal] Dictionaries can't have null keys\n");
+		fprintf(stderr, ERROR "[internal] Dictionaries can't have null keys\n" RESET);
 		return;
 	}
 
@@ -186,7 +188,7 @@ void setLiteralDictionary(LiteralDictionary* dictionary, Literal key, Literal va
 
 Literal getLiteralDictionary(LiteralDictionary* dictionary, Literal key) {
 	if (IS_NULL(key)) {
-		fprintf(stderr, "[Internal] Dictionaries can't have null keys\n");
+		fprintf(stderr, ERROR "[internal] Dictionaries can't have null keys\n" RESET);
 		return TO_NULL_LITERAL;
 	}
 
@@ -202,7 +204,7 @@ Literal getLiteralDictionary(LiteralDictionary* dictionary, Literal key) {
 
 void removeLiteralDictionary(LiteralDictionary* dictionary, Literal key) {
 	if (IS_NULL(key)) {
-		fprintf(stderr, "[Internal] Dictionaries can't have null keys\n");
+		fprintf(stderr, ERROR "[internal] Dictionaries can't have null keys\n" RESET);
 		return;
 	}
 

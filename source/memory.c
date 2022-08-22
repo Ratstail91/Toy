@@ -1,5 +1,7 @@
 #include "memory.h"
 
+#include "console_colors.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -13,7 +15,7 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 	void* mem = realloc(pointer, newSize);
 
 	if (mem == NULL) {
-		fprintf(stderr, "[Internal]Memory allocation error (requested %d for %d, replacing %d)\n", (int)newSize, (int)pointer, (int)oldSize);
+		fprintf(stderr, ERROR "[internal]Memory allocation error (requested %d for %d, replacing %d)\n" ERROR, (int)newSize, (int)pointer, (int)oldSize);
 		exit(-1);
 	}
 

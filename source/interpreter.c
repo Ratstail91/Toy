@@ -8,14 +8,14 @@
 #include <string.h>
 
 static void stdoutWrapper(const char* output) {
-	fprintf(stdout, "%s", output);
-	fprintf(stdout, "\n"); //default new line
+	printf("%s", output);
+	printf("\n"); //default new line
 }
 
 static void stderrWrapper(const char* output) {
-	fprintf(stderr, "Assertion failure: ");
+	fprintf(stderr, ERROR "Assertion failure: ");
 	fprintf(stderr, "%s", output);
-	fprintf(stderr, "\n"); //default new line
+	fprintf(stderr, "\n" RESET); //default new line
 }
 
 void initInterpreter(Interpreter* interpreter) {
@@ -114,9 +114,9 @@ static bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr
 	//this converts identifiers to values
 	if (IS_IDENTIFIER(*literalPtr)) {
 		if (!getScopeVariable(interpreter->scope, *literalPtr, literalPtr)) {
-			printf("Undeclared variable \"");;
+			printf(ERROR "Error: Undeclared variable \"");;
 			printLiteral(*literalPtr);
-			printf("\"\n");
+			printf("\"\n" RESET);
 			return false;
 		}
 	}
@@ -131,9 +131,9 @@ static bool execAssert(Interpreter* interpreter) {
 	parseIdentifierToValue(interpreter, &lhs);
 
 	if (!IS_STRING(rhs)) {
-		printf("The assert keyword needs a string as the second argument, received: ");
+		printf(ERROR "ERROR: The assert keyword needs a string as the second argument, received: ");
 		printLiteral(rhs);
-		printf("\n");
+		printf("\n" RESET);
 		return false;
 	}
 
@@ -203,9 +203,9 @@ static bool execNegate(Interpreter* interpreter) {
 		lit = TO_FLOAT_LITERAL(-AS_FLOAT(lit));
 	}
 	else {
-		printf("[internal] The interpreter can't negate that literal: ");
+		printf(ERROR "[internal] The interpreter can't negate that literal: ");
 		printLiteral(lit);
-		printf("\n");
+		printf("\n" RESET);
 		return false;
 	}
 
@@ -225,9 +225,9 @@ static bool execInvert(Interpreter* interpreter) {
 		lit = TO_BOOLEAN_LITERAL(!AS_BOOLEAN(lit));
 	}
 	else {
-		printf("[internal] The interpreter can't invert that literal: ");
+		printf(ERROR "[internal] The interpreter can't invert that literal: ");
 		printLiteral(lit);
-		printf("\n");
+		printf("\n" RESET);
 		return false;
 	}
 
@@ -246,7 +246,7 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 	if (IS_STRING(lhs) && IS_STRING(rhs)) {
 		//check for overflow
 		if (STRLEN(lhs) + STRLEN(rhs) > MAX_STRING_LENGTH) {
-			printf("Can't concatenate these strings (result is too long)\n");
+			printf(ERROR "ERROR: Can't concatenate these strings (result is too long)\n" RESET);
 			return false;
 		}
 
@@ -284,7 +284,7 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 
 			case OP_DIVISION:
 				if (AS_INTEGER(rhs) == 0) {
-					printf("Can't divide by zero (error found in interpreter)");
+					printf(ERROR "ERROR: Can't divide by zero (error found in interpreter)" RESET);
 					return false;
 				}
 				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) / AS_INTEGER(rhs) ));
@@ -292,7 +292,7 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 
 			case OP_MODULO:
 				if (AS_INTEGER(rhs) == 0) {
-					printf("Can't modulo by zero (error found in interpreter)");
+					printf(ERROR "ERROR: Can't modulo by zero (error found in interpreter)" RESET);
 					return false;
 				}
 				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) % AS_INTEGER(rhs) ));
@@ -306,7 +306,7 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 
 	//catch bad modulo
 	if (opcode == OP_MODULO) {
-		printf("Bad arithmetic argument (modulo on floats not allowed)\n");
+		printf(ERROR "ERROR: Bad arithmetic argument (modulo on floats not allowed)\n" RESET);
 		return false;
 	}
 
@@ -326,24 +326,24 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 
 			case OP_DIVISION:
 				if (AS_FLOAT(rhs) == 0) {
-					printf("Can't divide by zero (error found in interpreter)");
+					printf(ERROR "ERROR: Can't divide by zero (error found in interpreter)" RESET);
 					return false;
 				}
 				pushLiteralArray(&interpreter->stack, TO_FLOAT_LITERAL( AS_FLOAT(lhs) / AS_FLOAT(rhs) ));
 				return true;
 
 			default:
-				printf("[internal] bad opcode argument passed to execArithmetic()");
+				printf(ERROR "[internal] bad opcode argument passed to execArithmetic()" RESET);
 				return false;
 		}
 	}
 
 	//wrong types
-	printf("Bad arithmetic argument ");
+	printf(ERROR "ERROR: Bad arithmetic argument ");
 	printLiteral(lhs);
 	printf(" and ");
 	printLiteral(rhs);
-	printf("\n");
+	printf("\n" RESET);
 	return false;
 }
 
@@ -367,9 +367,9 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 	parseIdentifierToValue(interpreter, &type);
 
 	if (!declareScopeVariable(interpreter->scope, identifier, type)) {
-		printf("Can't redefine the variable \"");
+		printf(ERROR "ERROR: Can't redefine the variable \"");
 		printLiteral(identifier);
-		printf("\"\n");
+		printf("\"\n" RESET);
 		return false;
 	}
 
@@ -377,9 +377,9 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 	parseIdentifierToValue(interpreter, &val);
 
 	if (!IS_NULL(val) && !setScopeVariable(interpreter->scope, identifier, val, false)) {
-		printf("Incorrect type assigned to variable \"");
+		printf(ERROR "ERROR: Incorrect type assigned to variable \"");
 		printLiteral(identifier);
-		printf("\"\n");
+		printf("\"\n" RESET);
 		return false;
 	}
 
@@ -393,23 +393,23 @@ static bool execVarAssign(Interpreter* interpreter) {
 	parseIdentifierToValue(interpreter, &rhs);
 
 	if (!IS_IDENTIFIER(lhs)) {
-		printf("Can't assign to a non-variable \"");
+		printf(ERROR "ERROR: Can't assign to a non-variable \"");
 		printLiteral(lhs);
-		printf("\"\n");
+		printf("\"\n" RESET);
 		return false;
 	}
 
 	if (!isDelcaredScopeVariable(interpreter->scope, lhs)) {
-		printf("Undeclared variable \"");
+		printf(ERROR "ERROR: Undeclared variable \"");
 		printLiteral(lhs);
-		printf("\"\n");
+		printf("\"\n" RESET);
 		return false;
 	}
 
 	if (!setScopeVariable(interpreter->scope, lhs, rhs, true)) {
-		printf("Incorrect type assigned to variable \"");
+		printf(ERROR "ERROR Incorrect type assigned to variable \"");
 		printLiteral(lhs);
-		printf("\"\n");
+		printf("\"\n" RESET);
 		return false;
 	}
 
@@ -427,7 +427,7 @@ static bool execValCast(Interpreter* interpreter) {
 	Literal result = TO_NULL_LITERAL;
 
 	if (IS_NULL(value)) {
-		printf("Can't cast a null value\n");
+		printf(ERROR "ERROR: Can't cast a null value\n" RESET);
 		return false;
 	}
 
@@ -488,7 +488,7 @@ static bool execValCast(Interpreter* interpreter) {
 		break;
 
 		default:
-			printf("Unknown cast type found %d, terminating\n", AS_TYPE(type).typeOf);
+			printf(ERROR"ERROR: Unknown cast type found %d, terminating\n" RESET, AS_TYPE(type).typeOf);
 			return false;
 	}
 
@@ -524,16 +524,16 @@ static bool execCompareLess(Interpreter* interpreter, bool invert) {
 
 	//not a number, return falure
 	if (!(IS_INTEGER(lhs) || IS_FLOAT(lhs))) {
-		printf("Incorrect type in comparison, value \"");
+		printf(ERROR "ERROR: Incorrect type in comparison, value \"");
 		printLiteral(lhs);
-		printf("\"\n");
+		printf("\"\n" RESET);
 		return false;
 	}
 
 	if (!(IS_INTEGER(rhs) || IS_FLOAT(rhs))) {
-		printf("Incorrect type in comparison, value \"");
+		printf(ERROR "ERROR: Incorrect type in comparison, value \"");
 		printLiteral(rhs);
-		printf("\"\n");
+		printf("\"\n" RESET);
 		return false;
 	}
 
@@ -569,16 +569,16 @@ static bool execCompareLessEqual(Interpreter* interpreter, bool invert) {
 
 	//not a number, return falure
 	if (!(IS_INTEGER(lhs) || IS_FLOAT(lhs))) {
-		printf("Incorrect type in comparison, value \"");
+		printf(ERROR "ERROR: Incorrect type in comparison, value \"");
 		printLiteral(lhs);
-		printf("\"\n");
+		printf("\"\n" RESET);
 		return false;
 	}
 
 	if (!(IS_INTEGER(rhs) || IS_FLOAT(rhs))) {
-		printf("Incorrect type in comparison, value \"");
+		printf(ERROR "ERROR: Incorrect type in comparison, value \"");
 		printLiteral(rhs);
-		printf("\"\n");
+		printf("\"\n" RESET);
 		return false;
 	}
 
@@ -609,7 +609,7 @@ static bool execJump(Interpreter* interpreter) {
 	int target = (int)readShort(interpreter->bytecode, &interpreter->count);
 
 	if (target + interpreter->codeStart > interpreter->length) {
-		printf("Jump out of range\n");
+		printf(ERROR "[internal] Jump out of range\n" RESET);
 		return false;
 	}
 
@@ -623,7 +623,7 @@ static bool execFalseJump(Interpreter* interpreter) {
 	int target = (int)readShort(interpreter->bytecode, &interpreter->count);
 
 	if (target + interpreter->codeStart > interpreter->length) {
-		printf("Jump out of range (false jump)\n");
+		printf(ERROR "[internal] Jump out of range (false jump)\n" RESET);
 		return false;
 	}
 
@@ -635,7 +635,7 @@ static bool execFalseJump(Interpreter* interpreter) {
 	}
 
 	if (IS_NULL(lit)) {
-		printf("Null detected in comparison\n");
+		printf(ERROR "Error: Null detected in comparison\n" RESET);
 		return false;
 	}
 
@@ -785,7 +785,7 @@ static void execInterpreter(Interpreter* interpreter) {
 			break;
 
 			default:
-				printf("Unknown opcode found %d, terminating\n", opcode);
+				printf(ERROR "Error: Unknown opcode found %d, terminating\n" RESET, opcode);
 				printLiteralArray(&interpreter->stack, "\n");
 				return;
 		}

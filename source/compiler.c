@@ -53,7 +53,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 				break;
 
 				default:
-					fprintf(stderr, "[Internal] Unrecognized key node type in writeNodeCompoundToCache()");
+					fprintf(stderr, ERROR "[internal] Unrecognized key node type in writeNodeCompoundToCache()" RESET);
 					return -1;
 			}
 
@@ -78,7 +78,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 				break;
 
 				default:
-					fprintf(stderr, "[Internal] Unrecognized value node type in writeNodeCompoundToCache()");
+					fprintf(stderr, ERROR "[internal] Unrecognized value node type in writeNodeCompoundToCache()" RESET);
 					return -1;
 			}
 		}
@@ -109,7 +109,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 				break;
 
 				default:
-					fprintf(stderr, "[Internal] Unrecognized node type in writeNodeCompoundToCache()");
+					fprintf(stderr, ERROR "[internal] Unrecognized node type in writeNodeCompoundToCache()" RESET);
 					return -1;
 			}
 		}
@@ -118,7 +118,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 		index = pushLiteralArray(&compiler->literalCache, TO_ARRAY_LITERAL(store));
 	}
 	else {
-		fprintf(stderr, "[Internal] Unrecognized compound type in writeNodeCompoundToCache()");
+		fprintf(stderr, ERROR "[Internal] Unrecognized compound type in writeNodeCompoundToCache()" RESET);
 	}
 
 	return index;
@@ -444,7 +444,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 
 		case NODE_PATH_BREAK: {
 			if (!breakAddressesPtr) {
-				fprintf(stderr, "Can't place a break statement here\n");
+				fprintf(stderr, ERROR "ERROR: Can't place a break statement here\n" RESET);
 				break;
 			}
 
@@ -460,7 +460,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 
 		case NODE_PATH_CONTINUE: {
 			if (!continueAddressesPtr) {
-				fprintf(stderr, "Can't place a continue statement here\n");
+				fprintf(stderr, ERROR "ERROR: Can't place a continue statement here\n" RESET);
 				break;
 			}
 
@@ -730,7 +730,7 @@ unsigned char* collateCompiler(Compiler* compiler, int* size) {
 			break;
 
 			default:
-				fprintf(stderr, "[Internal] Unknown literal type encountered within literal cache: %d\n", compiler->literalCache.literals[i].type);
+				fprintf(stderr, ERROR "[internal] Unknown literal type encountered within literal cache: %d\n" RESET, compiler->literalCache.literals[i].type);
 				return NULL;
 		}
 	}

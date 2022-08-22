@@ -4,6 +4,8 @@
 #include "literal_array.h"
 #include "literal_dictionary.h"
 
+#include "console_colors.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -265,7 +267,7 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 
 				default:
 					//should never be seen
-					fprintf(stderr, "[Internal] Unrecognized literal type in print type: %d\n", AS_TYPE(literal).typeOf);
+					fprintf(stderr, ERROR "[internal] Unrecognized literal type in print type: %d\n" RESET, AS_TYPE(literal).typeOf);
 			}
 
 			//const (printed last)
@@ -293,7 +295,7 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 
 		default:
 			//should never bee seen
-			fprintf(stderr, "[Internal] Unrecognized literal type in print: %d\n", literal.type);
+			fprintf(stderr, ERROR "[internal] Unrecognized literal type in print: %d\n" RESET, literal.type);
 	}
 }
 
@@ -327,7 +329,7 @@ void freeLiteral(Literal literal) {
 
 bool _isTruthy(Literal x) {
 	if (IS_NULL(x)) {
-		fprintf(stderr, "Null is neither true nor false");
+		fprintf(stderr, ERROR "ERROR: Null is neither true nor false" RESET);
 		return false;
 	}
 
@@ -476,7 +478,7 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 
 		default:
 			//should never bee seen
-			fprintf(stderr, "[Internal] Unrecognized literal type in equality: %d\n", lhs.type);
+			fprintf(stderr, ERROR "[internal] Unrecognized literal type in equality: %d\n" RESET, lhs.type);
 			return false;
 	}
 }
@@ -531,7 +533,7 @@ int hashLiteral(Literal lit) {
 
 		default:
 			//should never bee seen
-			fprintf(stderr, "[Internal] Unrecognized literal type in hash: %d\n", lit.type);
+			fprintf(stderr, ERROR "[internal] Unrecognized literal type in hash: %d\n" RESET, lit.type);
 			return 0;
 	}
 }

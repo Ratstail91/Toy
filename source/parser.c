@@ -15,7 +15,7 @@ static void error(Parser* parser, Token token, const char* message) {
 	//keep going while panicing
 	if (parser->panic) return;
 
-	fprintf(stderr, "[Line %d] Error", token.line);
+	fprintf(stderr, ERROR "[Line %d] Error", token.line);
 
 	//check type
 	if (token.type == TOKEN_EOF) {
@@ -27,7 +27,7 @@ static void error(Parser* parser, Token token, const char* message) {
 	}
 
 	//finally
-	fprintf(stderr, ": %s\n", message);
+	fprintf(stderr, ": %s\n" RESET, message);
 	parser->error = true;
 	parser->panic = true;
 }
@@ -60,7 +60,7 @@ static void consume(Parser* parser, TokenType tokenType, const char* msg) {
 
 static void synchronize(Parser* parser) {
 	if (command.verbose) {
-		printf(ERROR "synchronizing\n" RESET);
+		fprintf(stderr, ERROR "synchronizing\n" RESET);
 	}
 
 	while (parser->current.type != TOKEN_EOF) {
@@ -244,7 +244,7 @@ static Opcode string(Parser* parser, Node** nodeHandle) {
 			if (length > MAX_STRING_LENGTH) {
 				length = MAX_STRING_LENGTH;
 				char buffer[256];
-				snprintf(buffer, 256, "Strings can only be a maximum of %d characters long", MAX_STRING_LENGTH);
+				snprintf(buffer, 256, ERROR "Strings can only be a maximum of %d characters long" RESET, MAX_STRING_LENGTH);
 				error(parser, parser->previous, buffer);
 			}
 
@@ -781,14 +781,14 @@ static bool calcStaticBinaryArithmetic(Parser* parser, Node** nodeHandle) {
 			break;
 
 			default:
-				printf("[internal] bad opcode argument passed to calcStaticBinaryArithmetic()");
+				error(parser, parser->previous, "[internal] bad opcode argument passed to calcStaticBinaryArithmetic()");
 				return false;
 		}
 	}
 
 	//catch bad modulo
 	if ((IS_FLOAT(lhs) || IS_FLOAT(rhs)) && (*nodeHandle)->binary.opcode == OP_MODULO) {
-		printf("Bad arithmetic argument (modulo on floats not allowed)");
+		error(parser, parser->previous, "Bad arithmetic argument (modulo on floats not allowed)");
 		return false;
 	}
 
@@ -839,7 +839,7 @@ static bool calcStaticBinaryArithmetic(Parser* parser, Node** nodeHandle) {
 			break;
 
 			default:
-				printf("[internal] bad opcode argument passed to calcStaticBinaryArithmetic()");
+				error(parser, parser->previous, "[internal] bad opcode argument passed to calcStaticBinaryArithmetic()");
 				return false;
 		}
 	}
