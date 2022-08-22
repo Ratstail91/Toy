@@ -33,6 +33,11 @@ static bool checkType(Literal typeLiteral, Literal value) {
 		return false;
 	}
 
+	//always allow null values
+	if (IS_NULL(value)) {
+		return true;
+	}
+
 	//for each type, if a mismatch is found, return false
 	if (AS_TYPE(typeLiteral).typeOf == LITERAL_BOOLEAN && !IS_BOOLEAN(value)) {
 		return false;
