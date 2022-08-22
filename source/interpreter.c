@@ -364,6 +364,8 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 	Literal identifier = interpreter->literalCache.literals[identifierIndex];
 	Literal type = interpreter->literalCache.literals[typeIndex];
 
+	parseIdentifierToValue(interpreter, &type);
+
 	if (!declareScopeVariable(interpreter->scope, identifier, type)) {
 		printf("Can't redefine the variable \"");
 		printLiteral(identifier);
@@ -711,7 +713,7 @@ static void execInterpreter(Interpreter* interpreter) {
 
 			case OP_VAR_DECL:
 			case OP_VAR_DECL_LONG:
-				if (!execVarDecl(interpreter, opcode == OP_LITERAL_LONG)) {
+				if (!execVarDecl(interpreter, opcode == OP_VAR_DECL_LONG)) {
 					return;
 				}
 			break;

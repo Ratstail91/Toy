@@ -206,6 +206,10 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 			printToBuffer("<");
 
 			switch(AS_TYPE(literal).typeOf) {
+				case LITERAL_NULL:
+					printToBuffer("null");
+				break;
+
 				case LITERAL_BOOLEAN:
 					printToBuffer("bool");
 				break;
@@ -261,7 +265,7 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 
 				default:
 					//should never be seen
-					fprintf(stderr, "[Internal] Unrecognized literal type in print type: %d\n", literal.type);
+					fprintf(stderr, "[Internal] Unrecognized literal type in print type: %d\n", AS_TYPE(literal).typeOf);
 			}
 
 			//const (printed last)

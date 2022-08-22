@@ -125,30 +125,30 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 }
 
 static int writeLiteralTypeToCache(LiteralArray* literalCache, Literal literal) {
-	//I don't like storing types in an array, but it's the easiest and most straight forward method
-	LiteralArray* store = ALLOCATE(LiteralArray, 1);
-	initLiteralArray(store);
-
-	//store the base literal in the store
-	pushLiteralArray(store, literal);
-
 	//if it's a compound type, recurse and store the results
 	if (AS_TYPE(literal).typeOf == LITERAL_ARRAY || AS_TYPE(literal).typeOf == LITERAL_DICTIONARY) {
+		//I don't like storing types in an array, but it's the easiest and most straight forward method
+		LiteralArray* store = ALLOCATE(LiteralArray, 1);
+		initLiteralArray(store);
+
+		//store the base literal in the store
+		pushLiteralArray(store, literal);
+
 		for (int i = 0; i < AS_TYPE(literal).count; i++) {
 			//write the values to the cache, and the indexes to the store
 			int subIndex = writeLiteralTypeToCache(literalCache, ((Literal*)(AS_TYPE(literal).subtypes))[i]);
 			pushLiteralArray(store, TO_INTEGER_LITERAL(subIndex));
 		}
+
+		//push the store to the cache, tweaking the type
+		literal = TO_ARRAY_LITERAL(store);
+		literal.type = LITERAL_TYPE_INTERMEDIATE; //NOTE: tweaking the type usually isn't a good idea
 	}
 
-	//push the store to the cache, tweaking the type
-	Literal lit = TO_ARRAY_LITERAL(store);
-	lit.type = LITERAL_TYPE_INTERMEDIATE; //NOTE: tweaking the type usually isn't a good idea
-
 	//BUGFIX: check if exactly this literal array exists
-	int index = findLiteralIndex(literalCache, lit);
+	int index = findLiteralIndex(literalCache, literal);
 	if (index < 0) {
-		index = pushLiteralArray(literalCache, lit);
+		index = pushLiteralArray(literalCache, literal);
 	}
 
 	return index;
@@ -253,7 +253,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			fprintf(stderr, ERROR "[Internal] NODE_PAIR encountered in writeCompilerWithJumps()\n" RESET);
 		break;
 
-		case NODE_VAR_TYPES: { //TODO: the "type" keyword
+		case NODE_VAR_TYPES: { //TODO: remove this
 			int index = writeLiteralTypeToCache(&compiler->literalCache, node->varTypes.typeLiteral);
 
 			//embed the info into the bytecode

@@ -1130,7 +1130,7 @@ static void statement(Parser* parser, Node** nodeHandle) {
 static Literal readTypeToLiteral(Parser* parser) {
 	advance(parser);
 
-	Literal literal = TO_NULL_LITERAL;
+	Literal literal = TO_TYPE_LITERAL(LITERAL_NULL, false);
 
 	switch(parser->previous.type) {
 		case TOKEN_BOOLEAN:
@@ -1175,6 +1175,26 @@ static Literal readTypeToLiteral(Parser* parser) {
 
 		case TOKEN_ANY:
 			AS_TYPE(literal).typeOf = LITERAL_ANY;
+		break;
+
+		//wtf
+		case TOKEN_IDENTIFIER: {
+			//duplicated from identifier()
+			Token identifierToken = parser->previous;
+			int length = identifierToken.length;
+			//for safety
+			if (length > 256) {
+				length = 256;
+				error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
+			}
+			char* cpy = copyString(identifierToken.lexeme, length);
+			literal = _toIdentifierLiteral(cpy, strlen(cpy)); //BUGFIX: use this instead of the macro
+		}
+		break;
+
+		//WTF
+		case TOKEN_TYPE:
+			AS_TYPE(literal).typeOf = LITERAL_TYPE;
 		break;
 
 		default:

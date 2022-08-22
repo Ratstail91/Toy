@@ -28,6 +28,11 @@ static bool checkType(Literal typeLiteral, Literal value) {
 		return true;
 	}
 
+	//don't allow null types
+	if (AS_TYPE(typeLiteral).typeOf == LITERAL_NULL) {
+		return false;
+	}
+
 	//for each type, if a mismatch is found, return false
 	if (AS_TYPE(typeLiteral).typeOf == LITERAL_BOOLEAN && !IS_BOOLEAN(value)) {
 		return false;
@@ -80,7 +85,11 @@ static bool checkType(Literal typeLiteral, Literal value) {
 		}
 	}
 
-	//TODO: functions
+	//TODO: function type checking
+
+	if (AS_TYPE(typeLiteral).typeOf == LITERAL_TYPE && !IS_TYPE(value)) {
+		return false;
+	}
 
 	return true;
 }

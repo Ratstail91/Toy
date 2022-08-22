@@ -1,4 +1,4 @@
-print [
+var arr: [string] = [
 
 "0",
 "1",
@@ -335,3 +335,5 @@ print [
 "299"
 
 ];
+
+print arr;

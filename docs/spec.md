@@ -87,6 +87,7 @@ Variable names in Toy may have a type. These types are:
 * dictionary - a collection of indexable key-value pairs
 * function - chunks of reusable code
 * any - any of the above
+* type - the type of types
 
 Types are optional attachments to names - they can be specified as such:
 
@@ -102,11 +103,19 @@ Types are not interoperable, but in some cases they can be converted from one ty
 var y : float = (float)x;
 ```
 
-defining the type of a variable is not required - in such a case, the type is "any".
+Defining the type of a variable is not required - in such a case, the type is "any".
 
 ```
 //define the variable named "v" with any type
 var z = 1;
+```
+
+Variables are first-class citizens, meaning they can be stored in and used from variables:
+
+```
+//this was originally unintended, but interesting
+var t: type = int;
+var u: t = 42;
 ```
 
 ## Const
