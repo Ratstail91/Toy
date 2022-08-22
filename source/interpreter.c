@@ -709,7 +709,7 @@ static void execInterpreter(Interpreter* interpreter) {
 				interpreter->scope = popScope(interpreter->scope);
 			break;
 
-			//TODO: custom type declarations
+			//TODO: custom type declarations?
 
 			case OP_VAR_DECL:
 			case OP_VAR_DECL_LONG:

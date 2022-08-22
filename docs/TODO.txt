@@ -13,6 +13,7 @@ DONE: truthiness rethink
 DONE: string concat with the + operator
 DONE: increment & decrement operators
 
+TODO: A way to check the type of a variable (typeOf keyword)
 TODO: a = b = c = 1; ?
 TODO: are compounds shallow or deep copies?
 TODO: functions, and all of their features

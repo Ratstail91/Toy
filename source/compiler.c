@@ -189,7 +189,6 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 
 	//determine node type
 	switch(node->type) {
-		//TODO: more types, like variables, etc.
 		case NODE_ERROR: {
 			fprintf(stderr, ERROR "[Internal] NODE_ERROR encountered in writeCompilerWithJumps()\n" RESET);
 			compiler->bytecode[compiler->count++] = OP_EOF; //1 byte
