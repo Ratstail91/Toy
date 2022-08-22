@@ -78,7 +78,6 @@ static void synchronize(Parser* parser) {
 			case TOKEN_IMPORT:
 			case TOKEN_PRINT:
 			case TOKEN_RETURN:
-			case TOKEN_TYPE:
 			case TOKEN_VAR:
 			case TOKEN_WHILE:
 				parser->panic = false;
@@ -119,8 +118,17 @@ ParseRule parseRules[];
 //forward declarations
 static void declaration(Parser* parser, Node** nodeHandle);
 static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule rule);
+static Literal readTypeToLiteral(Parser* parser);
 
 //the expression rules
+static Opcode forceType(Parser* parser, Node** nodeHandle) {
+	Literal literal = readTypeToLiteral(parser);
+
+	emitNodeLiteral(nodeHandle, literal);
+
+	return OP_EOF;
+}
+
 static Opcode compound(Parser* parser, Node** nodeHandle) {
 	//read either an array or a dictionary into a literal node
 
@@ -615,7 +623,7 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_OF,
 	{NULL, NULL, PREC_NONE},// TOKEN_PRINT,
 	{NULL, NULL, PREC_NONE},// TOKEN_RETURN,
-	{NULL, NULL, PREC_NONE},// TOKEN_USING,
+	{forceType, NULL, PREC_PRIMARY},// TOKEN_TYPE,
 	{NULL, NULL, PREC_NONE},// TOKEN_VAR,
 	{NULL, NULL, PREC_NONE},// TOKEN_WHILE,
 
@@ -1231,14 +1239,7 @@ static void varDecl(Parser* parser, Node** nodeHandle) {
 	//variable definition is an expression
 	Node* expressionNode = NULL;
 	if (match(parser, TOKEN_ASSIGN)) {
-		//BUGFIX: if reading into a "type" variable, expect a type value
-		if (AS_TYPE(typeLiteral).typeOf == LITERAL_TYPE) { //This may cause issues when reading function returns
-			Literal val = readTypeToLiteral(parser);
-
-			emitNodeLiteral(&expressionNode, val);
-		} else {
-			expression(parser, &expressionNode);
-		}
+		expression(parser, &expressionNode);
 	}
 	else {
 		//values are null by default

@@ -118,6 +118,16 @@ var t: type = int;
 var u: t = 42;
 ```
 
+To force a type instead of an array, use the `type` keyword:
+
+```
+var a = [type type]; //array of types
+var b = type [type]; //type of array of types
+var c = [type]; //error!
+
+var d = b; //types can be re-assigned to other variables
+```
+
 ## Const
 
 The "const" keyword can be appended to the type of a variable to fix the value in place - constants, as they're known, can't be changed once they are given a value at declaration.
