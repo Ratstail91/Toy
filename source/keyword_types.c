@@ -9,8 +9,6 @@ KeywordType keywordTypes[] = {
 	{TOKEN_INTEGER,    "int"},
 	{TOKEN_FLOAT,      "float"},
 	{TOKEN_STRING,     "string"},
-	{TOKEN_ARRAY,      "array"},
-	{TOKEN_DICTIONARY, "dictionary"},
 	{TOKEN_FUNCTION,   "fn"},
 	{TOKEN_ANY,        "any"},
 
