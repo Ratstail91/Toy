@@ -754,7 +754,7 @@ unsigned char* collateCompiler(Compiler* compiler, int* size) {
 	emitByte(&collation, &capacity, &count, OP_EOF); //terminate bytecode
 
 	//finalize
-	SHRINK_ARRAY(unsigned char, collation, capacity, count);
+	collation = SHRINK_ARRAY(unsigned char, collation, capacity, count);
 
 	*size = count;
 
