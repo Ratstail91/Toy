@@ -269,18 +269,22 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 	if(IS_INTEGER(lhs) && IS_INTEGER(rhs)) {
 		switch(opcode) {
 			case OP_ADDITION:
+			case OP_VAR_ADDITION_ASSIGN:
 				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) + AS_INTEGER(rhs) ));
 				return true;
 
 			case OP_SUBTRACTION:
+			case OP_VAR_SUBTRACTION_ASSIGN:
 				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) - AS_INTEGER(rhs) ));
 				return true;
 
 			case OP_MULTIPLICATION:
+			case OP_VAR_MULTIPLICATION_ASSIGN:
 				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) * AS_INTEGER(rhs) ));
 				return true;
 
 			case OP_DIVISION:
+			case OP_VAR_DIVISION_ASSIGN:
 				if (AS_INTEGER(rhs) == 0) {
 					printf(ERROR "ERROR: Can't divide by zero (error found in interpreter)" RESET);
 					return false;
@@ -289,6 +293,7 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 				return true;
 
 			case OP_MODULO:
+			case OP_VAR_MODULO_ASSIGN:
 				if (AS_INTEGER(rhs) == 0) {
 					printf(ERROR "ERROR: Can't modulo by zero (error found in interpreter)" RESET);
 					return false;
@@ -303,7 +308,7 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 	}
 
 	//catch bad modulo
-	if (opcode == OP_MODULO) {
+	if (opcode == OP_MODULO || opcode == OP_VAR_MODULO_ASSIGN) {
 		printf(ERROR "ERROR: Bad arithmetic argument (modulo on floats not allowed)\n" RESET);
 		return false;
 	}
@@ -311,18 +316,22 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 	if(IS_FLOAT(lhs) && IS_FLOAT(rhs)) {
 		switch(opcode) {
 			case OP_ADDITION:
+			case OP_VAR_ADDITION_ASSIGN:
 				pushLiteralArray(&interpreter->stack, TO_FLOAT_LITERAL( AS_FLOAT(lhs) + AS_FLOAT(rhs) ));
 				return true;
 
 			case OP_SUBTRACTION:
+			case OP_VAR_SUBTRACTION_ASSIGN:
 				pushLiteralArray(&interpreter->stack, TO_FLOAT_LITERAL( AS_FLOAT(lhs) - AS_FLOAT(rhs) ));
 				return true;
 
 			case OP_MULTIPLICATION:
+			case OP_VAR_MULTIPLICATION_ASSIGN:
 				pushLiteralArray(&interpreter->stack, TO_FLOAT_LITERAL( AS_FLOAT(lhs) * AS_FLOAT(rhs) ));
 				return true;
 
 			case OP_DIVISION:
+			case OP_VAR_DIVISION_ASSIGN:
 				if (AS_FLOAT(rhs) == 0) {
 					printf(ERROR "ERROR: Can't divide by zero (error found in interpreter)" RESET);
 					return false;
@@ -410,6 +419,18 @@ static bool execVarAssign(Interpreter* interpreter) {
 		printf("\"\n" RESET);
 		return false;
 	}
+
+	return true;
+}
+
+static bool execVarArithmeticAssign(Interpreter* interpreter) {
+	Literal rhs = popLiteralArray(&interpreter->stack);
+	Literal lhs = popLiteralArray(&interpreter->stack);
+
+	//duplicate the name
+	pushLiteralArray(&interpreter->stack, lhs);
+	pushLiteralArray(&interpreter->stack, lhs);
+	pushLiteralArray(&interpreter->stack, rhs);
 
 	return true;
 }
@@ -687,6 +708,21 @@ static void execInterpreter(Interpreter* interpreter) {
 			case OP_DIVISION:
 			case OP_MODULO:
 				if (!execArithmetic(interpreter, opcode)) {
+					return;
+				}
+			break;
+
+			case OP_VAR_ADDITION_ASSIGN:
+			case OP_VAR_SUBTRACTION_ASSIGN:
+			case OP_VAR_MULTIPLICATION_ASSIGN:
+			case OP_VAR_DIVISION_ASSIGN:
+			case OP_VAR_MODULO_ASSIGN:
+				execVarArithmeticAssign(interpreter);
+				if (!execArithmetic(interpreter, opcode)) {
+					popLiteralArray(&interpreter->stack);
+					return;
+				}
+				if (!execVarAssign(interpreter)) {
 					return;
 				}
 			break;

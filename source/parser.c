@@ -326,6 +326,31 @@ static Opcode binary(Parser* parser, Node** nodeHandle) {
 			return OP_VAR_ASSIGN;
 		}
 
+		case TOKEN_PLUS_ASSIGN: {
+			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
+			return OP_VAR_ADDITION_ASSIGN;
+		}
+
+		case TOKEN_MINUS_ASSIGN: {
+			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
+			return OP_VAR_SUBTRACTION_ASSIGN;
+		}
+
+		case TOKEN_MULTIPLY_ASSIGN: {
+			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
+			return OP_VAR_MULTIPLICATION_ASSIGN;
+		}
+
+		case TOKEN_DIVIDE_ASSIGN: {
+			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
+			return OP_VAR_DIVISION_ASSIGN;
+		}
+
+		case TOKEN_MODULO_ASSIGN: {
+			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
+			return OP_VAR_MODULO_ASSIGN;
+		}
+
 		//comparison
 		case TOKEN_EQUAL: {
 			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
@@ -641,11 +666,11 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, binary, PREC_FACTOR},// TOKEN_MULTIPLY,
 	{NULL, binary, PREC_FACTOR},// TOKEN_DIVIDE,
 	{NULL, binary, PREC_FACTOR},// TOKEN_MODULO,
-	{NULL, NULL, PREC_NONE},// TOKEN_PLUS_ASSIGN,
-	{NULL, NULL, PREC_NONE},// TOKEN_MINUS_ASSIGN,
-	{NULL, NULL, PREC_NONE},// TOKEN_MULTIPLY_ASSIGN,
-	{NULL, NULL, PREC_NONE},// TOKEN_DIVIDE_ASSIGN,
-	{NULL, NULL, PREC_NONE},// TOKEN_MODULO_ASSIGN,
+	{NULL, binary, PREC_ASSIGNMENT},// TOKEN_PLUS_ASSIGN,
+	{NULL, binary, PREC_ASSIGNMENT},// TOKEN_MINUS_ASSIGN,
+	{NULL, binary, PREC_ASSIGNMENT},// TOKEN_MULTIPLY_ASSIGN,
+	{NULL, binary, PREC_ASSIGNMENT},// TOKEN_DIVIDE_ASSIGN,
+	{NULL, binary, PREC_ASSIGNMENT},// TOKEN_MODULO_ASSIGN,
 	{incrementPrefix, incrementInfix, PREC_CALL},// TOKEN_PLUS_PLUS,
 	{decrementPrefix, decrementInfix, PREC_CALL},// TOKEN_MINUS_MINUS,
 	{NULL, binary, PREC_ASSIGNMENT},// TOKEN_ASSIGN,

@@ -33,6 +33,11 @@ typedef enum Opcode {
 	OP_VAR_DECL_LONG,	//declare a variable to be used (as a long literal)
 
 	OP_VAR_ASSIGN,		//assign to a literal
+	OP_VAR_ADDITION_ASSIGN,
+	OP_VAR_SUBTRACTION_ASSIGN,
+	OP_VAR_MULTIPLICATION_ASSIGN,
+	OP_VAR_DIVISION_ASSIGN,
+	OP_VAR_MODULO_ASSIGN,
 
 	OP_TYPE_CAST,		//temporarily change a type of an atomic value
 
