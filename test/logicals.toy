@@ -1,0 +1,6 @@
+assert true && true, "boolean and failed";
+assert true || true, "boolean or failed";
+
+assert false || true && true, "boolen precedence failed";
+
+print "All good";

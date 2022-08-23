@@ -96,7 +96,6 @@ typedef enum {
 	PREC_TERNARY,
 	PREC_OR,
 	PREC_AND,
-	// PREC_EQUALITY,
 	PREC_COMPARISON,
 	PREC_TERM,
 	PREC_FACTOR,
@@ -380,6 +379,16 @@ static Opcode binary(Parser* parser, Node** nodeHandle) {
 		case TOKEN_GREATER_EQUAL: {
 			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
 			return OP_COMPARE_GREATER_EQUAL;
+		}
+
+		case TOKEN_AND: {
+			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
+			return OP_AND;
+		}
+
+		case TOKEN_OR: {
+			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
+			return OP_OR;
 		}
 
 		default:
@@ -689,8 +698,8 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, binary, PREC_COMPARISON},// TOKEN_GREATER,
 	{NULL, binary, PREC_COMPARISON},// TOKEN_LESS_EQUAL,
 	{NULL, binary, PREC_COMPARISON},// TOKEN_GREATER_EQUAL,
-	{NULL, NULL, PREC_NONE},// TOKEN_AND,
-	{NULL, NULL, PREC_NONE},// TOKEN_OR,
+	{NULL, binary, PREC_AND},// TOKEN_AND,
+	{NULL, binary, PREC_OR},// TOKEN_OR,
 
 	//other operators
 	{NULL, NULL, PREC_NONE},// TOKEN_COLON,

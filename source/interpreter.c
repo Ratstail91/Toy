@@ -624,6 +624,40 @@ static bool execCompareLessEqual(Interpreter* interpreter, bool invert) {
 	return true;
 }
 
+static bool execAnd(Interpreter* interpreter) {
+	Literal rhs = popLiteralArray(&interpreter->stack);
+	Literal lhs = popLiteralArray(&interpreter->stack);
+
+	parseIdentifierToValue(interpreter, &rhs);
+	parseIdentifierToValue(interpreter, &lhs);
+
+	if (IS_TRUTHY(lhs) && IS_TRUTHY(rhs)) {
+		pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(true));
+	}
+	else {
+		pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(false));
+	}
+
+	return true;
+}
+
+static bool execOr(Interpreter* interpreter) {
+	Literal rhs = popLiteralArray(&interpreter->stack);
+	Literal lhs = popLiteralArray(&interpreter->stack);
+
+	parseIdentifierToValue(interpreter, &rhs);
+	parseIdentifierToValue(interpreter, &lhs);
+
+	if (IS_TRUTHY(lhs) || IS_TRUTHY(rhs)) {
+		pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(true));
+	}
+	else {
+		pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(false));
+	}
+
+	return true;
+}
+
 static bool execJump(Interpreter* interpreter) {
 	int target = (int)readShort(interpreter->bytecode, &interpreter->count);
 
@@ -802,6 +836,18 @@ static void execInterpreter(Interpreter* interpreter) {
 
 			case OP_INVERT:
 				if (!execInvert(interpreter)) {
+					return;
+				}
+			break;
+
+			case OP_AND:
+				if (!execAnd(interpreter)) {
+					return;
+				}
+			break;
+
+			case OP_OR:
+				if (!execOr(interpreter)) {
 					return;
 				}
 			break;
