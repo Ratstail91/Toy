@@ -21,6 +21,36 @@ void initCompiler(Compiler* compiler) {
 }
 
 //separated out, so it can be recursive
+static int writeLiteralTypeToCache(LiteralArray* literalCache, Literal literal) {
+	//if it's a compound type, recurse and store the results
+	if (AS_TYPE(literal).typeOf == LITERAL_ARRAY || AS_TYPE(literal).typeOf == LITERAL_DICTIONARY) {
+		//I don't like storing types in an array, but it's the easiest and most straight forward method
+		LiteralArray* store = ALLOCATE(LiteralArray, 1);
+		initLiteralArray(store);
+
+		//store the base literal in the store
+		pushLiteralArray(store, literal);
+
+		for (int i = 0; i < AS_TYPE(literal).count; i++) {
+			//write the values to the cache, and the indexes to the store
+			int subIndex = writeLiteralTypeToCache(literalCache, ((Literal*)(AS_TYPE(literal).subtypes))[i]);
+			pushLiteralArray(store, TO_INTEGER_LITERAL(subIndex));
+		}
+
+		//push the store to the cache, tweaking the type
+		literal = TO_ARRAY_LITERAL(store);
+		literal.type = LITERAL_TYPE_INTERMEDIATE; //NOTE: tweaking the type usually isn't a good idea
+	}
+
+	//BUGFIX: check if exactly this literal array exists
+	int index = findLiteralIndex(literalCache, literal);
+	if (index < 0) {
+		index = pushLiteralArray(literalCache, literal);
+	}
+
+	return index;
+}
+
 static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 	int index = -1;
 
@@ -124,34 +154,61 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 	return index;
 }
 
-static int writeLiteralTypeToCache(LiteralArray* literalCache, Literal literal) {
-	//if it's a compound type, recurse and store the results
-	if (AS_TYPE(literal).typeOf == LITERAL_ARRAY || AS_TYPE(literal).typeOf == LITERAL_DICTIONARY) {
-		//I don't like storing types in an array, but it's the easiest and most straight forward method
-		LiteralArray* store = ALLOCATE(LiteralArray, 1);
-		initLiteralArray(store);
+static int writeNodeCollectionToCache(Compiler* compiler, Node* node) {
+	//stored as an array
+	LiteralArray* store = ALLOCATE(LiteralArray, 1);
+	initLiteralArray(store);
 
-		//store the base literal in the store
-		pushLiteralArray(store, literal);
+	//ensure each literal value is in the cache, individually
+	for (int i = 0; i < node->fnCollection.count; i++) {
+		switch(node->fnCollection.nodes[i].type) {
+			case NODE_VAR_DECL: {
+				//write each piece of the declaration to the bytecode
+				int identifierIndex = findLiteralIndex(&compiler->literalCache, node->fnCollection.nodes[i].varDecl.identifier);
+				if (identifierIndex < 0) {
+					identifierIndex = pushLiteralArray(&compiler->literalCache, node->fnCollection.nodes[i].varDecl.identifier);
+				}
 
-		for (int i = 0; i < AS_TYPE(literal).count; i++) {
-			//write the values to the cache, and the indexes to the store
-			int subIndex = writeLiteralTypeToCache(literalCache, ((Literal*)(AS_TYPE(literal).subtypes))[i]);
-			pushLiteralArray(store, TO_INTEGER_LITERAL(subIndex));
+				int typeIndex = writeLiteralTypeToCache(&compiler->literalCache, node->fnCollection.nodes[i].varDecl.typeLiteral);
+
+				//embed the info into the bytecode
+				if (identifierIndex >= 256 || typeIndex >= 256) {
+					//push a "long" declaration
+					compiler->bytecode[compiler->count++] = OP_VAR_DECL_LONG; //1 byte
+
+					*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)identifierIndex; //2 bytes
+					compiler->count += sizeof(unsigned short);
+
+					*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)typeIndex; //2 bytes
+					compiler->count += sizeof(unsigned short);
+				}
+				else {
+					//push a declaration
+					compiler->bytecode[compiler->count++] = OP_VAR_DECL; //1 byte
+					compiler->bytecode[compiler->count++] = (unsigned char)identifierIndex; //1 byte
+					compiler->bytecode[compiler->count++] = (unsigned char)typeIndex; //1 byte
+				}
+			}
+			break;
+
+			case NODE_LITERAL: {
+				//values
+				int val = findLiteralIndex(&compiler->literalCache, node->fnCollection.nodes[i].atomic.literal);
+				if (val < 0) {
+					val = pushLiteralArray(&compiler->literalCache, node->fnCollection.nodes[i].atomic.literal);
+				}
+				pushLiteralArray(store, TO_INTEGER_LITERAL(val));
+			}
+			break;
+
+			default:
+				fprintf(stderr, ERROR "[internal] Unrecognized node type in writeNodeCollectionToCache()" RESET);
+				return -1;
 		}
-
-		//push the store to the cache, tweaking the type
-		literal = TO_ARRAY_LITERAL(store);
-		literal.type = LITERAL_TYPE_INTERMEDIATE; //NOTE: tweaking the type usually isn't a good idea
 	}
 
-	//BUGFIX: check if exactly this literal array exists
-	int index = findLiteralIndex(literalCache, literal);
-	if (index < 0) {
-		index = pushLiteralArray(literalCache, literal);
-	}
-
-	return index;
+	//push the store to the cache, with instructions about how pack it
+	return pushLiteralArray(&compiler->literalCache, TO_ARRAY_LITERAL(store));
 }
 
 static int writeLiteralToCompiler(Compiler* compiler, Literal literal) {
@@ -306,6 +363,66 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 				compiler->bytecode[compiler->count++] = OP_VAR_DECL; //1 byte
 				compiler->bytecode[compiler->count++] = (unsigned char)identifierIndex; //1 byte
 				compiler->bytecode[compiler->count++] = (unsigned char)typeIndex; //1 byte
+			}
+		}
+		break;
+
+		case NODE_FN_DECL: {
+			//run a compiler over the function
+			Compiler* fnCompiler = ALLOCATE(Compiler, 1);
+			initCompiler(fnCompiler);
+			writeCompiler(fnCompiler, node->fnDecl.arguments);
+			writeCompiler(fnCompiler, node->fnDecl.returns);
+			writeCompiler(fnCompiler, node->fnDecl.block);
+
+			//create the function in the literal cache (by storing the compiler object)
+			Literal fnLiteral = TO_FUNCTION_LITERAL(fnCompiler, 0);
+			fnLiteral.type = LITERAL_FUNCTION_INTERMEDIATE; //NOTE: changing type
+
+			//push the name
+			int identifierIndex = findLiteralIndex(&compiler->literalCache, node->fnDecl.identifier);
+			if (identifierIndex < 0) {
+				identifierIndex = pushLiteralArray(&compiler->literalCache, node->fnDecl.identifier);
+			}
+
+			//push to function (functions are never equal)
+			int fnIndex = pushLiteralArray(&compiler->literalCache, fnLiteral);
+
+			//embed the info into the bytecode
+			if (identifierIndex >= 256 || fnIndex >= 256) {
+				//push a "long" declaration
+				compiler->bytecode[compiler->count++] = OP_FN_DECL_LONG; //1 byte
+
+				*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)identifierIndex; //2 bytes
+				compiler->count += sizeof(unsigned short);
+
+				*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)fnIndex; //2 bytes
+				compiler->count += sizeof(unsigned short);
+			}
+			else {
+				//push a declaration
+				compiler->bytecode[compiler->count++] = OP_FN_DECL; //1 byte
+				compiler->bytecode[compiler->count++] = (unsigned char)identifierIndex; //1 byte
+				compiler->bytecode[compiler->count++] = (unsigned char)fnIndex; //1 byte
+			}
+		}
+		break;
+
+		case NODE_FN_COLLECTION: {
+			int index = writeNodeCollectionToCache(compiler, node);
+
+			//push the node opcode to the bytecode
+			if (index >= 256) {
+				//push a "long" index
+				compiler->bytecode[compiler->count++] = OP_LITERAL_LONG; //1 byte
+				*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)index; //2 bytes
+
+				compiler->count += sizeof(unsigned short);
+			}
+			else {
+				//push the index
+				compiler->bytecode[compiler->count++] = OP_LITERAL; //1 byte
+				compiler->bytecode[compiler->count++] = (unsigned char)index; //1 byte
 			}
 		}
 		break;
@@ -481,6 +598,20 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 		}
 		break;
 
+		case NODE_PATH_RETURN: {
+			//read each returned literal onto the stack, and return the number of values to return
+			for (int i = 0; i < node->path.thenPath->fnCollection.count; i++) {
+				writeCompilerWithJumps(compiler, &node->path.thenPath->fnCollection.nodes[i], breakAddressesPtr, continueAddressesPtr);
+			}
+
+			//push the return, with the number of literals
+			compiler->bytecode[compiler->count++] = OP_RETURN; //1 byte
+
+			*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)(node->path.thenPath->fnCollection.count); //2 bytes
+			compiler->count += sizeof(unsigned short);
+		}
+		break;
+
 		case NODE_INCREMENT_PREFIX: {
 			//push the literal to the stack (twice)
 			writeLiteralToCompiler(compiler, node->increment.identifier);
@@ -582,28 +713,36 @@ static void emitFloat(unsigned char** collationPtr, int* capacityPtr, int* count
 }
 
 //return the result
-unsigned char* collateCompiler(Compiler* compiler, int* size) {
+static unsigned char* collateCompilerHeaderOpt(Compiler* compiler, int* size, bool embedHeader) {
 	int capacity = GROW_CAPACITY(0);
 	int count = 0;
 	unsigned char* collation = ALLOCATE(unsigned char, capacity);
 
-	//embed the header with version information
-	emitByte(&collation, &capacity, &count, TOY_VERSION_MAJOR);
-	emitByte(&collation, &capacity, &count, TOY_VERSION_MINOR);
-	emitByte(&collation, &capacity, &count, TOY_VERSION_PATCH);
+	//for the function-section at the end of the main-collation
+	int fnIndex = 0; //counts up for each fn
+	int fnCapacity = GROW_CAPACITY(0);
+	int fnCount = 0;
+	unsigned char* fnCollation = ALLOCATE(unsigned char, fnCapacity);
 
-	//embed the build info
-	if (strlen(TOY_VERSION_BUILD) + count + 1 > capacity) {
-		int oldCapacity = capacity;
-		capacity = strlen(TOY_VERSION_BUILD) + count + 1; //full header size
-		collation = GROW_ARRAY(unsigned char, collation, oldCapacity, capacity);
+	if (embedHeader) {
+		//embed the header with version information
+		emitByte(&collation, &capacity, &count, TOY_VERSION_MAJOR);
+		emitByte(&collation, &capacity, &count, TOY_VERSION_MINOR);
+		emitByte(&collation, &capacity, &count, TOY_VERSION_PATCH);
+
+		//embed the build info
+		if (strlen(TOY_VERSION_BUILD) + count + 1 > capacity) {
+			int oldCapacity = capacity;
+			capacity = strlen(TOY_VERSION_BUILD) + count + 1; //full header size
+			collation = GROW_ARRAY(unsigned char, collation, oldCapacity, capacity);
+		}
+
+		memcpy(&collation[count], TOY_VERSION_BUILD, strlen(TOY_VERSION_BUILD));
+		count += strlen(TOY_VERSION_BUILD);
+		collation[count++] = '\0'; //terminate the build string
+
+		emitByte(&collation, &capacity, &count, OP_SECTION_END); //terminate header
 	}
-
-	memcpy(&collation[count], TOY_VERSION_BUILD, strlen(TOY_VERSION_BUILD));
-	count += strlen(TOY_VERSION_BUILD);
-	collation[count++] = '\0'; //terminate the build string
-
-	emitByte(&collation, &capacity, &count, OP_SECTION_END); //terminate header
 
 	//embed the data section (first short is the number of literals)
 	emitShort(&collation, &capacity, &count, compiler->literalCache.count);
@@ -684,7 +823,33 @@ unsigned char* collateCompiler(Compiler* compiler, int* size) {
 			}
 			break;
 
-			//TODO: function
+			case LITERAL_FUNCTION_INTERMEDIATE: {
+				//extract the compiler
+				Literal fn = compiler->literalCache.literals[i];
+				void* fnCompiler = AS_FUNCTION(fn);
+
+				//collate the function into bytecode (without header)
+				int size = 0;
+				unsigned char* bytes = collateCompilerHeaderOpt((Compiler*)fnCompiler, &size, false);
+
+				//emit how long this section is, +1 for ending mark
+				emitShort(&fnCollation, &fnCapacity, &fnCount, (unsigned short)size + 1);
+
+				//write the fn to the fn collation
+				for (int i = 0; i < size; i++) {
+					emitByte(&fnCollation, &fnCapacity, &fnCount, bytes[i]);
+				}
+
+				emitByte(&fnCollation, &fnCapacity, &fnCount, OP_FN_END); //for marking the correct end-point of the function
+
+				//embed the reference to the function implementation into the current collation (to be extracted later)
+				emitByte(&collation, &capacity, &count, LITERAL_FUNCTION);
+				emitShort(&collation, &capacity, &count, (unsigned short)(fnIndex++));
+
+				freeCompiler((Compiler*)fnCompiler);
+				FREE(Compiler, fnCompiler);
+			}
+			break;
 
 			case LITERAL_IDENTIFIER: {
 				emitByte(&collation, &capacity, &count, LITERAL_IDENTIFIER);
@@ -744,6 +909,18 @@ unsigned char* collateCompiler(Compiler* compiler, int* size) {
 
 	emitByte(&collation, &capacity, &count, OP_SECTION_END); //terminate data
 
+	//embed the function section (beginning with function count, size)
+	emitShort(&collation, &capacity, &count, fnIndex);
+	emitShort(&collation, &capacity, &count, fnCount);
+
+	for (int i = 0; i < fnCount; i++) {
+		emitByte(&collation, &capacity, &count, fnCollation[i]);
+	}
+
+	emitByte(&collation, &capacity, &count, OP_SECTION_END); //terminate function section
+
+	FREE_ARRAY(unsigned char, fnCollation, fnCapacity); //clear the function stuff
+
 	//code section
 	for (int i = 0; i < compiler->count; i++) {
 		emitByte(&collation, &capacity, &count, compiler->bytecode[i]);
@@ -759,4 +936,8 @@ unsigned char* collateCompiler(Compiler* compiler, int* size) {
 	*size = count;
 
 	return collation;	
+}
+
+unsigned char* collateCompiler(Compiler* compiler, int* size) {
+	return collateCompilerHeaderOpt(compiler, size, true);
 }

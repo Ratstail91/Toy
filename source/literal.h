@@ -12,12 +12,14 @@ typedef enum {
 	LITERAL_STRING,
 	LITERAL_ARRAY,
 	LITERAL_DICTIONARY,
-	LITERAL_FUNCTION, //TODO: to be implemented later; the type is still handled for the most part
+	LITERAL_FUNCTION,
 
 	//these are meta-level types
 	LITERAL_IDENTIFIER,
 	LITERAL_TYPE,
 	LITERAL_TYPE_INTERMEDIATE, //used to process types in the compiler only
+	LITERAL_FUNCTION_INTERMEDIATE, //used to process functions in the compiler only
+	// LITERAL_FUNCTION_NATIVE, //for handling native functions
 	LITERAL_ANY, //used by the type system only
 } LiteralType;
 
@@ -35,7 +37,10 @@ typedef struct {
 		void* array;
 		void* dictionary;
 
-		// void* function;
+		struct {
+			void* ptr;
+			int length;
+		} function;
 
 		struct { //for variable names
             char* ptr;
@@ -70,7 +75,7 @@ typedef struct {
 #define AS_STRING(value)					((value).as.string.ptr)
 #define AS_ARRAY(value)						((LiteralArray*)((value).as.array))
 #define AS_DICTIONARY(value)				((LiteralDictionary*)((value).as.dictionary))
-// #define AS_FUNCTION(value)
+#define AS_FUNCTION(value)					((value).as.function.ptr)
 #define AS_IDENTIFIER(value)				((value).as.identifier.ptr)
 #define AS_TYPE(value)						((value).as.type)
 
@@ -81,7 +86,7 @@ typedef struct {
 #define TO_STRING_LITERAL(value)			_toStringLiteral(value)
 #define TO_ARRAY_LITERAL(value)				((Literal){LITERAL_ARRAY,		{ .array = value }})
 #define TO_DICTIONARY_LITERAL(value)		((Literal){LITERAL_DICTIONARY,	{ .dictionary = value }})
-// #define TO_FUNCTION_LITERAL
+#define TO_FUNCTION_LITERAL(value, l)	((Literal){LITERAL_FUNCTION,	{ .function.ptr = value, .function.length = l }})
 #define TO_IDENTIFIER_LITERAL(value)		_toIdentifierLiteral(value, strlen(value))
 #define TO_TYPE_LITERAL(value, c)			((Literal){ LITERAL_TYPE,		{ .type.typeOf = value, .type.constant = c, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
 

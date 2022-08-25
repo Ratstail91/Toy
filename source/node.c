@@ -62,11 +62,26 @@ void freeNode(Node* node) {
 			freeNode(node->varDecl.expression);
 		break;
 
+		case NODE_FN_DECL:
+			freeLiteral(node->fnDecl.identifier);
+			freeNode(node->fnDecl.arguments);
+			freeNode(node->fnDecl.returns);
+			freeNode(node->fnDecl.block);
+		break;
+
+		case NODE_FN_COLLECTION:
+			for (int i = 0; i < node->fnCollection.count; i++) {
+				freeNode(node->fnCollection.nodes + i);
+			}
+			FREE_ARRAY(Node, node->fnCollection.nodes, node->fnCollection.capacity);
+		break;
+
 		case NODE_PATH_IF:
 		case NODE_PATH_WHILE:
 		case NODE_PATH_FOR:
 		case NODE_PATH_BREAK:
 		case NODE_PATH_CONTINUE:
+		case NODE_PATH_RETURN:
 			freeNode(node->path.preClause);
 			freeNode(node->path.postClause);
 			freeNode(node->path.condition);
@@ -167,6 +182,29 @@ void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal type, Node* 
 	tmp->varDecl.identifier = identifier;
 	tmp->varDecl.typeLiteral = type;
 	tmp->varDecl.expression = expression;
+
+	*nodeHandle = tmp;
+}
+
+void emitNodeFnDecl(Node** nodeHandle, Literal identifier, Node* arguments, Node* returns, Node* block) {
+	Node* tmp = ALLOCATE(Node, 1);
+
+	tmp->type = NODE_FN_DECL;
+	tmp->fnDecl.identifier = identifier;
+	tmp->fnDecl.arguments = arguments;
+	tmp->fnDecl.returns = returns;
+	tmp->fnDecl.block = block;
+
+	*nodeHandle = tmp;
+}
+
+void emitNodeFnCollection(Node** nodeHandle) {
+	Node* tmp = ALLOCATE(Node, 1);
+
+	tmp->type = NODE_FN_COLLECTION;
+	tmp->fnCollection.nodes = NULL;
+	tmp->fnCollection.capacity = 0;
+	tmp->fnCollection.count = 0;
 
 	*nodeHandle = tmp;
 }

@@ -124,6 +124,12 @@ void runSource(char* source) {
 	if (!tb) {
 		return;
 	}
+
+	//DEBUG
+	// for (size_t i = 0; i < size; i++) {
+	// 	printf("%d, ", tb[i]);
+	// }
+
 	runBinary(tb, size);
 }
 

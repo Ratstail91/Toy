@@ -32,6 +32,9 @@ typedef enum Opcode {
 	OP_VAR_DECL,		//declare a variable to be used (as a literal)
 	OP_VAR_DECL_LONG,	//declare a variable to be used (as a long literal)
 
+	OP_FN_DECL,			//declare a function to be used (as a literal)
+	OP_FN_DECL_LONG,	//declare a function to be used (as a long literal)
+
 	OP_VAR_ASSIGN,		//assign to a literal
 	OP_VAR_ADDITION_ASSIGN,
 	OP_VAR_SUBTRACTION_ASSIGN,
@@ -57,9 +60,11 @@ typedef enum Opcode {
 	//jumps, and conditional jumps (absolute)
 	OP_JUMP,
 	OP_IF_FALSE_JUMP,
+	OP_RETURN,
 
 	//meta
-	OP_SECTION_END,
+	OP_FN_END, //different from SECTION_END
+	OP_SECTION_END = 255,
 	//TODO: add more
 } Opcode;
 

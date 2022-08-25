@@ -284,7 +284,9 @@ Token scanLexer(Lexer* lexer) {
 		case ';': return makeToken(lexer, TOKEN_SEMICOLON);
 		case ',': return makeToken(lexer, TOKEN_COMMA);
 		case '.':
-			if (peek(lexer) == '.' && peekNext(lexer) == ',') {
+			if (peek(lexer) == '.' && peekNext(lexer) == '.') {
+				advance(lexer);
+				advance(lexer);
 				return makeToken(lexer, TOKEN_REST);
 			}
 			return makeToken(lexer, TOKEN_DOT);

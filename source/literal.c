@@ -187,6 +187,10 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 		break;
 		
 		//TODO: functions
+		case LITERAL_FUNCTION: {
+			printFn("(function)");
+		}
+		break;
 
 		case LITERAL_IDENTIFIER: {
 			char buffer[256];
@@ -293,9 +297,14 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 		}
 		break;
 
-		default:
-			//should never bee seen
-			fprintf(stderr, ERROR "[internal] Unrecognized literal type in print: %d\n" RESET, literal.type);
+		case LITERAL_TYPE_INTERMEDIATE:
+		case LITERAL_FUNCTION_INTERMEDIATE:
+			printFn("Unprintable literal found");
+		break;
+
+		case LITERAL_ANY:
+			printFn("(any)");
+		break;
 	}
 }
 
@@ -438,7 +447,9 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 
 			return true;
 
-		//TODO: functions
+		case LITERAL_FUNCTION:
+			return false; //functions are never equal
+		break;
 
 		case LITERAL_IDENTIFIER:
 			//check shortcuts
@@ -474,13 +485,15 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 			}
 			return true;
 
-		//NOTE: any covered by check at the top of the function
+		case LITERAL_ANY:
+			return true;
 
-		default:
-			//should never bee seen
-			fprintf(stderr, ERROR "[internal] Unrecognized literal type in equality: %d\n" RESET, lhs.type);
+		case LITERAL_FUNCTION_INTERMEDIATE:
+			fprintf(stderr, ERROR "[internal] Can't compare functions\n" RESET);
 			return false;
 	}
+
+	return false;
 }
 
 int hashLiteral(Literal lit) {

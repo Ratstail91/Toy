@@ -1,0 +1,9 @@
+
+
+fn name(argument: type, arg2: type, ...rest): int {
+	print "hello world";
+	return 0;
+}
+
+
+print name;

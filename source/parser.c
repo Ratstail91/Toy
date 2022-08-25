@@ -1094,6 +1094,33 @@ static void continueStmt(Parser* parser, Node** nodeHandle) {
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of continue statement");
 }
 
+static void returnStmt(Parser* parser, Node** nodeHandle) {
+	Node* returnValues = NULL;
+	emitNodeFnCollection(&returnValues);
+
+	if (!match(parser, TOKEN_SEMICOLON)) {
+		do {
+			//append the node to the return list (grow the node if needed)
+			if (returnValues->fnCollection.capacity < returnValues->fnCollection.count + 1) {
+				int oldCapacity = returnValues->fnCollection.capacity;
+
+				returnValues->fnCollection.capacity = GROW_CAPACITY(oldCapacity);
+				returnValues->fnCollection.nodes = GROW_ARRAY(Node, returnValues->fnCollection.nodes, oldCapacity, returnValues->fnCollection.capacity);
+			}
+
+			Node* node = NULL;
+			parsePrecedence(parser, &node, PREC_TERNARY);
+
+			returnValues->fnCollection.nodes[returnValues->fnCollection.count++] = *node;
+		} while(match(parser, TOKEN_COMMA));
+
+		consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of return statement");
+	}
+
+	freeNode(*nodeHandle); //free the initial node
+	emitNodePath(nodeHandle, NODE_PATH_RETURN, NULL, NULL, NULL, returnValues, NULL);
+}
+
 //precedence functions
 static void expressionStmt(Parser* parser, Node** nodeHandle) {
 	//BUGFIX: check for empty statements
@@ -1161,6 +1188,12 @@ static void statement(Parser* parser, Node** nodeHandle) {
 	//continue
 	if (match(parser, TOKEN_CONTINUE)) {
 		continueStmt(parser, nodeHandle);
+		return;
+	}
+
+	//return
+	if (match(parser, TOKEN_RETURN)) {
+		returnStmt(parser, nodeHandle);
 		return;
 	}
 
@@ -1257,7 +1290,15 @@ static void varDecl(Parser* parser, Node** nodeHandle) {
 	consume(parser, TOKEN_IDENTIFIER, "Expected identifier after var keyword");
 	Token identifierToken = parser->previous;
 
-	char* cpy = copyString(identifierToken.lexeme, identifierToken.length);
+	int length = identifierToken.length;
+
+	//for safety
+	if (length > 256) {
+		length = 256;
+		error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
+	}
+
+	char* cpy = copyString(identifierToken.lexeme, length);
 	Literal identifier = _toIdentifierLiteral(cpy, strlen(cpy)); //BUGFIX: use this instead of the macro
 
 	//read the type, if present
@@ -1289,10 +1330,154 @@ static void varDecl(Parser* parser, Node** nodeHandle) {
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of var declaration");
 }
 
+static void fnDecl(Parser* parser, Node** nodeHandle) {
+	//read the identifier
+	consume(parser, TOKEN_IDENTIFIER, "Expected identifier after var keyword");
+	Token identifierToken = parser->previous;
+
+	int length = identifierToken.length;
+
+	//for safety
+	if (length > 256) {
+		length = 256;
+		error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
+	}
+
+	char* cpy = copyString(identifierToken.lexeme, length);
+	Literal identifier = _toIdentifierLiteral(cpy, strlen(cpy)); //BUGFIX: use this instead of the macro
+
+	//TODO: read the parameters and arity
+	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' after function identifier");
+
+	//for holding the array of arguments
+	Node* argumentNode = NULL;
+	emitNodeFnCollection(&argumentNode);
+
+	//read args
+	if (!match(parser, TOKEN_PAREN_RIGHT)) {
+		do {
+			//check for rest parameter
+			if (match(parser, TOKEN_REST)) {
+				//read the argument identifier
+				consume(parser, TOKEN_IDENTIFIER, "Expected identifier as function argument");
+				Token argIdentifierToken = parser->previous;
+
+				int length = argIdentifierToken.length;
+
+				//for safety
+				if (length > 256) {
+					length = 256;
+					error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
+				}
+
+				char* cpy = copyString(argIdentifierToken.lexeme, length);
+				Literal argIdentifier = _toIdentifierLiteral(cpy, strlen(cpy)); //BUGFIX: use this instead of the macro
+
+				//set the type (array of any types)
+				Literal argTypeLiteral = TO_TYPE_LITERAL(LITERAL_ARRAY, false);
+				TYPE_PUSH_SUBTYPE(&argTypeLiteral, TO_TYPE_LITERAL(LITERAL_ANY, false));
+
+				//emit the node to the argument list (grow the node if needed)
+				if (argumentNode->fnCollection.capacity < argumentNode->fnCollection.count + 1) {
+					int oldCapacity = argumentNode->fnCollection.capacity;
+
+					argumentNode->fnCollection.capacity = GROW_CAPACITY(oldCapacity);
+					argumentNode->fnCollection.nodes = GROW_ARRAY(Node, argumentNode->fnCollection.nodes, oldCapacity, argumentNode->fnCollection.capacity);
+				}
+
+				//store the arg in the array
+				Node* literalNode = NULL;
+				emitNodeVarDecl(&literalNode, argIdentifier, argTypeLiteral, NULL);
+
+				argumentNode->fnCollection.nodes[argumentNode->fnCollection.count++] = *literalNode;
+
+				break;
+			}
+
+			//read the argument identifier
+			consume(parser, TOKEN_IDENTIFIER, "Expected identifier as function argument");
+			Token argIdentifierToken = parser->previous;
+
+			int length = argIdentifierToken.length;
+
+			//for safety
+			if (length > 256) {
+				length = 256;
+				error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
+			}
+
+			char* cpy = copyString(argIdentifierToken.lexeme, length);
+
+			Literal argIdentifier = _toIdentifierLiteral(cpy, strlen(cpy)); //BUGFIX: use this instead of the macro
+
+			//read optional type of the identifier
+			Literal argTypeLiteral;
+			if (match(parser, TOKEN_COLON)) {
+				argTypeLiteral = readTypeToLiteral(parser);
+			}
+			else {
+				//default to non-const any
+				argTypeLiteral = TO_TYPE_LITERAL(LITERAL_ANY, false);
+			}
+
+			//emit the node to the argument list (grow the node if needed)
+			if (argumentNode->fnCollection.capacity < argumentNode->fnCollection.count + 1) {
+				int oldCapacity = argumentNode->fnCollection.capacity;
+
+				argumentNode->fnCollection.capacity = GROW_CAPACITY(oldCapacity);
+				argumentNode->fnCollection.nodes = GROW_ARRAY(Node, argumentNode->fnCollection.nodes, oldCapacity, argumentNode->fnCollection.capacity);
+			}
+
+			//store the arg in the array
+			Node* literalNode = NULL;
+			emitNodeVarDecl(&literalNode, argIdentifier, argTypeLiteral, NULL);
+
+			argumentNode->fnCollection.nodes[argumentNode->fnCollection.count++] = *literalNode;
+
+		} while (match(parser, TOKEN_COMMA)); //if comma is read, continue
+
+		consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' after function argument list");
+	}
+
+	//read the return types, if present
+	Node* returnNode = NULL;
+	emitNodeFnCollection(&returnNode);
+
+	if (match(parser, TOKEN_COLON)) {
+		do {
+			//append the node to the return list (grow the node if needed)
+			if (returnNode->fnCollection.capacity < returnNode->fnCollection.count + 1) {
+				int oldCapacity = returnNode->fnCollection.capacity;
+
+				returnNode->fnCollection.capacity = GROW_CAPACITY(oldCapacity);
+				returnNode->fnCollection.nodes = GROW_ARRAY(Node, returnNode->fnCollection.nodes, oldCapacity, returnNode->fnCollection.capacity);
+			}
+
+			Node* literalNode = NULL;
+			emitNodeLiteral(&literalNode, readTypeToLiteral(parser));
+
+			returnNode->fnCollection.nodes[returnNode->fnCollection.count++] = *literalNode;
+		} while(match(parser, TOKEN_COMMA));
+	}
+
+	//read the function body
+	consume(parser, TOKEN_BRACE_LEFT, "Expected '{' after return list");
+
+	Node* blockNode = ALLOCATE(Node, 1);
+	blockStmt(parser, &blockNode);
+
+	//declare it
+	freeNode(*nodeHandle); //free the initial node, because WTF?
+	emitNodeFnDecl(nodeHandle, identifier, argumentNode, returnNode, blockNode);
+}
+
 static void declaration(Parser* parser, Node** nodeHandle) { //assume nodeHandle holds a blank node
 	//variable declarations
 	if (match(parser, TOKEN_VAR)) {
 		varDecl(parser, nodeHandle);
+	}
+	else if (match(parser, TOKEN_FUNCTION)) {
+		fnDecl(parser, nodeHandle);
 	}
 	else {
 		statement(parser, nodeHandle);

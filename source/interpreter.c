@@ -44,6 +44,10 @@ void freeInterpreter(Interpreter* interpreter) {
 
 			interpreter->literalCache.literals[i] = TO_NULL_LITERAL;
 		}
+
+		if (IS_FUNCTION(interpreter->literalCache.literals[i])) {
+			FREE_ARRAY(unsigned char, interpreter->literalCache.literals[i].as.function.ptr, interpreter->literalCache.literals[i].as.function.length);
+		}
 	}
 	freeLiteralArray(&interpreter->literalCache);
 
@@ -874,41 +878,8 @@ static void execInterpreter(Interpreter* interpreter) {
 	}
 }
 
-void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length) {
-	//prep the bytecode
-	interpreter->bytecode = bytecode;
-	interpreter->length = length;
-	interpreter->count = 0;
 
-	if (!interpreter->bytecode) {
-		printf(ERROR "Error: No valid bytecode given\n" RESET);
-		return;
-	}
-
-	//prep the literal cache
-	if (interpreter->literalCache.count > 0) {
-		freeLiteralArray(&interpreter->literalCache); //automatically inits
-	}
-
-	//header section
-	const unsigned char major = readByte(interpreter->bytecode, &interpreter->count);
-	const unsigned char minor = readByte(interpreter->bytecode, &interpreter->count);
-	const unsigned char patch = readByte(interpreter->bytecode, &interpreter->count);
-
-	if (major != TOY_VERSION_MAJOR || minor != TOY_VERSION_MINOR || patch != TOY_VERSION_PATCH) {
-		printf(ERROR "Error: interpreter/bytecode version mismatch\n" RESET);
-	}
-
-	const char* build = readString(interpreter->bytecode, &interpreter->count);
-
-	if (command.verbose) {
-		if (strncmp(build, TOY_VERSION_BUILD, strlen(TOY_VERSION_BUILD))) {
-			printf(WARN "Warning: interpreter/bytecode build mismatch\n" RESET);
-		}
-	}
-
-	consumeByte(OP_SECTION_END, interpreter->bytecode, &interpreter->count);
-
+static void readInterpreterSections(Interpreter* interpreter) {
 	//data section
 	const short literalCount = readShort(interpreter->bytecode, &interpreter->count);
 
@@ -1017,7 +988,22 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 			}
 			break;
 
-			//TODO: functions
+			case LITERAL_FUNCTION: {
+				//read the index
+				unsigned short index = readShort(interpreter->bytecode, &interpreter->count);
+				Literal literal = TO_INTEGER_LITERAL(index);
+
+				//change the type, to read it PROPERLY below
+				literal.type = LITERAL_FUNCTION_INTERMEDIATE;
+
+				//push to the literal cache
+				pushLiteralArray(&interpreter->literalCache, literal);
+
+				if (command.verbose) {
+					printf("(function)\n");
+				}
+			}
+			break;
 
 			case LITERAL_IDENTIFIER: {
 				char* str = readString(interpreter->bytecode, &interpreter->count);
@@ -1085,16 +1071,85 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 		}
 	}
 
-	consumeByte(OP_SECTION_END, interpreter->bytecode, &interpreter->count);
+	consumeByte(OP_SECTION_END, interpreter->bytecode, &interpreter->count); //terminate the literal section
+
+	//read the function metadata
+	int functionCount = readShort(interpreter->bytecode, &interpreter->count);
+	int functionSize = readShort(interpreter->bytecode, &interpreter->count); //might not be needed
+
+	//read in the functions
+	for (int i = 0; i < interpreter->literalCache.count; i++) {
+		if (interpreter->literalCache.literals[i].type == LITERAL_FUNCTION_INTERMEDIATE) {
+			//get the size of the function
+			size_t size = (size_t)readShort(interpreter->bytecode, &interpreter->count);
+
+			//read the function code (literal cache and all)
+			unsigned char* bytes = ALLOCATE(unsigned char, size);
+			memcpy(bytes, interpreter->bytecode + interpreter->count, size);
+			interpreter->count += size;
+
+			//assert that the last memory slot is function end
+			if (bytes[size - 1] != OP_FN_END) {
+				printf(ERROR "[internal] Failed to find function end" RESET);
+				FREE_ARRAY(unsigned char, bytes, size);
+				return;
+			}
+
+			//change the type to normal
+			interpreter->literalCache.literals[i] = TO_FUNCTION_LITERAL(bytes, size);
+		}
+	}
+
+	//TODO
 
 	//set the starting point for the interpreter
 	interpreter->codeStart = interpreter->count;
+}
+
+void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length) {
+	//prep the bytecode
+	interpreter->bytecode = bytecode;
+	interpreter->length = length;
+	interpreter->count = 0;
+
+	if (!interpreter->bytecode) {
+		printf(ERROR "Error: No valid bytecode given\n" RESET);
+		return;
+	}
+
+	//prep the literal cache
+	if (interpreter->literalCache.count > 0) {
+		freeLiteralArray(&interpreter->literalCache); //automatically inits
+	}
+
+	//header section
+	const unsigned char major = readByte(interpreter->bytecode, &interpreter->count);
+	const unsigned char minor = readByte(interpreter->bytecode, &interpreter->count);
+	const unsigned char patch = readByte(interpreter->bytecode, &interpreter->count);
+
+	if (major != TOY_VERSION_MAJOR || minor != TOY_VERSION_MINOR || patch != TOY_VERSION_PATCH) {
+		printf(ERROR "Error: interpreter/bytecode version mismatch\n" RESET);
+	}
+
+	const char* build = readString(interpreter->bytecode, &interpreter->count);
+
+	if (command.verbose) {
+		if (strncmp(build, TOY_VERSION_BUILD, strlen(TOY_VERSION_BUILD))) {
+			printf(WARN "Warning: interpreter/bytecode build mismatch\n" RESET);
+		}
+	}
+
+	consumeByte(OP_SECTION_END, interpreter->bytecode, &interpreter->count);
+
+	//read the sections of the bytecode
+	readInterpreterSections(interpreter);
 
 	//code section
 	if (command.verbose) {
 		printf(NOTICE "executing bytecode\n" RESET);
 	}
 
+	//execute the interpreter
 	execInterpreter(interpreter);
 
 	//free the bytecode immediately after use

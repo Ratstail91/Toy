@@ -18,11 +18,14 @@ typedef enum NodeType {
 	NODE_PAIR, //contains a left and right
 	NODE_VAR_TYPES, //contains a type and a sub-node array for compound types
 	NODE_VAR_DECL, //contains identifier literal, typenode, expression definition
+	NODE_FN_DECL, //containd identifier literal, arguments node, returns node, block node
+	NODE_FN_COLLECTION, //parts of a function
 	NODE_PATH_IF, //for control flow
 	NODE_PATH_WHILE, //for control flow
 	NODE_PATH_FOR, //for control flow
 	NODE_PATH_BREAK,
 	NODE_PATH_CONTINUE,
+	NODE_PATH_RETURN,
 	NODE_INCREMENT_PREFIX,
 	NODE_INCREMENT_POSTFIX,
 } NodeType;
@@ -83,6 +86,21 @@ typedef struct NodeVarDecl {
 	Node* expression;
 } NodeVarDecl;
 
+typedef struct NodeFnDecl {
+	NodeType type;
+	Literal identifier;
+	Node* arguments;
+	Node* returns;
+	Node* block;
+} NodeFnDecl;
+
+typedef struct NodeFnCollection {
+	NodeType type;
+	Node* nodes;
+	int capacity;
+	int count;
+} NodeFnCollection;
+
 typedef struct NodePath {
 	NodeType type;
 	Node* preClause;
@@ -109,6 +127,8 @@ union _node {
 	NodePair pair;
 	NodeVarTypes varTypes;
 	NodeVarDecl varDecl;
+	NodeFnDecl fnDecl;
+	NodeFnCollection fnCollection;
 	NodePath path;
 	NodeIncrement increment;
 };
@@ -123,6 +143,8 @@ void emitNodeCompound(Node** nodeHandle, LiteralType literalType);
 void emitNodePair(Node** nodeHandle, Node* left, Node* right);
 void emitNodeVarTypes(Node** nodeHandle, Literal literal);
 void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal type, Node* expression);
+void emitNodeFnDecl(Node** nodeHandle, Literal identifier, Node* arguments, Node* returns, Node* block);
+void emitNodeFnCollection(Node** nodeHandle);
 void emitNodePath(Node** nodeHandle, NodeType type, Node* preClause, Node* postClause, Node* condition, Node* thenPath, Node* elsePath);
 void emiteNodePrefixIncrement(Node** nodeHandle, Literal identifier, int increment);
 void emiteNodePostfixIncrement(Node** nodeHandle, Literal identifier, int increment);
