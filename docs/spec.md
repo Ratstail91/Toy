@@ -275,7 +275,7 @@ fn doSomething() {
 }
 ```
 
-Functions can take a number of parameters within the parenthesis following their names, and can return a number of values to the calling context using the return keyword.
+Functions can take a set number of parameters within the parenthesis following their names, and can return a number of values to the calling context using the return keyword.
 
 ```
 fn reverseOrder(a, b, c) { //return type isn't required by default

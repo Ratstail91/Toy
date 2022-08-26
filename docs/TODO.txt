@@ -19,13 +19,12 @@ DONE: functions are invoked by calling their names
 DONE: function arguments can have specified types
 DONE: function returns can have specified types
 DONE: closures are explicitly supported
+DONE: functions are first-class citizens
+DONE: functions take a set number of parameters
 
 
-TODO: functions take a set number of parameters
-TODO: functions can return a set number of values
-TODO: functions are first-class citizens
+TODO: functions return a set number of values
 TODO: functions last argument can be a rest parameter
-TODO: check for wrong number of function parameters
 
 TODO: Nullish types
 TODO: A way to check the type of a variable (typeOf keyword)

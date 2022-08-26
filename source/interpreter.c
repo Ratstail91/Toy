@@ -750,8 +750,10 @@ static bool execFnCall(Interpreter* interpreter) {
 	LiteralArray arguments;
 	initLiteralArray(&arguments);
 
-	//unpack the arguments
-	while (interpreter->stack.count > 1) {
+	Literal stackSize = popLiteralArray(&interpreter->stack);
+
+	//unpack the stack of arguments
+	for (int i = 0; i < AS_INTEGER(stackSize); i++) {
 		pushLiteralArray(&arguments, popLiteralArray(&interpreter->stack)); //NOTE: also reverses the order
 	}
 
@@ -779,6 +781,19 @@ static bool execFnCall(Interpreter* interpreter) {
 	//prep the arguments
 	LiteralArray* paramArray = AS_ARRAY(inner.literalCache.literals[ readShort(inner.bytecode, &inner.count) ]);
 	LiteralArray* returnArray = AS_ARRAY(inner.literalCache.literals[ readShort(inner.bytecode, &inner.count) ]);
+
+	//check the param total is correct
+	if (paramArray->count != arguments.count * 2) {
+		printf(ERROR "ERROR: Incorrect number of arguments passed to function \"\n");
+		printLiteral(identifier);
+		printf("\"\n" RESET);
+
+		//free, and skip out
+		freeLiteralArray(&arguments);
+		freeInterpreter(&inner);
+
+		return false;
+	}
 
 	for (int i = 0; i < paramArray->count; i += 2) { //contents is the indexes of identifier & type
 		//declare and define each entry in the scope

@@ -1,0 +1,32 @@
+//test function return
+fn testFourtyTwo() {
+	return 42;
+}
+
+assert testFourtyTwo() == 42, "function returns failed";
+
+
+//test function parameters
+fn identity(x) {
+	return x;
+}
+
+assert identity("hello world") == "hello world", "identity function failed";
+
+
+//test closures
+fn make() {
+	var counter = 0;
+
+	fn count() {
+		return ++counter;
+	}
+
+	return count;
+}
+
+var tally = make();
+
+assert tally() == 1 && tally() == 2, "Closures failed";
+
+print "All good";

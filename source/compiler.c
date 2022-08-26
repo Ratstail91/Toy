@@ -426,6 +426,25 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 				}
 			}
 
+			//push the argument COUNT to the top of the stack
+			int argumentsCount = findLiteralIndex(&compiler->literalCache, TO_INTEGER_LITERAL(node->fnCall.arguments->fnCollection.count));
+			if (argumentsCount < 0) {
+				argumentsCount = pushLiteralArray(&compiler->literalCache, TO_INTEGER_LITERAL(node->fnCall.arguments->fnCollection.count));
+			}
+
+			if (argumentsCount >= 256) {
+				//push a "long" index
+				compiler->bytecode[compiler->count++] = OP_LITERAL_LONG; //1 byte
+
+				*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)argumentsCount; //2 bytes
+				compiler->count += sizeof(unsigned short);
+			}
+			else {
+				//push the index
+				compiler->bytecode[compiler->count++] = OP_LITERAL; //1 byte
+				compiler->bytecode[compiler->count++] = (unsigned char)argumentsCount; //1 byte
+			}
+
 			//call the function
 			//DO NOT call the collection, this is done in binary
 		}
