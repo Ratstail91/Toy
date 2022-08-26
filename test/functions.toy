@@ -29,4 +29,17 @@ var tally = make();
 
 assert tally() == 1 && tally() == 2, "Closures failed";
 
+
+//expressions as arguments
+fn argFn() {
+	return 42;
+}
+
+fn outerFn(val) {
+	assert val == 42, "expression as argument failed";
+}
+
+outerFn(argFn());
+
+
 print "All good";

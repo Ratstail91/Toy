@@ -405,6 +405,12 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			//NOTE: assume the function definition/name is above us
 
 			for (int i = 0; i < node->fnCall.arguments->fnCollection.count; i++) { //reverse order, to count from the beginning in the interpreter
+				//sub-calls
+				if (node->fnCall.arguments->fnCollection.nodes[i].type != NODE_LITERAL) {
+					writeCompilerWithJumps(compiler, &node->fnCall.arguments->fnCollection.nodes[i], breakAddressesPtr, continueAddressesPtr);
+					continue;
+				}
+
 				//write each argument to the bytecode
 				int argumentsIndex = findLiteralIndex(&compiler->literalCache, node->fnCall.arguments->fnCollection.nodes[i].atomic.literal);
 				if (argumentsIndex < 0) {
