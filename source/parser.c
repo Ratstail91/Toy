@@ -627,6 +627,51 @@ static Opcode decrementInfix(Parser* parser, Node** nodeHandle) {
 	return OP_EOF;
 }
 
+static Opcode fnCall(Parser* parser, Node** nodeHandle) {
+	advance(parser);
+
+	//binary() is an infix rule - so only get the RHS of the operator
+	switch(parser->previous.type) {
+		//arithmetic
+		case TOKEN_PAREN_LEFT: {
+			Node* arguments = NULL;
+			emitNodeFnCollection(&arguments);
+
+			//if there's arguments
+			if (!match(parser, TOKEN_PAREN_RIGHT)) {
+				//read each argument
+				do {
+					//emit the node to the argument list (grow the node if needed)
+					if (arguments->fnCollection.capacity < arguments->fnCollection.count + 1) {
+						int oldCapacity = arguments->fnCollection.capacity;
+
+						arguments->fnCollection.capacity = GROW_CAPACITY(oldCapacity);
+						arguments->fnCollection.nodes = GROW_ARRAY(Node, arguments->fnCollection.nodes, oldCapacity, arguments->fnCollection.capacity);
+					}
+
+					Node* node = NULL;
+					parsePrecedence(parser, &node, PREC_TERNARY);
+					arguments->fnCollection.nodes[arguments->fnCollection.count++] = *node;
+				} while(match(parser, TOKEN_COMMA));
+
+				consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of argument list");
+			}
+
+			//emit the call
+			emitFnCall(nodeHandle, arguments);
+
+			return OP_FN_CALL;
+		}
+		break;
+
+		default:
+			error(parser, parser->previous, "Unexpected token passed to function call precedence rule");
+			return OP_EOF;
+	}
+
+	return OP_EOF;
+}
+
 ParseRule parseRules[] = { //must match the token types
 	//types
 	{atomic, NULL, PREC_PRIMARY},// TOKEN_NULL,
@@ -685,7 +730,7 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, binary, PREC_ASSIGNMENT},// TOKEN_ASSIGN,
 
 	//logical operators
-	{grouping, NULL, PREC_CALL},// TOKEN_PAREN_LEFT,
+	{grouping, fnCall, PREC_CALL},// TOKEN_PAREN_LEFT,
 	{NULL, NULL, PREC_NONE},// TOKEN_PAREN_RIGHT,
 	{compound, NULL, PREC_CALL},// TOKEN_BRACKET_LEFT,
 	{NULL, NULL, PREC_NONE},// TOKEN_BRACKET_RIGHT,

@@ -10,9 +10,6 @@
 
 #include <stdio.h>
 
-//assigning to a byte from a short loses data
-#define AS_USHORT(value) (*(unsigned short*)(&(value)))
-
 void initCompiler(Compiler* compiler) {
 	initLiteralArray(&compiler->literalCache);
 	compiler->bytecode = NULL;
@@ -21,7 +18,7 @@ void initCompiler(Compiler* compiler) {
 }
 
 //separated out, so it can be recursive
-static int writeLiteralTypeToCache(LiteralArray* literalCache, Literal literal) {
+static int writeLiteralTypeToCacheOpt(LiteralArray* literalCache, Literal literal, bool skipDuplicationOptimisation) {
 	//if it's a compound type, recurse and store the results
 	if (AS_TYPE(literal).typeOf == LITERAL_ARRAY || AS_TYPE(literal).typeOf == LITERAL_DICTIONARY) {
 		//I don't like storing types in an array, but it's the easiest and most straight forward method
@@ -33,7 +30,7 @@ static int writeLiteralTypeToCache(LiteralArray* literalCache, Literal literal) 
 
 		for (int i = 0; i < AS_TYPE(literal).count; i++) {
 			//write the values to the cache, and the indexes to the store
-			int subIndex = writeLiteralTypeToCache(literalCache, ((Literal*)(AS_TYPE(literal).subtypes))[i]);
+			int subIndex = writeLiteralTypeToCacheOpt(literalCache, ((Literal*)(AS_TYPE(literal).subtypes))[i], false);
 			pushLiteralArray(store, TO_INTEGER_LITERAL(subIndex));
 		}
 
@@ -42,13 +39,22 @@ static int writeLiteralTypeToCache(LiteralArray* literalCache, Literal literal) 
 		literal.type = LITERAL_TYPE_INTERMEDIATE; //NOTE: tweaking the type usually isn't a good idea
 	}
 
-	//BUGFIX: check if exactly this literal array exists
-	int index = findLiteralIndex(literalCache, literal);
-	if (index < 0) {
-		index = pushLiteralArray(literalCache, literal);
-	}
+	if (!skipDuplicationOptimisation) {
+		//BUGFIX: check if exactly this literal array exists
+		int index = findLiteralIndex(literalCache, literal);
+		if (index < 0) {
+			index = pushLiteralArray(literalCache, literal);
+		}
 
-	return index;
+		return index;
+	}
+	else {
+		return pushLiteralArray(literalCache, literal);
+	}
+}
+
+static int writeLiteralTypeToCache(LiteralArray* literalCache, Literal literal) {
+	return writeLiteralTypeToCacheOpt(literalCache, literal, false);
 }
 
 static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
@@ -155,49 +161,18 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 }
 
 static int writeNodeCollectionToCache(Compiler* compiler, Node* node) {
-	//stored as an array
 	LiteralArray* store = ALLOCATE(LiteralArray, 1);
-	initLiteralArray(store);
 
 	//ensure each literal value is in the cache, individually
 	for (int i = 0; i < node->fnCollection.count; i++) {
 		switch(node->fnCollection.nodes[i].type) {
 			case NODE_VAR_DECL: {
-				//write each piece of the declaration to the bytecode
-				int identifierIndex = findLiteralIndex(&compiler->literalCache, node->fnCollection.nodes[i].varDecl.identifier);
-				if (identifierIndex < 0) {
-					identifierIndex = pushLiteralArray(&compiler->literalCache, node->fnCollection.nodes[i].varDecl.identifier);
-				}
+				//write each piece of the declaration to the cache
+				int identifierIndex = pushLiteralArray(&compiler->literalCache, node->fnCollection.nodes[i].varDecl.identifier); //store without duplication optimisation
+				int typeIndex = writeLiteralTypeToCacheOpt(&compiler->literalCache, node->fnCollection.nodes[i].varDecl.typeLiteral, false);
 
-				int typeIndex = writeLiteralTypeToCache(&compiler->literalCache, node->fnCollection.nodes[i].varDecl.typeLiteral);
-
-				//embed the info into the bytecode
-				if (identifierIndex >= 256 || typeIndex >= 256) {
-					//push a "long" declaration
-					compiler->bytecode[compiler->count++] = OP_VAR_DECL_LONG; //1 byte
-
-					*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)identifierIndex; //2 bytes
-					compiler->count += sizeof(unsigned short);
-
-					*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)typeIndex; //2 bytes
-					compiler->count += sizeof(unsigned short);
-				}
-				else {
-					//push a declaration
-					compiler->bytecode[compiler->count++] = OP_VAR_DECL; //1 byte
-					compiler->bytecode[compiler->count++] = (unsigned char)identifierIndex; //1 byte
-					compiler->bytecode[compiler->count++] = (unsigned char)typeIndex; //1 byte
-				}
-			}
-			break;
-
-			case NODE_LITERAL: {
-				//values
-				int val = findLiteralIndex(&compiler->literalCache, node->fnCollection.nodes[i].atomic.literal);
-				if (val < 0) {
-					val = pushLiteralArray(&compiler->literalCache, node->fnCollection.nodes[i].atomic.literal);
-				}
-				pushLiteralArray(store, TO_INTEGER_LITERAL(val));
+				pushLiteralArray(store, TO_INTEGER_LITERAL(identifierIndex));
+				pushLiteralArray(store, TO_INTEGER_LITERAL(typeIndex));
 			}
 			break;
 
@@ -207,7 +182,7 @@ static int writeNodeCollectionToCache(Compiler* compiler, Node* node) {
 		}
 	}
 
-	//push the store to the cache, with instructions about how pack it
+	//store the store
 	return pushLiteralArray(&compiler->literalCache, TO_ARRAY_LITERAL(store));
 }
 
@@ -371,9 +346,9 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			//run a compiler over the function
 			Compiler* fnCompiler = ALLOCATE(Compiler, 1);
 			initCompiler(fnCompiler);
-			writeCompiler(fnCompiler, node->fnDecl.arguments);
-			writeCompiler(fnCompiler, node->fnDecl.returns);
-			writeCompiler(fnCompiler, node->fnDecl.block);
+			writeCompiler(fnCompiler, node->fnDecl.arguments); //can be empty, but not NULL
+			writeCompiler(fnCompiler, node->fnDecl.returns); //can be empty, but not NULL
+			writeCompiler(fnCompiler, node->fnDecl.block); //can be empty, but not NULL
 
 			//create the function in the literal cache (by storing the compiler object)
 			Literal fnLiteral = TO_FUNCTION_LITERAL(fnCompiler, 0);
@@ -409,21 +384,41 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 		break;
 
 		case NODE_FN_COLLECTION: {
+			//embed these in the bytecode...
 			int index = writeNodeCollectionToCache(compiler, node);
 
-			//push the node opcode to the bytecode
-			if (index >= 256) {
-				//push a "long" index
-				compiler->bytecode[compiler->count++] = OP_LITERAL_LONG; //1 byte
-				*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)index; //2 bytes
+			compiler->bytecode[compiler->count] = (unsigned short)index; //2 bytes
+			compiler->count += sizeof(unsigned short);
+		}
+		break;
 
-				compiler->count += sizeof(unsigned short);
+		case NODE_FN_CALL: {
+			//NOTE: assume the function definition/name is above us
+
+			for (int i = 0; i < node->fnCall.arguments->fnCollection.count; i++) { //reverse order, to count from the beginning in the interpreter
+				//write each argument to the bytecode
+				int argumentsIndex = findLiteralIndex(&compiler->literalCache, node->fnCall.arguments->fnCollection.nodes[i].atomic.literal);
+				if (argumentsIndex < 0) {
+					argumentsIndex = pushLiteralArray(&compiler->literalCache, node->fnCall.arguments->fnCollection.nodes[i].atomic.literal);
+				}
+
+				//push the node opcode to the bytecode
+				if (argumentsIndex >= 256) {
+					//push a "long" index
+					compiler->bytecode[compiler->count++] = OP_LITERAL_LONG; //1 byte
+
+					*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)argumentsIndex; //2 bytes
+					compiler->count += sizeof(unsigned short);
+				}
+				else {
+					//push the index
+					compiler->bytecode[compiler->count++] = OP_LITERAL; //1 byte
+					compiler->bytecode[compiler->count++] = (unsigned char)argumentsIndex; //1 byte
+				}
 			}
-			else {
-				//push the index
-				compiler->bytecode[compiler->count++] = OP_LITERAL; //1 byte
-				compiler->bytecode[compiler->count++] = (unsigned char)index; //1 byte
-			}
+
+			//call the function
+			//DO NOT call the collection, this is done in binary
 		}
 		break;
 
@@ -605,7 +600,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			}
 
 			//push the return, with the number of literals
-			compiler->bytecode[compiler->count++] = OP_RETURN; //1 byte
+			compiler->bytecode[compiler->count++] = OP_FN_RETURN; //1 byte
 
 			*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)(node->path.thenPath->fnCollection.count); //2 bytes
 			compiler->count += sizeof(unsigned short);

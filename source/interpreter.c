@@ -51,9 +51,7 @@ void freeInterpreter(Interpreter* interpreter) {
 	}
 	freeLiteralArray(&interpreter->literalCache);
 
-	while (interpreter->scope) {
-		interpreter->scope = popScope(interpreter->scope);
-	}
+	interpreter->scope = popScope(interpreter->scope);
 
 	freeLiteralArray(&interpreter->stack);
 }
@@ -156,7 +154,7 @@ static bool execPrint(Interpreter* interpreter) {
 
 	printLiteralCustom(lit, interpreter->printOutput);
 
-	freeLiteral(lit);
+	// freeLiteral(lit); //it's a reference (to the dictionaries), so don't free it
 
 	return true;
 }
@@ -391,6 +389,47 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 		printf(ERROR "ERROR: Incorrect type assigned to variable \"");
 		printLiteral(identifier);
 		printf("\"\n" RESET);
+		return false;
+	}
+
+	return true;
+}
+
+static bool execFnDecl(Interpreter* interpreter, bool lng) {
+	//read the index in the cache
+	int identifierIndex = 0;
+	int functionIndex = 0;
+	Scope* scope = pushScope(interpreter->scope);
+
+	if (lng) {
+		identifierIndex = (int)readShort(interpreter->bytecode, &interpreter->count);
+		functionIndex = (int)readShort(interpreter->bytecode, &interpreter->count);
+	}
+	else {
+		identifierIndex = (int)readByte(interpreter->bytecode, &interpreter->count);
+		functionIndex = (int)readByte(interpreter->bytecode, &interpreter->count);
+	}
+
+	Literal identifier = interpreter->literalCache.literals[identifierIndex];
+	Literal function = interpreter->literalCache.literals[functionIndex];
+
+	function.as.function.scope = scope; //hacked in
+
+	Literal type = TO_TYPE_LITERAL(LITERAL_FUNCTION, true);
+
+	if (!declareScopeVariable(interpreter->scope, identifier, type)) {
+		printf(ERROR "ERROR: Can't redefine the function \"");
+		printLiteral(identifier);
+		printf("\"\n" RESET);
+		popScope(scope);
+		return false;
+	}
+
+	if (!setScopeVariable(interpreter->scope, identifier, function, false)) {
+		printf(ERROR "ERROR: Incorrect type assigned to variable \"");
+		printLiteral(identifier);
+		printf("\"\n" RESET);
+		popScope(scope);
 		return false;
 	}
 
@@ -703,8 +742,111 @@ static bool execFalseJump(Interpreter* interpreter) {
 	return true;
 }
 
+//forward declare
+static void execInterpreter(Interpreter*);
+static void readInterpreterSections(Interpreter* interpreter);
+
+static bool execFnCall(Interpreter* interpreter) {
+	LiteralArray arguments;
+	initLiteralArray(&arguments);
+
+	//unpack the arguments
+	while (interpreter->stack.count > 1) {
+		pushLiteralArray(&arguments, popLiteralArray(&interpreter->stack)); //NOTE: also reverses the order
+	}
+
+	Literal identifier = popLiteralArray(&interpreter->stack);
+
+	Literal func = identifier;
+	parseIdentifierToValue(interpreter, &func);
+
+	//set up a new interpreter
+	Interpreter inner;
+
+	//init the inner interpreter manually
+	initLiteralArray(&inner.literalCache);
+	inner.scope = pushScope(func.as.function.scope);
+	inner.bytecode = AS_FUNCTION(func);
+	inner.length = func.as.function.length;
+	inner.count = 0;
+	initLiteralArray(&inner.stack);
+	setInterpreterPrint(&inner, interpreter->printOutput);
+	setInterpreterAssert(&inner, interpreter->assertOutput);
+
+	//prep the sections
+	readInterpreterSections(&inner);
+
+	//prep the arguments
+	LiteralArray* paramArray = AS_ARRAY(inner.literalCache.literals[ readShort(inner.bytecode, &inner.count) ]);
+	LiteralArray* returnArray = AS_ARRAY(inner.literalCache.literals[ readShort(inner.bytecode, &inner.count) ]);
+
+	for (int i = 0; i < paramArray->count; i += 2) { //contents is the indexes of identifier & type
+		//declare and define each entry in the scope
+		if (!declareScopeVariable(inner.scope, paramArray->literals[i], paramArray->literals[i + 1])) {
+			printf(ERROR "[internal] Could not redeclare parameter\n" RESET);
+			freeInterpreter(&inner);
+			return false;
+		}
+
+		if (!setScopeVariable(inner.scope, paramArray->literals[i], popLiteralArray(&arguments), false)) {
+			printf(ERROR "[internal] Could not redefine parameter\n" RESET);
+			freeInterpreter(&inner);
+			return false;
+		}
+	}
+
+	//execute the interpreter
+	execInterpreter(&inner);
+
+	//accept the stack as the results
+	LiteralArray returns;
+	initLiteralArray(&returns);
+
+	//unpack the results
+	while (inner.stack.count > 0) {
+		pushLiteralArray(&returns, popLiteralArray(&inner.stack)); //NOTE: also reverses the order
+	}
+
+	for (int i = 0; i < returns.count; i++) {
+		pushLiteralArray(&interpreter->stack, popLiteralArray(&returns)); //NOTE: reverses again
+	}
+
+	//free
+	freeLiteralArray(&returns);
+	freeLiteralArray(&arguments);
+	freeInterpreter(&inner);
+
+	//actual bytecode persists until next call
+	return true;
+}
+
+static bool execFnReturn(Interpreter* interpreter) {
+	LiteralArray returns;
+	initLiteralArray(&returns);
+
+	//get the values of everything on the stack
+	while (interpreter->stack.count > 0) {
+		Literal lit = popLiteralArray(&interpreter->stack);
+		parseIdentifierToValue(interpreter, &lit);
+		pushLiteralArray(&returns, lit); //reverses the order
+	}
+
+	//and back again
+	while (returns.count > 0) {
+		pushLiteralArray(&interpreter->stack, popLiteralArray(&returns));
+	}
+
+	freeLiteralArray(&returns);
+
+	//finally
+	return false;
+}
+
 //the heart of toy
 static void execInterpreter(Interpreter* interpreter) {
+	//set the starting point for the interpreter
+	interpreter->codeStart = interpreter->count;
+
 	unsigned char opcode = readByte(interpreter->bytecode, &interpreter->count);
 
 	while(opcode != OP_EOF && opcode != OP_SECTION_END) {
@@ -790,6 +932,13 @@ static void execInterpreter(Interpreter* interpreter) {
 				}
 			break;
 
+			case OP_FN_DECL:
+			case OP_FN_DECL_LONG:
+				if (!execFnDecl(interpreter, opcode == OP_FN_DECL_LONG)) {
+					return;
+				}
+			break;
+
 			case OP_VAR_ASSIGN:
 				if (!execVarAssign(interpreter)) {
 					return;
@@ -864,6 +1013,18 @@ static void execInterpreter(Interpreter* interpreter) {
 
 			case OP_IF_FALSE_JUMP:
 				if (!execFalseJump(interpreter)) {
+					return;
+				}
+			break;
+
+			case OP_FN_CALL:
+				if (!execFnCall(interpreter)) {
+					return;
+				}
+			break;
+
+			case OP_FN_RETURN:
+				if (!execFnReturn(interpreter)) {
 					return;
 				}
 			break;
@@ -1085,7 +1246,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 
 			//read the function code (literal cache and all)
 			unsigned char* bytes = ALLOCATE(unsigned char, size);
-			memcpy(bytes, interpreter->bytecode + interpreter->count, size);
+			memcpy(bytes, interpreter->bytecode + interpreter->count, size); //TODO: -1 for the ending mark
 			interpreter->count += size;
 
 			//assert that the last memory slot is function end
@@ -1100,10 +1261,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 		}
 	}
 
-	//TODO
-
-	//set the starting point for the interpreter
-	interpreter->codeStart = interpreter->count;
+	consumeByte(OP_SECTION_END, interpreter->bytecode, &interpreter->count); //terminate the function section
 }
 
 void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length) {

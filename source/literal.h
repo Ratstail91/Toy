@@ -39,6 +39,7 @@ typedef struct {
 
 		struct {
 			void* ptr;
+			void* scope;
 			int length;
 		} function;
 
@@ -86,7 +87,7 @@ typedef struct {
 #define TO_STRING_LITERAL(value)			_toStringLiteral(value)
 #define TO_ARRAY_LITERAL(value)				((Literal){LITERAL_ARRAY,		{ .array = value }})
 #define TO_DICTIONARY_LITERAL(value)		((Literal){LITERAL_DICTIONARY,	{ .dictionary = value }})
-#define TO_FUNCTION_LITERAL(value, l)	((Literal){LITERAL_FUNCTION,	{ .function.ptr = value, .function.length = l }})
+#define TO_FUNCTION_LITERAL(value, l)		((Literal){LITERAL_FUNCTION,	{ .function.ptr = value, .function.scope = NULL, .function.length = l }})
 #define TO_IDENTIFIER_LITERAL(value)		_toIdentifierLiteral(value, strlen(value))
 #define TO_TYPE_LITERAL(value, c)			((Literal){ LITERAL_TYPE,		{ .type.typeOf = value, .type.constant = c, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
 

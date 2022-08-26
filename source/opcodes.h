@@ -60,7 +60,8 @@ typedef enum Opcode {
 	//jumps, and conditional jumps (absolute)
 	OP_JUMP,
 	OP_IF_FALSE_JUMP,
-	OP_RETURN,
+	OP_FN_CALL,
+	OP_FN_RETURN,
 
 	//meta
 	OP_FN_END, //different from SECTION_END

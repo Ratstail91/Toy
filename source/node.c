@@ -76,6 +76,10 @@ void freeNode(Node* node) {
 			FREE_ARRAY(Node, node->fnCollection.nodes, node->fnCollection.capacity);
 		break;
 
+		case NODE_FN_CALL:
+			freeNode(node->fnCall.arguments);
+		break;
+
 		case NODE_PATH_IF:
 		case NODE_PATH_WHILE:
 		case NODE_PATH_FOR:
@@ -194,6 +198,15 @@ void emitNodeFnDecl(Node** nodeHandle, Literal identifier, Node* arguments, Node
 	tmp->fnDecl.arguments = arguments;
 	tmp->fnDecl.returns = returns;
 	tmp->fnDecl.block = block;
+
+	*nodeHandle = tmp;
+}
+
+void emitFnCall(Node** nodeHandle, Node* arguments) {
+	Node* tmp = ALLOCATE(Node, 1);
+
+	tmp->type = NODE_FN_CALL;
+	tmp->fnCall.arguments = arguments;
 
 	*nodeHandle = tmp;
 }

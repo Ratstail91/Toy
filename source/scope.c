@@ -90,7 +90,12 @@ static bool checkType(Literal typeLiteral, Literal value) {
 		}
 	}
 
-	//TODO: function type checking
+	if (IS_FUNCTION(value)) {
+		//check value's type
+		if (AS_TYPE(typeLiteral).typeOf != LITERAL_FUNCTION) {
+			return false;
+		}
+	}
 
 	if (AS_TYPE(typeLiteral).typeOf == LITERAL_TYPE && !IS_TYPE(value)) {
 		return false;
@@ -108,7 +113,7 @@ Scope* pushScope(Scope* ancestor) {
 
 	//tick up all scope reference counts
 	scope->references = 0;
-	for (Scope* ptr = scope; ptr; ptr = ptr->ancestor) {
+	for (Scope* ptr = scope; ptr != NULL; ptr = ptr->ancestor) {
 		ptr->references++;
 	}
 

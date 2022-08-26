@@ -20,6 +20,7 @@ typedef enum NodeType {
 	NODE_VAR_DECL, //contains identifier literal, typenode, expression definition
 	NODE_FN_DECL, //containd identifier literal, arguments node, returns node, block node
 	NODE_FN_COLLECTION, //parts of a function
+	NODE_FN_CALL,
 	NODE_PATH_IF, //for control flow
 	NODE_PATH_WHILE, //for control flow
 	NODE_PATH_FOR, //for control flow
@@ -101,6 +102,11 @@ typedef struct NodeFnCollection {
 	int count;
 } NodeFnCollection;
 
+typedef struct NodeFnCall {
+	NodeType type;
+	Node* arguments;
+} NodeFnCall;
+
 typedef struct NodePath {
 	NodeType type;
 	Node* preClause;
@@ -129,6 +135,7 @@ union _node {
 	NodeVarDecl varDecl;
 	NodeFnDecl fnDecl;
 	NodeFnCollection fnCollection;
+	NodeFnCall fnCall;
 	NodePath path;
 	NodeIncrement increment;
 };
@@ -144,6 +151,7 @@ void emitNodePair(Node** nodeHandle, Node* left, Node* right);
 void emitNodeVarTypes(Node** nodeHandle, Literal literal);
 void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal type, Node* expression);
 void emitNodeFnDecl(Node** nodeHandle, Literal identifier, Node* arguments, Node* returns, Node* block);
+void emitFnCall(Node** nodeHandle, Node* arguments);
 void emitNodeFnCollection(Node** nodeHandle);
 void emitNodePath(Node** nodeHandle, NodeType type, Node* preClause, Node* postClause, Node* condition, Node* thenPath, Node* elsePath);
 void emiteNodePrefixIncrement(Node** nodeHandle, Literal identifier, int increment);
