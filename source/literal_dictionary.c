@@ -22,7 +22,7 @@ static void setEntryValues(_entry* entry, Literal key, Literal value) {
 	else if (IS_IDENTIFIER(key)) {
 		entry->key = TO_IDENTIFIER_LITERAL( copyString(AS_IDENTIFIER(key), STRLEN_I(key)) );
 	}
-	
+
 	else {
 		freeLiteral(entry->key); //for types
 		entry->key = key;
@@ -38,7 +38,18 @@ static void setEntryValues(_entry* entry, Literal key, Literal value) {
 		buffer[STRLEN(value)] = '\0';
 		entry->value = TO_STRING_LITERAL(buffer);
 	}
-	
+
+	//OR take ownership of the copied function
+	else if (IS_FUNCTION(value)) {
+		unsigned char* buffer = ALLOCATE(unsigned char, value.as.function.length);
+		memcpy(buffer, AS_FUNCTION(value), value.as.function.length);
+
+		entry->value = TO_FUNCTION_LITERAL(buffer, value.as.function.length);
+
+		//save the scope
+		entry->value.as.function.scope = value.as.function.scope;
+	}
+
 	else {
 		entry->value = value;
 	}

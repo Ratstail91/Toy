@@ -823,7 +823,7 @@ static bool execFnCall(Interpreter* interpreter) {
 		Literal ret = popLiteralArray(&returns);
 
 		//check the return types
-		if (AS_TYPE(returnArray->literals[i]).typeOf != ret.type) {
+		if (returnArray->count > 0 && AS_TYPE(returnArray->literals[i]).typeOf != ret.type) {
 			printf(ERROR "ERROR: bad type found in return value\n" RESET);
 
 			//free, and skip out
@@ -1065,7 +1065,6 @@ static void execInterpreter(Interpreter* interpreter) {
 		opcode = readByte(interpreter->bytecode, &interpreter->count);
 	}
 }
-
 
 static void readInterpreterSections(Interpreter* interpreter) {
 	//data section
