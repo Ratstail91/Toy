@@ -21,7 +21,7 @@ TODO: functions take a number of parameters
 TODO: functions can return any number of values
 TODO: function arguments can have specified types
 TODO: function returns can have specified types
-TODO: functions are invoked by calling thier names
+TODO: functions are invoked by calling their names
 TODO: functions are first-class citizens
 TODO: functions last argument can be a rest parameter
 

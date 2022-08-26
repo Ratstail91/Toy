@@ -783,13 +783,13 @@ static bool execFnCall(Interpreter* interpreter) {
 	for (int i = 0; i < paramArray->count; i += 2) { //contents is the indexes of identifier & type
 		//declare and define each entry in the scope
 		if (!declareScopeVariable(inner.scope, paramArray->literals[i], paramArray->literals[i + 1])) {
-			printf(ERROR "[internal] Could not redeclare parameter\n" RESET);
+			printf(ERROR "[internal] Could not re-declare parameter\n" RESET);
 			freeInterpreter(&inner);
 			return false;
 		}
 
 		if (!setScopeVariable(inner.scope, paramArray->literals[i], popLiteralArray(&arguments), false)) {
-			printf(ERROR "[internal] Could not redefine parameter\n" RESET);
+			printf(ERROR "[internal] Could not define parameter (bad type?)\n" RESET);
 			freeInterpreter(&inner);
 			return false;
 		}
@@ -807,8 +807,35 @@ static bool execFnCall(Interpreter* interpreter) {
 		pushLiteralArray(&returns, popLiteralArray(&inner.stack)); //NOTE: also reverses the order
 	}
 
+	//TODO: remove this when multiple assignment is enabled
+	if (returns.count > 1) {
+		printf(ERROR "ERROR: Too many values returned (multiple returns not yet implemented)\n" RESET);
+
+		//free, and skip out
+		freeLiteralArray(&returns);
+		freeLiteralArray(&arguments);
+		freeInterpreter(&inner);
+
+		return false;
+	}
+
 	for (int i = 0; i < returns.count; i++) {
-		pushLiteralArray(&interpreter->stack, popLiteralArray(&returns)); //NOTE: reverses again
+		Literal ret = popLiteralArray(&returns);
+
+		//check the return types
+		if (AS_TYPE(returnArray->literals[i]).typeOf != ret.type) {
+			printf(ERROR "ERROR: bad type found in return value\n" RESET);
+
+			//free, and skip out
+			freeLiteral(ret);
+			freeLiteralArray(&returns);
+			freeLiteralArray(&arguments);
+			freeInterpreter(&inner);
+
+			return false;
+		}
+
+		pushLiteralArray(&interpreter->stack, ret); //NOTE: reverses again
 	}
 
 	//free

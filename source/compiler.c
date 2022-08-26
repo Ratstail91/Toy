@@ -89,7 +89,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 				break;
 
 				default:
-					fprintf(stderr, ERROR "[internal] Unrecognized key node type in writeNodeCompoundToCache()" RESET);
+					fprintf(stderr, ERROR "[internal] Unrecognized key node type in writeNodeCompoundToCache()\n" RESET);
 					return -1;
 			}
 
@@ -114,7 +114,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 				break;
 
 				default:
-					fprintf(stderr, ERROR "[internal] Unrecognized value node type in writeNodeCompoundToCache()" RESET);
+					fprintf(stderr, ERROR "[internal] Unrecognized value node type in writeNodeCompoundToCache()\n" RESET);
 					return -1;
 			}
 		}
@@ -176,8 +176,16 @@ static int writeNodeCollectionToCache(Compiler* compiler, Node* node) {
 			}
 			break;
 
+			case NODE_LITERAL: {
+				//write each piece of the declaration to the cache
+				int typeIndex = writeLiteralTypeToCacheOpt(&compiler->literalCache, node->fnCollection.nodes[i].atomic.literal, false);
+
+				pushLiteralArray(store, TO_INTEGER_LITERAL(typeIndex));
+			}
+			break;
+
 			default:
-				fprintf(stderr, ERROR "[internal] Unrecognized node type in writeNodeCollectionToCache()" RESET);
+				fprintf(stderr, ERROR "[internal] Unrecognized node type in writeNodeCollectionToCache()\n" RESET);
 				return -1;
 		}
 	}

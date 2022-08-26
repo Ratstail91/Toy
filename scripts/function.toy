@@ -1,5 +1,5 @@
 
-fn name(param1, param2) {
+fn name(param1: string, param2: string): string {
 	print "foobar";
 	print param1;
 	return param2;
