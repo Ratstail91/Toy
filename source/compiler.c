@@ -162,6 +162,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 
 static int writeNodeCollectionToCache(Compiler* compiler, Node* node) {
 	LiteralArray* store = ALLOCATE(LiteralArray, 1);
+	initLiteralArray(store);
 
 	//ensure each literal value is in the cache, individually
 	for (int i = 0; i < node->fnCollection.count; i++) {

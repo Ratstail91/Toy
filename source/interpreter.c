@@ -807,7 +807,7 @@ static bool execFnCall(Interpreter* interpreter) {
 		pushLiteralArray(&returns, popLiteralArray(&inner.stack)); //NOTE: also reverses the order
 	}
 
-	//TODO: remove this when multiple assignment is enabled
+	//TODO: remove this when multiple assignment is enabled - note the BUGFIX that balances the stack
 	if (returns.count > 1) {
 		printf(ERROR "ERROR: Too many values returned (multiple returns not yet implemented)\n" RESET);
 
@@ -1335,6 +1335,11 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 
 	//execute the interpreter
 	execInterpreter(interpreter);
+
+	//BUGFIX: clear the stack (for repl - stack must be balanced)
+	while(interpreter->stack.count > 0) {
+		popLiteralArray(&interpreter->stack);
+	}
 
 	//free the bytecode immediately after use
 	FREE_ARRAY(unsigned char, interpreter->bytecode, interpreter->length);
