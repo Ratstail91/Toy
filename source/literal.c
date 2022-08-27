@@ -187,9 +187,9 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 		break;
 		
 		//TODO: functions
-		case LITERAL_FUNCTION: {
+		case LITERAL_FUNCTION:
+		case LITERAL_FUNCTION_NATIVE:
 			printFn("(function)");
-		}
 		break;
 
 		case LITERAL_IDENTIFIER: {
@@ -452,6 +452,7 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 			return true;
 
 		case LITERAL_FUNCTION:
+		case LITERAL_FUNCTION_NATIVE:
 			return false; //functions are never equal
 		break;
 
