@@ -1419,8 +1419,7 @@ static void fnDecl(Parser* parser, Node** nodeHandle) {
 				Literal argIdentifier = _toIdentifierLiteral(cpy, strlen(cpy)); //BUGFIX: use this instead of the macro
 
 				//set the type (array of any types)
-				Literal argTypeLiteral = TO_TYPE_LITERAL(LITERAL_ARRAY, false);
-				TYPE_PUSH_SUBTYPE(&argTypeLiteral, TO_TYPE_LITERAL(LITERAL_ANY, false));
+				Literal argTypeLiteral = TO_TYPE_LITERAL(LITERAL_FUNCTION_ARG_REST, false);
 
 				//emit the node to the argument list (grow the node if needed)
 				if (argumentNode->fnCollection.capacity < argumentNode->fnCollection.count + 1) {

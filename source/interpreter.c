@@ -782,9 +782,15 @@ static bool execFnCall(Interpreter* interpreter) {
 	LiteralArray* paramArray = AS_ARRAY(inner.literalCache.literals[ readShort(inner.bytecode, &inner.count) ]);
 	LiteralArray* returnArray = AS_ARRAY(inner.literalCache.literals[ readShort(inner.bytecode, &inner.count) ]);
 
+	//get the rest param, if it exists
+	Literal restParam = TO_NULL_LITERAL;
+	if (paramArray->count >= 2 && AS_TYPE(paramArray->literals[ paramArray->count -1 ]).typeOf == LITERAL_FUNCTION_ARG_REST) {
+		restParam = paramArray->literals[ paramArray->count -2 ];
+	}
+
 	//check the param total is correct
-	if (paramArray->count != arguments.count * 2) {
-		printf(ERROR "ERROR: Incorrect number of arguments passed to function \"\n");
+	if ((IS_NULL(restParam) && paramArray->count != arguments.count * 2) || (!IS_NULL(restParam) && paramArray->count -2 > arguments.count * 2)) {
+		printf(ERROR "ERROR: Incorrect number of arguments passed to function \"");
 		printLiteral(identifier);
 		printf("\"\n" RESET);
 
@@ -795,16 +801,55 @@ static bool execFnCall(Interpreter* interpreter) {
 		return false;
 	}
 
-	for (int i = 0; i < paramArray->count; i += 2) { //contents is the indexes of identifier & type
+	//contents is the indexes of identifier & type
+	for (int i = 0; i < paramArray->count - (IS_NULL(restParam) ? 0 : 2); i += 2) { //don't count the rest parameter, if present
 		//declare and define each entry in the scope
 		if (!declareScopeVariable(inner.scope, paramArray->literals[i], paramArray->literals[i + 1])) {
 			printf(ERROR "[internal] Could not re-declare parameter\n" RESET);
+			//free, and skip out
+			freeLiteralArray(&arguments);
 			freeInterpreter(&inner);
 			return false;
 		}
 
 		if (!setScopeVariable(inner.scope, paramArray->literals[i], popLiteralArray(&arguments), false)) {
 			printf(ERROR "[internal] Could not define parameter (bad type?)\n" RESET);
+			//free, and skip out
+			freeLiteralArray(&arguments);
+			freeInterpreter(&inner);
+			return false;
+		}
+	}
+
+	//if using rest, pack the optional extra arguments into the rest parameter (array)
+	if (!IS_NULL(restParam)) {
+		LiteralArray rest;
+		initLiteralArray(&rest);
+
+		while (arguments.count > 0) {
+			pushLiteralArray(&rest, popLiteralArray(&arguments));
+		}
+
+		Literal restType = TO_TYPE_LITERAL(LITERAL_ARRAY, true);
+		TYPE_PUSH_SUBTYPE(&restType, TO_TYPE_LITERAL(LITERAL_ANY, false));
+
+		//declare & define the rest parameter
+		if (!declareScopeVariable(inner.scope, restParam, restType)) {
+			printf(ERROR "[internal] Could not declare rest parameter\n" RESET);
+			//free, and skip out
+			freeLiteral(restType);
+			freeLiteralArray(&rest);
+			freeLiteralArray(&arguments);
+			freeInterpreter(&inner);
+			return false;
+		}
+
+		if (!setScopeVariable(inner.scope, restParam, TO_ARRAY_LITERAL(&rest), false)) {
+			printf(ERROR "[internal] Could not define rest parameter\n" RESET);
+			//free, and skip out
+			freeLiteral(restType);
+			freeLiteralArray(&rest);
+			freeLiteralArray(&arguments);
 			freeInterpreter(&inner);
 			return false;
 		}
@@ -1083,7 +1128,7 @@ static void execInterpreter(Interpreter* interpreter) {
 
 static void readInterpreterSections(Interpreter* interpreter) {
 	//data section
-	const short literalCount = readShort(interpreter->bytecode, &interpreter->count);
+	const unsigned short literalCount = readShort(interpreter->bytecode, &interpreter->count);
 
 	if (command.verbose) {
 		printf(NOTICE "Reading %d literals\n" RESET, literalCount);

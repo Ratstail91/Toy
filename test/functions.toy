@@ -30,7 +30,7 @@ var tally = make();
 assert tally() == 1 && tally() == 2, "Closures failed";
 
 
-//expressions as arguments
+//test expressions as arguments
 fn argFn() {
 	return 42;
 }
@@ -40,6 +40,16 @@ fn outerFn(val) {
 }
 
 outerFn(argFn());
+
+
+//test extra parameters
+fn extra(one, two, ...rest) {
+	assert rest == ["three", "four", "five", "six", "seven"], "rest parameters failed";
+}
+
+extra("one", "two", "three", "four", "five", "six", "seven");
+
+
 
 
 print "All good";

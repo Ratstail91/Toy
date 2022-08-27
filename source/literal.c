@@ -305,6 +305,10 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 		case LITERAL_ANY:
 			printFn("(any)");
 		break;
+
+		default:
+			//should never be seen
+			fprintf(stderr, ERROR "[internal] Unrecognized literal type in print: %d\n" RESET, literal.type);
 	}
 }
 
@@ -489,7 +493,12 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 			return true;
 
 		case LITERAL_FUNCTION_INTERMEDIATE:
-			fprintf(stderr, ERROR "[internal] Can't compare functions\n" RESET);
+			fprintf(stderr, ERROR "[internal] Can't compare intermediate functions\n" RESET);
+			return false;
+
+		default:
+			//should never be seen
+			fprintf(stderr, ERROR "[internal] Unrecognized literal type in equality: %d\n" RESET, lhs.type);
 			return false;
 	}
 
