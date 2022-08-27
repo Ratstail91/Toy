@@ -1,0 +1,8 @@
+
+
+fn panic() {
+	assert false, "This should only be seen once";
+}
+
+panic();
+panic();

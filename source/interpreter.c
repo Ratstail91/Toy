@@ -29,6 +29,8 @@ void initInterpreter(Interpreter* interpreter) {
 
 	setInterpreterPrint(interpreter, stdoutWrapper);
 	setInterpreterAssert(interpreter, stderrWrapper);
+
+	interpreter->panic = false;
 }
 
 void freeInterpreter(Interpreter* interpreter) {
@@ -139,6 +141,7 @@ static bool execAssert(Interpreter* interpreter) {
 
 	if (IS_NULL(lhs) || !IS_TRUTHY(lhs)) {
 		(*interpreter->assertOutput)(AS_STRING(rhs));
+		interpreter->panic = true;
 		return false;
 	}
 
@@ -858,6 +861,9 @@ static bool execFnCall(Interpreter* interpreter) {
 	//execute the interpreter
 	execInterpreter(&inner);
 
+	//adopt the panic state
+	interpreter->panic = inner.panic;
+
 	//accept the stack as the results
 	LiteralArray returns;
 	initLiteralArray(&returns);
@@ -936,7 +942,7 @@ static void execInterpreter(Interpreter* interpreter) {
 
 	unsigned char opcode = readByte(interpreter->bytecode, &interpreter->count);
 
-	while(opcode != OP_EOF && opcode != OP_SECTION_END) {
+	while(opcode != OP_EOF && opcode != OP_SECTION_END && !interpreter->panic) {
 		switch(opcode) {
 			case OP_ASSERT:
 				if (!execAssert(interpreter)) {

@@ -25,6 +25,8 @@ typedef struct Interpreter {
 	// LiteralDictionary exports; //TODO: read-write - interface with Toy from C
 	PrintFn printOutput;
 	PrintFn assertOutput;
+
+	bool panic;
 } Interpreter;
 
 void initInterpreter(Interpreter* interpreter);

@@ -22,10 +22,10 @@ DONE: closures are explicitly supported
 DONE: functions are first-class citizens
 DONE: functions take a set number of parameters
 DONE: functions last argument can be a rest parameter
+DONE: assert needs to kill the whole script, not just functions
 
 
 TODO: functions return a set number of values
-TODO: assert needs to kill the whole script, not just functions
 
 TODO: ternary operator
 TODO: Nullish types
