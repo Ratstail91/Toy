@@ -2,6 +2,8 @@
 
 #include "common.h"
 
+#include <string.h>
+
 KeywordType keywordTypes[] = {
 	//type keywords
 	{TOKEN_NULL,       "null"},
@@ -57,4 +59,16 @@ char* findKeywordByType(TokenType type) {
 	}
 
 	return NULL;
+}
+
+TokenType findTypeByKeyword(const char* keyword) {
+	const int length = strlen(keyword);
+
+	for (int i = 0; keywordTypes[i].keyword; i++) {
+		if (!strncmp(keyword, keywordTypes[i].keyword, length)) {
+			return keywordTypes[i].type;
+		}
+	}
+
+	return TOKEN_EOF;
 }

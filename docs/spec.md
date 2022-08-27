@@ -448,7 +448,7 @@ print dict.foo; //syntactic sugar, only works if the key is not a built-in funct
 
 ## Indexing, Slice and Dot Notation
 
-Strings, arrays and dictionaries can be indexed in several ways, via the global `_get` and `_set` functions. Elements can be accessed using traditional bracket notation:
+Strings, arrays and dictionaries can be indexed in several ways, via the globally available functions (see below). Elements can be accessed using traditional bracket notation:
 
 ```
 str[0];
@@ -490,21 +490,41 @@ print str[::-2]; //drwolH
 
 0 cannot be used as the third argument.
 
-### _get() and _set()
+### Globally available functions
 
-The slice and dot notations (the latter of which only works on dictionaries) are simply syntactic sugar for the global `_get` and `_set` functions. These functions take a number of arguments, which correlate to the slice and dot notations:
+The slice and dot notations (the latter of which only works on dictionaries) are simply syntactic sugar for the globally available functions.
 
 ```
-fn _get(self, first, second, third) {
+//usable with arrays and dictionaries
+fn _set(self, key, value) {
 	//native code
 }
 
-fn _set(self, first, second, third, value) {
+//usable with arrays and dictionaries
+fn _get(self, key) {
+	//native code
+}
+
+//usable with arrays
+fn push(self, val) {
+	//native code
+}
+
+//usable with arrays
+fn pop(self) {
+	//native code
+}
+
+//usable with arrays, dictionaries and strings
+fn length(self) {
+	//native code
+}
+
+//usable with arrays and dictionaries
+fn clear(self) {
 	//native code
 }
 ```
-
-These functions can be overwritten.
 
 ## Standard Library
 
@@ -517,7 +537,6 @@ import "standard";
 
 The following functions are available in the standard library.
 
-* clear(self: any) - This function removes the contents of the array, dictionary or string, leaving an empty array. This alters the memory.
 * clock() - This function returns the number of seconds since January 1st, 1970.
 * concat(self: any, x: any): any - This function requires an array or dictionary with a matching type as "x". This function returns a new dictionary instance which contains the contents of the current array or dictionary combined with the contents of "x". In the event of a dictionary key clash, the key-value pair in the current dictionary is included, and the key-value pair from "x" is discarded.
 * containsKey(self: [any, any], k: any): bool - This function returns true if the dictionary contains a key "k", otherwise it returns false.
@@ -533,8 +552,6 @@ The following functions are available in the standard library.
 * lastIndexOf(self: string, str: string): int - This function returns the position of the last instance of "str" in the calling string "self".
 * length(self: any): int - This function returns the length of the array, dictionary or string.
 * map(self: any, cb: fn(k: any, v: any)(any)): any - This function calls "cb" once for every entry in the array or dictionary, with that key passed in as "k" and value passed in as "v". It returns a new array or dictionary with the keys copied from the current "self", and values replaced with the results of calls to "cb".
-* pop(self: [any]): any - This function deletes the value at the end of the array, and returns that value.
-* push(self: [any], x: type) - This function inserts the value of "x" at the end of the array.
 * reduce(self: any, default: any, cb: fn(acc: any, k: any, v: any): any): any - This function calls "cb" once for every element in the array or dictionary "self", with that element passed in as "k" and "v", and the value of the previous call passed in as "acc". For the first call to "cb", "default" is used for "acc". The final value of "acc" is returned by "reduce".
 * remove(self: any, k: any) - This function deletes the value at the index or key "k", shifting the remaining entries down 1 index if it's an array. This alters the memory.
 * replace(self: string, pat: string, rep: string): string - For each instance of "pat" that it finds in the calling string "self", it replaces it with "rep", then returns the new string.

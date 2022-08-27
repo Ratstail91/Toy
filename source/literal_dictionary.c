@@ -113,9 +113,9 @@ static void adjustEntryCapacity(_entry** dictionaryHandle, int oldCapacity, int 
 	*dictionaryHandle = newEntries;
 }
 
-static bool setEntryArray(_entry** dictionaryHandle, int* capacityPtr, int count, Literal key, Literal value, int hash) {
+static bool setEntryArray(_entry** dictionaryHandle, int* capacityPtr, int contains, Literal key, Literal value, int hash) {
 	//expand array if needed
-	if (count + 1 > *capacityPtr * DICTIONARY_MAX_LOAD) {
+	if (contains + 1 > *capacityPtr * DICTIONARY_MAX_LOAD) {
 		int oldCapacity = *capacityPtr;
 		*capacityPtr = GROW_CAPACITY(*capacityPtr);
 		adjustEntryCapacity(dictionaryHandle, oldCapacity, *capacityPtr); //custom rather than automatic reallocation
@@ -138,7 +138,7 @@ static bool setEntryArray(_entry** dictionaryHandle, int* capacityPtr, int count
 		value = TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(value), STRLEN_I(value)));
 	}
 
-	//true = count increase
+	//true = contains increase
 	if (IS_NULL(entry->key)) {
 		setEntryValues(entry, key, value);
 		return true;
@@ -177,6 +177,7 @@ void initLiteralDictionary(LiteralDictionary* dictionary) {
 	//HACK: because modulo by 0 is undefined, set the capacity to a non-zero value (and allocate the arrays)
 	dictionary->entries = NULL;
 	dictionary->capacity = GROW_CAPACITY(0);
+	dictionary->contains = 0;
 	dictionary->count = 0;
 	adjustEntryCapacity(&dictionary->entries, 0, dictionary->capacity);
 }
@@ -184,7 +185,7 @@ void initLiteralDictionary(LiteralDictionary* dictionary) {
 void freeLiteralDictionary(LiteralDictionary* dictionary) {
 	freeEntryArray(dictionary->entries, dictionary->capacity);
 	dictionary->capacity = 0;
-	dictionary->count = 0;
+	dictionary->contains = 0;
 }
 
 void setLiteralDictionary(LiteralDictionary* dictionary, Literal key, Literal value) {
@@ -193,9 +194,10 @@ void setLiteralDictionary(LiteralDictionary* dictionary, Literal key, Literal va
 		return;
 	}
 
-	const int increment = setEntryArray(&dictionary->entries, &dictionary->capacity, dictionary->count, key, value, hashLiteral(key));
+	const int increment = setEntryArray(&dictionary->entries, &dictionary->capacity, dictionary->contains, key, value, hashLiteral(key));
 
 	if (increment) {
+		dictionary->contains++;
 		dictionary->count++;
 	}
 }
@@ -227,6 +229,7 @@ void removeLiteralDictionary(LiteralDictionary* dictionary, Literal key) {
 	if (entry != NULL) {
 		freeEntry(entry);
 		entry->value = TO_BOOLEAN_LITERAL(true); //tombstone
+		dictionary->count--;
 	}
 }
 

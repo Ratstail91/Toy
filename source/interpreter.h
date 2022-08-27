@@ -29,6 +29,12 @@ typedef struct Interpreter {
 	bool panic;
 } Interpreter;
 
+//for native function API
+typedef int (*NativeFn)(Interpreter* interpreter, LiteralArray* arguments);
+bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func);
+bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr);
+
+//init & free
 void initInterpreter(Interpreter* interpreter);
 void freeInterpreter(Interpreter* interpreter);
 

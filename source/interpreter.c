@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "memory.h"
+#include "keyword_types.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -18,6 +19,298 @@ static void stderrWrapper(const char* output) {
 	fprintf(stderr, "\n" RESET); //default new line
 }
 
+bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func) {
+	//reject reserved words
+	if (findTypeByKeyword(name) != TOKEN_EOF) {
+		printf("Can't override an existing keyword");
+		return false;
+	}
+
+	Literal identifier = TO_IDENTIFIER_LITERAL(name);
+
+	//make sure the name isn't taken
+	if (existsLiteralDictionary(&interpreter->scope->variables, identifier)) {
+		printf("Can't override an existing variable");
+		return false;
+	}
+
+	Literal fn = TO_FUNCTION_LITERAL((void*)func, 0);
+	fn.type = LITERAL_FUNCTION_NATIVE;
+
+	Literal type = TO_TYPE_LITERAL(fn.type, true);
+
+	setLiteralDictionary(&interpreter->scope->variables, identifier, fn);
+	setLiteralDictionary(&interpreter->scope->types, identifier, type);
+
+	return true;
+}
+
+bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr) {
+	//this converts identifiers to values
+	if (IS_IDENTIFIER(*literalPtr)) {
+		if (!getScopeVariable(interpreter->scope, *literalPtr, literalPtr)) {
+			printf(ERROR "Error: Undeclared variable \"");;
+			printLiteral(*literalPtr);
+			printf("\"\n" RESET);
+			return false;
+		}
+	}
+
+	return true;
+}
+
+int _set(Interpreter* interpreter, LiteralArray* arguments) {
+	//if wrong number of arguments, fail
+	if (arguments->count != 3) {
+		(interpreter->printOutput)("Incorrect number of arguments to _set");
+		return -1;
+	}
+
+	Literal obj = arguments->literals[0];
+	Literal key = arguments->literals[1];
+	Literal val = arguments->literals[2];
+
+	parseIdentifierToValue(interpreter, &obj);
+
+	switch(obj.type) {
+		case LITERAL_ARRAY: {
+			Literal typeLiteral = getScopeType(interpreter->scope, key);
+
+			if (AS_TYPE(typeLiteral).typeOf == LITERAL_ARRAY) {
+				Literal subtypeLiteral = ((Literal*)(AS_TYPE(typeLiteral).subtypes))[0];
+
+				if (AS_TYPE(subtypeLiteral).typeOf != LITERAL_ANY && AS_TYPE(subtypeLiteral).typeOf != val.type) {
+					(interpreter->printOutput)("bad argument type in _set");
+					return -1;
+				}
+			}
+
+			if (!IS_INTEGER(key)) {
+				(interpreter->printOutput)("Expected integer index in _set");
+				return -1;
+			}
+
+			if (AS_ARRAY(obj)->count <= AS_INTEGER(key) || AS_INTEGER(key) < 0) {
+				(interpreter->printOutput)("Index out of bounds in _set");
+				return -1;
+			}
+
+			parseIdentifierToValue(interpreter, &val);
+
+			//if it's a string or an identifier, make a local copy
+			if (IS_STRING(val)) {
+				val = TO_STRING_LITERAL(copyString(AS_STRING(val), STRLEN(val)));
+			}
+			if (IS_IDENTIFIER(val)) {
+				val = TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(val), STRLEN_I(val)));
+			}
+
+			//TODO: proper copy function for literals
+
+			AS_ARRAY(obj)->literals[AS_INTEGER(key)] = val;
+			return 0;
+		}
+
+		case LITERAL_DICTIONARY: {
+			Literal typeLiteral = getScopeType(interpreter->scope, key);
+
+			if (AS_TYPE(typeLiteral).typeOf == LITERAL_DICTIONARY) {
+				Literal keySubtypeLiteral = ((Literal*)(AS_TYPE(typeLiteral).subtypes))[0];
+				Literal valSubtypeLiteral = ((Literal*)(AS_TYPE(typeLiteral).subtypes))[1];
+
+				if (AS_TYPE(keySubtypeLiteral).typeOf != LITERAL_ANY && AS_TYPE(keySubtypeLiteral).typeOf != key.type) {
+					(interpreter->printOutput)("bad argument type in _set");
+					return -1;
+				}
+
+				if (AS_TYPE(valSubtypeLiteral).typeOf != LITERAL_ANY && AS_TYPE(valSubtypeLiteral).typeOf != val.type) {
+					(interpreter->printOutput)("bad argument type in _set");
+					return -1;
+				}
+			}
+
+			parseIdentifierToValue(interpreter, &key);
+			parseIdentifierToValue(interpreter, &val);
+
+			setLiteralDictionary(AS_DICTIONARY(obj), key, val);
+			return 0;
+		}
+
+		default:
+			(interpreter->printOutput)("Incorrect compound type in _set");
+			printLiteral(obj);
+			return -1;
+	}
+}
+
+int _get(Interpreter* interpreter, LiteralArray* arguments) {
+	//if wrong number of arguments, fail
+	if (arguments->count != 2) {
+		(interpreter->printOutput)("Incorrect number of arguments to _get");
+		return -1;
+	}
+
+	Literal obj = arguments->literals[0];
+	Literal key = arguments->literals[1];
+
+	parseIdentifierToValue(interpreter, &obj);
+
+	switch(obj.type) {
+		case LITERAL_ARRAY: {
+			if (!IS_INTEGER(key)) {
+				(interpreter->printOutput)("Expected integer index in _get");
+				return -1;
+			}
+
+			if (AS_ARRAY(obj)->count <= AS_INTEGER(key) || AS_INTEGER(key) < 0) {
+				(interpreter->printOutput)("Index out of bounds in _get");
+				return -1;
+			}
+
+			pushLiteralArray(&interpreter->stack, AS_ARRAY(obj)->literals[AS_INTEGER(key)]);
+			return 1;
+		}
+
+		case LITERAL_DICTIONARY:
+			pushLiteralArray(&interpreter->stack, getLiteralDictionary(AS_DICTIONARY(obj), key));
+			return 1;
+
+		default:
+			(interpreter->printOutput)("Incorrect compound type in _get");
+			printLiteral(obj);
+			return -1;
+	}
+}
+
+int _push(Interpreter* interpreter, LiteralArray* arguments) {
+	//if wrong number of arguments, fail
+	if (arguments->count != 2) {
+		(interpreter->printOutput)("Incorrect number of arguments to _push");
+		return -1;
+	}
+
+	Literal obj = arguments->literals[0];
+	Literal val = arguments->literals[1];
+
+	parseIdentifierToValue(interpreter, &obj);
+
+	switch(obj.type) {
+		case LITERAL_ARRAY: {
+			Literal typeLiteral = getScopeType(interpreter->scope, val);
+
+			if (AS_TYPE(typeLiteral).typeOf == LITERAL_ARRAY) {
+				Literal subtypeLiteral = ((Literal*)(AS_TYPE(typeLiteral).subtypes))[0];
+
+				if (AS_TYPE(subtypeLiteral).typeOf != LITERAL_ANY && AS_TYPE(subtypeLiteral).typeOf != val.type) {
+					(interpreter->printOutput)("bad argument type in _push");
+					return -1;
+				}
+			}
+
+			parseIdentifierToValue(interpreter, &val);
+
+			pushLiteralArray(AS_ARRAY(obj), val);
+			return 0;
+		}
+
+		default:
+			(interpreter->printOutput)("Incorrect compound type in _push");
+			printLiteral(obj);
+			return -1;
+	}
+}
+
+int _pop(Interpreter* interpreter, LiteralArray* arguments) {
+	//if wrong number of arguments, fail
+	if (arguments->count != 1) {
+		(interpreter->printOutput)("Incorrect number of arguments to _pop");
+		return -1;
+	}
+
+	Literal obj = arguments->literals[0];
+
+	parseIdentifierToValue(interpreter, &obj);
+
+	switch(obj.type) {
+		case LITERAL_ARRAY: {
+			pushLiteralArray(&interpreter->stack, popLiteralArray(AS_ARRAY(obj)));
+			return 1;
+		}
+
+		default:
+			(interpreter->printOutput)("Incorrect compound type in _pop");
+			printLiteral(obj);
+			return -1;
+	}
+}
+
+int _length(Interpreter* interpreter, LiteralArray* arguments) {
+	//if wrong number of arguments, fail
+	if (arguments->count != 1) {
+		(interpreter->printOutput)("Incorrect number of arguments to _get");
+		return -1;
+	}
+
+	Literal obj = arguments->literals[0];
+
+	parseIdentifierToValue(interpreter, &obj);
+
+	switch(obj.type) {
+		case LITERAL_ARRAY: {
+			pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_ARRAY(obj)->count ));
+			return 1;
+		}
+
+		case LITERAL_DICTIONARY:
+			pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_DICTIONARY(obj)->count ));
+			return 1;
+
+		case LITERAL_STRING:
+			pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( STRLEN(obj) ));
+			return 1;
+
+		default:
+			(interpreter->printOutput)("Incorrect compound type in _length");
+			printLiteral(obj);
+			return -1;
+	}
+}
+
+int _clear(Interpreter* interpreter, LiteralArray* arguments) {
+	//if wrong number of arguments, fail
+	if (arguments->count != 1) {
+		(interpreter->printOutput)("Incorrect number of arguments to _get");
+		return -1;
+	}
+
+	Literal obj = arguments->literals[0];
+
+	parseIdentifierToValue(interpreter, &obj);
+
+	switch(obj.type) {
+		case LITERAL_ARRAY: {
+			while(AS_ARRAY(obj)->count) {
+				popLiteralArray(AS_ARRAY(obj));
+			}
+			return 1;
+		}
+
+		case LITERAL_DICTIONARY: {
+			for (int i = 0; i < AS_DICTIONARY(obj)->capacity; i++) {
+				if ( !IS_NULL(AS_DICTIONARY(obj)->entries[i].key) ) {
+					removeLiteralDictionary(AS_DICTIONARY(obj), AS_DICTIONARY(obj)->entries[i].key);
+				}
+			}
+			return 1;
+		}
+
+		default:
+			(interpreter->printOutput)("Incorrect compound type in _get");
+			printLiteral(obj);
+			return -1;
+	}
+}
+
 void initInterpreter(Interpreter* interpreter) {
 	initLiteralArray(&interpreter->literalCache);
 	interpreter->scope = pushScope(NULL);
@@ -29,6 +322,14 @@ void initInterpreter(Interpreter* interpreter) {
 
 	setInterpreterPrint(interpreter, stdoutWrapper);
 	setInterpreterAssert(interpreter, stderrWrapper);
+
+	//globally available functions (tmp?)
+	injectNativeFn(interpreter, "_set", _set);
+	injectNativeFn(interpreter, "_get", _get);
+	injectNativeFn(interpreter, "_push", _push);
+	injectNativeFn(interpreter, "_pop", _pop);
+	injectNativeFn(interpreter, "_length", _length);
+	injectNativeFn(interpreter, "_clear", _clear);
 
 	interpreter->panic = false;
 }
@@ -110,20 +411,6 @@ static void consumeShort(unsigned short bytes, unsigned char* tb, int* count) {
 		printf("[internal] Failed to consume the correct bytes (expected %u, found %u)\n", bytes, *(unsigned short*)(tb + *count));
 	}
 	*count += 2;
-}
-
-static bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr) {
-	//this converts identifiers to values
-	if (IS_IDENTIFIER(*literalPtr)) {
-		if (!getScopeVariable(interpreter->scope, *literalPtr, literalPtr)) {
-			printf(ERROR "Error: Undeclared variable \"");;
-			printLiteral(*literalPtr);
-			printf("\"\n" RESET);
-			return false;
-		}
-	}
-
-	return true;
 }
 
 //each available statement
@@ -763,7 +1050,30 @@ static bool execFnCall(Interpreter* interpreter) {
 	Literal identifier = popLiteralArray(&interpreter->stack);
 
 	Literal func = identifier;
-	parseIdentifierToValue(interpreter, &func);
+
+	if (!parseIdentifierToValue(interpreter, &func)) {
+		freeLiteralArray(&arguments);
+		return false;
+	}
+
+	//check for side-loaded native functions
+	if (IS_FUNCTION_NATIVE(func)) {
+		//reverse the order to the correct order
+		LiteralArray correct;
+		initLiteralArray(&correct);
+
+		while(arguments.count) {
+			pushLiteralArray(&correct, popLiteralArray(&arguments));
+		}
+
+		freeLiteralArray(&arguments);
+
+		//call the native function
+		((NativeFn) AS_FUNCTION(func) )(interpreter, &correct);
+
+		freeLiteralArray(&correct);
+		return true;
+	}
 
 	//set up a new interpreter
 	Interpreter inner;

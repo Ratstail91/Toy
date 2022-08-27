@@ -20,7 +20,7 @@ typedef enum {
 	LITERAL_TYPE_INTERMEDIATE, //used to process types in the compiler only
 	LITERAL_FUNCTION_INTERMEDIATE, //used to process functions in the compiler only
 	LITERAL_FUNCTION_ARG_REST, //used to process function rest parameters
-	// LITERAL_FUNCTION_NATIVE, //for handling native functions
+	LITERAL_FUNCTION_NATIVE, //for handling native functions
 	LITERAL_ANY, //used by the type system only
 } LiteralType;
 
@@ -68,6 +68,7 @@ typedef struct {
 #define IS_ARRAY(value)						((value).type == LITERAL_ARRAY)
 #define IS_DICTIONARY(value)				((value).type == LITERAL_DICTIONARY)
 #define IS_FUNCTION(value)					((value).type == LITERAL_FUNCTION)
+#define IS_FUNCTION_NATIVE(value)			((value).type == LITERAL_FUNCTION_NATIVE)
 #define IS_IDENTIFIER(value)				((value).type == LITERAL_IDENTIFIER)
 #define IS_TYPE(value)						((value).type == LITERAL_TYPE)
 

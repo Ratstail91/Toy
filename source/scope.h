@@ -21,3 +21,4 @@ bool isDelcaredScopeVariable(Scope* scope, Literal key);
 bool setScopeVariable(Scope* scope, Literal key, Literal value, bool constCheck);
 bool getScopeVariable(Scope* scope, Literal key, Literal* value);
 
+Literal getScopeType(Scope* scope, Literal key);

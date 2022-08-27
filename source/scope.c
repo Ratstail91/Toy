@@ -198,3 +198,17 @@ bool getScopeVariable(Scope* scope, Literal key, Literal* valueHandle) {
 	*valueHandle = getLiteralDictionary(&scope->variables, key);
 	return true;
 }
+
+Literal getScopeType(Scope* scope, Literal key) {
+	//dead end
+	if (scope == NULL) {
+		return TO_NULL_LITERAL;
+	}
+
+	//if it's not in this scope, keep searching up the chain
+	if (!existsLiteralDictionary(&scope->types, key)) {
+		return getScopeType(scope->ancestor, key);
+	}
+
+	return getLiteralDictionary(&scope->types, key);
+}
