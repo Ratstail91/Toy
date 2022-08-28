@@ -1,6 +1,7 @@
 #pragma once
 
 #include "literal.h"
+#include "literal_util.h"
 
 typedef struct LiteralArray {
 	Literal* literals;

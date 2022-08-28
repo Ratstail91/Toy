@@ -1,6 +1,7 @@
 #pragma once
 
 #include "literal.h"
+#include "literal_util.h" //TODO: move this to node_util.h
 #include "opcodes.h"
 #include "token_types.h"
 

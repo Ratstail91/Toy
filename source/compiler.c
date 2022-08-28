@@ -760,7 +760,7 @@ static unsigned char* collateCompilerHeaderOpt(Compiler* compiler, int* size, bo
 		emitByte(&collation, &capacity, &count, TOY_VERSION_PATCH);
 
 		//embed the build info
-		if (strlen(TOY_VERSION_BUILD) + count + 1 > capacity) {
+		if ((int)strlen(TOY_VERSION_BUILD) + count + 1 > capacity) {
 			int oldCapacity = capacity;
 			capacity = strlen(TOY_VERSION_BUILD) + count + 1; //full header size
 			collation = GROW_ARRAY(unsigned char, collation, oldCapacity, capacity);
@@ -808,7 +808,7 @@ static unsigned char* collateCompilerHeaderOpt(Compiler* compiler, int* size, bo
 
 				Literal str = compiler->literalCache.literals[i];
 
-				for (int c = 0; c < STRLEN(str); c++) {
+				for (int c = 0; c < (int)strlen(AS_STRING(str)); c++) {
 					emitByte(&collation, &capacity, &count, AS_STRING(str)[c]);
 				}
 
@@ -885,7 +885,7 @@ static unsigned char* collateCompilerHeaderOpt(Compiler* compiler, int* size, bo
 
 				Literal identifier = compiler->literalCache.literals[i];
 
-				for (int c = 0; c < STRLEN_I(identifier); c++) {
+				for (int c = 0; c < (int)strlen(AS_IDENTIFIER(identifier)); c++) {
 					emitByte(&collation, &capacity, &count, AS_IDENTIFIER(identifier)[c]);
 				}
 

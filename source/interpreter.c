@@ -26,7 +26,7 @@ bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func) {
 		return false;
 	}
 
-	Literal identifier = TO_IDENTIFIER_LITERAL(name);
+	Literal identifier = TO_IDENTIFIER_LITERAL(copyString(name, strlen(name)), strlen(name));
 
 	//make sure the name isn't taken
 	if (existsLiteralDictionary(&interpreter->scope->variables, identifier)) {
@@ -99,10 +99,10 @@ int _set(Interpreter* interpreter, LiteralArray* arguments) {
 
 			//if it's a string or an identifier, make a local copy
 			if (IS_STRING(val)) {
-				val = TO_STRING_LITERAL(copyString(AS_STRING(val), STRLEN(val)));
+				val = TO_STRING_LITERAL(copyString(AS_STRING(val), strlen(AS_STRING(val)) ), strlen(AS_STRING(val)));
 			}
 			if (IS_IDENTIFIER(val)) {
-				val = TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(val), STRLEN_I(val)));
+				val = TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(val), strlen(AS_IDENTIFIER(val)) ), strlen(AS_STRING(val)));
 			}
 
 			//TODO: proper copy function for literals
@@ -266,7 +266,7 @@ int _length(Interpreter* interpreter, LiteralArray* arguments) {
 			return 1;
 
 		case LITERAL_STRING:
-			pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( STRLEN(obj) ));
+			pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( strlen(AS_STRING(obj)) ));
 			return 1;
 
 		default:
@@ -535,7 +535,7 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 	//special case for string concatenation ONLY
 	if (IS_STRING(lhs) && IS_STRING(rhs)) {
 		//check for overflow
-		if (STRLEN(lhs) + STRLEN(rhs) > MAX_STRING_LENGTH) {
+		if (strlen(AS_STRING(lhs)) + strlen(AS_STRING(rhs)) > MAX_STRING_LENGTH) {
 			printf(ERROR "ERROR: Can't concatenate these strings (result is too long)\n" RESET);
 			return false;
 		}
@@ -543,7 +543,7 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 		//concat the strings
 		char buffer[MAX_STRING_LENGTH];
 		snprintf(buffer, MAX_STRING_LENGTH, "%s%s", AS_STRING(lhs), AS_STRING(rhs));
-		pushLiteralArray(&interpreter->stack, TO_STRING_LITERAL(buffer));
+		pushLiteralArray(&interpreter->stack, TO_STRING_LITERAL( copyString(buffer, strlen(buffer)), strlen(buffer) ));
 
 		return true;
 	}
@@ -823,19 +823,21 @@ static bool execValCast(Interpreter* interpreter) {
 
 		case LITERAL_STRING:
 			if (IS_BOOLEAN(value)) {
-				result = TO_STRING_LITERAL(AS_BOOLEAN(value) ? "true" : "false");
+				char* str = AS_BOOLEAN(value) ? "true" : "false";
+
+				result = TO_STRING_LITERAL(copyString(str, strlen(str)), strlen(str));
 			}
 
 			if (IS_INTEGER(value)) {
 				char buffer[128];
 				snprintf(buffer, 128, "%d", AS_INTEGER(value));
-				result = TO_STRING_LITERAL(buffer);
+				result = TO_STRING_LITERAL(copyString(buffer, strlen(buffer)), strlen(buffer));
 			}
 
 			if (IS_FLOAT(value)) {
 				char buffer[128];
 				snprintf(buffer, 128, "%g", AS_FLOAT(value));
-				result = TO_STRING_LITERAL(buffer);
+				result = TO_STRING_LITERAL(copyString(buffer, strlen(buffer)), strlen(buffer));
 			}
 		break;
 
@@ -1496,7 +1498,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 
 			case LITERAL_STRING: {
 				char* s = readString(interpreter->bytecode, &interpreter->count);
-				pushLiteralArray(&interpreter->literalCache, TO_STRING_LITERAL(s));
+				pushLiteralArray(&interpreter->literalCache, TO_STRING_LITERAL( copyString(s, strlen(s)), strlen(s) ));
 
 				if (command.verbose) {
 					printf("(string \"%s\")\n", s);
@@ -1571,7 +1573,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 			case LITERAL_IDENTIFIER: {
 				char* str = readString(interpreter->bytecode, &interpreter->count);
 
-				Literal identifier = TO_IDENTIFIER_LITERAL(str);
+				Literal identifier = TO_IDENTIFIER_LITERAL(copyString(str, strlen(str)), strlen(str));
 
 				pushLiteralArray(&interpreter->literalCache, identifier);
 

@@ -20,7 +20,7 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 	void* mem = realloc(pointer, newSize);
 
 	if (mem == NULL) {
-		fprintf(stderr, ERROR "[internal]Memory allocation error (requested %d for %d, replacing %d)\n" ERROR, (int)newSize, (int)pointer, (int)oldSize);
+		fprintf(stderr, ERROR "[internal]Memory allocation error (requested %d for %ld, replacing %d)\n" ERROR, (int)newSize, (long int)pointer, (int)oldSize);
 		exit(-1);
 	}
 

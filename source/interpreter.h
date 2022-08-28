@@ -2,6 +2,8 @@
 
 #include "opcodes.h"
 
+#include "literal.h"
+#include "literal_util.h"
 #include "literal_array.h"
 #include "literal_dictionary.h"
 #include "scope.h"

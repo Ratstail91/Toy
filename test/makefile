@@ -12,7 +12,7 @@ OBJ = $(addprefix $(ODIR)/,$(TARGETS:../source/%.c=%.o)) $(addprefix $(ODIR)/,$(
 all: $(OBJ) $(TESTS:%.c=../$(OUTDIR)/%.exe)
 
 ../$(OUTDIR)/%.exe: $(ODIR)/%.o
-	$(CC) -o $@ $< $(TARGETS:../source/%.c=$(ODIR)/%.o) $(CFLAGS) $(LIBS)
+	@$(CC) -o $@ $< $(TARGETS:../source/%.c=$(ODIR)/%.o) $(CFLAGS) $(LIBS)
 	$@
 
 $(OBJ): | $(ODIR)
@@ -21,10 +21,10 @@ $(ODIR):
 	mkdir $(ODIR)
 
 $(ODIR)/%.o: %.c
-	$(CC) -c -o $@ $< $(CFLAGS)
+	@$(CC) -c -o $@ $< $(CFLAGS)
 
 $(ODIR)/%.o: ../source/%.c
-	$(CC) -c -o $@ $< $(CFLAGS)
+	@$(CC) -c -o $@ $< $(CFLAGS)
 
 .PHONY: clean
 

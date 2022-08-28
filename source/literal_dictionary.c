@@ -15,12 +15,12 @@ static void setEntryValues(_entry* entry, Literal key, Literal value) {
 
 	//take ownership of the copied string
 	if (IS_STRING(key)) {
-		entry->key = TO_STRING_LITERAL( copyString(AS_STRING(key), STRLEN(key)) );
+		entry->key = TO_STRING_LITERAL( copyString(AS_STRING(key), strlen(AS_STRING(key)) ), strlen(AS_STRING(key)));
 	}
 
 	//OR take ownership of the copied identifier
 	else if (IS_IDENTIFIER(key)) {
-		entry->key = TO_IDENTIFIER_LITERAL( copyString(AS_IDENTIFIER(key), STRLEN_I(key)) );
+		entry->key = TO_IDENTIFIER_LITERAL( copyString(AS_IDENTIFIER(key), strlen( AS_IDENTIFIER(key))), strlen(AS_IDENTIFIER(key)) );
 	}
 
 	else {
@@ -33,10 +33,10 @@ static void setEntryValues(_entry* entry, Literal key, Literal value) {
 
 	//take ownership of the copied string
 	if (IS_STRING(value)) {
-		char* buffer = ALLOCATE(char, STRLEN(value) + 1);
-		strncpy(buffer, AS_STRING(value), STRLEN(value));
-		buffer[STRLEN(value)] = '\0';
-		entry->value = TO_STRING_LITERAL(buffer);
+		char* buffer = ALLOCATE(char, strlen(AS_STRING(value)) + 1);
+		strncpy(buffer, AS_STRING(value), strlen(AS_STRING(value)));
+		buffer[strlen(AS_STRING(value))] = '\0';
+		entry->value = TO_STRING_LITERAL(buffer, strlen(buffer));
 	}
 
 	//OR take ownership of the copied function
@@ -125,17 +125,17 @@ static bool setEntryArray(_entry** dictionaryHandle, int* capacityPtr, int conta
 
 	//if it's a string or an identifier, make a local copy
 	if (IS_STRING(key)) {
-		key = TO_STRING_LITERAL(copyString(AS_STRING(key), STRLEN(key)));
+		key = TO_STRING_LITERAL(copyString(AS_STRING(key), strlen(AS_STRING(key)) ), strlen(AS_STRING(key)));
 	}
 	if (IS_IDENTIFIER(key)) {
-		key = TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(key), STRLEN_I(key)));
+		key = TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(key), strlen(AS_IDENTIFIER(key)) ), strlen(AS_IDENTIFIER(key)));
 	}
 
 	if (IS_STRING(value)) {
-		value = TO_STRING_LITERAL(copyString(AS_STRING(value), STRLEN(value)));
+		key = TO_STRING_LITERAL(copyString(AS_STRING(value), strlen(AS_STRING(value)) ), strlen(AS_STRING(value)));
 	}
 	if (IS_IDENTIFIER(value)) {
-		value = TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(value), STRLEN_I(value)));
+		key = TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(value), strlen(AS_IDENTIFIER(value)) ), strlen(AS_IDENTIFIER(value)));
 	}
 
 	//true = contains increase

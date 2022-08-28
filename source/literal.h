@@ -86,33 +86,25 @@ typedef struct {
 #define TO_BOOLEAN_LITERAL(value)			((Literal){LITERAL_BOOLEAN,		{ .boolean = value }})
 #define TO_INTEGER_LITERAL(value)			((Literal){LITERAL_INTEGER,		{ .integer = value }})
 #define TO_FLOAT_LITERAL(value)				((Literal){LITERAL_FLOAT,		{ .number = value }})
-#define TO_STRING_LITERAL(value)			_toStringLiteral(value)
+#define TO_STRING_LITERAL(value, l)			_toStringLiteral(value, l)
 #define TO_ARRAY_LITERAL(value)				((Literal){LITERAL_ARRAY,		{ .array = value }})
 #define TO_DICTIONARY_LITERAL(value)		((Literal){LITERAL_DICTIONARY,	{ .dictionary = value }})
 #define TO_FUNCTION_LITERAL(value, l)		((Literal){LITERAL_FUNCTION,	{ .function.ptr = value, .function.scope = NULL, .function.length = l }})
-#define TO_IDENTIFIER_LITERAL(value)		_toIdentifierLiteral(value, strlen(value))
+#define TO_IDENTIFIER_LITERAL(value, l)		_toIdentifierLiteral(value, l)
 #define TO_TYPE_LITERAL(value, c)			((Literal){ LITERAL_TYPE,		{ .type.typeOf = value, .type.constant = c, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
 
-//utils
-void printLiteral(Literal literal);
-void printLiteralCustom(Literal literal, void (printFn)(const char*));
 void freeLiteral(Literal literal);
 
 #define IS_TRUTHY(x) _isTruthy(x)
 
 #define MAX_STRING_LENGTH					4096
-#define STRLEN(lit)							((lit).as.string.length)
-#define STRLEN_I(lit)						((lit).as.identifier.length)
+// #define STRLEN(lit)							((lit).as.string.length)
+// #define STRLEN_I(lit)						((lit).as.identifier.length)
 #define HASH_I(lit)							((lit).as.identifier.hash)
 #define TYPE_PUSH_SUBTYPE(lit, subtype)		_typePushSubtype(lit, subtype)
 
 //BUGFIX: macros are not functions
 bool _isTruthy(Literal x);
-Literal _toStringLiteral(char* str);
+Literal _toStringLiteral(char* str, int length);
 Literal _toIdentifierLiteral(char* str, int length);
 Literal* _typePushSubtype(Literal* lit, Literal subtype);
-
-//utils
-char* copyString(char* original, int length);
-bool literalsAreEqual(Literal lhs, Literal rhs);
-int hashLiteral(Literal lit);

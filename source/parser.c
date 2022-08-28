@@ -255,7 +255,7 @@ static Opcode string(Parser* parser, Node** nodeHandle) {
 				error(parser, parser->previous, buffer);
 			}
 
-			emitNodeLiteral(nodeHandle, TO_STRING_LITERAL(copyString(parser->previous.lexeme, length)));
+			emitNodeLiteral(nodeHandle, TO_STRING_LITERAL(copyString(parser->previous.lexeme, length), length));
 			return OP_EOF;
 		}
 
