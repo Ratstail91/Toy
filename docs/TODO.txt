@@ -27,6 +27,7 @@ DONE: native functions
 DONE: global functions _get, _set, _push, _pop, _length, clear available
 
 
+TODO: change comma to colon in dictionary definition?
 TODO: slice and dot notation around the _index function
 TODO: ternary operator
 TODO: Nullish types

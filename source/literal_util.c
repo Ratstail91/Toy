@@ -194,8 +194,8 @@ int hashLiteral(Literal lit) {
 			return hash(res);
 		}
 
-		// case LITERAL_FUNCTION:
-		// 	//
+		case LITERAL_FUNCTION:
+			return 0;
 
 		case LITERAL_IDENTIFIER:
 			return HASH_I(lit); //pre-computed
