@@ -1377,7 +1377,7 @@ static void varDecl(Parser* parser, Node** nodeHandle) {
 
 static void fnDecl(Parser* parser, Node** nodeHandle) {
 	//read the identifier
-	consume(parser, TOKEN_IDENTIFIER, "Expected identifier after var keyword");
+	consume(parser, TOKEN_IDENTIFIER, "Expected identifier after fn keyword");
 	Token identifierToken = parser->previous;
 
 	int length = identifierToken.length;
