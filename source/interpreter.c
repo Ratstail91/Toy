@@ -42,8 +42,6 @@ bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func) {
 	setLiteralDictionary(&interpreter->scope->variables, identifier, fn);
 	setLiteralDictionary(&interpreter->scope->types, identifier, type);
 
-	freeLiteral(identifier);
-
 	return true;
 }
 
