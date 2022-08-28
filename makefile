@@ -3,6 +3,9 @@ export OUTDIR = out
 all: $(OUTDIR)
 	$(MAKE) -C source
 
+test: clean $(OUTDIR)
+	$(MAKE) -C test
+
 $(OUTDIR):
 	mkdir $(OUTDIR)
 
