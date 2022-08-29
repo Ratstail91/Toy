@@ -1370,7 +1370,6 @@ static void varDecl(Parser* parser, Node** nodeHandle) {
 	//TODO: static type checking?
 
 	//declare it
-	freeNode(*nodeHandle); //free the initial node
 	emitNodeVarDecl(nodeHandle, identifier, typeLiteral, expressionNode);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of var declaration");
@@ -1515,7 +1514,6 @@ static void fnDecl(Parser* parser, Node** nodeHandle) {
 	blockStmt(parser, &blockNode);
 
 	//declare it
-	freeNode(*nodeHandle); //free the initial node, because WTF?
 	emitNodeFnDecl(nodeHandle, identifier, argumentNode, returnNode, blockNode);
 }
 

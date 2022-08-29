@@ -34,13 +34,15 @@ void freeLiteral(Literal literal) {
 		return;
 	}
 
-	if (IS_ARRAY(literal)) {
+	if (IS_ARRAY(literal) || literal.type == LITERAL_DICTIONARY_INTERMEDIATE || literal.type == LITERAL_TYPE_INTERMEDIATE) {
 		freeLiteralArray(AS_ARRAY(literal));
+		FREE(LiteralArray, AS_ARRAY(literal));
 		return;
 	}
 
 	if (IS_DICTIONARY(literal)) {
 		freeLiteralDictionary(AS_DICTIONARY(literal));
+		FREE(LiteralDictionary, AS_DICTIONARY(literal));
 		return;
 	}
 

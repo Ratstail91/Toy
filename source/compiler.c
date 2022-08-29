@@ -19,6 +19,10 @@ void initCompiler(Compiler* compiler) {
 
 //separated out, so it can be recursive
 static int writeLiteralTypeToCacheOpt(LiteralArray* literalCache, Literal literal, bool skipDuplicationOptimisation) {
+	printf(WARN);
+	printLiteral(literal);
+	printf(RESET);
+
 	//if it's a compound type, recurse and store the results
 	if (AS_TYPE(literal).typeOf == LITERAL_ARRAY || AS_TYPE(literal).typeOf == LITERAL_DICTIONARY) {
 		//I don't like storing types in an array, but it's the easiest and most straight forward method
@@ -31,6 +35,7 @@ static int writeLiteralTypeToCacheOpt(LiteralArray* literalCache, Literal litera
 		for (int i = 0; i < AS_TYPE(literal).count; i++) {
 			//write the values to the cache, and the indexes to the store
 			int subIndex = writeLiteralTypeToCacheOpt(literalCache, ((Literal*)(AS_TYPE(literal).subtypes))[i], false);
+
 			Literal lit = TO_INTEGER_LITERAL(subIndex);
 			pushLiteralArray(store, lit);
 			freeLiteral(lit);
@@ -46,12 +51,15 @@ static int writeLiteralTypeToCacheOpt(LiteralArray* literalCache, Literal litera
 		int index = findLiteralIndex(literalCache, literal);
 		if (index < 0) {
 			index = pushLiteralArray(literalCache, literal);
+			freeLiteral(literal);
 		}
 
 		return index;
 	}
 	else {
-		return pushLiteralArray(literalCache, literal);
+		int index = pushLiteralArray(literalCache, literal);
+		freeLiteral(literal);
+		return index;
 	}
 }
 
@@ -131,7 +139,8 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 
 		//push the store to the cache, with instructions about how pack it
 		Literal literal = TO_DICTIONARY_LITERAL(store);
-		index = pushLiteralArray(&compiler->literalCache, literal); //WARNING: pushed as a dictionary, so below can recognize it
+		literal.type = LITERAL_DICTIONARY_INTERMEDIATE; //god damn it
+		index = pushLiteralArray(&compiler->literalCache, literal);
 		freeLiteral(literal);
 	}
 	else if (node->compound.literalType == LITERAL_ARRAY) {
@@ -257,7 +266,7 @@ static int writeLiteralToCompiler(Compiler* compiler, Literal literal) {
 
 static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAddressesPtr, void* continueAddressesPtr) {
 	//grow if the bytecode space is too small
-	if (compiler->capacity < compiler->count + 1) {
+	if (compiler->count + 32 > compiler->capacity) {
 		int oldCapacity = compiler->capacity;
 
 		compiler->capacity = GROW_CAPACITY_FAST(oldCapacity);
@@ -844,13 +853,10 @@ static unsigned char* collateCompilerHeaderOpt(Compiler* compiler, int* size, bo
 				for (int i = 0; i < ptr->count; i++) {
 					emitShort(&collation, &capacity, &count, (unsigned short)AS_INTEGER(ptr->literals[i])); //shorts representing the indexes of the values
 				}
-
-				freeLiteralArray(ptr);
-				FREE(LiteralArray, ptr);
 			}
 			break;
 
-			case LITERAL_DICTIONARY: {
+			case LITERAL_DICTIONARY_INTERMEDIATE: {
 				emitByte(&collation, &capacity, &count, LITERAL_DICTIONARY);
 
 				LiteralArray* ptr = AS_ARRAY(compiler->literalCache.literals[i]); //used an array for storage above
@@ -862,9 +868,6 @@ static unsigned char* collateCompilerHeaderOpt(Compiler* compiler, int* size, bo
 				for (int i = 0; i < ptr->count; i++) {
 					emitShort(&collation, &capacity, &count, (unsigned short)AS_INTEGER(ptr->literals[i])); //shorts representing the indexes of the values
 				}
-
-				freeLiteralArray(ptr);
-				FREE(LiteralArray, ptr);
 			}
 			break;
 
@@ -892,7 +895,8 @@ static unsigned char* collateCompilerHeaderOpt(Compiler* compiler, int* size, bo
 				emitShort(&collation, &capacity, &count, (unsigned short)(fnIndex++));
 
 				freeCompiler((Compiler*)fnCompiler);
-				FREE(Compiler, fnCompiler);
+				FREE(compiler, fnCompiler);
+				FREE_ARRAY(unsigned char, bytes, size);
 			}
 			break;
 
@@ -927,7 +931,7 @@ static unsigned char* collateCompilerHeaderOpt(Compiler* compiler, int* size, bo
 				LiteralArray* ptr = AS_ARRAY(compiler->literalCache.literals[i]); //used an array for storage above
 
 				//the base literal
-				Literal typeLiteral = ptr->literals[0];
+				Literal typeLiteral = copyLiteral(ptr->literals[0]);
 
 				//what type this literal represents
 				emitByte(&collation, &capacity, &count, AS_TYPE(typeLiteral).typeOf);
@@ -941,8 +945,7 @@ static unsigned char* collateCompilerHeaderOpt(Compiler* compiler, int* size, bo
 					}
 				}
 
-				freeLiteralArray(ptr);
-				FREE(LiteralArray, ptr);
+				freeLiteral(typeLiteral);
 			}
 			break;
 
@@ -980,7 +983,7 @@ static unsigned char* collateCompilerHeaderOpt(Compiler* compiler, int* size, bo
 
 	*size = count;
 
-	return collation;	
+	return collation;
 }
 
 unsigned char* collateCompiler(Compiler* compiler, int* size) {

@@ -18,6 +18,7 @@ typedef enum {
 	LITERAL_IDENTIFIER,
 	LITERAL_TYPE,
 	LITERAL_TYPE_INTERMEDIATE, //used to process types in the compiler only
+	LITERAL_DICTIONARY_INTERMEDIATE, //used to process dictionaries in the compiler only
 	LITERAL_FUNCTION_INTERMEDIATE, //used to process functions in the compiler only
 	LITERAL_FUNCTION_ARG_REST, //used to process function rest parameters
 	LITERAL_FUNCTION_NATIVE, //for handling native functions

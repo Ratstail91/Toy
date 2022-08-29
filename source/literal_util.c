@@ -72,13 +72,29 @@ Literal copyLiteral(Literal original) {
 			return lit;
 		}
 
-		case LITERAL_TYPE_INTERMEDIATE: {
+		case LITERAL_DICTIONARY_INTERMEDIATE: {
 			LiteralArray* array = ALLOCATE(LiteralArray, 1);
 			initLiteralArray(array);
 
 			//copy each element
 			for (int i = 0; i < AS_ARRAY(original)->count; i++) {
 				pushLiteralArray(array, copyLiteral(AS_ARRAY(original)->literals[i]));
+			}
+
+			Literal ret = TO_ARRAY_LITERAL(array);
+			ret.type = LITERAL_DICTIONARY_INTERMEDIATE;
+			return ret;
+		}
+
+		case LITERAL_TYPE_INTERMEDIATE: {
+			LiteralArray* array = ALLOCATE(LiteralArray, 1);
+			initLiteralArray(array);
+
+			//copy each element
+			for (int i = 0; i < AS_ARRAY(original)->count; i++) {
+				Literal literal =  copyLiteral(AS_ARRAY(original)->literals[i]);
+				pushLiteralArray(array, literal );
+				freeLiteral(literal);
 			}
 
 			Literal ret = TO_ARRAY_LITERAL(array);
@@ -141,6 +157,7 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 			return !strncmp(AS_STRING(lhs), AS_STRING(rhs), strlen(AS_STRING(lhs)));
 
 		case LITERAL_ARRAY:
+		case LITERAL_DICTIONARY_INTERMEDIATE: //BUGFIX
 		case LITERAL_TYPE_INTERMEDIATE: //BUGFIX: used for storing types as an array
 			//mismatched sizes
 			if (AS_ARRAY(lhs)->count != AS_ARRAY(rhs)->count) {
@@ -304,7 +321,7 @@ int hashLiteral(Literal lit) {
 
 //utils
 static void stdoutWrapper(const char* output) {
-	fprintf(stdout, "%s", output);
+	printf("%s", output);
 }
 
 //buffer the prints
@@ -323,7 +340,7 @@ static void printToBuffer(const char* str) {
 		globalPrintBuffer = GROW_ARRAY(char, globalPrintBuffer, oldCapacity, globalPrintCapacity);
 	}
 
-	snprintf(globalPrintBuffer + globalPrintCount, strlen(str) + 1, "%s", str);
+	snprintf(globalPrintBuffer + globalPrintCount, strlen(str), "%s", str);
 	globalPrintCount += strlen(str);
 }
 

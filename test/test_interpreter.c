@@ -1,6 +1,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "compiler.h"
+#include "interpreter.h"
 
 #include "console_colors.h"
 
@@ -47,9 +48,9 @@ char* readFile(char* path, size_t* fileSize) {
 int main() {
 	{
 		//test init & free
-		Compiler compiler;
-		initCompiler(&compiler);
-		freeCompiler(&compiler);
+		Interpreter interpreter;
+		initInterpreter(&interpreter);
+		freeInterpreter(&interpreter);
 	}
 
 	{
@@ -60,10 +61,12 @@ int main() {
 		Lexer lexer;
 		Parser parser;
 		Compiler compiler;
+		Interpreter interpreter;
 
 		initLexer(&lexer, source);
 		initParser(&parser, &lexer);
 		initCompiler(&compiler);
+		initInterpreter(&interpreter);
 
 		Node* node = scanParser(&parser);
 
@@ -74,11 +77,14 @@ int main() {
 		int size = 0;
 		unsigned char* bytecode = collateCompiler(&compiler, &size);
 
+		//run
+		runInterpreter(&interpreter, bytecode, size);
+
 		//cleanup
-		FREE_ARRAY(unsigned char, bytecode, size);
 		freeNode(node);
 		freeParser(&parser);
 		freeCompiler(&compiler);
+		freeInterpreter(&interpreter);
 	}
 
 	{
@@ -90,34 +96,31 @@ int main() {
 		Lexer lexer;
 		Parser parser;
 		Compiler compiler;
+		Interpreter interpreter;
 
 		initLexer(&lexer, source);
 		initParser(&parser, &lexer);
 		initCompiler(&compiler);
+		initInterpreter(&interpreter);
 
 		Node* node = scanParser(&parser);
-		while (node != NULL) {
-			if (node->type == NODE_ERROR) {
-				fprintf(stderr, ERROR "ERROR: Error node found" RESET);
-				return -1;
-			}
 
-			//write
-			writeCompiler(&compiler, node);
-			freeNode(node);
-
-			node = scanParser(&parser);
-		}
+		//write
+		writeCompiler(&compiler, node);
 
 		//collate
 		int size = 0;
 		unsigned char* bytecode = collateCompiler(&compiler, &size);
 
+		//run
+		runInterpreter(&interpreter, bytecode, size);
+
 		//cleanup
 		FREE_ARRAY(char, source, sourceLength);
-		FREE_ARRAY(unsigned char, bytecode, size);
+		freeNode(node);
 		freeParser(&parser);
 		freeCompiler(&compiler);
+		freeInterpreter(&interpreter);
 	}
 
 	printf(NOTICE "All good\n" RESET);

@@ -42,6 +42,8 @@ bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func) {
 	setLiteralDictionary(&interpreter->scope->variables, identifier, fn);
 	setLiteralDictionary(&interpreter->scope->types, identifier, type);
 
+	freeLiteral(identifier);
+
 	return true;
 }
 
@@ -526,7 +528,9 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 		//concat the strings
 		char buffer[MAX_STRING_LENGTH];
 		snprintf(buffer, MAX_STRING_LENGTH, "%s%s", AS_STRING(lhs), AS_STRING(rhs));
-		pushLiteralArray(&interpreter->stack, TO_STRING_LITERAL( copyString(buffer, strlen(buffer)), strlen(buffer) ));
+		Literal literal = TO_STRING_LITERAL( copyString(buffer, strlen(buffer)), strlen(buffer) );
+		pushLiteralArray(&interpreter->stack, literal);
+		freeLiteral(literal);
 
 		return true;
 	}
@@ -1451,7 +1455,9 @@ static void readInterpreterSections(Interpreter* interpreter) {
 			case LITERAL_BOOLEAN: {
 				//read the booleans
 				const bool b = readByte(interpreter->bytecode, &interpreter->count);
-				pushLiteralArray(&interpreter->literalCache, TO_BOOLEAN_LITERAL(b));
+				Literal literal = TO_BOOLEAN_LITERAL(b);
+				pushLiteralArray(&interpreter->literalCache, literal);
+				freeLiteral(literal);
 
 				if (command.verbose) {
 					printf("(boolean %s)\n", b ? "true" : "false");
@@ -1461,7 +1467,9 @@ static void readInterpreterSections(Interpreter* interpreter) {
 
 			case LITERAL_INTEGER: {
 				const int d = readInt(interpreter->bytecode, &interpreter->count);
-				pushLiteralArray(&interpreter->literalCache, TO_INTEGER_LITERAL(d));
+				Literal literal = TO_INTEGER_LITERAL(d);
+				pushLiteralArray(&interpreter->literalCache, literal);
+				freeLiteral(literal);
 
 				if (command.verbose) {
 					printf("(integer %d)\n", d);
@@ -1471,7 +1479,9 @@ static void readInterpreterSections(Interpreter* interpreter) {
 
 			case LITERAL_FLOAT: {
 				const float f = readFloat(interpreter->bytecode, &interpreter->count);
-				pushLiteralArray(&interpreter->literalCache, TO_FLOAT_LITERAL(f));
+				Literal literal = TO_FLOAT_LITERAL(f);
+				pushLiteralArray(&interpreter->literalCache, literal);
+				freeLiteral(literal);
 
 				if (command.verbose) {
 					printf("(float %f)\n", f);
@@ -1481,7 +1491,9 @@ static void readInterpreterSections(Interpreter* interpreter) {
 
 			case LITERAL_STRING: {
 				char* s = readString(interpreter->bytecode, &interpreter->count);
-				pushLiteralArray(&interpreter->literalCache, TO_STRING_LITERAL( copyString(s, strlen(s)), strlen(s) ));
+				Literal literal = TO_STRING_LITERAL( copyString(s, strlen(s)), strlen(s) );
+				pushLiteralArray(&interpreter->literalCache, literal);
+				freeLiteral(literal);
 
 				if (command.verbose) {
 					printf("(string \"%s\")\n", s);
@@ -1503,12 +1515,16 @@ static void readInterpreterSections(Interpreter* interpreter) {
 
 				if (command.verbose) {
 					printf("(array ");
-					printLiteral(TO_ARRAY_LITERAL(array));
+					Literal literal = TO_ARRAY_LITERAL(array);
+					printLiteral(literal);
+					freeLiteral(literal);
 					printf(")\n");
 				}
 
 				//finally, push the array proper
-				pushLiteralArray(&interpreter->literalCache, TO_ARRAY_LITERAL(array));
+				Literal literal = TO_ARRAY_LITERAL(array);
+				pushLiteralArray(&interpreter->literalCache, literal);
+				freeLiteral(literal);
 			}
 			break;
 
@@ -1527,12 +1543,16 @@ static void readInterpreterSections(Interpreter* interpreter) {
 
 				if (command.verbose) {
 					printf("(dictionary ");
-					printLiteral(TO_DICTIONARY_LITERAL(dictionary));
+					Literal literal = TO_DICTIONARY_LITERAL(dictionary);
+					printLiteral(literal);
+					freeLiteral(literal);
 					printf(")\n");
 				}
 
 				//finally, push the dictionary proper
-				pushLiteralArray(&interpreter->literalCache, TO_DICTIONARY_LITERAL(dictionary));
+				Literal literal = TO_DICTIONARY_LITERAL(dictionary);
+				pushLiteralArray(&interpreter->literalCache, literal);
+				freeLiteral(literal);
 			}
 			break;
 
@@ -1563,6 +1583,8 @@ static void readInterpreterSections(Interpreter* interpreter) {
 				if (command.verbose) {
 					printf("(identifier %s (hash: %x))\n", AS_IDENTIFIER(identifier), identifier.as.identifier.hash);
 				}
+
+				freeLiteral(identifier);
 			}
 			break;
 
@@ -1581,6 +1603,8 @@ static void readInterpreterSections(Interpreter* interpreter) {
 					printLiteral(typeLiteral);
 					printf(")\n");
 				}
+
+				freeLiteral(typeLiteral);
 			}
 			break;
 
@@ -1614,6 +1638,8 @@ static void readInterpreterSections(Interpreter* interpreter) {
 					printLiteral(typeLiteral);
 					printf(")\n");
 				}
+
+				freeLiteral(typeLiteral);
 			}
 			break;
 		}
