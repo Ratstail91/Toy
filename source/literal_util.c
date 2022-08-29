@@ -72,6 +72,21 @@ Literal copyLiteral(Literal original) {
 			return lit;
 		}
 
+		case LITERAL_TYPE_INTERMEDIATE: {
+			LiteralArray* array = ALLOCATE(LiteralArray, 1);
+			initLiteralArray(array);
+
+			//copy each element
+			for (int i = 0; i < AS_ARRAY(original)->count; i++) {
+				pushLiteralArray(array, copyLiteral(AS_ARRAY(original)->literals[i]));
+			}
+
+			Literal ret = TO_ARRAY_LITERAL(array);
+			ret.type = LITERAL_TYPE_INTERMEDIATE;
+			return ret;
+		}
+
+		case LITERAL_FUNCTION_INTERMEDIATE: //caries a compiler
 		case LITERAL_FUNCTION_NATIVE:
 			//no copying possible
 			return original;

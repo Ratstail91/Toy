@@ -31,7 +31,9 @@ static int writeLiteralTypeToCacheOpt(LiteralArray* literalCache, Literal litera
 		for (int i = 0; i < AS_TYPE(literal).count; i++) {
 			//write the values to the cache, and the indexes to the store
 			int subIndex = writeLiteralTypeToCacheOpt(literalCache, ((Literal*)(AS_TYPE(literal).subtypes))[i], false);
-			pushLiteralArray(store, TO_INTEGER_LITERAL(subIndex));
+			Literal lit = TO_INTEGER_LITERAL(subIndex);
+			pushLiteralArray(store, lit);
+			freeLiteral(lit);
 		}
 
 		//push the store to the cache, tweaking the type
@@ -77,14 +79,18 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 						key = pushLiteralArray(&compiler->literalCache, node->compound.nodes[i].pair.left->atomic.literal);
 					}
 
-					pushLiteralArray(store, TO_INTEGER_LITERAL(key));
+					Literal literal =  TO_INTEGER_LITERAL(key);
+					pushLiteralArray(store, literal);
+					freeLiteral(literal);
 				}
 				break;
 
 				case NODE_COMPOUND: {
 						int key = writeNodeCompoundToCache(compiler, node->compound.nodes[i].pair.left);
 
-						pushLiteralArray(store, TO_INTEGER_LITERAL(key));
+						Literal literal = TO_INTEGER_LITERAL(key);
+						pushLiteralArray(store, literal);
+						freeLiteral(literal);
 				}
 				break;
 
@@ -102,14 +108,18 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 						val = pushLiteralArray(&compiler->literalCache, node->compound.nodes[i].pair.right->atomic.literal);
 					}
 
-					pushLiteralArray(store, TO_INTEGER_LITERAL(val));
+					Literal literal = TO_INTEGER_LITERAL(val);
+					pushLiteralArray(store, literal);
+					freeLiteral(literal);
 				}
 				break;
 
 				case NODE_COMPOUND: {
 						int val = writeNodeCompoundToCache(compiler, node->compound.nodes[i].pair.right);
 
-						pushLiteralArray(store, TO_INTEGER_LITERAL(val));
+						Literal literal = TO_INTEGER_LITERAL(val);
+						pushLiteralArray(store, literal);
+						freeLiteral(literal);
 				}
 				break;
 
@@ -120,7 +130,9 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 		}
 
 		//push the store to the cache, with instructions about how pack it
-		index = pushLiteralArray(&compiler->literalCache, TO_DICTIONARY_LITERAL(store)); //WARNING: pushed as a dictionary, so below can recognize it
+		Literal literal = TO_DICTIONARY_LITERAL(store);
+		index = pushLiteralArray(&compiler->literalCache, literal); //WARNING: pushed as a dictionary, so below can recognize it
+		freeLiteral(literal);
 	}
 	else if (node->compound.literalType == LITERAL_ARRAY) {
 		//ensure each literal value is in the cache, individually
@@ -133,14 +145,18 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 						val = pushLiteralArray(&compiler->literalCache, node->compound.nodes[i].atomic.literal);
 					}
 
-					pushLiteralArray(store, TO_INTEGER_LITERAL(val));
+					Literal literal = TO_INTEGER_LITERAL(val);
+					pushLiteralArray(store, literal);
+					freeLiteral(literal);
 				}
 				break;
 
 				case NODE_COMPOUND: {
 					int val = writeNodeCompoundToCache(compiler, &node->compound.nodes[i]);
 
-					index = pushLiteralArray(store, TO_INTEGER_LITERAL(val));
+					Literal literal = TO_INTEGER_LITERAL(val);
+					index = pushLiteralArray(store, literal);
+					freeLiteral(literal);
 				}
 				break;
 
@@ -151,7 +167,9 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 		}
 
 		//push the store to the cache, with instructions about how pack it
-		index = pushLiteralArray(&compiler->literalCache, TO_ARRAY_LITERAL(store));
+		Literal literal = TO_ARRAY_LITERAL(store);
+		index = pushLiteralArray(&compiler->literalCache, literal);
+		freeLiteral(literal);
 	}
 	else {
 		fprintf(stderr, ERROR "[Internal] Unrecognized compound type in writeNodeCompoundToCache()" RESET);
@@ -172,8 +190,13 @@ static int writeNodeCollectionToCache(Compiler* compiler, Node* node) {
 				int identifierIndex = pushLiteralArray(&compiler->literalCache, node->fnCollection.nodes[i].varDecl.identifier); //store without duplication optimisation
 				int typeIndex = writeLiteralTypeToCacheOpt(&compiler->literalCache, node->fnCollection.nodes[i].varDecl.typeLiteral, false);
 
-				pushLiteralArray(store, TO_INTEGER_LITERAL(identifierIndex));
-				pushLiteralArray(store, TO_INTEGER_LITERAL(typeIndex));
+				Literal identifierLiteral =  TO_INTEGER_LITERAL(identifierIndex);
+				pushLiteralArray(store, identifierLiteral);
+				freeLiteral(identifierLiteral);
+
+				Literal typeLiteral = TO_INTEGER_LITERAL(typeIndex);
+				pushLiteralArray(store, typeLiteral);
+				freeLiteral(typeLiteral);
 			}
 			break;
 
@@ -181,7 +204,9 @@ static int writeNodeCollectionToCache(Compiler* compiler, Node* node) {
 				//write each piece of the declaration to the cache
 				int typeIndex = writeLiteralTypeToCacheOpt(&compiler->literalCache, node->fnCollection.nodes[i].atomic.literal, false);
 
-				pushLiteralArray(store, TO_INTEGER_LITERAL(typeIndex));
+				Literal typeLiteral = TO_INTEGER_LITERAL(typeIndex);
+				pushLiteralArray(store, typeLiteral);
+				freeLiteral(typeLiteral);
 			}
 			break;
 
@@ -192,7 +217,11 @@ static int writeNodeCollectionToCache(Compiler* compiler, Node* node) {
 	}
 
 	//store the store
-	return pushLiteralArray(&compiler->literalCache, TO_ARRAY_LITERAL(store));
+	Literal literal = TO_ARRAY_LITERAL(store);
+	int storeIndex = pushLiteralArray(&compiler->literalCache, literal);
+	freeLiteral(literal);
+
+	return storeIndex;
 }
 
 static int writeLiteralToCompiler(Compiler* compiler, Literal literal) {
@@ -414,22 +443,24 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			}
 
 			//push the argument COUNT to the top of the stack
-			int argumentsCount = findLiteralIndex(&compiler->literalCache, TO_INTEGER_LITERAL(node->fnCall.arguments->fnCollection.count));
-			if (argumentsCount < 0) {
-				argumentsCount = pushLiteralArray(&compiler->literalCache, TO_INTEGER_LITERAL(node->fnCall.arguments->fnCollection.count));
+			Literal argumentsCountLiteral =  TO_INTEGER_LITERAL(node->fnCall.arguments->fnCollection.count);
+			int argumentsCountIndex = findLiteralIndex(&compiler->literalCache, argumentsCountLiteral);
+			if (argumentsCountIndex < 0) {
+				argumentsCountIndex = pushLiteralArray(&compiler->literalCache, argumentsCountLiteral);
 			}
+			freeLiteral(argumentsCountLiteral);
 
-			if (argumentsCount >= 256) {
+			if (argumentsCountIndex >= 256) {
 				//push a "long" index
 				compiler->bytecode[compiler->count++] = OP_LITERAL_LONG; //1 byte
 
-				*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)argumentsCount; //2 bytes
+				*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)argumentsCountIndex; //2 bytes
 				compiler->count += sizeof(unsigned short);
 			}
 			else {
 				//push the index
 				compiler->bytecode[compiler->count++] = OP_LITERAL; //1 byte
-				compiler->bytecode[compiler->count++] = (unsigned char)argumentsCount; //1 byte
+				compiler->bytecode[compiler->count++] = (unsigned char)argumentsCountIndex; //1 byte
 			}
 
 			//call the function
@@ -586,7 +617,9 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			compiler->bytecode[compiler->count++] = OP_JUMP; //1 byte
 
 			//push to the breakAddresses array
-			pushLiteralArray((LiteralArray*)breakAddressesPtr, TO_INTEGER_LITERAL(compiler->count));
+			Literal literal = TO_INTEGER_LITERAL(compiler->count);
+			pushLiteralArray((LiteralArray*)breakAddressesPtr, literal);
+			freeLiteral(literal);
 
 			compiler->count += sizeof(unsigned short); //2 bytes
 		}
@@ -602,7 +635,9 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			compiler->bytecode[compiler->count++] = OP_JUMP; //1 byte
 
 			//push to the continueAddresses array
-			pushLiteralArray((LiteralArray*)continueAddressesPtr, TO_INTEGER_LITERAL(compiler->count));
+			Literal literal = TO_INTEGER_LITERAL(compiler->count);
+			pushLiteralArray((LiteralArray*)continueAddressesPtr, literal);
+			freeLiteral(literal);
 
 			compiler->count += sizeof(unsigned short); //2 bytes
 		}
