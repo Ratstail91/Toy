@@ -128,6 +128,30 @@ Scope* popScope(Scope* scope) {
 	return ret;
 }
 
+Scope* copyScope(Scope* original) {
+	Scope* scope = ALLOCATE(Scope, 1);
+	scope->ancestor = original->ancestor;
+	initLiteralDictionary(&scope->variables);
+	initLiteralDictionary(&scope->types);
+
+	//tick up all scope reference counts
+	scope->references = 0;
+	for (Scope* ptr = scope; ptr != NULL; ptr = ptr->ancestor) {
+		ptr->references++;
+	}
+
+	//copy the contents of the dictionaries
+	for (int i = 0; i < original->variables.capacity; i++) {
+		setLiteralDictionary(&scope->variables, original->variables.entries[i].key, original->variables.entries[i].value);
+	}
+
+	for (int i = 0; i < original->variables.capacity; i++) {
+		setLiteralDictionary(&scope->types, original->types.entries[i].key, original->types.entries[i].value);
+	}
+
+	return scope;
+}
+
 //returns false if error
 bool declareScopeVariable(Scope* scope, Literal key, Literal type) {
 	//don't redefine a variable within this scope

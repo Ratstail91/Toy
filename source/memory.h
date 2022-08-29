@@ -12,4 +12,3 @@
 
 void* reallocate(void* pointer, size_t oldSize, size_t newSize);
 
-int getAllocatedMemoryCount();

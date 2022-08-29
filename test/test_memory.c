@@ -10,11 +10,6 @@ int main() {
 		int* integer = ALLOCATE(int, 1);
 
 		FREE(int, integer);
-
-		if (getAllocatedMemoryCount() != 0) {
-			fprintf(stderr, ERROR "ERROR: integer failed to be allocated and freed correctly\n" RESET);
-			return -1;
-		}
 	}
 
 	{
@@ -22,11 +17,6 @@ int main() {
 		int* array = ALLOCATE(int, 10);
 
 		FREE_ARRAY(int, array, 10);
-
-		if (getAllocatedMemoryCount() != 0) {
-			fprintf(stderr, ERROR "ERROR: integer array failed to be allocated and freed correctly\n" RESET);
-			return -1;
-		}
 	}
 
 	{
@@ -36,11 +26,6 @@ int main() {
 
 		FREE_ARRAY(int, array1, 10);
 		FREE_ARRAY(int, array2, 10);
-
-		if (getAllocatedMemoryCount() != 0) {
-			fprintf(stderr, ERROR "ERROR: integer array failed to be allocated and freed correctly\n" RESET);
-			return -1;
-		}
 	}
 
 	printf(NOTICE "All good\n" RESET);

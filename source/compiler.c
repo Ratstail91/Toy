@@ -855,7 +855,7 @@ static unsigned char* collateCompilerHeaderOpt(Compiler* compiler, int* size, bo
 			case LITERAL_FUNCTION_INTERMEDIATE: {
 				//extract the compiler
 				Literal fn = compiler->literalCache.literals[i];
-				void* fnCompiler = AS_FUNCTION(fn);
+				void* fnCompiler = AS_FUNCTION(fn).bytecode; //store the compiler here for now
 
 				//collate the function into bytecode (without header)
 				int size = 0;

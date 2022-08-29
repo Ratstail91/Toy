@@ -335,23 +335,6 @@ void initInterpreter(Interpreter* interpreter) {
 }
 
 void freeInterpreter(Interpreter* interpreter) {
-	//since these are dynamically allocated, free them manually
-	for (int i = 0; i < interpreter->literalCache.count; i++) {
-		if (IS_ARRAY(interpreter->literalCache.literals[i]) || IS_DICTIONARY(interpreter->literalCache.literals[i]) || IS_TYPE(interpreter->literalCache.literals[i])) {
-
-			if (IS_TYPE(interpreter->literalCache.literals[i]) && AS_TYPE(interpreter->literalCache.literals[i]).capacity > 0) {
-				FREE_ARRAY(Literal, AS_TYPE(interpreter->literalCache.literals[i]).subtypes, AS_TYPE(interpreter->literalCache.literals[i]).capacity);
-			}
-
-			freeLiteral(interpreter->literalCache.literals[i]);
-
-			interpreter->literalCache.literals[i] = TO_NULL_LITERAL;
-		}
-
-		if (IS_FUNCTION(interpreter->literalCache.literals[i])) {
-			FREE_ARRAY(unsigned char, interpreter->literalCache.literals[i].as.function.ptr, interpreter->literalCache.literals[i].as.function.length);
-		}
-	}
 	freeLiteralArray(&interpreter->literalCache);
 
 	interpreter->scope = popScope(interpreter->scope);
@@ -1071,7 +1054,7 @@ static bool execFnCall(Interpreter* interpreter) {
 		freeLiteralArray(&arguments);
 
 		//call the native function
-		((NativeFn) AS_FUNCTION(func) )(interpreter, &correct);
+		((NativeFn) AS_FUNCTION(func).bytecode )(interpreter, &correct);
 
 		freeLiteralArray(&correct);
 		return true;
@@ -1083,7 +1066,7 @@ static bool execFnCall(Interpreter* interpreter) {
 	//init the inner interpreter manually
 	initLiteralArray(&inner.literalCache);
 	inner.scope = pushScope(func.as.function.scope);
-	inner.bytecode = AS_FUNCTION(func);
+	inner.bytecode = AS_FUNCTION(func).bytecode;
 	inner.length = func.as.function.length;
 	inner.count = 0;
 	initLiteralArray(&inner.stack);

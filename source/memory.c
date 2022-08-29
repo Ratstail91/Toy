@@ -5,12 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static int allocatedMemoryCount = 0;
-
 void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
-	allocatedMemoryCount -= oldSize;
-	allocatedMemoryCount += newSize;
-
 	if (newSize == 0) {
 		free(pointer);
 
@@ -27,6 +22,3 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 	return mem;
 }
 
-int getAllocatedMemoryCount() {
-	return allocatedMemoryCount;
-}

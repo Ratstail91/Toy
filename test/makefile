@@ -9,11 +9,17 @@ TARGETS = $(filter-out $(wildcard ../source/*main.c),$(wildcard ../source/*.c))
 TESTS = $(wildcard *.c)
 OBJ = $(addprefix $(ODIR)/,$(TARGETS:../source/%.c=%.o)) $(addprefix $(ODIR)/,$(TESTS:.c=.o))
 
+.PRECIOUS:  $(TESTS:%.c=../$(OUTDIR)/%.exe)
+
 all: $(OBJ) $(TESTS:%.c=../$(OUTDIR)/%.exe)
 
 ../$(OUTDIR)/%.exe: $(ODIR)/%.o
 	@$(CC) -o $@ $< $(TARGETS:../source/%.c=$(ODIR)/%.o) $(CFLAGS) $(LIBS)
-	$@
+ifeq ($(shell uname),Linux)
+	valgrind $@
+else
+	@echo please run these tests with valgrind on linux
+endif
 
 $(OBJ): | $(ODIR)
 

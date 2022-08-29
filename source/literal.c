@@ -1,6 +1,9 @@
 #include "literal.h"
 #include "memory.h"
 
+#include "literal_array.h"
+#include "literal_dictionary.h"
+
 #include "console_colors.h"
 
 #include <stdio.h>
@@ -31,6 +34,16 @@ void freeLiteral(Literal literal) {
 		return;
 	}
 
+	if (IS_ARRAY(literal)) {
+		freeLiteralArray(AS_ARRAY(literal));
+		return;
+	}
+
+	if (IS_DICTIONARY(literal)) {
+		freeLiteralDictionary(AS_DICTIONARY(literal));
+		return;
+	}
+
 	if (IS_IDENTIFIER(literal)) {
 		FREE_ARRAY(char, AS_IDENTIFIER(literal), literal.as.identifier.length);
 		return;
@@ -40,6 +53,7 @@ void freeLiteral(Literal literal) {
 		for (int i = 0; i < AS_TYPE(literal).count; i++) {
 			freeLiteral(((Literal*)(AS_TYPE(literal).subtypes))[i]);
 		}
+		FREE_ARRAY(Literal, AS_TYPE(literal).subtypes, AS_TYPE(literal).capacity);
 		return;
 	}
 }

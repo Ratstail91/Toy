@@ -39,7 +39,7 @@ typedef struct {
 		void* dictionary;
 
 		struct {
-			void* ptr;
+			void* bytecode;
 			void* scope;
 			int length;
 		} function;
@@ -78,7 +78,7 @@ typedef struct {
 #define AS_STRING(value)					((value).as.string.ptr)
 #define AS_ARRAY(value)						((LiteralArray*)((value).as.array))
 #define AS_DICTIONARY(value)				((LiteralDictionary*)((value).as.dictionary))
-#define AS_FUNCTION(value)					((value).as.function.ptr)
+#define AS_FUNCTION(value)					((value).as.function)
 #define AS_IDENTIFIER(value)				((value).as.identifier.ptr)
 #define AS_TYPE(value)						((value).as.type)
 
@@ -89,7 +89,7 @@ typedef struct {
 #define TO_STRING_LITERAL(value, l)			_toStringLiteral(value, l)
 #define TO_ARRAY_LITERAL(value)				((Literal){LITERAL_ARRAY,		{ .array = value }})
 #define TO_DICTIONARY_LITERAL(value)		((Literal){LITERAL_DICTIONARY,	{ .dictionary = value }})
-#define TO_FUNCTION_LITERAL(value, l)		((Literal){LITERAL_FUNCTION,	{ .function.ptr = value, .function.scope = NULL, .function.length = l }})
+#define TO_FUNCTION_LITERAL(value, l)		((Literal){LITERAL_FUNCTION,	{ .function.bytecode = value, .function.scope = NULL, .function.length = l }})
 #define TO_IDENTIFIER_LITERAL(value, l)		_toIdentifierLiteral(value, l)
 #define TO_TYPE_LITERAL(value, c)			((Literal){ LITERAL_TYPE,		{ .type.typeOf = value, .type.constant = c, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
 

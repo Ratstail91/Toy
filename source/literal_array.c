@@ -20,15 +20,7 @@ int pushLiteralArray(LiteralArray* array, Literal literal) {
 		array->literals = GROW_ARRAY(Literal, array->literals, oldCapacity, array->capacity);
 	}
 
-	//if it's a string or an identifier, make a local copy
-	if (IS_STRING(literal)) {
-		literal = TO_STRING_LITERAL(copyString(AS_STRING(literal), strlen( AS_STRING(literal) )), strlen( AS_STRING(literal) ));
-	}
-	if (IS_IDENTIFIER(literal)) {
-		literal = TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(literal), strlen( AS_IDENTIFIER(literal) )), strlen( AS_IDENTIFIER(literal) ));
-	}
-
-	array->literals[array->count] = literal;
+	array->literals[array->count] = copyLiteral(literal);
 	return array->count++;
 }
 

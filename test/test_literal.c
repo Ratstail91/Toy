@@ -49,12 +49,6 @@ int main() {
 		freeLiteral(literal);
 	}
 
-	//check allocated memory
-	if (getAllocatedMemoryCount() != 0) {
-		fprintf(stderr, ERROR "ERROR: Dangling memory detected: %d byes\n" RESET, getAllocatedMemoryCount());
-		return -1;
-	}
-
 	printf(NOTICE "All good\n" RESET);
 	return 0;
 }

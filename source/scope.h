@@ -12,6 +12,7 @@ typedef struct Scope {
 
 Scope* pushScope(Scope* scope);
 Scope* popScope(Scope* scope);
+Scope* copyScope(Scope* original);
 
 //returns false if error
 bool declareScopeVariable(Scope* scope, Literal key, Literal type);

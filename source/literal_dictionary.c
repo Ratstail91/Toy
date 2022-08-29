@@ -8,51 +8,12 @@
 
 //util functions
 static void setEntryValues(_entry* entry, Literal key, Literal value) {
-	//free the original string/identifier and overwrite it
-	if (IS_STRING(entry->key) || IS_IDENTIFIER(entry->key)) {
-		freeLiteral(entry->key);
-	}
+	//much simpler now
+	freeLiteral(entry->key);
+	entry->key = copyLiteral(key);
 
-	//take ownership of the copied string
-	if (IS_STRING(key)) {
-		entry->key = TO_STRING_LITERAL( copyString(AS_STRING(key), strlen(AS_STRING(key)) ), strlen(AS_STRING(key)));
-	}
-
-	//OR take ownership of the copied identifier
-	else if (IS_IDENTIFIER(key)) {
-		entry->key = TO_IDENTIFIER_LITERAL( copyString(AS_IDENTIFIER(key), strlen( AS_IDENTIFIER(key))), strlen(AS_IDENTIFIER(key)) );
-	}
-
-	else {
-		freeLiteral(entry->key); //for types
-		entry->key = key;
-	}
-
-	//values
 	freeLiteral(entry->value);
-
-	//take ownership of the copied string
-	if (IS_STRING(value)) {
-		char* buffer = ALLOCATE(char, strlen(AS_STRING(value)) + 1);
-		strncpy(buffer, AS_STRING(value), strlen(AS_STRING(value)));
-		buffer[strlen(AS_STRING(value))] = '\0';
-		entry->value = TO_STRING_LITERAL(buffer, strlen(buffer));
-	}
-
-	//OR take ownership of the copied function
-	else if (IS_FUNCTION(value)) {
-		unsigned char* buffer = ALLOCATE(unsigned char, value.as.function.length);
-		memcpy(buffer, AS_FUNCTION(value), value.as.function.length);
-
-		entry->value = TO_FUNCTION_LITERAL(buffer, value.as.function.length);
-
-		//save the scope
-		entry->value.as.function.scope = value.as.function.scope;
-	}
-
-	else {
-		entry->value = value;
-	}
+	entry->value = copyLiteral(value);
 }
 
 static _entry* getEntryArray(_entry* array, int capacity, Literal key, unsigned int hash, bool mustExist) {
@@ -122,21 +83,6 @@ static bool setEntryArray(_entry** dictionaryHandle, int* capacityPtr, int conta
 	}
 
 	_entry* entry = getEntryArray(*dictionaryHandle, *capacityPtr, key, hash, false);
-
-	//if it's a string or an identifier, make a local copy
-	if (IS_STRING(key)) {
-		key = TO_STRING_LITERAL(copyString(AS_STRING(key), strlen(AS_STRING(key)) ), strlen(AS_STRING(key)));
-	}
-	if (IS_IDENTIFIER(key)) {
-		key = TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(key), strlen(AS_IDENTIFIER(key)) ), strlen(AS_IDENTIFIER(key)));
-	}
-
-	if (IS_STRING(value)) {
-		key = TO_STRING_LITERAL(copyString(AS_STRING(value), strlen(AS_STRING(value)) ), strlen(AS_STRING(value)));
-	}
-	if (IS_IDENTIFIER(value)) {
-		key = TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(value), strlen(AS_IDENTIFIER(value)) ), strlen(AS_IDENTIFIER(value)));
-	}
 
 	//true = contains increase
 	if (IS_NULL(entry->key)) {

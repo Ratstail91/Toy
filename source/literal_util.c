@@ -2,11 +2,85 @@
 
 #include "literal_array.h"
 #include "literal_dictionary.h"
+#include "scope.h"
 
 #include "memory.h"
 #include "console_colors.h"
 
 #include <stdio.h>
+
+Literal copyLiteral(Literal original) {
+	switch(original.type) {
+		case LITERAL_NULL:
+		case LITERAL_BOOLEAN:
+		case LITERAL_INTEGER:
+		case LITERAL_FLOAT:
+			//no copying needed
+			return original;
+
+		case LITERAL_STRING: {
+			return TO_STRING_LITERAL(copyString(AS_STRING(original), strlen(AS_STRING(original)) ), strlen(AS_STRING(original)));
+		}
+
+		case LITERAL_ARRAY: {
+			LiteralArray* array = ALLOCATE(LiteralArray, 1);
+			initLiteralArray(array);
+
+			//copy each element
+			for (int i = 0; i < AS_ARRAY(original)->count; i++) {
+				pushLiteralArray(array, copyLiteral(AS_ARRAY(original)->literals[i]));
+			}
+
+			return TO_ARRAY_LITERAL(array);
+		}
+
+		case LITERAL_DICTIONARY: {
+			LiteralDictionary* dictionary = ALLOCATE(LiteralDictionary, 1);
+			initLiteralDictionary(dictionary);
+
+			//copy each entry
+			for (int i = 0; i < AS_DICTIONARY(original)->capacity; i++) {
+				if ( !IS_NULL(AS_DICTIONARY(original)->entries[i].key) ) {
+					setLiteralDictionary(dictionary, copyLiteral(AS_DICTIONARY(original)->entries[i].key), copyLiteral(AS_DICTIONARY(original)->entries[i].value));
+				}
+			}
+
+			return TO_DICTIONARY_LITERAL(dictionary);
+		}
+
+		case LITERAL_FUNCTION: {
+			unsigned char* buffer = ALLOCATE(unsigned char, AS_FUNCTION(original).length);
+			memcpy(buffer, AS_FUNCTION(original).bytecode, AS_FUNCTION(original).length);
+
+			Literal literal = TO_FUNCTION_LITERAL(buffer, AS_FUNCTION(original).length);
+			AS_FUNCTION(literal).scope = copyScope(AS_FUNCTION(original).scope);
+
+			return literal;
+		}
+
+		case LITERAL_IDENTIFIER: {
+			 return TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(original), strlen(AS_IDENTIFIER(original)) ), strlen(AS_IDENTIFIER(original)));
+		}
+
+		case LITERAL_TYPE: {
+			Literal lit = TO_TYPE_LITERAL(AS_TYPE(original).typeOf, AS_TYPE(original).constant);
+
+			for (int i = 0; i < AS_TYPE(original).count; i++) {
+				TYPE_PUSH_SUBTYPE(&lit, copyLiteral( ((Literal*)(AS_TYPE(original).subtypes))[i] ));
+			}
+
+			return lit;
+		}
+
+		case LITERAL_FUNCTION_NATIVE:
+			//no copying possible
+			return original;
+
+		default:
+			fprintf(stderr, ERROR "ERROR: Can't copy that literal type: %d\n" RESET, original.type);
+			return TO_NULL_LITERAL;
+	}
+}
 
 char* copyString(char* original, int length) {
 	//make a local copy of the char array

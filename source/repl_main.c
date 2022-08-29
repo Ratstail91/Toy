@@ -153,10 +153,6 @@ void repl() {
 	initInterpreter(&interpreter);
 
 	for(;;) {
-		if (command.verbose) {
-			//print the used memory footprint
-			printf("%d  ", getAllocatedMemoryCount());
-		}
 		printf("> ");
 		fgets(input, size, stdin);
 
