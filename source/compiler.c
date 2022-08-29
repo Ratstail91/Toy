@@ -300,25 +300,6 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			fprintf(stderr, ERROR "[Internal] NODE_PAIR encountered in writeCompilerWithJumps()\n" RESET);
 		break;
 
-		case NODE_VAR_TYPES: { //TODO: remove this
-			int index = writeLiteralTypeToCache(&compiler->literalCache, node->varTypes.typeLiteral);
-
-			//embed the info into the bytecode
-			if (index >= 256) {
-				//push a "long" index
-				compiler->bytecode[compiler->count++] = OP_TYPE_DECL_LONG; //1 byte
-				*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)index; //2 bytes
-
-				compiler->count += sizeof(unsigned short);
-			}
-			else {
-				//push the index
-				compiler->bytecode[compiler->count++] = OP_TYPE_DECL; //1 byte
-				compiler->bytecode[compiler->count++] = (unsigned char)index; //1 byte
-			}
-		}
-		break;
-
 		case NODE_VAR_DECL: {
 			//first, embed the expression (leaves it on the stack)
 			writeCompilerWithJumps(compiler, node->varDecl.expression, breakAddressesPtr, continueAddressesPtr);

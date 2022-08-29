@@ -17,7 +17,6 @@ typedef enum NodeType {
 	NODE_BLOCK, //contains a sub-node array
 	NODE_COMPOUND, //contains a sub-node array
 	NODE_PAIR, //contains a left and right
-	NODE_VAR_TYPES, //contains a type and a sub-node array for compound types
 	NODE_VAR_DECL, //contains identifier literal, typenode, expression definition
 	NODE_FN_DECL, //containd identifier literal, arguments node, returns node, block node
 	NODE_FN_COLLECTION, //parts of a function
@@ -76,11 +75,6 @@ typedef struct NodePair {
 	Node* right;
 } NodePair;
 
-typedef struct NodeVarTypes {
-	NodeType type;
-	Literal typeLiteral;
-} NodeVarTypes;
-
 typedef struct NodeVarDecl {
 	NodeType type;
 	Literal identifier;
@@ -132,7 +126,6 @@ union _node {
 	NodeBlock block;
 	NodeCompound compound;
 	NodePair pair;
-	NodeVarTypes varTypes;
 	NodeVarDecl varDecl;
 	NodeFnDecl fnDecl;
 	NodeFnCollection fnCollection;
@@ -143,19 +136,16 @@ union _node {
 
 void freeNode(Node* node);
 void emitNodeLiteral(Node** nodeHandle, Literal literal);
-void emitNodeUnary(Node** nodeHandle, Opcode opcode);
-void emitNodeBinary(Node** nodeHandle, Node* rhs, Opcode opcode);
+void emitNodeUnary(Node** nodeHandle, Opcode opcode, Node* child);
+void emitNodeBinary(Node** nodeHandle, Node* rhs, Opcode opcode); //handled node becomes lhs
 void emitNodeGrouping(Node** nodeHandle);
 void emitNodeBlock(Node** nodeHandle);
 void emitNodeCompound(Node** nodeHandle, LiteralType literalType);
 void emitNodePair(Node** nodeHandle, Node* left, Node* right);
-void emitNodeVarTypes(Node** nodeHandle, Literal literal);
 void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal type, Node* expression);
 void emitNodeFnDecl(Node** nodeHandle, Literal identifier, Node* arguments, Node* returns, Node* block);
 void emitFnCall(Node** nodeHandle, Node* arguments);
 void emitNodeFnCollection(Node** nodeHandle);
 void emitNodePath(Node** nodeHandle, NodeType type, Node* preClause, Node* postClause, Node* condition, Node* thenPath, Node* elsePath);
-void emiteNodePrefixIncrement(Node** nodeHandle, Literal identifier, int increment);
-void emiteNodePostfixIncrement(Node** nodeHandle, Literal identifier, int increment);
-
-void printNode(Node* node);
+void emitNodePrefixIncrement(Node** nodeHandle, Literal identifier, int increment);
+void emitNodePostfixIncrement(Node** nodeHandle, Literal identifier, int increment);

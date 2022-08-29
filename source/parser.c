@@ -271,14 +271,11 @@ static Opcode grouping(Parser* parser, Node** nodeHandle) {
 	//handle groupings with ()
 	switch(parser->previous.type) {
 		case TOKEN_PAREN_LEFT: {
-			Node* tmpNode = NULL;
-			parsePrecedence(parser, &tmpNode, PREC_TERNARY);
+			parsePrecedence(parser, nodeHandle, PREC_TERNARY);
 			consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of grouping");
 
 			//process the result without optimisations
 			emitNodeGrouping(nodeHandle);
-			nodeHandle = &((*nodeHandle)->unary.child); //re-align after append
-			(*nodeHandle) = tmpNode;
 			return OP_EOF;
 		}
 
@@ -430,8 +427,7 @@ static Opcode unary(Parser* parser, Node** nodeHandle) {
 		}
 
 		//actually emit the negation
-		emitNodeUnary(nodeHandle, OP_NEGATE);
-		(*nodeHandle)->unary.child = tmpNode; //set negate's child to the literal
+		emitNodeUnary(nodeHandle, OP_NEGATE, tmpNode);
 	}
 
 	else if (parser->previous.type == TOKEN_NOT) {
@@ -458,8 +454,7 @@ static Opcode unary(Parser* parser, Node** nodeHandle) {
 		}
 
 		//actually emit the negation
-		emitNodeUnary(nodeHandle, OP_INVERT);
-		(*nodeHandle)->unary.child = tmpNode; //set negate's child to the literal
+		emitNodeUnary(nodeHandle, OP_INVERT, tmpNode);
 	}
 
 	else {
@@ -589,7 +584,7 @@ static Opcode incrementPrefix(Parser* parser, Node** nodeHandle) {
 	Node* node = NULL;
 	identifier(parser, &node);
 
-	emiteNodePrefixIncrement(nodeHandle, node->atomic.literal, 1);
+	emitNodePrefixIncrement(nodeHandle, node->atomic.literal, 1);
 
 	return OP_EOF;
 }
@@ -600,7 +595,7 @@ static Opcode incrementInfix(Parser* parser, Node** nodeHandle) {
 
 	advance(parser);
 
-	emiteNodePostfixIncrement(nodeHandle, node->atomic.literal, 1);
+	emitNodePostfixIncrement(nodeHandle, node->atomic.literal, 1);
 
 	return OP_EOF;
 }
@@ -611,7 +606,7 @@ static Opcode decrementPrefix(Parser* parser, Node** nodeHandle) {
 	Node* node = NULL;
 	identifier(parser, &node);
 
-	emiteNodePrefixIncrement(nodeHandle, node->atomic.literal, -1);
+	emitNodePrefixIncrement(nodeHandle, node->atomic.literal, -1);
 
 	return OP_EOF;
 }
@@ -622,7 +617,7 @@ static Opcode decrementInfix(Parser* parser, Node** nodeHandle) {
 
 	advance(parser);
 
-	emiteNodePostfixIncrement(nodeHandle, node->atomic.literal, -1);
+	emitNodePostfixIncrement(nodeHandle, node->atomic.literal, -1);
 
 	return OP_EOF;
 }
@@ -1001,10 +996,7 @@ static void expression(Parser* parser, Node** nodeHandle) {
 //statements
 static void blockStmt(Parser* parser, Node** nodeHandle) {
 	//init
-	(*nodeHandle)->type = NODE_BLOCK;
-	(*nodeHandle)->block.nodes = NULL;
-	(*nodeHandle)->block.capacity = 0;
-	(*nodeHandle)->block.count = 0;
+	emitNodeBlock(nodeHandle);
 
 	//sub-scope, compile it and push it up in a node
 	while (!match(parser, TOKEN_BRACE_RIGHT)) {
@@ -1023,11 +1015,11 @@ static void blockStmt(Parser* parser, Node** nodeHandle) {
 		//process the grammar rule for this line
 		declaration(parser, &ptr);
 
-		//BUGFIX: if ptr has been re-assigned, copy the new value into the block's child
-		if (&((*nodeHandle)->block.nodes[(*nodeHandle)->block.count]) != ptr) {
-			((*nodeHandle)->block.nodes[(*nodeHandle)->block.count]) = *ptr;
-			FREE(Node, ptr);
-		}
+		// //BUGFIX: if ptr has been re-assigned, copy the new value into the block's child
+		// if (&((*nodeHandle)->block.nodes[(*nodeHandle)->block.count]) != ptr) {
+		// 	((*nodeHandle)->block.nodes[(*nodeHandle)->block.count]) = *ptr;
+		// 	FREE(Node, ptr);
+		// }
 
 		(*nodeHandle)->block.count++;
 

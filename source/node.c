@@ -52,10 +52,6 @@ void freeNode(Node* node) {
 			freeNode(node->pair.right);
 		break;
 
-		case NODE_VAR_TYPES:
-			freeLiteral(node->varTypes.typeLiteral);
-		break;
-
 		case NODE_VAR_DECL:
 			freeLiteral(node->varDecl.identifier);
 			freeLiteral(node->varDecl.typeLiteral);
@@ -108,13 +104,13 @@ void emitNodeLiteral(Node** nodeHandle, Literal literal) {
 	(*nodeHandle)->atomic.literal = literal;
 }
 
-void emitNodeUnary(Node** nodeHandle, Opcode opcode) {
+void emitNodeUnary(Node** nodeHandle, Opcode opcode, Node* child) {
 	//allocate a new node
 	*nodeHandle = ALLOCATE(Node, 1);
 
 	(*nodeHandle)->type = NODE_UNARY;
 	(*nodeHandle)->unary.opcode = opcode;
-	(*nodeHandle)->unary.child = NULL;
+	(*nodeHandle)->unary.child = child;
 }
 
 void emitNodeBinary(Node** nodeHandle, Node* rhs, Opcode opcode) {
@@ -132,7 +128,7 @@ void emitNodeGrouping(Node** nodeHandle) {
 	Node* tmp = ALLOCATE(Node, 1);
 
 	tmp->type = NODE_GROUPING;
-	tmp->grouping.child = NULL;
+	tmp->grouping.child = *nodeHandle;
 
 	*nodeHandle = tmp;
 }
@@ -170,21 +166,12 @@ void emitNodePair(Node** nodeHandle, Node* left, Node* right) {
 	*nodeHandle = tmp;
 }
 
-void emitNodeVarTypes(Node** nodeHandle, Literal literal) {
-	Node* tmp = ALLOCATE(Node, 1);
-
-	tmp->type = NODE_VAR_TYPES;
-	tmp->varTypes.typeLiteral = literal;
-
-	*nodeHandle = tmp;
-}
-
-void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal type, Node* expression) {
+void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal typeLiteral, Node* expression) {
 	Node* tmp = ALLOCATE(Node, 1);
 
 	tmp->type = NODE_VAR_DECL;
 	tmp->varDecl.identifier = identifier;
-	tmp->varDecl.typeLiteral = type;
+	tmp->varDecl.typeLiteral = typeLiteral;
 	tmp->varDecl.expression = expression;
 
 	*nodeHandle = tmp;
@@ -211,7 +198,7 @@ void emitFnCall(Node** nodeHandle, Node* arguments) {
 	*nodeHandle = tmp;
 }
 
-void emitNodeFnCollection(Node** nodeHandle) {
+void emitNodeFnCollection(Node** nodeHandle) { //a collection of nodes, intended for use with functions
 	Node* tmp = ALLOCATE(Node, 1);
 
 	tmp->type = NODE_FN_COLLECTION;
@@ -235,7 +222,7 @@ void emitNodePath(Node** nodeHandle, NodeType type, Node* preClause, Node* postC
 	*nodeHandle = tmp;
 }
 
-void emiteNodePrefixIncrement(Node** nodeHandle, Literal identifier, int increment) {
+void emitNodePrefixIncrement(Node** nodeHandle, Literal identifier, int increment) {
 	Node* tmp = ALLOCATE(Node, 1);
 
 	tmp->type = NODE_INCREMENT_PREFIX;
@@ -245,7 +232,7 @@ void emiteNodePrefixIncrement(Node** nodeHandle, Literal identifier, int increme
 	*nodeHandle = tmp;
 }
 
-void emiteNodePostfixIncrement(Node** nodeHandle, Literal identifier, int increment) {
+void emitNodePostfixIncrement(Node** nodeHandle, Literal identifier, int increment) {
 	Node* tmp = ALLOCATE(Node, 1);
 
 	tmp->type = NODE_INCREMENT_POSTFIX;
@@ -253,106 +240,4 @@ void emiteNodePostfixIncrement(Node** nodeHandle, Literal identifier, int increm
 	tmp->increment.increment = increment;
 
 	*nodeHandle = tmp;
-}
-
-void printNode(Node* node) {
-	if (node == NULL) {
-		return;
-	}
-
-	switch(node->type) {
-		case NODE_ERROR:
-			printf("error");
-		break;
-
-		case NODE_LITERAL:
-			printf("literal:");
-			printLiteral(node->atomic.literal);
-		break;
-
-		case NODE_UNARY:
-			printf("unary:");
-			printNode(node->unary.child);
-		break;
-
-		case NODE_BINARY:
-			printf("binary-left:");
-			printNode(node->binary.left);
-			printf(";binary-right:");
-			printNode(node->binary.right);
-			printf(";");
-		break;
-
-		case NODE_GROUPING:
-			printf("(");
-			printNode(node->grouping.child);
-			printf(")");
-		break;
-
-		case NODE_BLOCK:
-			printf("{\n");
-
-			for (int i = 0; i < node->block.count; i++) {
-				printNode(&(node->block.nodes[i]));
-			}
-
-			printf("\n}\n");
-		break;
-
-		case NODE_COMPOUND:
-			printf("compound[\n");
-
-			for (int i = 0; i < node->compound.count; i++) {
-				printNode(&(node->compound.nodes[i]));
-			}
-
-			printf("]\n");
-		break;
-
-		case NODE_PAIR:
-			printf("pair-left:");
-			printNode(node->pair.left);
-			printf(";pair-right:");
-			printNode(node->pair.right);
-			printf(";");
-		break;
-
-		case NODE_VAR_TYPES:
-			printLiteral(node->varTypes.typeLiteral);
-		break;
-
-		case NODE_VAR_DECL:
-			printf("vardecl(");
-			printLiteral(node->varDecl.identifier);
-			printf("; ");
-			printLiteral(node->varDecl.typeLiteral);
-			printf("; ");
-			printNode(node->varDecl.expression);
-			printf(")");
-		break;
-
-		case NODE_PATH_IF:
-		case NODE_PATH_WHILE:
-		case NODE_PATH_FOR:
-			printf("path(");
-			printNode(node->path.preClause);
-			printf("; ");
-			printNode(node->path.condition);
-			printf("; ");
-			printNode(node->path.postClause);
-			printf("):(");
-			printNode(node->path.thenPath);
-			printf(")else(");
-			printNode(node->path.elsePath);
-			printf(")");
-		break;
-
-		// case NODE_INCREMENT_PREFIX:
-		// case NODE_INCREMENT_POSTFIX:
-		// 	//TODO
-		// break;
-
-		default:
-			printf("[internal] unkown node type in printNode: %d\n", node->type);
-	}
 }
