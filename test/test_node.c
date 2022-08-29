@@ -10,8 +10,11 @@ int main() {
 		//test literals
 		char* str = "foobar";
 
+		Literal literal =  TO_STRING_LITERAL(copyString(str, strlen(str)), strlen(str));
+
 		Node* node;
-		emitNodeLiteral(&node, TO_STRING_LITERAL(copyString(str, strlen(str)), strlen(str)) );
+		emitNodeLiteral(&node, literal);
+		freeLiteral(literal);
 		freeNode(node);
 	}
 
@@ -24,9 +27,12 @@ int main() {
 		Node* left;
 		Node* right;
 
+		Literal identifier = TO_IDENTIFIER_LITERAL(copyString(idn, strlen(idn)), strlen(idn));
+		Literal string = TO_STRING_LITERAL(copyString(str, strlen(str)), strlen(str));
+
 		emitNodeCompound(&dictionary, LITERAL_DICTIONARY);
-		emitNodeLiteral(&left, TO_IDENTIFIER_LITERAL(copyString(idn, strlen(idn)), strlen(idn)) );
-		emitNodeLiteral(&right, TO_STRING_LITERAL(copyString(str, strlen(str)), strlen(str)) );
+		emitNodeLiteral(&left, identifier);
+		emitNodeLiteral(&right, string);
 
 		//grow the node if needed
 		if (dictionary->compound.capacity < dictionary->compound.count + 1) {
@@ -37,12 +43,12 @@ int main() {
 		}
 
 		//store the left and right in the node
-		Node* pair = NULL;
-		emitNodePair(&pair, left, right);
-		dictionary->compound.nodes[dictionary->compound.count++] = *pair;
+		setNodePair(&dictionary->compound.nodes[dictionary->compound.count++], left, right);
 
 		//the real test
 		freeNode(dictionary);
+		freeLiteral(identifier);
+		freeLiteral(string);
 	}
 
 	printf(NOTICE "All good\n" RESET);

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void freeNode(Node* node) {
+void freeNodeCustom(Node* node, bool freeSelf) {
 	//don't free a NULL node
 	if (node == NULL) {
 		return;
@@ -35,14 +35,14 @@ void freeNode(Node* node) {
 
 		case NODE_BLOCK:
 			for (int i = 0; i < node->block.count; i++) {
-				freeNode(node->block.nodes + i);
+				freeNodeCustom(node->block.nodes + i, false);
 			}
 			FREE_ARRAY(Node, node->block.nodes, node->block.capacity);
 		break;
 
 		case NODE_COMPOUND:
 			for (int i = 0; i < node->compound.count; i++) {
-				freeNode(node->compound.nodes + i);
+				freeNodeCustom(node->compound.nodes + i, false);
 			}
 			FREE_ARRAY(Node, node->compound.nodes, node->compound.capacity);
 		break;
@@ -67,7 +67,7 @@ void freeNode(Node* node) {
 
 		case NODE_FN_COLLECTION:
 			for (int i = 0; i < node->fnCollection.count; i++) {
-				freeNode(node->fnCollection.nodes + i);
+				freeNodeCustom(node->fnCollection.nodes + i, false);
 			}
 			FREE_ARRAY(Node, node->fnCollection.nodes, node->fnCollection.capacity);
 		break;
@@ -94,6 +94,14 @@ void freeNode(Node* node) {
 			freeLiteral(node->increment.identifier);
 		break;
 	}
+
+	if (freeSelf) {
+		FREE(Node, node);
+	}
+}
+
+void freeNode(Node* node) {
+	freeNodeCustom(node, true);
 }
 
 void emitNodeLiteral(Node** nodeHandle, Literal literal) {
@@ -101,7 +109,7 @@ void emitNodeLiteral(Node** nodeHandle, Literal literal) {
 	*nodeHandle = ALLOCATE(Node, 1);
 
 	(*nodeHandle)->type = NODE_LITERAL;
-	(*nodeHandle)->atomic.literal = literal;
+	(*nodeHandle)->atomic.literal = copyLiteral(literal);
 }
 
 void emitNodeUnary(Node** nodeHandle, Opcode opcode, Node* child) {
@@ -156,14 +164,11 @@ void emitNodeCompound(Node** nodeHandle, LiteralType literalType) {
 	*nodeHandle = tmp;
 }
 
-void emitNodePair(Node** nodeHandle, Node* left, Node* right) {
-	Node* tmp = ALLOCATE(Node, 1);
-
-	tmp->type = NODE_PAIR;
-	tmp->pair.left = left;
-	tmp->pair.right = right;
-
-	*nodeHandle = tmp;
+void setNodePair(Node* node, Node* left, Node* right) {
+	//assume the node has already been allocated
+	node->type = NODE_PAIR;
+	node->pair.left = left;
+	node->pair.right = right;
 }
 
 void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal typeLiteral, Node* expression) {
@@ -226,7 +231,7 @@ void emitNodePrefixIncrement(Node** nodeHandle, Literal identifier, int incremen
 	Node* tmp = ALLOCATE(Node, 1);
 
 	tmp->type = NODE_INCREMENT_PREFIX;
-	tmp->increment.identifier = identifier;
+	tmp->increment.identifier = copyLiteral(identifier);
 	tmp->increment.increment = increment;
 
 	*nodeHandle = tmp;
@@ -236,7 +241,7 @@ void emitNodePostfixIncrement(Node** nodeHandle, Literal identifier, int increme
 	Node* tmp = ALLOCATE(Node, 1);
 
 	tmp->type = NODE_INCREMENT_POSTFIX;
-	tmp->increment.identifier = identifier;
+	tmp->increment.identifier = copyLiteral(identifier);
 	tmp->increment.increment = increment;
 
 	*nodeHandle = tmp;

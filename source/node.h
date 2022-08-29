@@ -141,7 +141,7 @@ void emitNodeBinary(Node** nodeHandle, Node* rhs, Opcode opcode); //handled node
 void emitNodeGrouping(Node** nodeHandle);
 void emitNodeBlock(Node** nodeHandle);
 void emitNodeCompound(Node** nodeHandle, LiteralType literalType);
-void emitNodePair(Node** nodeHandle, Node* left, Node* right);
+void setNodePair(Node* node, Node* left, Node* right);
 void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal type, Node* expression);
 void emitNodeFnDecl(Node** nodeHandle, Literal identifier, Node* arguments, Node* returns, Node* block);
 void emitFnCall(Node** nodeHandle, Node* arguments);

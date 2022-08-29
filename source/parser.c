@@ -125,6 +125,8 @@ static Opcode forceType(Parser* parser, Node** nodeHandle) {
 
 	emitNodeLiteral(nodeHandle, literal);
 
+	freeLiteral(literal);
+
 	return OP_EOF;
 }
 
@@ -192,9 +194,7 @@ static Opcode compound(Parser* parser, Node** nodeHandle) {
 			}
 
 			//store the left and right in the node
-			Node* pair = NULL;
-			emitNodePair(&pair, left, right);
-			dictionary->compound.nodes[dictionary->compound.count++] = *pair;
+			setNodePair(&dictionary->compound.nodes[dictionary->compound.count++], left, right);
 		}
 		//detect an array
 		else {
@@ -218,8 +218,9 @@ static Opcode compound(Parser* parser, Node** nodeHandle) {
 				array->compound.nodes = GROW_ARRAY(Node, array->compound.nodes, oldCapacity, array->compound.capacity);
 			}
 
-			//store the left in the array
+			//copy into the array, and manually free the temp node
 			array->compound.nodes[array->compound.count++] = *left;
+			FREE(Node, left);
 		}
 	}
 
@@ -255,7 +256,9 @@ static Opcode string(Parser* parser, Node** nodeHandle) {
 				error(parser, parser->previous, buffer);
 			}
 
-			emitNodeLiteral(nodeHandle, TO_STRING_LITERAL(copyString(parser->previous.lexeme, length), length));
+			Literal literal = TO_STRING_LITERAL(copyString(parser->previous.lexeme, length), length);
+			emitNodeLiteral(nodeHandle, literal);
+			freeLiteral(literal);
 			return OP_EOF;
 		}
 
@@ -512,29 +515,43 @@ static Opcode identifier(Parser* parser, Node** nodeHandle) {
 	}
 
 	char* cpy = copyString(identifierToken.lexeme, length);
-	Literal identifier = _toIdentifierLiteral(cpy, strlen(cpy)); //BUGFIX: use this instead of the macro
+	Literal identifier = _toIdentifierLiteral(cpy, length); //BUGFIX: use this instead of the macro
 
 	emitNodeLiteral(nodeHandle, identifier);
+
+	freeLiteral(identifier); //don't leave it hanging
 
 	return OP_EOF;
 }
 
 static Opcode castingPrefix(Parser* parser, Node** nodeHandle) {
 	switch(parser->previous.type) {
-		case TOKEN_BOOLEAN:
-			emitNodeLiteral(nodeHandle, TO_TYPE_LITERAL(LITERAL_BOOLEAN, false));
+		case TOKEN_BOOLEAN: {
+			Literal literal = TO_TYPE_LITERAL(LITERAL_BOOLEAN, false);
+			emitNodeLiteral(nodeHandle, literal);
+			freeLiteral(literal);
+		}
 		break;
 
-		case TOKEN_INTEGER:
-			emitNodeLiteral(nodeHandle, TO_TYPE_LITERAL(LITERAL_INTEGER, false));
+		case TOKEN_INTEGER: {
+			Literal literal = TO_TYPE_LITERAL(LITERAL_INTEGER, false);
+			emitNodeLiteral(nodeHandle, literal);
+			freeLiteral(literal);
+		}
 		break;
 
-		case TOKEN_FLOAT:
-			emitNodeLiteral(nodeHandle, TO_TYPE_LITERAL(LITERAL_FLOAT, false));
+		case TOKEN_FLOAT: {
+			Literal literal = TO_TYPE_LITERAL(LITERAL_FLOAT, false);
+			emitNodeLiteral(nodeHandle, literal);
+			freeLiteral(literal);
+		}
 		break;
 
-		case TOKEN_STRING:
-			emitNodeLiteral(nodeHandle, TO_TYPE_LITERAL(LITERAL_STRING, false));
+		case TOKEN_STRING: {
+			Literal literal = TO_TYPE_LITERAL(LITERAL_STRING, false);
+			emitNodeLiteral(nodeHandle, literal);
+			freeLiteral(literal);
+		}
 		break;
 
 		default:
@@ -586,6 +603,8 @@ static Opcode incrementPrefix(Parser* parser, Node** nodeHandle) {
 
 	emitNodePrefixIncrement(nodeHandle, node->atomic.literal, 1);
 
+	freeNode(node);
+
 	return OP_EOF;
 }
 
@@ -597,6 +616,8 @@ static Opcode incrementInfix(Parser* parser, Node** nodeHandle) {
 
 	emitNodePostfixIncrement(nodeHandle, node->atomic.literal, 1);
 
+	freeNode(node);
+
 	return OP_EOF;
 }
 
@@ -604,9 +625,11 @@ static Opcode decrementPrefix(Parser* parser, Node** nodeHandle) {
 	advance(parser);
 
 	Node* node = NULL;
-	identifier(parser, &node);
+	identifier(parser, &node); //weird
 
 	emitNodePrefixIncrement(nodeHandle, node->atomic.literal, -1);
+
+	freeNode(node);
 
 	return OP_EOF;
 }
@@ -618,6 +641,8 @@ static Opcode decrementInfix(Parser* parser, Node** nodeHandle) {
 	advance(parser);
 
 	emitNodePostfixIncrement(nodeHandle, node->atomic.literal, -1);
+
+	freeNode(node);
 
 	return OP_EOF;
 }
@@ -647,6 +672,7 @@ static Opcode fnCall(Parser* parser, Node** nodeHandle) {
 					Node* node = NULL;
 					parsePrecedence(parser, &node, PREC_TERNARY);
 					arguments->fnCollection.nodes[arguments->fnCollection.count++] = *node;
+					FREE(Node, node);
 				} while(match(parser, TOKEN_COMMA));
 
 				consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of argument list");
@@ -1007,21 +1033,14 @@ static void blockStmt(Parser* parser, Node** nodeHandle) {
 			(*nodeHandle)->block.nodes = GROW_ARRAY(Node, (*nodeHandle)->block.nodes, oldCapacity, (*nodeHandle)->block.capacity);
 		}
 
-		//use the next node in sequence
-		(*nodeHandle)->block.nodes[(*nodeHandle)->block.count].type = NODE_ERROR; //BUGFIX: so freeing won't break the damn thing
-
-		Node* ptr = &((*nodeHandle)->block.nodes[(*nodeHandle)->block.count]);
+		Node* node = NULL;
 
 		//process the grammar rule for this line
-		declaration(parser, &ptr);
+		declaration(parser, &node);
 
-		// //BUGFIX: if ptr has been re-assigned, copy the new value into the block's child
-		// if (&((*nodeHandle)->block.nodes[(*nodeHandle)->block.count]) != ptr) {
-		// 	((*nodeHandle)->block.nodes[(*nodeHandle)->block.count]) = *ptr;
-		// 	FREE(Node, ptr);
-		// }
-
-		(*nodeHandle)->block.count++;
+		//BUGFIX: statements no longer require an existing node
+		((*nodeHandle)->block.nodes[(*nodeHandle)->block.count++]) = *node;
+		FREE(Node, node); //simply free the tmp node
 
 		// Ground floor: perfumery / Stationery and leather goods / Wigs and haberdashery / Kitchenware and food / Going up!
 		if (parser->panic) {
@@ -1032,15 +1051,16 @@ static void blockStmt(Parser* parser, Node** nodeHandle) {
 
 static void printStmt(Parser* parser, Node** nodeHandle) {
 	//set the node info
-	(*nodeHandle)->type = NODE_UNARY;
-	(*nodeHandle)->unary.opcode = OP_PRINT;
-	expression(parser, &((*nodeHandle)->unary.child));
+	Node* node = NULL;
+	expression(parser, &node);
+	emitNodeUnary(nodeHandle, OP_PRINT, node);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of print statement");
 }
 
 static void assertStmt(Parser* parser, Node** nodeHandle) {
 	//set the node info
+	(*nodeHandle) = ALLOCATE(Node, 1); //special case, because I'm lazy
 	(*nodeHandle)->type = NODE_BINARY;
 	(*nodeHandle)->binary.opcode = OP_ASSERT;
 
@@ -1062,16 +1082,13 @@ static void ifStmt(Parser* parser, Node** nodeHandle) {
 
 	//read the then path
 	consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of if clause");
-	thenPath = ALLOCATE(Node, 1);
 	declaration(parser, &thenPath);
 
 	//read the optional else path
 	if (match(parser, TOKEN_ELSE)) {
-		elsePath = ALLOCATE(Node, 1);
 		declaration(parser, &elsePath);
 	}
 
-	freeNode(*nodeHandle); //free the initial node
 	emitNodePath(nodeHandle, NODE_PATH_IF, NULL, NULL, condition, thenPath, elsePath);
 }
 
@@ -1085,18 +1102,16 @@ static void whileStmt(Parser* parser, Node** nodeHandle) {
 
 	//read the then path
 	consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of while clause");
-	thenPath = ALLOCATE(Node, 1);
 	declaration(parser, &thenPath);
 
-	freeNode(*nodeHandle); //free the initial node
 	emitNodePath(nodeHandle, NODE_PATH_WHILE, NULL, NULL, condition, thenPath, NULL);
 }
 
 static void forStmt(Parser* parser, Node** nodeHandle) {
-	Node* preClause = ALLOCATE(Node, 1);
+	Node* preClause = NULL;
 	Node* postClause = NULL;
 	Node* condition = NULL;
-	Node* thenPath = ALLOCATE(Node, 1);
+	Node* thenPath = NULL;
 
 	//read the clauses
 	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' at beginning of for clause");
@@ -1110,22 +1125,18 @@ static void forStmt(Parser* parser, Node** nodeHandle) {
 	consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of for clause");
 
 	//read the path
-	thenPath = ALLOCATE(Node, 1);
 	declaration(parser, &thenPath);
 
-	freeNode(*nodeHandle); //free the initial node
 	emitNodePath(nodeHandle, NODE_PATH_FOR, preClause, postClause, condition, thenPath, NULL);
 }
 
 static void breakStmt(Parser* parser, Node** nodeHandle) {
-	freeNode(*nodeHandle);
 	emitNodePath(nodeHandle, NODE_PATH_BREAK, NULL, NULL, NULL, NULL, NULL);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of break statement");
 }
 
 static void continueStmt(Parser* parser, Node** nodeHandle) {
-	freeNode(*nodeHandle);
 	emitNodePath(nodeHandle, NODE_PATH_CONTINUE, NULL, NULL, NULL, NULL, NULL);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of continue statement");
@@ -1136,7 +1147,7 @@ static void returnStmt(Parser* parser, Node** nodeHandle) {
 	emitNodeFnCollection(&returnValues);
 
 	if (!match(parser, TOKEN_SEMICOLON)) {
-		do {
+		do { //loop for multiple returns (disabled later in the pipeline)
 			//append the node to the return list (grow the node if needed)
 			if (returnValues->fnCollection.capacity < returnValues->fnCollection.count + 1) {
 				int oldCapacity = returnValues->fnCollection.capacity;
@@ -1149,12 +1160,12 @@ static void returnStmt(Parser* parser, Node** nodeHandle) {
 			parsePrecedence(parser, &node, PREC_TERNARY);
 
 			returnValues->fnCollection.nodes[returnValues->fnCollection.count++] = *node;
+			FREE(Node, node);
 		} while(match(parser, TOKEN_COMMA));
 
 		consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of return statement");
 	}
 
-	freeNode(*nodeHandle); //free the initial node
 	emitNodePath(nodeHandle, NODE_PATH_RETURN, NULL, NULL, NULL, returnValues, NULL);
 }
 
@@ -1162,8 +1173,7 @@ static void returnStmt(Parser* parser, Node** nodeHandle) {
 static void expressionStmt(Parser* parser, Node** nodeHandle) {
 	//BUGFIX: check for empty statements
 	if (match(parser, TOKEN_SEMICOLON)) {
-		(*nodeHandle)->type = NODE_LITERAL;
-		(*nodeHandle)->atomic.literal = TO_NULL_LITERAL;
+		emitNodeLiteral(nodeHandle, TO_NULL_LITERAL);
 		return;
 	}
 
@@ -1172,8 +1182,7 @@ static void expressionStmt(Parser* parser, Node** nodeHandle) {
 	expression(parser, &ptr);
 
 	if (ptr != NULL) {
-		**nodeHandle = *ptr;
-		FREE(Node, ptr); //BUGFIX: this thread of execution is nuts
+		*nodeHandle = ptr;
 	}
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at the end of expression statement");
@@ -1383,7 +1392,7 @@ static void fnDecl(Parser* parser, Node** nodeHandle) {
 	char* cpy = copyString(identifierToken.lexeme, length);
 	Literal identifier = _toIdentifierLiteral(cpy, strlen(cpy)); //BUGFIX: use this instead of the macro
 
-	//TODO: read the parameters and arity
+	//read the parameters and arity
 	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' after function identifier");
 
 	//for holding the array of arguments
@@ -1426,6 +1435,7 @@ static void fnDecl(Parser* parser, Node** nodeHandle) {
 				emitNodeVarDecl(&literalNode, argIdentifier, argTypeLiteral, NULL);
 
 				argumentNode->fnCollection.nodes[argumentNode->fnCollection.count++] = *literalNode;
+				FREE(Node, literalNode);
 
 				break;
 			}
@@ -1469,6 +1479,7 @@ static void fnDecl(Parser* parser, Node** nodeHandle) {
 			emitNodeVarDecl(&literalNode, argIdentifier, argTypeLiteral, NULL);
 
 			argumentNode->fnCollection.nodes[argumentNode->fnCollection.count++] = *literalNode;
+			FREE(Node, literalNode);
 
 		} while (match(parser, TOKEN_COMMA)); //if comma is read, continue
 
@@ -1493,13 +1504,14 @@ static void fnDecl(Parser* parser, Node** nodeHandle) {
 			emitNodeLiteral(&literalNode, readTypeToLiteral(parser));
 
 			returnNode->fnCollection.nodes[returnNode->fnCollection.count++] = *literalNode;
+			FREE(Node, literalNode);
 		} while(match(parser, TOKEN_COMMA));
 	}
 
 	//read the function body
 	consume(parser, TOKEN_BRACE_LEFT, "Expected '{' after return list");
 
-	Node* blockNode = ALLOCATE(Node, 1);
+	Node* blockNode = NULL;
 	blockStmt(parser, &blockNode);
 
 	//declare it
@@ -1547,8 +1559,7 @@ Node* scanParser(Parser* parser) {
 	}
 
 	//returns nodes on the heap
-	Node* node = ALLOCATE(Node, 1);
-	node->type = NODE_ERROR; //BUGFIX: so freeing won't break the damn thing
+	Node* node = NULL;
 
 	//process the grammar rule for this line
 	declaration(parser, &node);
@@ -1563,3 +1574,4 @@ Node* scanParser(Parser* parser) {
 
 	return node;
 }
+
