@@ -19,10 +19,6 @@ void initCompiler(Compiler* compiler) {
 
 //separated out, so it can be recursive
 static int writeLiteralTypeToCacheOpt(LiteralArray* literalCache, Literal literal, bool skipDuplicationOptimisation) {
-	printf(WARN);
-	printLiteral(literal);
-	printf(RESET);
-
 	//if it's a compound type, recurse and store the results
 	if (AS_TYPE(literal).typeOf == LITERAL_ARRAY || AS_TYPE(literal).typeOf == LITERAL_DICTIONARY) {
 		//I don't like storing types in an array, but it's the easiest and most straight forward method
@@ -51,9 +47,9 @@ static int writeLiteralTypeToCacheOpt(LiteralArray* literalCache, Literal litera
 		int index = findLiteralIndex(literalCache, literal);
 		if (index < 0) {
 			index = pushLiteralArray(literalCache, literal);
-			freeLiteral(literal);
 		}
 
+		freeLiteral(literal);
 		return index;
 	}
 	else {
