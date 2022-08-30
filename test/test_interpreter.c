@@ -45,6 +45,67 @@ char* readFile(char* path, size_t* fileSize) {
 	return buffer;
 }
 
+unsigned char* compileString(char* source, size_t* size) {
+	Lexer lexer;
+	Parser parser;
+	Compiler compiler;
+
+	initLexer(&lexer, source);
+	initParser(&parser, &lexer);
+	initCompiler(&compiler);
+
+	//run the parser until the end of the source
+	Node* node = scanParser(&parser);
+	while(node != NULL) {
+		//pack up and leave
+		if (node->type == NODE_ERROR) {
+			printf(ERROR "error node detected\n" RESET);
+			freeNode(node);
+			freeCompiler(&compiler);
+			freeParser(&parser);
+			return NULL;
+		}
+
+		writeCompiler(&compiler, node);
+		freeNode(node);
+		node = scanParser(&parser);
+	}
+
+	//get the bytecode dump
+	unsigned char* tb = collateCompiler(&compiler, (int*)(size));
+
+	//cleanup
+	freeCompiler(&compiler);
+	freeParser(&parser);
+	//no lexer to clean up
+
+	//finally
+	return tb;
+}
+
+void runBinary(unsigned char* tb, size_t size) {
+	Interpreter interpreter;
+	initInterpreter(&interpreter);
+	runInterpreter(&interpreter, tb, size);
+	freeInterpreter(&interpreter);
+}
+
+void runSource(char* source) {
+	size_t size = 0;
+	unsigned char* tb = compileString(source, &size);
+	if (!tb) {
+		return;
+	}
+	runBinary(tb, size);
+}
+
+void runSourceFile(char* fname) {
+	size_t size = 0; //not used
+	char* source = readFile(fname, &size);
+	runSource(source);
+	free((void*)source);
+}
+
 int main() {
 	{
 		//test init & free
@@ -88,39 +149,31 @@ int main() {
 	}
 
 	{
-		//source
-		size_t sourceLength = 0;
-		char* source = readFile("sample_code.toy", &sourceLength);
+		//run each file in ../scripts/test/
+		int count = 12;
+		char* filenames[] = {
+			"arithmetic.toy",
+			"casting.toy",
+			"comparisons.toy",
+			"functions.toy",
+			"jumps.toy",
+			"logicals.toy",
+			"long-array.toy",
+			"long-dictionary.toy",
+			"long-literals.toy",
+			"native-functions.toy",
+			"panic-within-functions.toy", 
+			"types.toy"
+		};
 
-		//test basic compilation & collation
-		Lexer lexer;
-		Parser parser;
-		Compiler compiler;
-		Interpreter interpreter;
+		for (int i = 0; i < count; i++) {
+			printf("Running %s\n", filenames[i]);
 
-		initLexer(&lexer, source);
-		initParser(&parser, &lexer);
-		initCompiler(&compiler);
-		initInterpreter(&interpreter);
+			char buffer[128];
+			snprintf(buffer, 128, "../scripts/test/%s", filenames[i]);
 
-		Node* node = scanParser(&parser);
-
-		//write
-		writeCompiler(&compiler, node);
-
-		//collate
-		int size = 0;
-		unsigned char* bytecode = collateCompiler(&compiler, &size);
-
-		//run
-		runInterpreter(&interpreter, bytecode, size);
-
-		//cleanup
-		FREE_ARRAY(char, source, sourceLength);
-		freeNode(node);
-		freeParser(&parser);
-		freeCompiler(&compiler);
-		freeInterpreter(&interpreter);
+			runSourceFile(buffer);
+		}
 	}
 
 	printf(NOTICE "All good\n" RESET);

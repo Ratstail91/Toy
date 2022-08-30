@@ -3,6 +3,7 @@
 
 #include "literal_array.h"
 #include "literal_dictionary.h"
+#include "scope.h"
 
 #include "console_colors.h"
 
@@ -44,6 +45,10 @@ void freeLiteral(Literal literal) {
 		freeLiteralDictionary(AS_DICTIONARY(literal));
 		FREE(LiteralDictionary, AS_DICTIONARY(literal));
 		return;
+	}
+
+	if (IS_FUNCTION(literal)) {
+		popScope(AS_FUNCTION(literal).scope);
 	}
 
 	if (IS_IDENTIFIER(literal)) {

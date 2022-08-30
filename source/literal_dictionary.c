@@ -136,7 +136,7 @@ void freeLiteralDictionary(LiteralDictionary* dictionary) {
 
 void setLiteralDictionary(LiteralDictionary* dictionary, Literal key, Literal value) {
 	if (IS_NULL(key)) {
-		fprintf(stderr, ERROR "[internal] Dictionaries can't have null keys\n" RESET);
+		fprintf(stderr, ERROR "[internal] Dictionaries can't have null keys (get)\n" RESET);
 		return;
 	}
 
@@ -150,14 +150,14 @@ void setLiteralDictionary(LiteralDictionary* dictionary, Literal key, Literal va
 
 Literal getLiteralDictionary(LiteralDictionary* dictionary, Literal key) {
 	if (IS_NULL(key)) {
-		fprintf(stderr, ERROR "[internal] Dictionaries can't have null keys\n" RESET);
+		fprintf(stderr, ERROR "[internal] Dictionaries can't have null keys (set)\n" RESET);
 		return TO_NULL_LITERAL;
 	}
 
 	_entry* entry = getEntryArray(dictionary->entries, dictionary->capacity, key, hashLiteral(key), true);
 
 	if (entry != NULL) {
-		return entry->value;
+		return copyLiteral(entry->value);
 	}
 	else {
 		return TO_NULL_LITERAL;
@@ -166,7 +166,7 @@ Literal getLiteralDictionary(LiteralDictionary* dictionary, Literal key) {
 
 void removeLiteralDictionary(LiteralDictionary* dictionary, Literal key) {
 	if (IS_NULL(key)) {
-		fprintf(stderr, ERROR "[internal] Dictionaries can't have null keys\n" RESET);
+		fprintf(stderr, ERROR "[internal] Dictionaries can't have null keys (remove)\n" RESET);
 		return;
 	}
 

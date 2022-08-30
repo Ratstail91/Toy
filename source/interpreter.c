@@ -50,12 +50,14 @@ bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func) {
 bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr) {
 	//this converts identifiers to values
 	if (IS_IDENTIFIER(*literalPtr)) {
+	//	Literal idn = *literalPtr;
 		if (!getScopeVariable(interpreter->scope, *literalPtr, literalPtr)) {
 			printf(ERROR "Error: Undeclared variable \"");;
 			printLiteral(*literalPtr);
 			printf("\"\n" RESET);
 			return false;
 		}
+	//	freeLiteral(idn);
 	}
 
 	return true;
@@ -417,19 +419,26 @@ static bool execAssert(Interpreter* interpreter) {
 		return false;
 	}
 
+	freeLiteral(lhs);
+	freeLiteral(rhs);
+
 	return true;
 }
 
 static bool execPrint(Interpreter* interpreter) {
 	//print what is on top of the stack, then pop it
 	Literal lit = popLiteralArray(&interpreter->stack);
-	if (!parseIdentifierToValue(interpreter, &lit)) {
-		return false;
+
+	if (IS_IDENTIFIER(lit)) {
+		Literal idn = lit;
+		if (!parseIdentifierToValue(interpreter, &lit)) {
+			return false;
+		}
 	}
 
 	printLiteralCustom(lit, interpreter->printOutput);
 
-	// freeLiteral(lit); //it's a reference (to the dictionaries), so don't free it
+	freeLiteral(lit);
 
 	return true;
 }
@@ -460,6 +469,8 @@ static bool rawLiteral(Interpreter* interpreter) {
 
 	pushLiteralArray(&interpreter->stack, lit);
 
+	freeLiteral(lit);
+
 	return true;
 }
 
@@ -481,10 +492,16 @@ static bool execNegate(Interpreter* interpreter) {
 		printf(ERROR "[internal] The interpreter can't negate that literal: ");
 		printLiteral(lit);
 		printf("\n" RESET);
+
+		freeLiteral(lit);
+
 		return false;
 	}
 
 	pushLiteralArray(&interpreter->stack, lit);
+
+	freeLiteral(lit);
+
 	return true;
 }
 
@@ -503,10 +520,16 @@ static bool execInvert(Interpreter* interpreter) {
 		printf(ERROR "[internal] The interpreter can't invert that literal: ");
 		printLiteral(lit);
 		printf("\n" RESET);
+
+		freeLiteral(lit);
+
 		return false;
 	}
 
 	pushLiteralArray(&interpreter->stack, lit);
+
+	freeLiteral(lit);
+
 	return true;
 }
 
@@ -531,6 +554,8 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 		Literal literal = TO_STRING_LITERAL( copyString(buffer, strlen(buffer)), strlen(buffer) );
 		pushLiteralArray(&interpreter->stack, literal);
 		freeLiteral(literal);
+		freeLiteral(lhs);
+		freeLiteral(rhs);
 
 		return true;
 	}
@@ -630,6 +655,10 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 	printf(" and ");
 	printLiteral(rhs);
 	printf("\n" RESET);
+
+	freeLiteral(lhs);
+	freeLiteral(rhs);
+
 	return false;
 }
 
@@ -666,8 +695,16 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 		printf(ERROR "ERROR: Incorrect type assigned to variable \"");
 		printLiteral(identifier);
 		printf("\"\n" RESET);
+
+		freeLiteral(identifier);
+		freeLiteral(type);
+		freeLiteral(val);
+
 		return false;
 	}
+
+	freeLiteral(type);
+	freeLiteral(val);
 
 	return true;
 }
@@ -710,6 +747,8 @@ static bool execFnDecl(Interpreter* interpreter, bool lng) {
 		return false;
 	}
 
+	freeLiteral(type);
+
 	return true;
 }
 
@@ -740,6 +779,9 @@ static bool execVarAssign(Interpreter* interpreter) {
 		return false;
 	}
 
+	freeLiteral(lhs);
+	freeLiteral(rhs);
+
 	return true;
 }
 
@@ -751,6 +793,9 @@ static bool execVarArithmeticAssign(Interpreter* interpreter) {
 	pushLiteralArray(&interpreter->stack, lhs);
 	pushLiteralArray(&interpreter->stack, lhs);
 	pushLiteralArray(&interpreter->stack, rhs);
+
+	freeLiteral(lhs);
+	freeLiteral(rhs);
 
 	return true;
 }
@@ -767,6 +812,10 @@ static bool execValCast(Interpreter* interpreter) {
 
 	if (IS_NULL(value)) {
 		printf(ERROR "ERROR: Can't cast a null value\n" RESET);
+
+		freeLiteral(value);
+		freeLiteral(type);
+
 		return false;
 	}
 
@@ -835,6 +884,11 @@ static bool execValCast(Interpreter* interpreter) {
 
 	//leave the new value on the stack
 	pushLiteralArray(&interpreter->stack, result);
+
+	freeLiteral(result);
+	freeLiteral(value);
+	freeLiteral(type);
+
 	return true;
 }
 
@@ -853,6 +907,9 @@ static bool execCompareEqual(Interpreter* interpreter, bool invert) {
 
 	pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(result));
 
+	freeLiteral(lhs);
+	freeLiteral(rhs);
+
 	return true;
 }
 
@@ -868,6 +925,8 @@ static bool execCompareLess(Interpreter* interpreter, bool invert) {
 		printf(ERROR "ERROR: Incorrect type in comparison, value \"");
 		printLiteral(lhs);
 		printf("\"\n" RESET);
+		freeLiteral(lhs);
+		freeLiteral(rhs);
 		return false;
 	}
 
@@ -875,6 +934,8 @@ static bool execCompareLess(Interpreter* interpreter, bool invert) {
 		printf(ERROR "ERROR: Incorrect type in comparison, value \"");
 		printLiteral(rhs);
 		printf("\"\n" RESET);
+		freeLiteral(lhs);
+		freeLiteral(rhs);
 		return false;
 	}
 
@@ -898,6 +959,9 @@ static bool execCompareLess(Interpreter* interpreter, bool invert) {
 
 	pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(result));
 
+	freeLiteral(lhs);
+	freeLiteral(rhs);
+
 	return true;
 }
 
@@ -913,6 +977,8 @@ static bool execCompareLessEqual(Interpreter* interpreter, bool invert) {
 		printf(ERROR "ERROR: Incorrect type in comparison, value \"");
 		printLiteral(lhs);
 		printf("\"\n" RESET);
+		freeLiteral(lhs);
+		freeLiteral(rhs);
 		return false;
 	}
 
@@ -920,6 +986,8 @@ static bool execCompareLessEqual(Interpreter* interpreter, bool invert) {
 		printf(ERROR "ERROR: Incorrect type in comparison, value \"");
 		printLiteral(rhs);
 		printf("\"\n" RESET);
+		freeLiteral(lhs);
+		freeLiteral(rhs);
 		return false;
 	}
 
@@ -943,6 +1011,9 @@ static bool execCompareLessEqual(Interpreter* interpreter, bool invert) {
 
 	pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(result));
 
+	freeLiteral(lhs);
+	freeLiteral(rhs);
+
 	return true;
 }
 
@@ -960,6 +1031,9 @@ static bool execAnd(Interpreter* interpreter) {
 		pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(false));
 	}
 
+	freeLiteral(lhs);
+	freeLiteral(rhs);
+
 	return true;
 }
 
@@ -976,6 +1050,9 @@ static bool execOr(Interpreter* interpreter) {
 	else {
 		pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(false));
 	}
+
+	freeLiteral(lhs);
+	freeLiteral(rhs);
 
 	return true;
 }
@@ -1018,6 +1095,8 @@ static bool execFalseJump(Interpreter* interpreter) {
 		interpreter->count = target + interpreter->codeStart;
 	}
 
+	freeLiteral(lit);
+
 	return true;
 }
 
@@ -1042,6 +1121,7 @@ static bool execFnCall(Interpreter* interpreter) {
 
 	if (!parseIdentifierToValue(interpreter, &func)) {
 		freeLiteralArray(&arguments);
+		freeLiteral(identifier);
 		return false;
 	}
 
@@ -1221,6 +1301,7 @@ static bool execFnReturn(Interpreter* interpreter) {
 		Literal lit = popLiteralArray(&interpreter->stack);
 		parseIdentifierToValue(interpreter, &lit);
 		pushLiteralArray(&returns, lit); //reverses the order
+		freeLiteral(lit);
 	}
 
 	//and back again
@@ -1291,7 +1372,7 @@ static void execInterpreter(Interpreter* interpreter) {
 			case OP_VAR_MODULO_ASSIGN:
 				execVarArithmeticAssign(interpreter);
 				if (!execArithmetic(interpreter, opcode)) {
-					popLiteralArray(&interpreter->stack);
+					freeLiteral(popLiteralArray(&interpreter->stack));
 					return;
 				}
 				if (!execVarAssign(interpreter)) {

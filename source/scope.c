@@ -142,11 +142,15 @@ Scope* copyScope(Scope* original) {
 
 	//copy the contents of the dictionaries
 	for (int i = 0; i < original->variables.capacity; i++) {
-		setLiteralDictionary(&scope->variables, original->variables.entries[i].key, original->variables.entries[i].value);
+		if (!IS_NULL(original->variables.entries[i].key)) {
+			setLiteralDictionary(&scope->variables, original->variables.entries[i].key, original->variables.entries[i].value);
+		}
 	}
 
-	for (int i = 0; i < original->variables.capacity; i++) {
-		setLiteralDictionary(&scope->types, original->types.entries[i].key, original->types.entries[i].value);
+	for (int i = 0; i < original->types.capacity; i++) {
+		if (!IS_NULL(original->types.entries[i].key)) {
+			setLiteralDictionary(&scope->types, original->types.entries[i].key, original->types.entries[i].value);
+		}
 	}
 
 	return scope;
