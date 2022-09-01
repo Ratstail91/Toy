@@ -407,7 +407,7 @@ static size_t globalPrintCount = 0;
 static char quotes = 0; //set to 0 to not show string quotes
 
 static void printToBuffer(const char* str) {
-	while (strlen(str) + globalPrintCount > globalPrintCapacity) {
+	while (strlen(str) + globalPrintCount + 1 > globalPrintCapacity) {
 		int oldCapacity = globalPrintCapacity;
 
 		globalPrintCapacity = GROW_CAPACITY(globalPrintCapacity);
