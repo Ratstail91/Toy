@@ -109,3 +109,13 @@ bool _isTruthy(Literal x);
 Literal _toStringLiteral(char* str, int length);
 Literal _toIdentifierLiteral(char* str, int length);
 Literal* _typePushSubtype(Literal* lit, Literal subtype);
+
+//utils
+Literal copyLiteral(Literal original);
+char* copyString(char* original, int length);
+bool literalsAreEqual(Literal lhs, Literal rhs);
+int hashLiteral(Literal lit);
+
+void printLiteral(Literal literal);
+void printLiteralCustom(Literal literal, void (printFn)(const char*));
+

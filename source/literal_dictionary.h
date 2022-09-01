@@ -1,7 +1,6 @@
 #pragma once
 
 #include "literal.h"
-#include "literal_util.h"
 
 //TODO: benchmark this
 #define DICTIONARY_MAX_LOAD 0.75
