@@ -3,13 +3,15 @@
 	//test arrays without types
 	var array = [];
 
+	assert _length(array) == 0, "_length failed with array";
+
 	_push(array, 1);
 	_push(array, 2);
 	_push(array, 3);
 	_push(array, 4);
 	_push(array, "foo");
 
-	assert _length(array) == 5, "_push or _length failed with array";
+	assert _length(array) == 5, "_push failed with array";
 	assert _pop(array) == "foo", "_pop failed with array";
 
 	_set(array, 2, "bar");
@@ -43,13 +45,15 @@
 	//test arrays with types
 	var array: [int] = [];
 
+	assert _length(array) == 0, "_length failed with array (+ types)";
+
 	_push(array, 1);
 	_push(array, 2);
 	_push(array, 3);
 	_push(array, 4);
 	_push(array, 10);
 
-	assert _length(array) == 5, "_push or _length failed with array (+ types)";
+	assert _length(array) == 5, "_push or failed with array (+ types)";
 	assert _pop(array) == 10, "_pop failed with array (+ types)";
 
 	_set(array, 2, 70);

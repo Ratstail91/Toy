@@ -121,6 +121,10 @@ Scope* pushScope(Scope* ancestor) {
 }
 
 Scope* popScope(Scope* scope) {
+	if (scope == NULL) { //CAN pop a null
+		return NULL;
+	}
+
 	Scope* ret = scope->ancestor;
 
 	freeAncestorChain(scope);

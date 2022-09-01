@@ -78,7 +78,9 @@ Literal copyLiteral(Literal original) {
 
 			//copy each element
 			for (int i = 0; i < AS_ARRAY(original)->count; i++) {
-				pushLiteralArray(array, copyLiteral(AS_ARRAY(original)->literals[i]));
+				Literal literal = copyLiteral(AS_ARRAY(original)->literals[i]);
+				pushLiteralArray(array, literal);
+				freeLiteral(literal);
 			}
 
 			Literal ret = TO_ARRAY_LITERAL(array);
@@ -93,7 +95,7 @@ Literal copyLiteral(Literal original) {
 			//copy each element
 			for (int i = 0; i < AS_ARRAY(original)->count; i++) {
 				Literal literal =  copyLiteral(AS_ARRAY(original)->literals[i]);
-				pushLiteralArray(array, literal );
+				pushLiteralArray(array, literal);
 				freeLiteral(literal);
 			}
 

@@ -75,6 +75,7 @@ int _set(Interpreter* interpreter, LiteralArray* arguments) {
 	Literal val = arguments->literals[2];
 
 	parseIdentifierToValue(interpreter, &obj);
+	parseIdentifierToValue(interpreter, &key);
 
 	switch(obj.type) {
 		case LITERAL_ARRAY: {
@@ -99,17 +100,8 @@ int _set(Interpreter* interpreter, LiteralArray* arguments) {
 				return -1;
 			}
 
-			parseIdentifierToValue(interpreter, &val);
-
-			//if it's a string or an identifier, make a local copy
-			if (IS_STRING(val)) {
-				val = TO_STRING_LITERAL(copyString(AS_STRING(val), strlen(AS_STRING(val)) ), strlen(AS_STRING(val)));
-			}
-			if (IS_IDENTIFIER(val)) {
-				val = TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(val), strlen(AS_IDENTIFIER(val)) ), strlen(AS_STRING(val)));
-			}
-
-			//TODO: proper copy function for literals
+			//don't use pushLiteralArray, since we're setting
+			val = copyLiteral(val);
 
 			AS_ARRAY(obj)->literals[AS_INTEGER(key)] = val;
 			return 0;
@@ -197,6 +189,7 @@ int _push(Interpreter* interpreter, LiteralArray* arguments) {
 	Literal val = arguments->literals[1];
 
 	parseIdentifierToValue(interpreter, &obj);
+	parseIdentifierToValue(interpreter, &val);
 
 	switch(obj.type) {
 		case LITERAL_ARRAY: {
@@ -210,8 +203,6 @@ int _push(Interpreter* interpreter, LiteralArray* arguments) {
 					return -1;
 				}
 			}
-
-			parseIdentifierToValue(interpreter, &val);
 
 			pushLiteralArray(AS_ARRAY(obj), val);
 			return 0;
@@ -261,17 +252,25 @@ int _length(Interpreter* interpreter, LiteralArray* arguments) {
 
 	switch(obj.type) {
 		case LITERAL_ARRAY: {
-			pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_ARRAY(obj)->count ));
+			Literal lit = TO_INTEGER_LITERAL( AS_ARRAY(obj)->count );
+			pushLiteralArray(&interpreter->stack, lit);
+			freeLiteral(lit);
 			return 1;
 		}
 
-		case LITERAL_DICTIONARY:
-			pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_DICTIONARY(obj)->count ));
+		case LITERAL_DICTIONARY: {
+			Literal lit = TO_INTEGER_LITERAL( AS_DICTIONARY(obj)->count );
+			pushLiteralArray(&interpreter->stack, lit);
+			freeLiteral(lit);
 			return 1;
+		}
 
-		case LITERAL_STRING:
-			pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( strlen(AS_STRING(obj)) ));
+		case LITERAL_STRING: {
+			Literal lit = TO_INTEGER_LITERAL( strlen(AS_STRING(obj)) );
+			pushLiteralArray(&interpreter->stack, lit);
+			freeLiteral(lit);
 			return 1;
+		}
 
 		default:
 			(interpreter->printOutput)("Incorrect compound type in _length");
@@ -703,7 +702,6 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 		return false;
 	}
 
-	freeLiteral(type);
 	freeLiteral(val);
 
 	return true;
@@ -727,7 +725,7 @@ static bool execFnDecl(Interpreter* interpreter, bool lng) {
 	Literal identifier = interpreter->literalCache.literals[identifierIndex];
 	Literal function = interpreter->literalCache.literals[functionIndex];
 
-	function.as.function.scope = scope; //hacked in
+	function.as.function.scope = pushScope(scope); //hacked in
 
 	Literal type = TO_TYPE_LITERAL(LITERAL_FUNCTION, true);
 
@@ -1153,6 +1151,7 @@ static bool execFnCall(Interpreter* interpreter) {
 	inner.bytecode = AS_FUNCTION(func).bytecode;
 	inner.length = func.as.function.length;
 	inner.count = 0;
+	inner.panic = false;
 	initLiteralArray(&inner.stack);
 	setInterpreterPrint(&inner, interpreter->printOutput);
 	setInterpreterAssert(&inner, interpreter->assertOutput);
@@ -1178,6 +1177,7 @@ static bool execFnCall(Interpreter* interpreter) {
 
 		//free, and skip out
 		freeLiteralArray(&arguments);
+		popScope(inner.scope);
 		freeInterpreter(&inner);
 
 		return false;
@@ -1190,6 +1190,7 @@ static bool execFnCall(Interpreter* interpreter) {
 			printf(ERROR "[internal] Could not re-declare parameter\n" RESET);
 			//free, and skip out
 			freeLiteralArray(&arguments);
+			popScope(inner.scope);
 			freeInterpreter(&inner);
 			return false;
 		}
@@ -1198,6 +1199,7 @@ static bool execFnCall(Interpreter* interpreter) {
 			printf(ERROR "[internal] Could not define parameter (bad type?)\n" RESET);
 			//free, and skip out
 			freeLiteralArray(&arguments);
+			popScope(inner.scope);
 			freeInterpreter(&inner);
 			return false;
 		}
@@ -1222,6 +1224,7 @@ static bool execFnCall(Interpreter* interpreter) {
 			freeLiteral(restType);
 			freeLiteralArray(&rest);
 			freeLiteralArray(&arguments);
+			popScope(inner.scope);
 			freeInterpreter(&inner);
 			return false;
 		}
@@ -1232,6 +1235,7 @@ static bool execFnCall(Interpreter* interpreter) {
 			freeLiteral(restType);
 			freeLiteralArray(&rest);
 			freeLiteralArray(&arguments);
+			popScope(inner.scope);
 			freeInterpreter(&inner);
 			return false;
 		}
@@ -1249,7 +1253,9 @@ static bool execFnCall(Interpreter* interpreter) {
 
 	//unpack the results
 	while (inner.stack.count > 0) {
-		pushLiteralArray(&returns, popLiteralArray(&inner.stack)); //NOTE: also reverses the order
+		Literal lit = popLiteralArray(&inner.stack);
+		pushLiteralArray(&returns, lit); //NOTE: also reverses the order
+		freeLiteral(lit);
 	}
 
 	//TODO: remove this when multiple assignment is enabled - note the BUGFIX that balances the stack
@@ -1281,6 +1287,7 @@ static bool execFnCall(Interpreter* interpreter) {
 		}
 
 		pushLiteralArray(&interpreter->stack, ret); //NOTE: reverses again
+		freeLiteral(ret);
 	}
 
 	//free
@@ -1306,7 +1313,9 @@ static bool execFnReturn(Interpreter* interpreter) {
 
 	//and back again
 	while (returns.count > 0) {
-		pushLiteralArray(&interpreter->stack, popLiteralArray(&returns));
+		Literal lit =  popLiteralArray(&returns);
+		pushLiteralArray(&interpreter->stack, lit);
+		freeLiteral(lit);
 	}
 
 	freeLiteralArray(&returns);
@@ -1700,7 +1709,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 				if (AS_TYPE(typeLiteral).typeOf == LITERAL_ARRAY) {
 					unsigned short vt = readShort(interpreter->bytecode, &interpreter->count);
 
-					TYPE_PUSH_SUBTYPE(&typeLiteral, interpreter->literalCache.literals[vt]);
+					TYPE_PUSH_SUBTYPE(&typeLiteral, copyLiteral(interpreter->literalCache.literals[vt]));
 				}
 
 				if (AS_TYPE(typeLiteral).typeOf == LITERAL_DICTIONARY) {
@@ -1720,7 +1729,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 					printf(")\n");
 				}
 
-				freeLiteral(typeLiteral);
+		//		freeLiteral(typeLiteral);
 			}
 			break;
 		}

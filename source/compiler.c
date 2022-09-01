@@ -19,6 +19,8 @@ void initCompiler(Compiler* compiler) {
 
 //separated out, so it can be recursive
 static int writeLiteralTypeToCacheOpt(LiteralArray* literalCache, Literal literal, bool skipDuplicationOptimisation) {
+	bool shouldFree = false;
+
 	//if it's a compound type, recurse and store the results
 	if (AS_TYPE(literal).typeOf == LITERAL_ARRAY || AS_TYPE(literal).typeOf == LITERAL_DICTIONARY) {
 		//I don't like storing types in an array, but it's the easiest and most straight forward method
@@ -38,6 +40,7 @@ static int writeLiteralTypeToCacheOpt(LiteralArray* literalCache, Literal litera
 		}
 
 		//push the store to the cache, tweaking the type
+		shouldFree = true;
 		literal = TO_ARRAY_LITERAL(store);
 		literal.type = LITERAL_TYPE_INTERMEDIATE; //NOTE: tweaking the type usually isn't a good idea
 	}
@@ -49,12 +52,16 @@ static int writeLiteralTypeToCacheOpt(LiteralArray* literalCache, Literal litera
 			index = pushLiteralArray(literalCache, literal);
 		}
 
-		freeLiteral(literal);
+		if (shouldFree) {
+			freeLiteral(literal);
+		}
 		return index;
 	}
 	else {
 		int index = pushLiteralArray(literalCache, literal);
-		freeLiteral(literal);
+		if (shouldFree) {
+			freeLiteral(literal);
+		}
 		return index;
 	}
 }
@@ -411,7 +418,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			//embed these in the bytecode...
 			int index = writeNodeCollectionToCache(compiler, node);
 
-			compiler->bytecode[compiler->count] = (unsigned short)index; //2 bytes
+			AS_USHORT(compiler->bytecode[compiler->count]) = (unsigned short)index; //2 bytes
 			compiler->count += sizeof(unsigned short);
 		}
 		break;
