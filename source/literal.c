@@ -48,7 +48,8 @@ void freeLiteral(Literal literal) {
 	}
 
 	if (IS_FUNCTION(literal)) {
-		popScope(AS_FUNCTION(literal).scope);
+		AS_FUNCTION(literal).scope = popScope(AS_FUNCTION(literal).scope);
+		FREE_ARRAY(unsigned char, AS_FUNCTION(literal).bytecode, AS_FUNCTION(literal).length);
 	}
 
 	if (IS_IDENTIFIER(literal)) {
@@ -119,7 +120,7 @@ Literal copyLiteral(Literal original) {
 
 			//copy each element
 			for (int i = 0; i < AS_ARRAY(original)->count; i++) {
-				pushLiteralArray(array, copyLiteral(AS_ARRAY(original)->literals[i]));
+				pushLiteralArray(array, AS_ARRAY(original)->literals[i]);
 			}
 
 			return TO_ARRAY_LITERAL(array);
@@ -132,7 +133,7 @@ Literal copyLiteral(Literal original) {
 			//copy each entry
 			for (int i = 0; i < AS_DICTIONARY(original)->capacity; i++) {
 				if ( !IS_NULL(AS_DICTIONARY(original)->entries[i].key) ) {
-					setLiteralDictionary(dictionary, copyLiteral(AS_DICTIONARY(original)->entries[i].key), copyLiteral(AS_DICTIONARY(original)->entries[i].value));
+					setLiteralDictionary(dictionary, AS_DICTIONARY(original)->entries[i].key, AS_DICTIONARY(original)->entries[i].value);
 				}
 			}
 

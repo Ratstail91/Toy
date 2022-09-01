@@ -213,6 +213,9 @@ bool setScopeVariable(Scope* scope, Literal key, Literal value, bool constCheck)
 
 	//actually assign
 	setLiteralDictionary(&scope->variables, key, value);
+
+	freeLiteral(typeLiteral);
+
 	return true;
 }
 

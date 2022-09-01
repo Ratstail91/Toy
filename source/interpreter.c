@@ -43,6 +43,7 @@ bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func) {
 	setLiteralDictionary(&interpreter->scope->types, identifier, type);
 
 	freeLiteral(identifier);
+	freeLiteral(type);
 
 	return true;
 }
@@ -678,7 +679,11 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 	Literal identifier = interpreter->literalCache.literals[identifierIndex];
 	Literal type = interpreter->literalCache.literals[typeIndex];
 
-	parseIdentifierToValue(interpreter, &type);
+	bool freeType = false;
+	if (IS_IDENTIFIER(type)) {
+		parseIdentifierToValue(interpreter, &type);
+		freeType = true;
+	}
 
 	if (!declareScopeVariable(interpreter->scope, identifier, type)) {
 		printf(ERROR "ERROR: Can't redefine the variable \"");
@@ -695,7 +700,7 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 		printLiteral(identifier);
 		printf("\"\n" RESET);
 
-		freeLiteral(identifier);
+		freeLiteral(identifier); //TODO: test this
 		freeLiteral(type);
 		freeLiteral(val);
 
@@ -704,6 +709,10 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 
 	freeLiteral(val);
 
+	if (freeType) {
+		freeLiteral(type);
+	}
+
 	return true;
 }
 
@@ -711,7 +720,6 @@ static bool execFnDecl(Interpreter* interpreter, bool lng) {
 	//read the index in the cache
 	int identifierIndex = 0;
 	int functionIndex = 0;
-	Scope* scope = pushScope(interpreter->scope);
 
 	if (lng) {
 		identifierIndex = (int)readShort(interpreter->bytecode, &interpreter->count);
@@ -725,7 +733,7 @@ static bool execFnDecl(Interpreter* interpreter, bool lng) {
 	Literal identifier = interpreter->literalCache.literals[identifierIndex];
 	Literal function = interpreter->literalCache.literals[functionIndex];
 
-	function.as.function.scope = pushScope(scope); //hacked in
+	function.as.function.scope = pushScope(interpreter->scope); //hacked in
 
 	Literal type = TO_TYPE_LITERAL(LITERAL_FUNCTION, true);
 
@@ -733,7 +741,6 @@ static bool execFnDecl(Interpreter* interpreter, bool lng) {
 		printf(ERROR "ERROR: Can't redefine the function \"");
 		printLiteral(identifier);
 		printf("\"\n" RESET);
-		popScope(scope);
 		return false;
 	}
 
@@ -741,7 +748,6 @@ static bool execFnDecl(Interpreter* interpreter, bool lng) {
 		printf(ERROR "ERROR: Incorrect type assigned to variable \"");
 		printLiteral(identifier);
 		printf("\"\n" RESET);
-		popScope(scope);
 		return false;
 	}
 
@@ -1215,7 +1221,8 @@ static bool execFnCall(Interpreter* interpreter) {
 		}
 
 		Literal restType = TO_TYPE_LITERAL(LITERAL_ARRAY, true);
-		TYPE_PUSH_SUBTYPE(&restType, TO_TYPE_LITERAL(LITERAL_ANY, false));
+		Literal any = TO_TYPE_LITERAL(LITERAL_ANY, false);
+		TYPE_PUSH_SUBTYPE(&restType, any);
 
 		//declare & define the rest parameter
 		if (!declareScopeVariable(inner.scope, restParam, restType)) {
@@ -1607,14 +1614,12 @@ static void readInterpreterSections(Interpreter* interpreter) {
 					printf("(array ");
 					Literal literal = TO_ARRAY_LITERAL(array);
 					printLiteral(literal);
-					freeLiteral(literal);
 					printf(")\n");
 				}
 
 				//finally, push the array proper
 				Literal literal = TO_ARRAY_LITERAL(array);
 				pushLiteralArray(&interpreter->literalCache, literal);
-				freeLiteral(literal);
 			}
 			break;
 
@@ -1635,14 +1640,12 @@ static void readInterpreterSections(Interpreter* interpreter) {
 					printf("(dictionary ");
 					Literal literal = TO_DICTIONARY_LITERAL(dictionary);
 					printLiteral(literal);
-					freeLiteral(literal);
 					printf(")\n");
 				}
 
 				//finally, push the dictionary proper
 				Literal literal = TO_DICTIONARY_LITERAL(dictionary);
 				pushLiteralArray(&interpreter->literalCache, literal);
-				freeLiteral(literal);
 			}
 			break;
 
@@ -1694,7 +1697,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 					printf(")\n");
 				}
 
-				freeLiteral(typeLiteral);
+//				freeLiteral(typeLiteral);
 			}
 			break;
 
@@ -1709,7 +1712,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 				if (AS_TYPE(typeLiteral).typeOf == LITERAL_ARRAY) {
 					unsigned short vt = readShort(interpreter->bytecode, &interpreter->count);
 
-					TYPE_PUSH_SUBTYPE(&typeLiteral, copyLiteral(interpreter->literalCache.literals[vt]));
+					TYPE_PUSH_SUBTYPE(&typeLiteral, interpreter->literalCache.literals[vt]);
 				}
 
 				if (AS_TYPE(typeLiteral).typeOf == LITERAL_DICTIONARY) {
@@ -1729,7 +1732,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 					printf(")\n");
 				}
 
-		//		freeLiteral(typeLiteral);
+//				freeLiteral(typeLiteral);
 			}
 			break;
 		}
@@ -1815,7 +1818,8 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 
 	//BUGFIX: clear the stack (for repl - stack must be balanced)
 	while(interpreter->stack.count > 0) {
-		popLiteralArray(&interpreter->stack);
+		Literal lit = popLiteralArray(&interpreter->stack);
+		freeLiteral(lit);
 	}
 
 	//free the bytecode immediately after use
