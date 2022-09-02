@@ -53,7 +53,7 @@ bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr) {
 	if (IS_IDENTIFIER(*literalPtr)) {
 	//	Literal idn = *literalPtr;
 		if (!getScopeVariable(interpreter->scope, *literalPtr, literalPtr)) {
-			printf(ERROR "Error: Undeclared variable \"");;
+			printf(ERROR "ERROR: Undeclared variable \"");;
 			printLiteral(*literalPtr);
 			printf("\"\n" RESET);
 			return false;
@@ -249,28 +249,32 @@ int _length(Interpreter* interpreter, LiteralArray* arguments) {
 
 	Literal obj = arguments->literals[0];
 
-	parseIdentifierToValue(interpreter, &obj);
+	bool freeObj = false;
+	if (IS_IDENTIFIER(obj)) {
+		parseIdentifierToValue(interpreter, &obj);
+		freeObj = true;
+	}
 
 	switch(obj.type) {
 		case LITERAL_ARRAY: {
 			Literal lit = TO_INTEGER_LITERAL( AS_ARRAY(obj)->count );
 			pushLiteralArray(&interpreter->stack, lit);
 			freeLiteral(lit);
-			return 1;
+			break;
 		}
 
 		case LITERAL_DICTIONARY: {
 			Literal lit = TO_INTEGER_LITERAL( AS_DICTIONARY(obj)->count );
 			pushLiteralArray(&interpreter->stack, lit);
 			freeLiteral(lit);
-			return 1;
+			break;
 		}
 
 		case LITERAL_STRING: {
 			Literal lit = TO_INTEGER_LITERAL( strlen(AS_STRING(obj)) );
 			pushLiteralArray(&interpreter->stack, lit);
 			freeLiteral(lit);
-			return 1;
+			break;
 		}
 
 		default:
@@ -278,6 +282,12 @@ int _length(Interpreter* interpreter, LiteralArray* arguments) {
 			printLiteral(obj);
 			return -1;
 	}
+
+	if (freeObj) {
+		freeLiteral(obj);
+	}
+
+	return 1;
 }
 
 int _clear(Interpreter* interpreter, LiteralArray* arguments) {
@@ -339,10 +349,24 @@ void initInterpreter(Interpreter* interpreter) {
 }
 
 void freeInterpreter(Interpreter* interpreter) {
+	//BUGFIX: handle scopes of functions, which refer to the parent scope (leaking memory)
+	for (int i = 0; i < interpreter->scope->variables.capacity; i++) {
+		//handle keys, just in case
+		if (IS_FUNCTION(interpreter->scope->variables.entries[i].key)) {
+			popScope(AS_FUNCTION(interpreter->scope->variables.entries[i].key).scope);
+			AS_FUNCTION(interpreter->scope->variables.entries[i].key).scope = NULL;
+		}
+
+		if (IS_FUNCTION(interpreter->scope->variables.entries[i].value)) {
+			popScope(AS_FUNCTION(interpreter->scope->variables.entries[i].value).scope);
+			AS_FUNCTION(interpreter->scope->variables.entries[i].value).scope = NULL;
+		}
+	}
+
+	popScope(interpreter->scope);
+	interpreter->scope = NULL;
+
 	freeLiteralArray(&interpreter->literalCache);
-
-	interpreter->scope = popScope(interpreter->scope);
-
 	freeLiteralArray(&interpreter->stack);
 }
 
@@ -537,8 +561,17 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 	Literal rhs = popLiteralArray(&interpreter->stack);
 	Literal lhs = popLiteralArray(&interpreter->stack);
 
-	parseIdentifierToValue(interpreter, &rhs);
-	parseIdentifierToValue(interpreter, &lhs);
+	if (IS_IDENTIFIER(rhs)) {
+		Literal idn = rhs;
+		parseIdentifierToValue(interpreter, &rhs);
+		freeLiteral(idn);
+	}
+
+	if (IS_IDENTIFIER(lhs)) {
+		Literal idn = lhs;
+		parseIdentifierToValue(interpreter, &lhs);
+		freeLiteral(idn);
+	}
 
 	//special case for string concatenation ONLY
 	if (IS_STRING(lhs) && IS_STRING(rhs)) {
@@ -733,7 +766,7 @@ static bool execFnDecl(Interpreter* interpreter, bool lng) {
 	Literal identifier = interpreter->literalCache.literals[identifierIndex];
 	Literal function = interpreter->literalCache.literals[functionIndex];
 
-	function.as.function.scope = pushScope(interpreter->scope); //hacked in
+	AS_FUNCTION(function).scope = pushScope(interpreter->scope); //hacked in (needed for closure persistance)
 
 	Literal type = TO_TYPE_LITERAL(LITERAL_FUNCTION, true);
 
@@ -744,12 +777,15 @@ static bool execFnDecl(Interpreter* interpreter, bool lng) {
 		return false;
 	}
 
-	if (!setScopeVariable(interpreter->scope, identifier, function, false)) {
+	if (!setScopeVariable(interpreter->scope, identifier, function, false)) { //scope gets copied here
 		printf(ERROR "ERROR: Incorrect type assigned to variable \"");
 		printLiteral(identifier);
 		printf("\"\n" RESET);
 		return false;
 	}
+
+	popScope(AS_FUNCTION(function).scope); //hacked out
+	AS_FUNCTION(function).scope = NULL;
 
 	freeLiteral(type);
 
@@ -900,8 +936,17 @@ static bool execCompareEqual(Interpreter* interpreter, bool invert) {
 	Literal rhs = popLiteralArray(&interpreter->stack);
 	Literal lhs = popLiteralArray(&interpreter->stack);
 
-	parseIdentifierToValue(interpreter, &rhs);
-	parseIdentifierToValue(interpreter, &lhs);
+	if (IS_IDENTIFIER(rhs)) {
+		Literal idn = rhs;
+		parseIdentifierToValue(interpreter, &rhs);
+		freeLiteral(idn);
+	}
+
+	if (IS_IDENTIFIER(lhs)) {
+		Literal idn = lhs;
+		parseIdentifierToValue(interpreter, &lhs);
+		freeLiteral(idn);
+	}
 
 	bool result = literalsAreEqual(lhs, rhs);
 
@@ -921,8 +966,17 @@ static bool execCompareLess(Interpreter* interpreter, bool invert) {
 	Literal rhs = popLiteralArray(&interpreter->stack);
 	Literal lhs = popLiteralArray(&interpreter->stack);
 
-	parseIdentifierToValue(interpreter, &rhs);
-	parseIdentifierToValue(interpreter, &lhs);
+	if (IS_IDENTIFIER(rhs)) {
+		Literal idn = rhs;
+		parseIdentifierToValue(interpreter, &rhs);
+		freeLiteral(idn);
+	}
+
+	if (IS_IDENTIFIER(lhs)) {
+		Literal idn = lhs;
+		parseIdentifierToValue(interpreter, &lhs);
+		freeLiteral(idn);
+	}
 
 	//not a number, return falure
 	if (!(IS_INTEGER(lhs) || IS_FLOAT(lhs))) {
@@ -973,8 +1027,17 @@ static bool execCompareLessEqual(Interpreter* interpreter, bool invert) {
 	Literal rhs = popLiteralArray(&interpreter->stack);
 	Literal lhs = popLiteralArray(&interpreter->stack);
 
-	parseIdentifierToValue(interpreter, &rhs);
-	parseIdentifierToValue(interpreter, &lhs);
+	if (IS_IDENTIFIER(rhs)) {
+		Literal idn = rhs;
+		parseIdentifierToValue(interpreter, &rhs);
+		freeLiteral(idn);
+	}
+
+	if (IS_IDENTIFIER(lhs)) {
+		Literal idn = lhs;
+		parseIdentifierToValue(interpreter, &lhs);
+		freeLiteral(idn);
+	}
 
 	//not a number, return falure
 	if (!(IS_INTEGER(lhs) || IS_FLOAT(lhs))) {
@@ -1025,8 +1088,17 @@ static bool execAnd(Interpreter* interpreter) {
 	Literal rhs = popLiteralArray(&interpreter->stack);
 	Literal lhs = popLiteralArray(&interpreter->stack);
 
-	parseIdentifierToValue(interpreter, &rhs);
-	parseIdentifierToValue(interpreter, &lhs);
+	if (IS_IDENTIFIER(rhs)) {
+		Literal idn = rhs;
+		parseIdentifierToValue(interpreter, &rhs);
+		freeLiteral(idn);
+	}
+
+	if (IS_IDENTIFIER(lhs)) {
+		Literal idn = lhs;
+		parseIdentifierToValue(interpreter, &lhs);
+		freeLiteral(idn);
+	}
 
 	if (IS_TRUTHY(lhs) && IS_TRUTHY(rhs)) {
 		pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(true));
@@ -1045,8 +1117,17 @@ static bool execOr(Interpreter* interpreter) {
 	Literal rhs = popLiteralArray(&interpreter->stack);
 	Literal lhs = popLiteralArray(&interpreter->stack);
 
-	parseIdentifierToValue(interpreter, &rhs);
-	parseIdentifierToValue(interpreter, &lhs);
+	if (IS_IDENTIFIER(rhs)) {
+		Literal idn = rhs;
+		parseIdentifierToValue(interpreter, &rhs);
+		freeLiteral(idn);
+	}
+
+	if (IS_IDENTIFIER(lhs)) {
+		Literal idn = lhs;
+		parseIdentifierToValue(interpreter, &lhs);
+		freeLiteral(idn);
+	}
 
 	if (IS_TRUTHY(lhs) || IS_TRUTHY(rhs)) {
 		pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(true));
@@ -1116,7 +1197,9 @@ static bool execFnCall(Interpreter* interpreter) {
 
 	//unpack the stack of arguments
 	for (int i = 0; i < AS_INTEGER(stackSize); i++) {
-		pushLiteralArray(&arguments, popLiteralArray(&interpreter->stack)); //NOTE: also reverses the order
+		Literal lit = popLiteralArray(&interpreter->stack);
+		pushLiteralArray(&arguments, lit); //NOTE: also reverses the order
+		freeLiteral(lit);
 	}
 
 	Literal identifier = popLiteralArray(&interpreter->stack);
@@ -1128,6 +1211,8 @@ static bool execFnCall(Interpreter* interpreter) {
 		freeLiteral(identifier);
 		return false;
 	}
+
+	freeLiteral(identifier);
 
 	//check for side-loaded native functions
 	if (IS_FUNCTION_NATIVE(func)) {
@@ -1300,7 +1385,10 @@ static bool execFnCall(Interpreter* interpreter) {
 	//free
 	freeLiteralArray(&returns);
 	freeLiteralArray(&arguments);
-	freeInterpreter(&inner);
+	freeLiteralArray(&inner.stack);
+	freeLiteralArray(&inner.literalCache);
+	popScope(inner.scope);
+	freeLiteral(func);
 
 	//actual bytecode persists until next call
 	return true;
@@ -1619,7 +1707,10 @@ static void readInterpreterSections(Interpreter* interpreter) {
 
 				//finally, push the array proper
 				Literal literal = TO_ARRAY_LITERAL(array);
-				pushLiteralArray(&interpreter->literalCache, literal);
+				pushLiteralArray(&interpreter->literalCache, literal); //copied
+
+				freeLiteralArray(array);
+				FREE(LiteralArray, array);
 			}
 			break;
 
@@ -1645,7 +1736,10 @@ static void readInterpreterSections(Interpreter* interpreter) {
 
 				//finally, push the dictionary proper
 				Literal literal = TO_DICTIONARY_LITERAL(dictionary);
-				pushLiteralArray(&interpreter->literalCache, literal);
+				pushLiteralArray(&interpreter->literalCache, literal); //copied
+
+				freeLiteralDictionary(dictionary);
+				FREE(LiteralDictionary, dictionary);
 			}
 			break;
 
@@ -1719,12 +1813,12 @@ static void readInterpreterSections(Interpreter* interpreter) {
 					unsigned short kt = readShort(interpreter->bytecode, &interpreter->count);
 					unsigned short vt = readShort(interpreter->bytecode, &interpreter->count);
 
-					TYPE_PUSH_SUBTYPE(&typeLiteral, interpreter->literalCache.literals[kt]);
-					TYPE_PUSH_SUBTYPE(&typeLiteral, interpreter->literalCache.literals[vt]);
+					TYPE_PUSH_SUBTYPE(&typeLiteral, copyLiteral(interpreter->literalCache.literals[kt]));
+					TYPE_PUSH_SUBTYPE(&typeLiteral, copyLiteral(interpreter->literalCache.literals[vt]));
 				}
 
 				//save the type
-				pushLiteralArray(&interpreter->literalCache, typeLiteral);
+				pushLiteralArray(&interpreter->literalCache, typeLiteral); //copied
 
 				if (command.verbose) {
 					printf("(type ");
@@ -1732,7 +1826,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 					printf(")\n");
 				}
 
-//				freeLiteral(typeLiteral);
+				freeLiteral(typeLiteral);
 			}
 			break;
 		}
@@ -1764,6 +1858,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 
 			//change the type to normal
 			interpreter->literalCache.literals[i] = TO_FUNCTION_LITERAL(bytes, size);
+			AS_FUNCTION(interpreter->literalCache.literals[i]).scope = pushScope(interpreter->scope); //BUGFIX
 		}
 	}
 

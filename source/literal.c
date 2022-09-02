@@ -31,7 +31,7 @@ static unsigned int hash(unsigned int x) {
 //exposed functions
 void freeLiteral(Literal literal) {
 	if (IS_STRING(literal)) {
-		FREE_ARRAY(char, AS_STRING(literal), literal.as.string.length);
+		FREE_ARRAY(char, AS_STRING(literal), literal.as.string.length + 1);
 		return;
 	}
 
@@ -48,12 +48,13 @@ void freeLiteral(Literal literal) {
 	}
 
 	if (IS_FUNCTION(literal)) {
-		AS_FUNCTION(literal).scope = popScope(AS_FUNCTION(literal).scope);
+		popScope(AS_FUNCTION(literal).scope);
+		AS_FUNCTION(literal).scope = NULL;
 		FREE_ARRAY(unsigned char, AS_FUNCTION(literal).bytecode, AS_FUNCTION(literal).length);
 	}
 
 	if (IS_IDENTIFIER(literal)) {
-		FREE_ARRAY(char, AS_IDENTIFIER(literal), literal.as.identifier.length);
+		FREE_ARRAY(char, AS_IDENTIFIER(literal), literal.as.identifier.length + 1);
 		return;
 	}
 
@@ -111,7 +112,7 @@ Literal copyLiteral(Literal original) {
 			return original;
 
 		case LITERAL_STRING: {
-			return TO_STRING_LITERAL(copyString(AS_STRING(original), strlen(AS_STRING(original)) ), strlen(AS_STRING(original)));
+			return TO_STRING_LITERAL(copyString(AS_STRING(original), strlen(AS_STRING(original))), strlen(AS_STRING(original)));
 		}
 
 		case LITERAL_ARRAY: {
