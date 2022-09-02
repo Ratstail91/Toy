@@ -25,6 +25,10 @@ int pushLiteralArray(LiteralArray* array, Literal literal) {
 }
 
 Literal popLiteralArray(LiteralArray* array) {
+	if (array->count <= 0) {
+		return TO_NULL_LITERAL;
+	}
+
 	//get the return
 	Literal ret = array->literals[array->count-1];
 

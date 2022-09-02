@@ -118,6 +118,10 @@ int _set(Interpreter* interpreter, LiteralArray* arguments) {
 				return -1;
 			}
 
+			freeLiteral(obj);
+			freeLiteral(key);
+			freeLiteral(val);
+
 			return 0;
 		}
 
@@ -147,6 +151,10 @@ int _set(Interpreter* interpreter, LiteralArray* arguments) {
 				printf("\"\n" RESET);
 				return -1;
 			}
+
+			freeLiteral(obj);
+			freeLiteral(key);
+			freeLiteral(val);
 
 			return 0;
 		}
@@ -183,15 +191,20 @@ int _get(Interpreter* interpreter, LiteralArray* arguments) {
 			}
 
 			pushLiteralArray(&interpreter->stack, AS_ARRAY(obj)->literals[AS_INTEGER(key)]);
+			freeLiteral(obj);
 			return 1;
 		}
 
-		case LITERAL_DICTIONARY:
-			pushLiteralArray(&interpreter->stack, getLiteralDictionary(AS_DICTIONARY(obj), key));
+		case LITERAL_DICTIONARY: {
+			Literal dict = getLiteralDictionary(AS_DICTIONARY(obj), key);
+			pushLiteralArray(&interpreter->stack, dict);
+			freeLiteral(dict);
+			freeLiteral(obj);
 			return 1;
+		}
 
 		default:
-			(interpreter->printOutput)("Incorrect compound type in _get");
+			(interpreter->printOutput)("Incorrect compound type in _get ");
 			printLiteral(obj);
 			return -1;
 	}
@@ -238,11 +251,13 @@ int _push(Interpreter* interpreter, LiteralArray* arguments) {
 				return -1;
 			}
 
+			freeLiteral(obj);
+
 			return 0;
 		}
 
 		default:
-			(interpreter->printOutput)("Incorrect compound type in _push");
+			(interpreter->printOutput)("Incorrect compound type in _push ");
 			printLiteral(obj);
 			return -1;
 	}
@@ -278,11 +293,13 @@ int _pop(Interpreter* interpreter, LiteralArray* arguments) {
 				return -1;
 			}
 
+			freeLiteral(obj);
+
 			return 1;
 		}
 
 		default:
-			(interpreter->printOutput)("Incorrect compound type in _pop");
+			(interpreter->printOutput)("Incorrect compound type in _pop ");
 			printLiteral(obj);
 			return -1;
 	}
@@ -326,7 +343,7 @@ int _length(Interpreter* interpreter, LiteralArray* arguments) {
 		}
 
 		default:
-			(interpreter->printOutput)("Incorrect compound type in _length");
+			(interpreter->printOutput)("Incorrect compound type in _length ");
 			printLiteral(obj);
 			return -1;
 	}
@@ -373,7 +390,7 @@ int _clear(Interpreter* interpreter, LiteralArray* arguments) {
 
 			freeLiteral(obj);
 
-			return 1;
+			break;
 		}
 
 		case LITERAL_DICTIONARY: {
@@ -391,14 +408,17 @@ int _clear(Interpreter* interpreter, LiteralArray* arguments) {
 
 			freeLiteral(obj);
 
-			return 1;
+			break;
 		}
 
 		default:
-			(interpreter->printOutput)("Incorrect compound type in _get");
+			(interpreter->printOutput)("Incorrect compound type in _clear ");
 			printLiteral(obj);
 			return -1;
 	}
+
+	freeLiteral(obj);
+	return 1;
 }
 
 void initInterpreter(Interpreter* interpreter) {
@@ -1378,7 +1398,9 @@ static bool execFnCall(Interpreter* interpreter) {
 		initLiteralArray(&rest);
 
 		while (arguments.count > 0) {
-			pushLiteralArray(&rest, popLiteralArray(&arguments));
+			Literal lit = popLiteralArray(&arguments);
+			pushLiteralArray(&rest, lit);
+			freeLiteral(lit);
 		}
 
 		Literal restType = TO_TYPE_LITERAL(LITERAL_ARRAY, true);
@@ -1407,6 +1429,8 @@ static bool execFnCall(Interpreter* interpreter) {
 			freeInterpreter(&inner);
 			return false;
 		}
+
+		freeLiteral(restType);
 	}
 
 	//execute the interpreter
@@ -1426,19 +1450,16 @@ static bool execFnCall(Interpreter* interpreter) {
 		freeLiteral(lit);
 	}
 
+	bool returnValue = true;
+
 	//TODO: remove this when multiple assignment is enabled - note the BUGFIX that balances the stack
 	if (returns.count > 1) {
 		printf(ERROR "ERROR: Too many values returned (multiple returns not yet implemented)\n" RESET);
 
-		//free, and skip out
-		freeLiteralArray(&returns);
-		freeLiteralArray(&arguments);
-		freeInterpreter(&inner);
-
-		return false;
+		returnValue = false;
 	}
 
-	for (int i = 0; i < returns.count; i++) {
+	for (int i = 0; i < returns.count && returnValue; i++) {
 		Literal ret = popLiteralArray(&returns);
 
 		//check the return types
@@ -1446,12 +1467,8 @@ static bool execFnCall(Interpreter* interpreter) {
 			printf(ERROR "ERROR: bad type found in return value\n" RESET);
 
 			//free, and skip out
-			freeLiteral(ret);
-			freeLiteralArray(&returns);
-			freeLiteralArray(&arguments);
-			freeInterpreter(&inner);
-
-			return false;
+			returnValue = false;
+			break;
 		}
 
 		pushLiteralArray(&interpreter->stack, ret); //NOTE: reverses again
@@ -1459,6 +1476,19 @@ static bool execFnCall(Interpreter* interpreter) {
 	}
 
 	//free
+	//BUGFIX: handle scopes of functions, which refer to the parent scope (leaking memory)
+	for (int i = 0; i < inner.scope->variables.capacity; i++) {
+		//handle keys, just in case
+		if (IS_FUNCTION(inner.scope->variables.entries[i].key)) {
+			popScope(AS_FUNCTION(inner.scope->variables.entries[i].key).scope);
+			AS_FUNCTION(inner.scope->variables.entries[i].key).scope = NULL;
+		}
+
+		if (IS_FUNCTION(inner.scope->variables.entries[i].value)) {
+			popScope(AS_FUNCTION(inner.scope->variables.entries[i].value).scope);
+			AS_FUNCTION(inner.scope->variables.entries[i].value).scope = NULL;
+		}
+	}
 	freeLiteralArray(&returns);
 	freeLiteralArray(&arguments);
 	freeLiteralArray(&inner.stack);

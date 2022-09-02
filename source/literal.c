@@ -277,9 +277,12 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 					}
 
 					//compare the values
-					if (!literalsAreEqual(AS_DICTIONARY(lhs)->entries[i].value, getLiteralDictionary(AS_DICTIONARY(rhs), AS_DICTIONARY(lhs)->entries[i].key) )) {
+					Literal val = getLiteralDictionary(AS_DICTIONARY(rhs), AS_DICTIONARY(lhs)->entries[i].key); //TODO: could be more efficient
+					if (!literalsAreEqual(AS_DICTIONARY(lhs)->entries[i].value, val)) {
+						freeLiteral(val);
 						return false;
 					}
+					freeLiteral(val);
 				}
 			}
 
