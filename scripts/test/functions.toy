@@ -30,6 +30,18 @@ var tally = make();
 assert tally() == 1 && tally() == 2, "Closures failed";
 
 
+//test closures self-capture
+fn capture(count: int) {
+	if (count > 5) {
+		return count;
+	}
+
+	return capture(count + 1);
+}
+
+assert capture(0) == 5, "Self capture failed";
+
+
 //test expressions as arguments
 fn argFn() {
 	return 42;

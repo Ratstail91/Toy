@@ -71,12 +71,19 @@ int _set(Interpreter* interpreter, LiteralArray* arguments) {
 		return -1;
 	}
 
+	Literal idn = arguments->literals[0];
 	Literal obj = arguments->literals[0];
 	Literal key = arguments->literals[1];
 	Literal val = arguments->literals[2];
 
+	if (!IS_IDENTIFIER(idn)) {
+		(interpreter->printOutput)("expected identifier in _set");
+		return -1;
+	}
+
 	parseIdentifierToValue(interpreter, &obj);
 	parseIdentifierToValue(interpreter, &key);
+	parseIdentifierToValue(interpreter, &val);
 
 	switch(obj.type) {
 		case LITERAL_ARRAY: {
@@ -102,9 +109,15 @@ int _set(Interpreter* interpreter, LiteralArray* arguments) {
 			}
 
 			//don't use pushLiteralArray, since we're setting
-			val = copyLiteral(val);
+			AS_ARRAY(obj)->literals[AS_INTEGER(key)] = copyLiteral(val);
 
-			AS_ARRAY(obj)->literals[AS_INTEGER(key)] = val;
+			if (!setScopeVariable(interpreter->scope, idn, obj, true)) {
+				printf(ERROR "ERROR: Incorrect type assigned to array (_set) \"");
+				printLiteral(val);
+				printf("\"\n" RESET);
+				return -1;
+			}
+
 			return 0;
 		}
 
@@ -126,10 +139,15 @@ int _set(Interpreter* interpreter, LiteralArray* arguments) {
 				}
 			}
 
-			parseIdentifierToValue(interpreter, &key);
-			parseIdentifierToValue(interpreter, &val);
-
 			setLiteralDictionary(AS_DICTIONARY(obj), key, val);
+
+			if (!setScopeVariable(interpreter->scope, idn, obj, true)) {
+				printf(ERROR "ERROR: Incorrect type assigned to dictionary (_get) \"");
+				printLiteral(val);
+				printf("\"\n" RESET);
+				return -1;
+			}
+
 			return 0;
 		}
 
@@ -186,8 +204,14 @@ int _push(Interpreter* interpreter, LiteralArray* arguments) {
 		return -1;
 	}
 
+	Literal idn = arguments->literals[0];
 	Literal obj = arguments->literals[0];
 	Literal val = arguments->literals[1];
+
+	if (!IS_IDENTIFIER(idn)) {
+		(interpreter->printOutput)("expected identifier in _push");
+		return -1;
+	}
 
 	parseIdentifierToValue(interpreter, &obj);
 	parseIdentifierToValue(interpreter, &val);
@@ -206,6 +230,14 @@ int _push(Interpreter* interpreter, LiteralArray* arguments) {
 			}
 
 			pushLiteralArray(AS_ARRAY(obj), val);
+
+			if (!setScopeVariable(interpreter->scope, idn, obj, true)) { //TODO: could definitely be more efficient than overwriting the whole original object
+				printf(ERROR "ERROR: Incorrect type assigned to array (_push) \"");
+				printLiteral(val);
+				printf("\"\n" RESET);
+				return -1;
+			}
+
 			return 0;
 		}
 
@@ -223,13 +255,29 @@ int _pop(Interpreter* interpreter, LiteralArray* arguments) {
 		return -1;
 	}
 
+	Literal idn = arguments->literals[0];
 	Literal obj = arguments->literals[0];
+
+	if (!IS_IDENTIFIER(idn)) {
+		(interpreter->printOutput)("expected identifier in _pop");
+		return -1;
+	}
 
 	parseIdentifierToValue(interpreter, &obj);
 
 	switch(obj.type) {
 		case LITERAL_ARRAY: {
-			pushLiteralArray(&interpreter->stack, popLiteralArray(AS_ARRAY(obj)));
+			Literal lit = popLiteralArray(AS_ARRAY(obj));
+			pushLiteralArray(&interpreter->stack, lit);
+			freeLiteral(lit);
+
+			if (!setScopeVariable(interpreter->scope, idn, obj, true)) { //TODO: could definitely be more efficient than overwriting the whole original object
+				printf(ERROR "ERROR: Incorrect type assigned to array (_pop) \"");
+				printLiteral(obj);
+				printf("\"\n" RESET);
+				return -1;
+			}
+
 			return 1;
 		}
 
@@ -297,24 +345,52 @@ int _clear(Interpreter* interpreter, LiteralArray* arguments) {
 		return -1;
 	}
 
+	Literal idn = arguments->literals[0];
 	Literal obj = arguments->literals[0];
+
+	if (!IS_IDENTIFIER(idn)) {
+		(interpreter->printOutput)("expected identifier in _clear");
+		return -1;
+	}
 
 	parseIdentifierToValue(interpreter, &obj);
 
+	//NOTE: just pass in new compounds
+
 	switch(obj.type) {
 		case LITERAL_ARRAY: {
-			while(AS_ARRAY(obj)->count) {
-				popLiteralArray(AS_ARRAY(obj));
+			LiteralArray* array = ALLOCATE(LiteralArray, 1);
+			initLiteralArray(array);
+
+			Literal obj = TO_ARRAY_LITERAL(array);
+
+			if (!setScopeVariable(interpreter->scope, idn, obj, true)) {
+				printf(ERROR "ERROR: Incorrect type assigned to array (_clear) \"");
+				printLiteral(obj);
+				printf("\"\n" RESET);
+				return -1;
 			}
+
+			freeLiteral(obj);
+
 			return 1;
 		}
 
 		case LITERAL_DICTIONARY: {
-			for (int i = 0; i < AS_DICTIONARY(obj)->capacity; i++) {
-				if ( !IS_NULL(AS_DICTIONARY(obj)->entries[i].key) ) {
-					removeLiteralDictionary(AS_DICTIONARY(obj), AS_DICTIONARY(obj)->entries[i].key);
-				}
+			LiteralDictionary* dictionary = ALLOCATE(LiteralDictionary, 1);
+			initLiteralDictionary(dictionary);
+
+			Literal obj = TO_DICTIONARY_LITERAL(dictionary);
+
+			if (!setScopeVariable(interpreter->scope, idn, obj, true)) {
+				printf(ERROR "ERROR: Incorrect type assigned to dictionary (_clear) \"");
+				printLiteral(obj);
+				printf("\"\n" RESET);
+				return -1;
 			}
+
+			freeLiteral(obj);
+
 			return 1;
 		}
 
