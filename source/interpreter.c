@@ -460,21 +460,21 @@ void initInterpreter(Interpreter* interpreter) {
 
 void freeInterpreter(Interpreter* interpreter) {
 	//BUGFIX: handle scopes of functions, which refer to the parent scope (leaking memory)
-	while(inner.scope != NULL) {
-		for (int i = 0; i < inner.scope->variables.capacity; i++) {
+	while(interpreter->scope != NULL) {
+		for (int i = 0; i < interpreter->scope->variables.capacity; i++) {
 			//handle keys, just in case
-			if (IS_FUNCTION(inner.scope->variables.entries[i].key)) {
-				popScope(AS_FUNCTION(inner.scope->variables.entries[i].key).scope);
-				AS_FUNCTION(inner.scope->variables.entries[i].key).scope = NULL;
+			if (IS_FUNCTION(interpreter->scope->variables.entries[i].key)) {
+				popScope(AS_FUNCTION(interpreter->scope->variables.entries[i].key).scope);
+				AS_FUNCTION(interpreter->scope->variables.entries[i].key).scope = NULL;
 			}
 
-			if (IS_FUNCTION(inner.scope->variables.entries[i].value)) {
-				popScope(AS_FUNCTION(inner.scope->variables.entries[i].value).scope);
-				AS_FUNCTION(inner.scope->variables.entries[i].value).scope = NULL;
+			if (IS_FUNCTION(interpreter->scope->variables.entries[i].value)) {
+				popScope(AS_FUNCTION(interpreter->scope->variables.entries[i].value).scope);
+				AS_FUNCTION(interpreter->scope->variables.entries[i].value).scope = NULL;
 			}
 		}
 
-		inner.scope = popScope(inner.scope);
+		interpreter->scope = popScope(interpreter->scope);
 	}
 
 	freeLiteralArray(&interpreter->literalCache);
