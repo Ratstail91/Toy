@@ -18,7 +18,7 @@ all: $(OBJ) $(TESTS:%.c=../$(OUTDIR)/%.exe)
 ifeq ($(shell uname),Linux)
 	valgrind --leak-check=full --track-origins=yes $@
 else
-	@echo please run these tests with valgrind on linux
+	$@
 endif
 
 $(OBJ): | $(ODIR)

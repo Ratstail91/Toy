@@ -267,7 +267,7 @@ static int writeLiteralToCompiler(Compiler* compiler, Literal literal) {
 	return index;
 }
 
-static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAddressesPtr, void* continueAddressesPtr) {
+static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAddressesPtr, void* continueAddressesPtr, int jumpOffsets) { //NOTE: jumpOfsets are included, because function arg and return indexes are embedded in the code body i.e. need to include thier sizes in the jump
 	//grow if the bytecode space is too small
 	if (compiler->count + 32 > compiler->capacity) {
 		int oldCapacity = compiler->capacity;
@@ -291,20 +291,20 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 
 		case NODE_UNARY:
 			//pass to the child node, then embed the unary command (print, negate, etc.)
-			writeCompilerWithJumps(compiler, node->unary.child, breakAddressesPtr, continueAddressesPtr);
+			writeCompilerWithJumps(compiler, node->unary.child, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
 			compiler->bytecode[compiler->count++] = (unsigned char)node->unary.opcode; //1 byte
 		break;
 
 		case NODE_BINARY:
 			//pass to the child nodes, then embed the binary command (math, etc.)
-			writeCompilerWithJumps(compiler, node->binary.left, breakAddressesPtr, continueAddressesPtr);
-			writeCompilerWithJumps(compiler, node->binary.right, breakAddressesPtr, continueAddressesPtr);
+			writeCompilerWithJumps(compiler, node->binary.left, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+			writeCompilerWithJumps(compiler, node->binary.right, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
 			compiler->bytecode[compiler->count++] = (unsigned char)node->binary.opcode; //1 byte
 		break;
 
 		case NODE_GROUPING:
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_GROUPING_BEGIN; //1 byte
-			writeCompilerWithJumps(compiler, node->grouping.child, breakAddressesPtr, continueAddressesPtr);
+			writeCompilerWithJumps(compiler, node->grouping.child, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_GROUPING_END; //1 byte
 		break;
 
@@ -312,7 +312,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_SCOPE_BEGIN; //1 byte
 
 			for (int i = 0; i < node->block.count; i++) {
-				writeCompilerWithJumps(compiler, &(node->block.nodes[i]), breakAddressesPtr, continueAddressesPtr);
+				writeCompilerWithJumps(compiler, &(node->block.nodes[i]), breakAddressesPtr, continueAddressesPtr, jumpOffsets);
 			}
 
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_SCOPE_END; //1 byte
@@ -343,7 +343,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 
 		case NODE_VAR_DECL: {
 			//first, embed the expression (leaves it on the stack)
-			writeCompilerWithJumps(compiler, node->varDecl.expression, breakAddressesPtr, continueAddressesPtr);
+			writeCompilerWithJumps(compiler, node->varDecl.expression, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
 
 			//write each piece of the declaration to the bytecode
 			int identifierIndex = findLiteralIndex(&compiler->literalCache, node->varDecl.identifier);
@@ -379,7 +379,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			initCompiler(fnCompiler);
 			writeCompiler(fnCompiler, node->fnDecl.arguments); //can be empty, but not NULL
 			writeCompiler(fnCompiler, node->fnDecl.returns); //can be empty, but not NULL
-			writeCompiler(fnCompiler, node->fnDecl.block); //can be empty, but not NULL
+			writeCompilerWithJumps(fnCompiler, node->fnDecl.block, NULL, NULL, -4); //can be empty, but not NULL
 
 			//create the function in the literal cache (by storing the compiler object)
 			Literal fnLiteral = TO_FUNCTION_LITERAL(fnCompiler, 0);
@@ -429,7 +429,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			for (int i = 0; i < node->fnCall.arguments->fnCollection.count; i++) { //reverse order, to count from the beginning in the interpreter
 				//sub-calls
 				if (node->fnCall.arguments->fnCollection.nodes[i].type != NODE_LITERAL) {
-					writeCompilerWithJumps(compiler, &node->fnCall.arguments->fnCollection.nodes[i], breakAddressesPtr, continueAddressesPtr);
+					writeCompilerWithJumps(compiler, &node->fnCall.arguments->fnCollection.nodes[i], breakAddressesPtr, continueAddressesPtr, jumpOffsets);
 					continue;
 				}
 
@@ -482,7 +482,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 
 		case NODE_PATH_IF: {
 			//process the condition
-			writeCompilerWithJumps(compiler, node->path.condition, breakAddressesPtr, continueAddressesPtr);
+			writeCompilerWithJumps(compiler, node->path.condition, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
 
 			//cache the point to insert the jump distance at
 			compiler->bytecode[compiler->count++] = OP_IF_FALSE_JUMP; //1 byte
@@ -490,7 +490,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			compiler->count += sizeof(unsigned short); //2 bytes
 
 			//write the then path
-			writeCompilerWithJumps(compiler, node->path.thenPath, breakAddressesPtr, continueAddressesPtr);
+			writeCompilerWithJumps(compiler, node->path.thenPath, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
 
 			int jumpToEnd = 0;
 
@@ -502,14 +502,14 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			}
 
 			//update the jumpToElse to point here
-			AS_USHORT(compiler->bytecode[jumpToElse]) = compiler->count; //2 bytes
+			AS_USHORT(compiler->bytecode[jumpToElse]) = compiler->count + jumpOffsets; //2 bytes
 
 			if (node->path.elsePath) {
 				//if there's an else path, write it and 
-				writeCompilerWithJumps(compiler, node->path.elsePath, breakAddressesPtr, continueAddressesPtr);
+				writeCompilerWithJumps(compiler, node->path.elsePath, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
 
 				//update the jumpToEnd to point here
-				AS_USHORT(compiler->bytecode[jumpToEnd]) = compiler->count; //2 bytes
+				AS_USHORT(compiler->bytecode[jumpToEnd]) = compiler->count + jumpOffsets; //2 bytes
 			}
 		}
 		break;
@@ -526,7 +526,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			unsigned short jumpToStart = compiler->count;
 
 			//process the condition
-			writeCompilerWithJumps(compiler, node->path.condition, &breakAddresses, &continueAddresses);
+			writeCompilerWithJumps(compiler, node->path.condition, &breakAddresses, &continueAddresses, jumpOffsets);
 
 			//if false, jump to end
 			compiler->bytecode[compiler->count++] = OP_IF_FALSE_JUMP; //1 byte
@@ -534,26 +534,29 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			compiler->count += sizeof(unsigned short); //2 bytes
 
 			//write the body
-			writeCompilerWithJumps(compiler, node->path.thenPath, &breakAddresses, &continueAddresses);
+			writeCompilerWithJumps(compiler, node->path.thenPath, &breakAddresses, &continueAddresses, jumpOffsets);
 
 			//jump to condition
 			compiler->bytecode[compiler->count++] = OP_JUMP; //1 byte
-			AS_USHORT(compiler->bytecode[compiler->count]) = jumpToStart;
+			AS_USHORT(compiler->bytecode[compiler->count]) = jumpToStart + jumpOffsets;
 			compiler->count += sizeof(unsigned short); //2 bytes
 
 			//jump from condition
-			AS_USHORT(compiler->bytecode[jumpToEnd]) = (unsigned short)compiler->count;
+			AS_USHORT(compiler->bytecode[jumpToEnd]) = (unsigned short)compiler->count + jumpOffsets;
 
 			//set the breaks and continues
 			for (int i = 0; i < breakAddresses.count; i++) {
 				int point = AS_INTEGER(breakAddresses.literals[i]);
-				AS_USHORT(compiler->bytecode[point]) = (unsigned short)compiler->count;
+				AS_USHORT(compiler->bytecode[point]) = (unsigned short)compiler->count + jumpOffsets;
 			}
 
 			for (int i = 0; i < continueAddresses.count; i++) {
 				int point = AS_INTEGER(continueAddresses.literals[i]);
-				AS_USHORT(compiler->bytecode[point]) = jumpToStart;
+				AS_USHORT(compiler->bytecode[point]) = jumpToStart + jumpOffsets;
 			}
+
+			//clear the stack after use
+			compiler->bytecode[compiler->count++] = OP_POP_STACK; //1 byte
 
 			//cleanup
 			freeLiteralArray(&breakAddresses);
@@ -572,11 +575,11 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			compiler->bytecode[compiler->count++] = OP_SCOPE_BEGIN; //1 byte
 
 			//initial setup
-			writeCompilerWithJumps(compiler, node->path.preClause, &breakAddresses, &continueAddresses);
+			writeCompilerWithJumps(compiler, node->path.preClause, &breakAddresses, &continueAddresses, jumpOffsets);
 
 			//conditional
 			unsigned short jumpToStart = compiler->count;
-			writeCompilerWithJumps(compiler, node->path.condition, &breakAddresses, &continueAddresses);
+			writeCompilerWithJumps(compiler, node->path.condition, &breakAddresses, &continueAddresses, jumpOffsets);
 
 			//if false jump to end
 			compiler->bytecode[compiler->count++] = OP_IF_FALSE_JUMP; //1 byte
@@ -585,33 +588,36 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 
 			//write the body
 			compiler->bytecode[compiler->count++] = OP_SCOPE_BEGIN; //1 byte
-			writeCompilerWithJumps(compiler, node->path.thenPath, &breakAddresses, &continueAddresses);
+			writeCompilerWithJumps(compiler, node->path.thenPath, &breakAddresses, &continueAddresses, jumpOffsets);
 			compiler->bytecode[compiler->count++] = OP_SCOPE_END; //1 byte
 
 			//for-breaks actually jump to the bottom
 			int jumpToIncrement = compiler->count;
 
 			//evaluate third clause, restart
-			writeCompilerWithJumps(compiler, node->path.postClause, &breakAddresses, &continueAddresses);
+			writeCompilerWithJumps(compiler, node->path.postClause, &breakAddresses, &continueAddresses, jumpOffsets);
 
 			compiler->bytecode[compiler->count++] = OP_JUMP; //1 byte
-			AS_USHORT(compiler->bytecode[compiler->count]) = jumpToStart;
+			AS_USHORT(compiler->bytecode[compiler->count]) = jumpToStart + jumpOffsets;
 			compiler->count += sizeof(unsigned short); //2 bytes
 
-			AS_USHORT(compiler->bytecode[jumpToEnd]) = compiler->count;
+			AS_USHORT(compiler->bytecode[jumpToEnd]) = compiler->count + jumpOffsets;
 
 			compiler->bytecode[compiler->count++] = OP_SCOPE_END; //1 byte
 
 			//set the breaks and continues
 			for (int i = 0; i < breakAddresses.count; i++) {
 				int point = AS_INTEGER(breakAddresses.literals[i]);
-				AS_USHORT(compiler->bytecode[point]) = compiler->count;
+				AS_USHORT(compiler->bytecode[point]) = compiler->count + jumpOffsets;
 			}
 
 			for (int i = 0; i < continueAddresses.count; i++) {
 				int point = AS_INTEGER(continueAddresses.literals[i]);
-				AS_USHORT(compiler->bytecode[point]) = jumpToIncrement;
+				AS_USHORT(compiler->bytecode[point]) = jumpToIncrement + jumpOffsets;
 			}
+
+			//clear the stack after use
+			compiler->bytecode[compiler->count++] = OP_POP_STACK; //1 byte
 
 			//cleanup
 			freeLiteralArray(&breakAddresses);
@@ -658,7 +664,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 		case NODE_PATH_RETURN: {
 			//read each returned literal onto the stack, and return the number of values to return
 			for (int i = 0; i < node->path.thenPath->fnCollection.count; i++) {
-				writeCompilerWithJumps(compiler, &node->path.thenPath->fnCollection.nodes[i], breakAddressesPtr, continueAddressesPtr);
+				writeCompilerWithJumps(compiler, &node->path.thenPath->fnCollection.nodes[i], breakAddressesPtr, continueAddressesPtr, jumpOffsets);
 			}
 
 			//push the return, with the number of literals
@@ -714,7 +720,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 }
 
 void writeCompiler(Compiler* compiler, Node* node) {
-	writeCompilerWithJumps(compiler, node, NULL, NULL);
+	writeCompilerWithJumps(compiler, node, NULL, NULL, 0);
 }
 
 void freeCompiler(Compiler* compiler) {

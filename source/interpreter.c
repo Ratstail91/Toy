@@ -597,8 +597,12 @@ static bool execPushLiteral(Interpreter* interpreter, bool lng) {
 static bool rawLiteral(Interpreter* interpreter) {
 	Literal lit = popLiteralArray(&interpreter->stack);
 
-	if (!parseIdentifierToValue(interpreter, &lit)) {
-		return false;
+	if (IS_IDENTIFIER(lit)) {
+		Literal idn = lit;
+		if (!parseIdentifierToValue(interpreter, &lit)) {
+			return false;
+		}
+		freeLiteral(idn);
 	}
 
 	pushLiteralArray(&interpreter->stack, lit);
@@ -1277,8 +1281,12 @@ static bool execFalseJump(Interpreter* interpreter) {
 	//actually jump
 	Literal lit = popLiteralArray(&interpreter->stack);
 
-	if (!parseIdentifierToValue(interpreter, &lit)) {
-		return false;
+	bool freeLit = false;
+	if (IS_IDENTIFIER(lit)) {
+		Literal idn = lit;
+		parseIdentifierToValue(interpreter, &lit);
+		freeLiteral(idn);
+		freeLit = true;
 	}
 
 	if (IS_NULL(lit)) {
@@ -1290,7 +1298,9 @@ static bool execFalseJump(Interpreter* interpreter) {
 		interpreter->count = target + interpreter->codeStart;
 	}
 
-	freeLiteral(lit);
+	if (freeLit) {
+		freeLiteral(lit);
+	}
 
 	return true;
 }
@@ -1322,8 +1332,6 @@ static bool execFnCall(Interpreter* interpreter) {
 		return false;
 	}
 
-	freeLiteral(identifier);
-
 	//check for side-loaded native functions
 	if (IS_FUNCTION_NATIVE(func)) {
 		//reverse the order to the correct order
@@ -1342,6 +1350,18 @@ static bool execFnCall(Interpreter* interpreter) {
 		freeLiteralArray(&correct);
 		return true;
 	}
+
+	if (!IS_FUNCTION(func)) {
+		printf(ERROR "ERROR: Function not found: ");
+		printLiteral(identifier);
+		printf("\n" RESET);
+
+		freeLiteral(identifier);
+		freeLiteralArray(&arguments);
+		return false;
+	}
+
+	freeLiteral(identifier);
 
 	//set up a new interpreter
 	Interpreter inner;
@@ -1463,7 +1483,7 @@ static bool execFnCall(Interpreter* interpreter) {
 	initLiteralArray(&returns);
 
 	//unpack the results
-	while (inner.stack.count > 0) {
+	for (int i = 0; i < (returnArray->count || 1); i++) {
 		Literal lit = popLiteralArray(&inner.stack);
 		pushLiteralArray(&returns, lit); //NOTE: also reverses the order
 		freeLiteral(lit);
@@ -1473,7 +1493,7 @@ static bool execFnCall(Interpreter* interpreter) {
 
 	//TODO: remove this when multiple assignment is enabled - note the BUGFIX that balances the stack
 	if (returns.count > 1) {
-		printf(ERROR "ERROR: Too many values returned (multiple returns not yet implemented)\n" RESET);
+		printf(ERROR "ERROR: Too many values returned (multiple returns not yet supported)\n" RESET);
 
 		returnValue = false;
 	}
@@ -1526,7 +1546,11 @@ static bool execFnReturn(Interpreter* interpreter) {
 	//get the values of everything on the stack
 	while (interpreter->stack.count > 0) {
 		Literal lit = popLiteralArray(&interpreter->stack);
-		parseIdentifierToValue(interpreter, &lit);
+		if (IS_IDENTIFIER(lit)) {
+			Literal idn = lit;
+			parseIdentifierToValue(interpreter, &lit);
+			freeLiteral(idn);
+		}
 		pushLiteralArray(&returns, lit); //reverses the order
 		freeLiteral(lit);
 	}
@@ -1728,6 +1752,12 @@ static void execInterpreter(Interpreter* interpreter) {
 			case OP_FN_RETURN:
 				if (!execFnReturn(interpreter)) {
 					return;
+				}
+			break;
+
+			case OP_POP_STACK:
+				while (interpreter->stack.count > 0) {
+					freeLiteral(popLiteralArray(&interpreter->stack));
 				}
 			break;
 

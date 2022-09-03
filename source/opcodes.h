@@ -63,6 +63,9 @@ typedef enum Opcode {
 	OP_FN_CALL,
 	OP_FN_RETURN,
 
+	//pop the stack at the end of a complex statement
+	OP_POP_STACK,
+
 	//meta
 	OP_FN_END, //different from SECTION_END
 	OP_SECTION_END = 255,

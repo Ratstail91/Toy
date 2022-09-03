@@ -1,8 +1,19 @@
+fn capture(count: int) {
+	print count;
+	print capture;
 
+	if (count < 5) {
+		return count;
+	}
 
+	print count;
+	print capture;
 
-fn foo() {
-	//
+	count++;
+	count++;
+
+//	return capture(count + 1);
+	return -1;
 }
 
-foo();
+print capture(52);

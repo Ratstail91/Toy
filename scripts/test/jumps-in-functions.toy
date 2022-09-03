@@ -1,0 +1,87 @@
+fn sanity() {
+	//test true jump
+	if (true) {
+		assert true, "if-then failed (1)";
+	}
+	else {
+		assert false, "if-then failed (2)";
+	}
+
+
+	//test false jump
+	if (false) {
+		assert false, "if-then failed (3)";
+	}
+	else {
+		assert true, "if-then failed (4)";
+	}
+
+
+	//test while loop
+	var whileCounter = 0;
+	while (whileCounter < 10) {
+		whileCounter = whileCounter + 1;
+	}
+
+	assert whileCounter == 10, "while-loop failed";
+
+
+	//test for loop
+	var forCache = 0;
+	for (var i = 0; i < 20; i++) {
+		forCache = i;
+	}
+
+	assert forCache == 19, "for-loop failed";
+
+
+	//test break - while
+	var breakWhileCache = 0;
+	while(true) {
+		breakWhileCache = breakWhileCache + 1;
+
+		if (breakWhileCache >= 7) {
+			break;
+		}
+	}
+
+	assert breakWhileCache == 7, "break-while failed";
+
+
+	//test continue - while
+	var continueWhileCache = 0;
+	while (continueWhileCache < 10) {
+		continueWhileCache = continueWhileCache + 1;
+
+		if (continueWhileCache >= 7) {
+			continue;
+		}
+
+		assert continueWhileCache < 7, "continue-while failed";
+	}
+
+
+	//test break - for
+	for (var i = 0; i < 10; i++) {
+		if (i >= 7) {
+			break;
+		}
+
+		assert i < 7, "break-for failed";
+	}
+
+
+	//test break - continue
+	for (var i = 0; i < 10; i++) {
+		if (i >= 7) {
+			continue;
+		}
+
+		assert i < 7, "continue-for failed";
+	}
+
+	print "All good";
+}
+
+//invoke the test
+sanity();
