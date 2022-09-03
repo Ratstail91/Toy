@@ -1,12 +1,8 @@
-fn capture(count: int) {
-	print count;
-	print capture;
 
-	if (count > 5) {
-		return count;
-	}
 
-	return capture(count + 1);
+fn panic() {
+	assert false, "This should only be seen once";
 }
 
-print capture(0);
+panic();
+panic();

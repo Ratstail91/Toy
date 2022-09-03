@@ -550,6 +550,7 @@ static bool execAssert(Interpreter* interpreter) {
 
 	if (IS_NULL(lhs) || !IS_TRUTHY(lhs)) {
 		(*interpreter->assertOutput)(AS_STRING(rhs));
+		freeLiteral(rhs);
 		interpreter->panic = true;
 		return false;
 	}
@@ -569,6 +570,7 @@ static bool execPrint(Interpreter* interpreter) {
 		if (!parseIdentifierToValue(interpreter, &lit)) {
 			return false;
 		}
+		freeLiteral(idn);
 	}
 
 	printLiteralCustom(lit, interpreter->printOutput);
@@ -657,7 +659,7 @@ static bool execInvert(Interpreter* interpreter) {
 		if (!parseIdentifierToValue(interpreter, &lit)) {
 			return false;
 		}
-		freeLitreral(idn);
+		freeLiteral(idn);
 	}
 
 	if (IS_BOOLEAN(lit)) {
@@ -849,7 +851,12 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 	}
 
 	Literal val = popLiteralArray(&interpreter->stack);
-	parseIdentifierToValue(interpreter, &val);
+
+	if (IS_IDENTIFIER(val)) {
+		Literal idn = val;
+		parseIdentifierToValue(interpreter, &val);
+		freeLiteral(idn);
+	}
 
 	if (!IS_NULL(val) && !setScopeVariable(interpreter->scope, identifier, val, false)) {
 		printf(ERROR "ERROR: Incorrect type assigned to variable \"");
@@ -919,7 +926,11 @@ static bool execVarAssign(Interpreter* interpreter) {
 	Literal rhs = popLiteralArray(&interpreter->stack);
 	Literal lhs = popLiteralArray(&interpreter->stack);
 
-	parseIdentifierToValue(interpreter, &rhs);
+	if (IS_IDENTIFIER(rhs)) {
+		Literal idn = rhs;
+		parseIdentifierToValue(interpreter, &rhs);
+		freeLiteral(idn);
+	}
 
 	if (!IS_IDENTIFIER(lhs)) {
 		printf(ERROR "ERROR: Can't assign to a non-variable \"");
@@ -932,6 +943,9 @@ static bool execVarAssign(Interpreter* interpreter) {
 		printf(ERROR "ERROR: Undeclared variable \"");
 		printLiteral(lhs);
 		printf("\"\n" RESET);
+
+		freeLiteral(lhs);
+		freeLiteral(rhs);
 		return false;
 	}
 
@@ -939,6 +953,9 @@ static bool execVarAssign(Interpreter* interpreter) {
 		printf(ERROR "ERROR Incorrect type assigned to variable \"");
 		printLiteral(lhs);
 		printf("\"\n" RESET);
+
+		freeLiteral(lhs);
+		freeLiteral(rhs);
 		return false;
 	}
 
@@ -1352,7 +1369,9 @@ static bool execFnCall(Interpreter* interpreter) {
 		initLiteralArray(&correct);
 
 		while(arguments.count) {
-			pushLiteralArray(&correct, popLiteralArray(&arguments));
+			Literal lit =  popLiteralArray(&arguments);
+			pushLiteralArray(&correct, lit);
+			freeLiteral(lit);
 		}
 
 		freeLiteralArray(&arguments);
@@ -1361,6 +1380,7 @@ static bool execFnCall(Interpreter* interpreter) {
 		((NativeFn) AS_FUNCTION(func).bytecode )(interpreter, &correct);
 
 		freeLiteralArray(&correct);
+		freeLiteral(identifier);
 		return true;
 	}
 
