@@ -39,7 +39,7 @@ fn capture(count: int) {
 	return capture(count + 1);
 }
 
-assert capture(0) == 5, "Self capture failed";
+assert capture(0) == 6, "Self capture failed";
 
 
 //test expressions as arguments

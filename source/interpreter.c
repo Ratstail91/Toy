@@ -1469,7 +1469,7 @@ static bool execFnCall(Interpreter* interpreter) {
 		}
 
 		freeLiteral(restType);
-		freeLiteral(lit);
+		freeLiteralArray(&rest);
 	}
 
 	//execute the interpreter
