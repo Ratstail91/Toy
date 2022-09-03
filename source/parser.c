@@ -1177,7 +1177,6 @@ static void expressionStmt(Parser* parser, Node** nodeHandle) {
 		return;
 	}
 
-	//BUGFIX: statements assume the node exists, expressions assume it doens't
 	Node* ptr = NULL;
 	expression(parser, &ptr);
 

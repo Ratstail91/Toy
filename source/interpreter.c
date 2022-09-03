@@ -82,8 +82,18 @@ int _set(Interpreter* interpreter, LiteralArray* arguments) {
 	}
 
 	parseIdentifierToValue(interpreter, &obj);
-	parseIdentifierToValue(interpreter, &key);
-	parseIdentifierToValue(interpreter, &val);
+
+	bool freeKey = false;
+	if (IS_IDENTIFIER(key)) {
+		parseIdentifierToValue(interpreter, &key);
+		freeKey = true;
+	}
+
+	bool freeVal = false;
+	if (IS_IDENTIFIER(val)) {
+		parseIdentifierToValue(interpreter, &val);
+		freeVal = true;
+	}
 
 	switch(obj.type) {
 		case LITERAL_ARRAY: {
@@ -118,11 +128,7 @@ int _set(Interpreter* interpreter, LiteralArray* arguments) {
 				return -1;
 			}
 
-			freeLiteral(obj);
-			freeLiteral(key);
-			freeLiteral(val);
-
-			return 0;
+			break;
 		}
 
 		case LITERAL_DICTIONARY: {
@@ -152,11 +158,7 @@ int _set(Interpreter* interpreter, LiteralArray* arguments) {
 				return -1;
 			}
 
-			freeLiteral(obj);
-			freeLiteral(key);
-			freeLiteral(val);
-
-			return 0;
+			break;
 		}
 
 		default:
@@ -164,6 +166,18 @@ int _set(Interpreter* interpreter, LiteralArray* arguments) {
 			printLiteral(obj);
 			return -1;
 	}
+
+	freeLiteral(obj);
+
+	if (freeKey) {
+		freeLiteral(key);
+	}
+
+	if (freeVal) {
+		freeLiteral(val);
+	}
+
+	return 0;
 }
 
 int _get(Interpreter* interpreter, LiteralArray* arguments) {
@@ -1382,14 +1396,17 @@ static bool execFnCall(Interpreter* interpreter) {
 			return false;
 		}
 
-		if (!setScopeVariable(inner.scope, paramArray->literals[i], popLiteralArray(&arguments), false)) {
+		Literal arg = popLiteralArray(&arguments);
+		if (!setScopeVariable(inner.scope, paramArray->literals[i], arg, false)) {
 			printf(ERROR "[internal] Could not define parameter (bad type?)\n" RESET);
 			//free, and skip out
+			freeLiteral(arg);
 			freeLiteralArray(&arguments);
 			popScope(inner.scope);
 			freeInterpreter(&inner);
 			return false;
 		}
+		freeLiteral(arg);
 	}
 
 	//if using rest, pack the optional extra arguments into the rest parameter (array)
@@ -1419,11 +1436,12 @@ static bool execFnCall(Interpreter* interpreter) {
 			return false;
 		}
 
-		if (!setScopeVariable(inner.scope, restParam, TO_ARRAY_LITERAL(&rest), false)) {
+		Literal lit = TO_ARRAY_LITERAL(&rest);
+		if (!setScopeVariable(inner.scope, restParam, lit, false)) {
 			printf(ERROR "[internal] Could not define rest parameter\n" RESET);
 			//free, and skip out
 			freeLiteral(restType);
-			freeLiteralArray(&rest);
+			freeLiteral(lit);
 			freeLiteralArray(&arguments);
 			popScope(inner.scope);
 			freeInterpreter(&inner);
@@ -1431,6 +1449,7 @@ static bool execFnCall(Interpreter* interpreter) {
 		}
 
 		freeLiteral(restType);
+		freeLiteral(lit);
 	}
 
 	//execute the interpreter
