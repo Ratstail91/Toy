@@ -617,8 +617,12 @@ static bool execNegate(Interpreter* interpreter) {
 	//negate the top literal on the stack (numbers only)
 	Literal lit = popLiteralArray(&interpreter->stack);
 
-	if (!parseIdentifierToValue(interpreter, &lit)) {
-		return false;
+	if (IS_IDENTIFIER(lit)) {
+		Literal idn = lit;
+		if (!parseIdentifierToValue(interpreter, &lit)) {
+			return false;
+		}
+		freeLiteral(idn);
 	}
 
 	else if (IS_INTEGER(lit)) {
@@ -648,8 +652,12 @@ static bool execInvert(Interpreter* interpreter) {
 	//negate the top literal on the stack (booleans only)
 	Literal lit = popLiteralArray(&interpreter->stack);
 
-	if (!parseIdentifierToValue(interpreter, &lit)) {
-		return false;
+	if (IS_IDENTIFIER(lit)) {
+		Literal idn = lit;
+		if (!parseIdentifierToValue(interpreter, &lit)) {
+			return false;
+		}
+		freeLitreral(idn);
 	}
 
 	if (IS_BOOLEAN(lit)) {
@@ -959,8 +967,12 @@ static bool execValCast(Interpreter* interpreter) {
 	Literal value = popLiteralArray(&interpreter->stack);
 	Literal type = popLiteralArray(&interpreter->stack);
 
-	if (!parseIdentifierToValue(interpreter, &value)) {
-		return false;
+	if (IS_IDENTIFIER(value)) {
+		Literal idn = value;
+		if (!parseIdentifierToValue(interpreter, &value)) {
+			return false;
+		}
+		freeLiteral(idn);
 	}
 
 	Literal result = TO_NULL_LITERAL;
