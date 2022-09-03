@@ -1,0 +1,12 @@
+fn fib(n : int) {
+    if (n < 2) {
+        return n;
+    }
+
+    return fib(n-1) + fib(n-2);
+}
+
+for (var i = 0; i < 40; i++) {
+	var res = fib(i);
+	print (string)i + ": " + (string)res;
+}

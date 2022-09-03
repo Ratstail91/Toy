@@ -1450,6 +1450,13 @@ static bool execFnCall(Interpreter* interpreter) {
 		}
 
 		Literal arg = popLiteralArray(&arguments);
+
+		if (IS_IDENTIFIER(arg)) {
+			Literal idn = arg;
+			parseIdentifierToValue(interpreter, &arg);
+			freeLiteral(idn);
+		}
+
 		if (!setScopeVariable(inner.scope, paramArray->literals[i], arg, false)) {
 			printf(ERROR "[internal] Could not define parameter (bad type?)\n" RESET);
 			//free, and skip out
