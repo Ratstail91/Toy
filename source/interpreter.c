@@ -441,6 +441,7 @@ void initInterpreter(Interpreter* interpreter) {
 	interpreter->bytecode = NULL;
 	interpreter->length = 0;
 	interpreter->count = 0;
+	interpreter->codeStart = -1;
 
 	initLiteralArray(&interpreter->stack);
 
@@ -1405,6 +1406,7 @@ static bool execFnCall(Interpreter* interpreter) {
 	inner.bytecode = AS_FUNCTION(func).bytecode;
 	inner.length = func.as.function.length;
 	inner.count = 0;
+	inner.codeStart = -1;
 	inner.panic = false;
 	initLiteralArray(&inner.stack);
 	setInterpreterPrint(&inner, interpreter->printOutput);
@@ -1614,7 +1616,9 @@ static bool execFnReturn(Interpreter* interpreter) {
 //the heart of toy
 static void execInterpreter(Interpreter* interpreter) {
 	//set the starting point for the interpreter
-	interpreter->codeStart = interpreter->count;
+	if (interpreter->codeStart == -1) {
+		interpreter->codeStart = interpreter->count;
+	}
 
 	unsigned char opcode = readByte(interpreter->bytecode, &interpreter->count);
 

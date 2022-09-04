@@ -1,8 +1,5 @@
 
-
-fn panic() {
-	assert false, "This should only be seen once";
+for (var i = 0; i < 40; i++) {
+	print i;
+	print (string)i + " printed";
 }
-
-panic();
-panic();

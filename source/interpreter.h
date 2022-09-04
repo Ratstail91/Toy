@@ -15,7 +15,7 @@ typedef struct Interpreter {
 	unsigned char* bytecode;
 	int length;
 	int count;
-	int codeStart; //for jumps
+	int codeStart; //BUGFIX: for jumps, must be initialized to -1
 	LiteralArray literalCache; //read-only - built from the bytecode, refreshed each time new bytecode is provided
 
 	//operation
