@@ -62,7 +62,7 @@
 
 
 	//test dictionaries with types
-	var dict: [string, string] = [:];
+	var dict: [string : string] = [:];
 
 	_set(dict, "key", "value");
 

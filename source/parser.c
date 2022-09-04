@@ -1273,7 +1273,7 @@ static Literal readTypeToLiteral(Parser* parser) {
 		case TOKEN_BRACKET_LEFT: {
 			Literal l = readTypeToLiteral(parser);
 
-			if (match(parser, TOKEN_COMMA)) {
+			if (match(parser, TOKEN_COLON)) {
 				Literal r = readTypeToLiteral(parser);
 
 				TYPE_PUSH_SUBTYPE(&literal, l);

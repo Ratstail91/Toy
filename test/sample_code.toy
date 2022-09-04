@@ -1,7 +1,7 @@
 
 
 
-var complex: type = type [string, [int]];
+var complex: type = type [string: [int]];
 var deep: type = type [[[ int ]]];
 
 
