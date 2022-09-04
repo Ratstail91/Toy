@@ -23,15 +23,13 @@ static void assertWrapper(const char* output) {
 }
 
 static void errorWrapper(const char* output) {
-	fprintf(stderr, ERROR "ERROR: ");
-	fprintf(stderr, "%s", output);
-	fprintf(stderr, RESET); //no newline
+	fprintf(stderr, ERROR "%s" RESET, output); //no newline
 }
 
 bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func) {
 	//reject reserved words
 	if (findTypeByKeyword(name) != TOKEN_EOF) {
-		printf("Can't override an existing keyword");
+		interpreter->errorOutput("Can't override an existing keyword\n");
 		return false;
 	}
 
@@ -39,7 +37,7 @@ bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func) {
 
 	//make sure the name isn't taken
 	if (existsLiteralDictionary(&interpreter->scope->variables, identifier)) {
-		printf("Can't override an existing variable");
+		interpreter->errorOutput("Can't override an existing variable\n");
 		return false;
 	}
 
@@ -62,9 +60,9 @@ bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr) {
 	if (IS_IDENTIFIER(*literalPtr)) {
 	//	Literal idn = *literalPtr;
 		if (!getScopeVariable(interpreter->scope, *literalPtr, literalPtr)) {
-			printf(ERROR "ERROR: Undeclared variable \"");;
-			printLiteral(*literalPtr);
-			printf("\"\n" RESET);
+			interpreter->errorOutput("Undeclared variable ");;
+			printLiteralCustom(*literalPtr, interpreter->errorOutput);
+			interpreter->errorOutput("\n");
 			return false;
 		}
 	//	freeLiteral(idn);
