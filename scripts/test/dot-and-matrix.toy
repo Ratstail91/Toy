@@ -1,26 +1,16 @@
-/*
-
 //dot product
 var a = [1, 2, 3];
 var b = [4, 5, 6];
 
-assert _length(a) == _length(b), "lengths wrong";
+assert _length(a) == _length(b), "a and b lengths are wrong";
 
 var acc = 0;
 for (var i = 0; i < _length(a); i++) {
 	acc += _get(a, i) * _get(b, i);
 }
 
-print acc;
+assert acc == 32, "dot product failed";
 
-*/
-
-//matrix multiply
-var c = [[4], [5], [6]]; //this is going t obe a 3x1
-var d = [[1, 2, 3]]; //this is going to be a 1x3
-
-// c x d = 3x3
-// d x c = 1x1
 
 //assume the args are matrices
 fn matrix(first, second) {
@@ -65,6 +55,13 @@ fn matrix(first, second) {
 
 	return result;
 }
+
+//matrix multiply
+var c = [[4], [5], [6]]; //this is a 3x1
+var d = [[1, 2, 3]]; //this is a 1x3
+
+// c x d = 3x3
+// d x c = 1x1
 
 assert matrix(c, d) == [[4,8,12],[5,10,15],[6,12,18]], "Matrix multiplication failed";
 
