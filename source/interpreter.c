@@ -4,19 +4,28 @@
 #include "common.h"
 #include "memory.h"
 #include "keyword_types.h"
+#include "opcodes.h"
+
+#include "lib_builtin.h"
 
 #include <stdio.h>
 #include <string.h>
 
-static void stdoutWrapper(const char* output) {
+static void printWrapper(const char* output) {
 	printf("%s", output);
 	printf("\n"); //default new line
 }
 
-static void stderrWrapper(const char* output) {
+static void assertWrapper(const char* output) {
 	fprintf(stderr, ERROR "Assertion failure: ");
 	fprintf(stderr, "%s", output);
 	fprintf(stderr, "\n" RESET); //default new line
+}
+
+static void errorWrapper(const char* output) {
+	fprintf(stderr, ERROR "ERROR: ");
+	fprintf(stderr, "%s", output);
+	fprintf(stderr, RESET); //no newline
 }
 
 bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func) {
@@ -64,413 +73,6 @@ bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr) {
 	return true;
 }
 
-int _set(Interpreter* interpreter, LiteralArray* arguments) {
-	//if wrong number of arguments, fail
-	if (arguments->count != 3) {
-		(interpreter->printOutput)("Incorrect number of arguments to _set");
-		return -1;
-	}
-
-	Literal idn = arguments->literals[0];
-	Literal obj = arguments->literals[0];
-	Literal key = arguments->literals[1];
-	Literal val = arguments->literals[2];
-
-	if (!IS_IDENTIFIER(idn)) {
-		(interpreter->printOutput)("expected identifier in _set");
-		return -1;
-	}
-
-	parseIdentifierToValue(interpreter, &obj);
-
-	bool freeKey = false;
-	if (IS_IDENTIFIER(key)) {
-		parseIdentifierToValue(interpreter, &key);
-		freeKey = true;
-	}
-
-	bool freeVal = false;
-	if (IS_IDENTIFIER(val)) {
-		parseIdentifierToValue(interpreter, &val);
-		freeVal = true;
-	}
-
-	switch(obj.type) {
-		case LITERAL_ARRAY: {
-			Literal typeLiteral = getScopeType(interpreter->scope, key);
-
-			if (AS_TYPE(typeLiteral).typeOf == LITERAL_ARRAY) {
-				Literal subtypeLiteral = ((Literal*)(AS_TYPE(typeLiteral).subtypes))[0];
-
-				if (AS_TYPE(subtypeLiteral).typeOf != LITERAL_ANY && AS_TYPE(subtypeLiteral).typeOf != val.type) {
-					(interpreter->printOutput)("bad argument type in _set");
-					return -1;
-				}
-			}
-
-			if (!IS_INTEGER(key)) {
-				(interpreter->printOutput)("Expected integer index in _set");
-				return -1;
-			}
-
-			if (AS_ARRAY(obj)->count <= AS_INTEGER(key) || AS_INTEGER(key) < 0) {
-				(interpreter->printOutput)("Index out of bounds in _set");
-				return -1;
-			}
-
-			//don't use pushLiteralArray, since we're setting
-			freeLiteral(AS_ARRAY(obj)->literals[AS_INTEGER(key)]); //BUGFIX: clear any existing data first
-			AS_ARRAY(obj)->literals[AS_INTEGER(key)] = copyLiteral(val);
-
-			if (!setScopeVariable(interpreter->scope, idn, obj, true)) {
-				printf(ERROR "ERROR: Incorrect type assigned to array (_set) \"");
-				printLiteral(val);
-				printf("\"\n" RESET);
-				return -1;
-			}
-
-			break;
-		}
-
-		case LITERAL_DICTIONARY: {
-			Literal typeLiteral = getScopeType(interpreter->scope, key);
-
-			if (AS_TYPE(typeLiteral).typeOf == LITERAL_DICTIONARY) {
-				Literal keySubtypeLiteral = ((Literal*)(AS_TYPE(typeLiteral).subtypes))[0];
-				Literal valSubtypeLiteral = ((Literal*)(AS_TYPE(typeLiteral).subtypes))[1];
-
-				if (AS_TYPE(keySubtypeLiteral).typeOf != LITERAL_ANY && AS_TYPE(keySubtypeLiteral).typeOf != key.type) {
-					(interpreter->printOutput)("bad argument type in _set");
-					return -1;
-				}
-
-				if (AS_TYPE(valSubtypeLiteral).typeOf != LITERAL_ANY && AS_TYPE(valSubtypeLiteral).typeOf != val.type) {
-					(interpreter->printOutput)("bad argument type in _set");
-					return -1;
-				}
-			}
-
-			setLiteralDictionary(AS_DICTIONARY(obj), key, val);
-
-			if (!setScopeVariable(interpreter->scope, idn, obj, true)) {
-				printf(ERROR "ERROR: Incorrect type assigned to dictionary (_get) \"");
-				printLiteral(val);
-				printf("\"\n" RESET);
-				return -1;
-			}
-
-			break;
-		}
-
-		default:
-			(interpreter->printOutput)("Incorrect compound type in _set");
-			printLiteral(obj);
-			return -1;
-	}
-
-	freeLiteral(obj);
-
-	if (freeKey) {
-		freeLiteral(key);
-	}
-
-	if (freeVal) {
-		freeLiteral(val);
-	}
-
-	return 0;
-}
-
-int _get(Interpreter* interpreter, LiteralArray* arguments) {
-	//if wrong number of arguments, fail
-	if (arguments->count != 2) {
-		(interpreter->printOutput)("Incorrect number of arguments to _get");
-		return -1;
-	}
-
-	Literal obj = arguments->literals[0];
-	Literal key = arguments->literals[1];
-
-	bool freeObj = false;
-	if (IS_IDENTIFIER(obj)) {
-		parseIdentifierToValue(interpreter, &obj);
-		freeObj = true;
-	}
-
-	bool freeKey = false;
-	if (IS_IDENTIFIER(key)) {
-		parseIdentifierToValue(interpreter, &key);
-		freeKey = true;
-	}
-
-	switch(obj.type) {
-		case LITERAL_ARRAY: {
-			if (!IS_INTEGER(key)) {
-				(interpreter->printOutput)("Expected integer index in _get");
-				return -1;
-			}
-
-			if (AS_ARRAY(obj)->count <= AS_INTEGER(key) || AS_INTEGER(key) < 0) {
-				(interpreter->printOutput)("Index out of bounds in _get");
-				return -1;
-			}
-
-			pushLiteralArray(&interpreter->stack, AS_ARRAY(obj)->literals[AS_INTEGER(key)]);
-
-			if (freeObj) {
-				freeLiteral(obj);
-			}
-
-			if (freeKey) {
-				freeLiteral(key);
-			}
-
-			return 1;
-		}
-
-		case LITERAL_DICTIONARY: {
-			Literal dict = getLiteralDictionary(AS_DICTIONARY(obj), key);
-			pushLiteralArray(&interpreter->stack, dict);
-			freeLiteral(dict);
-
-			if (freeObj) {
-				freeLiteral(obj);
-			}
-
-			if (freeKey) {
-				freeLiteral(key);
-			}
-
-			return 1;
-		}
-
-		default:
-			(interpreter->printOutput)("Incorrect compound type in _get ");
-			printLiteral(obj);
-			return -1;
-	}
-}
-
-int _push(Interpreter* interpreter, LiteralArray* arguments) {
-	//if wrong number of arguments, fail
-	if (arguments->count != 2) {
-		(interpreter->printOutput)("Incorrect number of arguments to _push");
-		return -1;
-	}
-
-	Literal idn = arguments->literals[0];
-	Literal obj = arguments->literals[0];
-	Literal val = arguments->literals[1];
-
-	if (!IS_IDENTIFIER(idn)) {
-		(interpreter->printOutput)("expected identifier in _push");
-		return -1;
-	}
-
-	parseIdentifierToValue(interpreter, &obj);
-
-	bool freeVal = false;
-	if (IS_IDENTIFIER(val)) {
-		parseIdentifierToValue(interpreter, &val);
-		freeVal = true;
-	}
-
-	switch(obj.type) {
-		case LITERAL_ARRAY: {
-			Literal typeLiteral = getScopeType(interpreter->scope, val);
-
-			if (AS_TYPE(typeLiteral).typeOf == LITERAL_ARRAY) {
-				Literal subtypeLiteral = ((Literal*)(AS_TYPE(typeLiteral).subtypes))[0];
-
-				if (AS_TYPE(subtypeLiteral).typeOf != LITERAL_ANY && AS_TYPE(subtypeLiteral).typeOf != val.type) {
-					(interpreter->printOutput)("bad argument type in _push");
-					return -1;
-				}
-			}
-
-			pushLiteralArray(AS_ARRAY(obj), val);
-
-			if (!setScopeVariable(interpreter->scope, idn, obj, true)) { //TODO: could definitely be more efficient than overwriting the whole original object
-				printf(ERROR "ERROR: Incorrect type assigned to array (_push) \"");
-				printLiteral(val);
-				printf("\"\n" RESET);
-				return -1;
-			}
-
-			freeLiteral(obj);
-
-			if (freeVal) {
-				freeLiteral(val);
-			}
-
-			return 0;
-		}
-
-		default:
-			(interpreter->printOutput)("Incorrect compound type in _push ");
-			printLiteral(obj);
-			return -1;
-	}
-}
-
-int _pop(Interpreter* interpreter, LiteralArray* arguments) {
-	//if wrong number of arguments, fail
-	if (arguments->count != 1) {
-		(interpreter->printOutput)("Incorrect number of arguments to _pop");
-		return -1;
-	}
-
-	Literal idn = arguments->literals[0];
-	Literal obj = arguments->literals[0];
-
-	if (!IS_IDENTIFIER(idn)) {
-		(interpreter->printOutput)("expected identifier in _pop");
-		return -1;
-	}
-
-	parseIdentifierToValue(interpreter, &obj);
-
-	switch(obj.type) {
-		case LITERAL_ARRAY: {
-			Literal lit = popLiteralArray(AS_ARRAY(obj));
-			pushLiteralArray(&interpreter->stack, lit);
-			freeLiteral(lit);
-
-			if (!setScopeVariable(interpreter->scope, idn, obj, true)) { //TODO: could definitely be more efficient than overwriting the whole original object
-				printf(ERROR "ERROR: Incorrect type assigned to array (_pop) \"");
-				printLiteral(obj);
-				printf("\"\n" RESET);
-				return -1;
-			}
-
-			freeLiteral(obj);
-
-			return 1;
-		}
-
-		default:
-			(interpreter->printOutput)("Incorrect compound type in _pop ");
-			printLiteral(obj);
-			return -1;
-	}
-}
-
-int _length(Interpreter* interpreter, LiteralArray* arguments) {
-	//if wrong number of arguments, fail
-	if (arguments->count != 1) {
-		(interpreter->printOutput)("Incorrect number of arguments to _get");
-		return -1;
-	}
-
-	Literal obj = arguments->literals[0];
-
-	bool freeObj = false;
-	if (IS_IDENTIFIER(obj)) {
-		parseIdentifierToValue(interpreter, &obj);
-		freeObj = true;
-	}
-
-	switch(obj.type) {
-		case LITERAL_ARRAY: {
-			Literal lit = TO_INTEGER_LITERAL( AS_ARRAY(obj)->count );
-			pushLiteralArray(&interpreter->stack, lit);
-			freeLiteral(lit);
-			break;
-		}
-
-		case LITERAL_DICTIONARY: {
-			Literal lit = TO_INTEGER_LITERAL( AS_DICTIONARY(obj)->count );
-			pushLiteralArray(&interpreter->stack, lit);
-			freeLiteral(lit);
-			break;
-		}
-
-		case LITERAL_STRING: {
-			Literal lit = TO_INTEGER_LITERAL( strlen(AS_STRING(obj)) );
-			pushLiteralArray(&interpreter->stack, lit);
-			freeLiteral(lit);
-			break;
-		}
-
-		default:
-			(interpreter->printOutput)("Incorrect compound type in _length ");
-			printLiteral(obj);
-			return -1;
-	}
-
-	if (freeObj) {
-		freeLiteral(obj);
-	}
-
-	return 1;
-}
-
-int _clear(Interpreter* interpreter, LiteralArray* arguments) {
-	//if wrong number of arguments, fail
-	if (arguments->count != 1) {
-		(interpreter->printOutput)("Incorrect number of arguments to _get");
-		return -1;
-	}
-
-	Literal idn = arguments->literals[0];
-	Literal obj = arguments->literals[0];
-
-	if (!IS_IDENTIFIER(idn)) {
-		(interpreter->printOutput)("expected identifier in _clear");
-		return -1;
-	}
-
-	parseIdentifierToValue(interpreter, &obj);
-
-	//NOTE: just pass in new compounds
-
-	switch(obj.type) {
-		case LITERAL_ARRAY: {
-			LiteralArray* array = ALLOCATE(LiteralArray, 1);
-			initLiteralArray(array);
-
-			Literal obj = TO_ARRAY_LITERAL(array);
-
-			if (!setScopeVariable(interpreter->scope, idn, obj, true)) {
-				printf(ERROR "ERROR: Incorrect type assigned to array (_clear) \"");
-				printLiteral(obj);
-				printf("\"\n" RESET);
-				return -1;
-			}
-
-			freeLiteral(obj);
-
-			break;
-		}
-
-		case LITERAL_DICTIONARY: {
-			LiteralDictionary* dictionary = ALLOCATE(LiteralDictionary, 1);
-			initLiteralDictionary(dictionary);
-
-			Literal obj = TO_DICTIONARY_LITERAL(dictionary);
-
-			if (!setScopeVariable(interpreter->scope, idn, obj, true)) {
-				printf(ERROR "ERROR: Incorrect type assigned to dictionary (_clear) \"");
-				printLiteral(obj);
-				printf("\"\n" RESET);
-				return -1;
-			}
-
-			freeLiteral(obj);
-
-			break;
-		}
-
-		default:
-			(interpreter->printOutput)("Incorrect compound type in _clear ");
-			printLiteral(obj);
-			return -1;
-	}
-
-	freeLiteral(obj);
-	return 1;
-}
-
 void initInterpreter(Interpreter* interpreter) {
 	initLiteralArray(&interpreter->literalCache);
 	interpreter->scope = pushScope(NULL);
@@ -481,8 +83,9 @@ void initInterpreter(Interpreter* interpreter) {
 
 	initLiteralArray(&interpreter->stack);
 
-	setInterpreterPrint(interpreter, stdoutWrapper);
-	setInterpreterAssert(interpreter, stderrWrapper);
+	setInterpreterPrint(interpreter, printWrapper);
+	setInterpreterAssert(interpreter, assertWrapper);
+	setInterpreterError(interpreter, errorWrapper);
 
 	//globally available functions (tmp?)
 	injectNativeFn(interpreter, "_set", _set);
@@ -527,6 +130,10 @@ void setInterpreterAssert(Interpreter* interpreter, PrintFn assertOutput) {
 	interpreter->assertOutput = assertOutput;
 }
 
+void setInterpreterError(Interpreter* interpreter, PrintFn errorOutput) {
+	interpreter->errorOutput = errorOutput;
+}
+
 //utils
 static unsigned char readByte(unsigned char* tb, int* count) {
 	unsigned char ret = *(unsigned char*)(tb + *count);
@@ -558,16 +165,20 @@ static char* readString(unsigned char* tb, int* count) {
 	return (char*)ret;
 }
 
-static void consumeByte(unsigned char byte, unsigned char* tb, int* count) {
+static void consumeByte(Interpreter* interpreter, unsigned char byte, unsigned char* tb, int* count) {
 	if (byte != tb[*count]) {
-		printf("[internal] Failed to consume the correct byte  (expected %u, found %u)\n", byte, tb[*count]);
+		char buffer[512];
+		snprintf(buffer, 512, "[internal] Failed to consume the correct byte (expected %u, found %u)\n", byte, tb[*count]);
+		interpreter->errorOutput(buffer);
 	}
 	*count += 1;
 }
 
-static void consumeShort(unsigned short bytes, unsigned char* tb, int* count) {
+static void consumeShort(Interpreter* interpreter, unsigned short bytes, unsigned char* tb, int* count) {
 	if (bytes != *(unsigned short*)(tb + *count)) {
-		printf("[internal] Failed to consume the correct bytes (expected %u, found %u)\n", bytes, *(unsigned short*)(tb + *count));
+		char buffer[512];
+		snprintf(buffer, 512, "[internal] Failed to consume the correct bytes (expected %u, found %u)\n", bytes, *(unsigned short*)(tb + *count));
+		interpreter->errorOutput(buffer);
 	}
 	*count += 2;
 }
@@ -579,9 +190,9 @@ static bool execAssert(Interpreter* interpreter) {
 	parseIdentifierToValue(interpreter, &lhs);
 
 	if (!IS_STRING(rhs)) {
-		printf(ERROR "ERROR: The assert keyword needs a string as the second argument, received: ");
-		printLiteral(rhs);
-		printf("\n" RESET);
+		interpreter->errorOutput("The assert keyword needs a string as the second argument, received: ");
+		printLiteralCustom(rhs, interpreter->errorOutput);
+		interpreter->errorOutput("\n");
 		return false;
 	}
 
@@ -671,9 +282,9 @@ static bool execNegate(Interpreter* interpreter) {
 		lit = TO_FLOAT_LITERAL(-AS_FLOAT(lit));
 	}
 	else {
-		printf(ERROR "[internal] The interpreter can't negate that literal: ");
-		printLiteral(lit);
-		printf("\n" RESET);
+		interpreter->errorOutput("[internal] The interpreter can't negate that literal: ");
+		printLiteralCustom(lit, interpreter->errorOutput);
+		interpreter->errorOutput("\n");
 
 		freeLiteral(lit);
 
@@ -703,9 +314,9 @@ static bool execInvert(Interpreter* interpreter) {
 		lit = TO_BOOLEAN_LITERAL(!AS_BOOLEAN(lit));
 	}
 	else {
-		printf(ERROR "[internal] The interpreter can't invert that literal: ");
-		printLiteral(lit);
-		printf("\n" RESET);
+		interpreter->errorOutput("[internal] The interpreter can't invert that literal: ");
+		printLiteralCustom(lit, interpreter->errorOutput);
+		interpreter->errorOutput("\n");
 
 		freeLiteral(lit);
 
@@ -739,7 +350,7 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 	if (IS_STRING(lhs) && IS_STRING(rhs)) {
 		//check for overflow
 		if (strlen(AS_STRING(lhs)) + strlen(AS_STRING(rhs)) > MAX_STRING_LENGTH) {
-			printf(ERROR "ERROR: Can't concatenate these strings (result is too long)\n" RESET);
+			interpreter->errorOutput("Can't concatenate these strings (result is too long)\n");
 			return false;
 		}
 
@@ -785,7 +396,7 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 			case OP_DIVISION:
 			case OP_VAR_DIVISION_ASSIGN:
 				if (AS_INTEGER(rhs) == 0) {
-					printf(ERROR "ERROR: Can't divide by zero (error found in interpreter)" RESET);
+					interpreter->errorOutput("Can't divide by zero (error found in interpreter)");
 					return false;
 				}
 				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) / AS_INTEGER(rhs) ));
@@ -794,21 +405,21 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 			case OP_MODULO:
 			case OP_VAR_MODULO_ASSIGN:
 				if (AS_INTEGER(rhs) == 0) {
-					printf(ERROR "ERROR: Can't modulo by zero (error found in interpreter)" RESET);
+					interpreter->errorOutput("Can't modulo by zero (error found in interpreter)");
 					return false;
 				}
 				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) % AS_INTEGER(rhs) ));
 				return true;
 
 			default:
-				printf("[internal] bad opcode argument passed to execArithmetic()");
+				interpreter->errorOutput("[internal] bad opcode argument passed to execArithmetic()");
 				return false;
 		}
 	}
 
 	//catch bad modulo
 	if (opcode == OP_MODULO || opcode == OP_VAR_MODULO_ASSIGN) {
-		printf(ERROR "ERROR: Bad arithmetic argument (modulo on floats not allowed)\n" RESET);
+		interpreter->errorOutput("Bad arithmetic argument (modulo on floats not allowed)\n");
 		return false;
 	}
 
@@ -832,24 +443,24 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 			case OP_DIVISION:
 			case OP_VAR_DIVISION_ASSIGN:
 				if (AS_FLOAT(rhs) == 0) {
-					printf(ERROR "ERROR: Can't divide by zero (error found in interpreter)" RESET);
+					interpreter->errorOutput("Can't divide by zero (error found in interpreter)");
 					return false;
 				}
 				pushLiteralArray(&interpreter->stack, TO_FLOAT_LITERAL( AS_FLOAT(lhs) / AS_FLOAT(rhs) ));
 				return true;
 
 			default:
-				printf(ERROR "[internal] bad opcode argument passed to execArithmetic()" RESET);
+				interpreter->errorOutput("[internal] bad opcode argument passed to execArithmetic()");
 				return false;
 		}
 	}
 
 	//wrong types
-	printf(ERROR "ERROR: Bad arithmetic argument ");
-	printLiteral(lhs);
-	printf(" and ");
-	printLiteral(rhs);
-	printf("\n" RESET);
+	interpreter->errorOutput("Bad arithmetic argument ");
+	printLiteralCustom(lhs, interpreter->errorOutput);
+	interpreter->errorOutput(" and ");
+	printLiteralCustom(rhs, interpreter->errorOutput);
+	interpreter->errorOutput("\n");
 
 	freeLiteral(lhs);
 	freeLiteral(rhs);
@@ -881,9 +492,9 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 	}
 
 	if (!declareScopeVariable(interpreter->scope, identifier, type)) {
-		printf(ERROR "ERROR: Can't redefine the variable \"");
-		printLiteral(identifier);
-		printf("\"\n" RESET);
+		interpreter->errorOutput("Can't redefine the variable \"");
+		printLiteralCustom(identifier, interpreter->errorOutput);
+		interpreter->errorOutput("\"\n");
 		return false;
 	}
 
@@ -896,9 +507,9 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 	}
 
 	if (!IS_NULL(val) && !setScopeVariable(interpreter->scope, identifier, val, false)) {
-		printf(ERROR "ERROR: Incorrect type assigned to variable \"");
-		printLiteral(identifier);
-		printf("\"\n" RESET);
+		interpreter->errorOutput("Incorrect type assigned to variable \"");
+		printLiteralCustom(identifier, interpreter->errorOutput);
+		interpreter->errorOutput("\"\n");
 
 		freeLiteral(identifier); //TODO: test this
 		freeLiteral(type);
@@ -938,16 +549,16 @@ static bool execFnDecl(Interpreter* interpreter, bool lng) {
 	Literal type = TO_TYPE_LITERAL(LITERAL_FUNCTION, true);
 
 	if (!declareScopeVariable(interpreter->scope, identifier, type)) {
-		printf(ERROR "ERROR: Can't redefine the function \"");
-		printLiteral(identifier);
-		printf("\"\n" RESET);
+		interpreter->errorOutput("Can't redefine the function \"");
+		printLiteralCustom(identifier, interpreter->errorOutput);
+		interpreter->errorOutput("\"\n");
 		return false;
 	}
 
 	if (!setScopeVariable(interpreter->scope, identifier, function, false)) { //scope gets copied here
-		printf(ERROR "ERROR: Incorrect type assigned to variable \"");
-		printLiteral(identifier);
-		printf("\"\n" RESET);
+		interpreter->errorOutput("Incorrect type assigned to variable \"");
+		printLiteralCustom(identifier, interpreter->errorOutput);
+		interpreter->errorOutput("\"\n");
 		return false;
 	}
 
@@ -970,16 +581,16 @@ static bool execVarAssign(Interpreter* interpreter) {
 	}
 
 	if (!IS_IDENTIFIER(lhs)) {
-		printf(ERROR "ERROR: Can't assign to a non-variable \"");
-		printLiteral(lhs);
-		printf("\"\n" RESET);
+		interpreter->errorOutput("Can't assign to a non-variable \"");
+		printLiteralCustom(lhs, interpreter->errorOutput);
+		interpreter->errorOutput("\"\n");
 		return false;
 	}
 
 	if (!isDelcaredScopeVariable(interpreter->scope, lhs)) {
-		printf(ERROR "ERROR: Undeclared variable \"");
-		printLiteral(lhs);
-		printf("\"\n" RESET);
+		interpreter->errorOutput("Undeclared variable \"");
+		printLiteralCustom(lhs, interpreter->errorOutput);
+		interpreter->errorOutput("\"\n");
 
 		freeLiteral(lhs);
 		freeLiteral(rhs);
@@ -987,9 +598,9 @@ static bool execVarAssign(Interpreter* interpreter) {
 	}
 
 	if (!setScopeVariable(interpreter->scope, lhs, rhs, true)) {
-		printf(ERROR "ERROR Incorrect type assigned to variable \"");
-		printLiteral(lhs);
-		printf("\"\n" RESET);
+		interpreter->errorOutput("Incorrect type assigned to variable \"");
+		printLiteralCustom(lhs, interpreter->errorOutput);
+		interpreter->errorOutput("\"\n");
 
 		freeLiteral(lhs);
 		freeLiteral(rhs);
@@ -1032,7 +643,7 @@ static bool execValCast(Interpreter* interpreter) {
 	Literal result = TO_NULL_LITERAL;
 
 	if (IS_NULL(value)) {
-		printf(ERROR "ERROR: Can't cast a null value\n" RESET);
+		interpreter->errorOutput("Can't cast a null value\n");
 
 		freeLiteral(value);
 		freeLiteral(type);
@@ -1111,7 +722,9 @@ static bool execValCast(Interpreter* interpreter) {
 		break;
 
 		default:
-			printf(ERROR"ERROR: Unknown cast type found %d, terminating\n" RESET, AS_TYPE(type).typeOf);
+			interpreter->errorOutput("Unknown cast type found: ");
+			printLiteralCustom(type, interpreter->errorOutput);
+			interpreter->errorOutput("\n");
 			return false;
 	}
 
@@ -1173,18 +786,19 @@ static bool execCompareLess(Interpreter* interpreter, bool invert) {
 
 	//not a number, return falure
 	if (!(IS_INTEGER(lhs) || IS_FLOAT(lhs))) {
-		printf(ERROR "ERROR: Incorrect type in comparison, value \"");
-		printLiteral(lhs);
-		printf("\"\n" RESET);
+		interpreter->errorOutput("Incorrect type in comparison, value \"");
+		printLiteralCustom(lhs, interpreter->errorOutput);
+		interpreter->errorOutput("\"\n");
+
 		freeLiteral(lhs);
 		freeLiteral(rhs);
 		return false;
 	}
 
 	if (!(IS_INTEGER(rhs) || IS_FLOAT(rhs))) {
-		printf(ERROR "ERROR: Incorrect type in comparison, value \"");
-		printLiteral(rhs);
-		printf("\"\n" RESET);
+		interpreter->errorOutput("Incorrect type in comparison, value \"");
+		printLiteralCustom(rhs, interpreter->errorOutput);
+		interpreter->errorOutput("\"\n");
 		freeLiteral(lhs);
 		freeLiteral(rhs);
 		return false;
@@ -1234,18 +848,20 @@ static bool execCompareLessEqual(Interpreter* interpreter, bool invert) {
 
 	//not a number, return falure
 	if (!(IS_INTEGER(lhs) || IS_FLOAT(lhs))) {
-		printf(ERROR "ERROR: Incorrect type in comparison, value \"");
-		printLiteral(lhs);
-		printf("\"\n" RESET);
+		interpreter->errorOutput("Incorrect type in comparison, value \"");
+		printLiteralCustom(lhs, interpreter->errorOutput);
+		interpreter->errorOutput("\"\n");
+
 		freeLiteral(lhs);
 		freeLiteral(rhs);
 		return false;
 	}
 
 	if (!(IS_INTEGER(rhs) || IS_FLOAT(rhs))) {
-		printf(ERROR "ERROR: Incorrect type in comparison, value \"");
-		printLiteral(rhs);
-		printf("\"\n" RESET);
+		interpreter->errorOutput("Incorrect type in comparison, value \"");
+		printLiteralCustom(rhs, interpreter->errorOutput);
+		interpreter->errorOutput("\"\n");
+
 		freeLiteral(lhs);
 		freeLiteral(rhs);
 		return false;
@@ -1339,7 +955,7 @@ static bool execJump(Interpreter* interpreter) {
 	int target = (int)readShort(interpreter->bytecode, &interpreter->count);
 
 	if (target + interpreter->codeStart > interpreter->length) {
-		printf(ERROR "[internal] Jump out of range\n" RESET);
+		interpreter->errorOutput("[internal] Jump out of range\n");
 		return false;
 	}
 
@@ -1353,7 +969,7 @@ static bool execFalseJump(Interpreter* interpreter) {
 	int target = (int)readShort(interpreter->bytecode, &interpreter->count);
 
 	if (target + interpreter->codeStart > interpreter->length) {
-		printf(ERROR "[internal] Jump out of range (false jump)\n" RESET);
+		interpreter->errorOutput("[internal] Jump out of range (false jump)\n");
 		return false;
 	}
 
@@ -1369,7 +985,7 @@ static bool execFalseJump(Interpreter* interpreter) {
 	}
 
 	if (IS_NULL(lit)) {
-		printf(ERROR "Error: Null detected in comparison\n" RESET);
+		interpreter->errorOutput("Null detected in comparison\n");
 		return false;
 	}
 
@@ -1434,9 +1050,9 @@ static bool execFnCall(Interpreter* interpreter) {
 	}
 
 	if (!IS_FUNCTION(func)) {
-		printf(ERROR "ERROR: Function not found: ");
-		printLiteral(identifier);
-		printf("\n" RESET);
+		interpreter->errorOutput("Function not found: ");
+		printLiteralCustom(identifier, interpreter->errorOutput);
+		interpreter->errorOutput("\n");
 
 		freeLiteral(identifier);
 		freeLiteralArray(&arguments);
@@ -1459,6 +1075,7 @@ static bool execFnCall(Interpreter* interpreter) {
 	initLiteralArray(&inner.stack);
 	setInterpreterPrint(&inner, interpreter->printOutput);
 	setInterpreterAssert(&inner, interpreter->assertOutput);
+	setInterpreterError(&inner, interpreter->errorOutput);
 
 	//prep the sections
 	readInterpreterSections(&inner);
@@ -1475,9 +1092,9 @@ static bool execFnCall(Interpreter* interpreter) {
 
 	//check the param total is correct
 	if ((IS_NULL(restParam) && paramArray->count != arguments.count * 2) || (!IS_NULL(restParam) && paramArray->count -2 > arguments.count * 2)) {
-		printf(ERROR "ERROR: Incorrect number of arguments passed to function \"");
-		printLiteral(identifier);
-		printf("\"\n" RESET);
+		interpreter->errorOutput("Incorrect number of arguments passed to function \"");
+		printLiteralCustom(identifier, interpreter->errorOutput);
+		interpreter->errorOutput("\"\n");
 
 		//free, and skip out
 		freeLiteralArray(&arguments);
@@ -1491,11 +1108,13 @@ static bool execFnCall(Interpreter* interpreter) {
 	for (int i = 0; i < paramArray->count - (IS_NULL(restParam) ? 0 : 2); i += 2) { //don't count the rest parameter, if present
 		//declare and define each entry in the scope
 		if (!declareScopeVariable(inner.scope, paramArray->literals[i], paramArray->literals[i + 1])) {
-			printf(ERROR "[internal] Could not re-declare parameter\n" RESET);
+			interpreter->errorOutput("[internal] Could not re-declare parameter\n");
+
 			//free, and skip out
 			freeLiteralArray(&arguments);
 			popScope(inner.scope);
 			freeInterpreter(&inner);
+
 			return false;
 		}
 
@@ -1508,12 +1127,14 @@ static bool execFnCall(Interpreter* interpreter) {
 		}
 
 		if (!setScopeVariable(inner.scope, paramArray->literals[i], arg, false)) {
-			printf(ERROR "[internal] Could not define parameter (bad type?)\n" RESET);
+			interpreter->errorOutput("[internal] Could not define parameter (bad type?)\n");
+
 			//free, and skip out
 			freeLiteral(arg);
 			freeLiteralArray(&arguments);
 			popScope(inner.scope);
 			freeInterpreter(&inner);
+
 			return false;
 		}
 		freeLiteral(arg);
@@ -1536,25 +1157,29 @@ static bool execFnCall(Interpreter* interpreter) {
 
 		//declare & define the rest parameter
 		if (!declareScopeVariable(inner.scope, restParam, restType)) {
-			printf(ERROR "[internal] Could not declare rest parameter\n" RESET);
+			interpreter->errorOutput("[internal] Could not declare rest parameter\n");
+
 			//free, and skip out
 			freeLiteral(restType);
 			freeLiteralArray(&rest);
 			freeLiteralArray(&arguments);
 			popScope(inner.scope);
 			freeInterpreter(&inner);
+
 			return false;
 		}
 
 		Literal lit = TO_ARRAY_LITERAL(&rest);
 		if (!setScopeVariable(inner.scope, restParam, lit, false)) {
-			printf(ERROR "[internal] Could not define rest parameter\n" RESET);
+			interpreter->errorOutput("[internal] Could not define rest parameter\n");
+
 			//free, and skip out
 			freeLiteral(restType);
 			freeLiteral(lit);
 			freeLiteralArray(&arguments);
 			popScope(inner.scope);
 			freeInterpreter(&inner);
+
 			return false;
 		}
 
@@ -1583,7 +1208,7 @@ static bool execFnCall(Interpreter* interpreter) {
 
 	//TODO: remove this when multiple assignment is enabled - note the BUGFIX that balances the stack
 	if (returns.count > 1) {
-		printf(ERROR "ERROR: Too many values returned (multiple returns not yet supported)\n" RESET);
+		interpreter->errorOutput("Too many values returned (multiple returns not yet supported)\n");
 
 		returnValue = false;
 	}
@@ -1593,7 +1218,7 @@ static bool execFnCall(Interpreter* interpreter) {
 
 		//check the return types
 		if (returnArray->count > 0 && AS_TYPE(returnArray->literals[i]).typeOf != ret.type) {
-			printf(ERROR "ERROR: bad type found in return value\n" RESET);
+			interpreter->errorOutput("Bad type found in return value\n");
 
 			//free, and skip out
 			returnValue = false;
@@ -1857,8 +1482,7 @@ static void execInterpreter(Interpreter* interpreter) {
 			break;
 
 			default:
-				printf(ERROR "Error: Unknown opcode found %d, terminating\n" RESET, opcode);
-				printLiteralArray(&interpreter->stack, "\n");
+				interpreter->errorOutput("Unknown opcode found, terminating\n");
 				return;
 		}
 
@@ -2082,7 +1706,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 		}
 	}
 
-	consumeByte(OP_SECTION_END, interpreter->bytecode, &interpreter->count); //terminate the literal section
+	consumeByte(interpreter, OP_SECTION_END, interpreter->bytecode, &interpreter->count); //terminate the literal section
 
 	//read the function metadata
 	int functionCount = readShort(interpreter->bytecode, &interpreter->count);
@@ -2101,7 +1725,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 
 			//assert that the last memory slot is function end
 			if (bytes[size - 1] != OP_FN_END) {
-				printf(ERROR "[internal] Failed to find function end" RESET);
+				interpreter->errorOutput("[internal] Failed to find function end");
 				FREE_ARRAY(unsigned char, bytes, size);
 				return;
 			}
@@ -2112,7 +1736,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 		}
 	}
 
-	consumeByte(OP_SECTION_END, interpreter->bytecode, &interpreter->count); //terminate the function section
+	consumeByte(interpreter, OP_SECTION_END, interpreter->bytecode, &interpreter->count); //terminate the function section
 }
 
 void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length) {
@@ -2122,7 +1746,7 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 	interpreter->count = 0;
 
 	if (!interpreter->bytecode) {
-		printf(ERROR "Error: No valid bytecode given\n" RESET);
+		interpreter->errorOutput("No valid bytecode given\n");
 		return;
 	}
 
@@ -2137,7 +1761,8 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 	const unsigned char patch = readByte(interpreter->bytecode, &interpreter->count);
 
 	if (major != TOY_VERSION_MAJOR || minor != TOY_VERSION_MINOR || patch != TOY_VERSION_PATCH) {
-		printf(ERROR "Error: interpreter/bytecode version mismatch\n" RESET);
+		interpreter->errorOutput("Interpreter/bytecode version mismatch\n");
+		return;
 	}
 
 	const char* build = readString(interpreter->bytecode, &interpreter->count);
@@ -2148,7 +1773,7 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 		}
 	}
 
-	consumeByte(OP_SECTION_END, interpreter->bytecode, &interpreter->count);
+	consumeByte(interpreter, OP_SECTION_END, interpreter->bytecode, &interpreter->count);
 
 	//read the sections of the bytecode
 	readInterpreterSections(interpreter);

@@ -30,6 +30,9 @@ DONE: Address circular references
 TODO: are compounds shallow or deep copies? Deep copies
 
 
+TODO: third output stream, for lexer/parser/compiler/interpreter errors
+
+
 TODO: slice and dot notation around the _index function
 TODO: ternary operator
 TODO: Nullish types
@@ -39,7 +42,6 @@ TODO: Assertion-based test scripts
 TODO: standard library
 TODO: external runner library
 TODO: document how it all works
-TODO: third output stream, for parser/compiler/interpreter errors
 TODO: better and more consistent error messages
 TODO: maximum recursion/function depth
 

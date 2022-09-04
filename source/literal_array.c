@@ -65,10 +65,3 @@ int findLiteralIndex(LiteralArray* array, Literal literal) {
 
 	return -1;
 }
-
-void printLiteralArray(LiteralArray* array, const char* delim) {
-	for (int i = 0; i < array->count; i++) {
-		printLiteral(array->literals[i]);
-		printf("%s", delim);
-	}
-}

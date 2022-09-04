@@ -1,7 +1,5 @@
 #pragma once
 
-#include "opcodes.h"
-
 #include "literal.h"
 #include "literal_array.h"
 #include "literal_dictionary.h"
@@ -26,6 +24,7 @@ typedef struct Interpreter {
 	// LiteralDictionary exports; //TODO: read-write - interface with Toy from C
 	PrintFn printOutput;
 	PrintFn assertOutput;
+	PrintFn errorOutput;
 
 	bool panic;
 } Interpreter;
@@ -42,5 +41,6 @@ void freeInterpreter(Interpreter* interpreter);
 //utilities for the host program
 void setInterpreterPrint(Interpreter* interpreter, PrintFn printOutput);
 void setInterpreterAssert(Interpreter* interpreter, PrintFn assertOutput);
+void setInterpreterError(Interpreter* interpreter, PrintFn errorOutput);
 
 void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length);

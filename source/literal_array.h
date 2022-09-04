@@ -14,5 +14,3 @@ Literal popLiteralArray(LiteralArray* array);
 void freeLiteralArray(LiteralArray* array);
 
 int findLiteralIndex(LiteralArray* array, Literal literal);
-
-void printLiteralArray(LiteralArray* array, const char* delim);
