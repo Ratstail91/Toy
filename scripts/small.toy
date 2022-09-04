@@ -1,5 +1,52 @@
 
-for (var i = 0; i < 40; i++) {
-	print i;
-	print (string)i + " printed";
+
+
+//assume the args are matrices
+fn matrix(first, second) {
+	//get the matrix size
+	var l1 = _length(first); //rows
+	var l2 = _length(_get(first, 0)); //cols
+
+	var l3 = _length(second); //rows
+	var l4 = _length(_get(second, 0)); //cols
+
+	//pre-allocate the matrix
+	var row = [];
+	for (var j = 0; j < l4; j++) {
+		_push(row, 0);
+	}
+
+	var result = [];
+	for (var i = 0; i < l1; i++) {
+		_push(result, row);
+	}
+
+	//assign the values
+	for (var i = 0; i < _length(first); i++) {
+		//select each element of "first"
+		var firstElement = _get(first, i);
+
+		//for each element of second
+		for (var i2 = 0; i2 < _length(second); i2++) {
+			for (var j2 = 0; j2 < _length(_get(second, 0)); j2++) {
+
+				var val = _get(_get(first, i), i2) * _get(_get(second, i2), j2);
+
+				//TODO: needs better notation than this tmpRow variable
+				var tmpRow = _get(result, i);
+				_set(tmpRow, j2, val);
+				_set(result, i, tmpRow);
+
+				//result[ i ][ j2 ] += first[i][i2] * second[i2][j2]
+			}
+		}
+	}
+
+	return result;
 }
+
+//matrix multiply
+var c = [[4], [5], [6]]; //this is a 3x1
+var d = [[1, 2, 3]]; //this is a 1x3
+
+print matrix(c, d);

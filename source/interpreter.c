@@ -119,6 +119,7 @@ int _set(Interpreter* interpreter, LiteralArray* arguments) {
 			}
 
 			//don't use pushLiteralArray, since we're setting
+			freeLiteral(AS_ARRAY(obj)->literals[AS_INTEGER(key)]); //BUGFIX: clear any existing data first
 			AS_ARRAY(obj)->literals[AS_INTEGER(key)] = copyLiteral(val);
 
 			if (!setScopeVariable(interpreter->scope, idn, obj, true)) {
