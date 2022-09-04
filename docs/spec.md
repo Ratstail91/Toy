@@ -23,7 +23,6 @@ Names used in the language must start with a letter or underscore, and must cont
 The following list of keywords cannot be used as names, due to their significance (or potential later use) in the language.
 
 * any
-* array
 * as
 * assert
 * bool
@@ -31,7 +30,6 @@ The following list of keywords cannot be used as names, due to their significanc
 * class
 * const
 * continue
-* dictionary
 * do
 * else
 * export
@@ -68,10 +66,10 @@ Likewise, the following logical operators are available (`&&` is more tightly bo
 (  )  [  ]  {  }  !  !=  ==  <  >  <=  >=  &&  ||
 ```
 
-Other operators used throughout the language are: the assignment, colon, semicolon, comma, dot, pipe, rest operators:
+Other operators used throughout the language are: the assignment, colon, semicolon, comma, dot, rest operators:
 
 ```
-= : ; , . | ...
+= : ; , . ...
 ```
 
 ## Types
@@ -86,8 +84,8 @@ Variable names in Toy may have a type. These types are:
 * array - a collection of 0-indexed variables
 * dictionary - a collection of indexable key-value pairs
 * function - chunks of reusable code
-* any - any of the above
 * type - the type of types
+* any - any of the above
 
 Types are optional attachments to names - they can be specified as such:
 
@@ -99,8 +97,8 @@ var x : int = 0;
 Types are not interoperable, but in some cases they can be converted from one type to another by "casting":
 
 ```
-//declare the variable named "y" as a float, and assign it the value stored in x
-var y : float = (float)x;
+//declare the variable named "y" as a float, and assign it the value stored in x (which is being cast to a float)
+var y : float = float x;
 ```
 
 Defining the type of a variable is not required - in such a case, the type is "any".
@@ -110,7 +108,7 @@ Defining the type of a variable is not required - in such a case, the type is "a
 var z = 1;
 ```
 
-Variables are first-class citizens, meaning they can be stored in and used from variables:
+Types are first-class citizens, meaning they can be stored in and used from variables:
 
 ```
 //this was originally unintended, but interesting
@@ -506,22 +504,22 @@ fn _get(self, key) {
 }
 
 //usable with arrays
-fn push(self, val) {
+fn _push(self, val) {
 	//native code
 }
 
 //usable with arrays
-fn pop(self) {
+fn _pop(self) {
 	//native code
 }
 
 //usable with arrays, dictionaries and strings
-fn length(self) {
+fn _length(self) {
 	//native code
 }
 
 //usable with arrays and dictionaries
-fn clear(self) {
+fn _clear(self) {
 	//native code
 }
 ```

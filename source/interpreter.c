@@ -1051,6 +1051,10 @@ static bool execValCast(Interpreter* interpreter) {
 				result = TO_INTEGER_LITERAL(AS_BOOLEAN(value) ? 1 : 0);
 			}
 
+			if (IS_INTEGER(value)) {
+				result = copyLiteral(value);
+			}
+
 			if (IS_FLOAT(value)) {
 				result = TO_INTEGER_LITERAL(AS_FLOAT(value));
 			}
@@ -1069,6 +1073,10 @@ static bool execValCast(Interpreter* interpreter) {
 
 			if (IS_INTEGER(value)) {
 				result = TO_FLOAT_LITERAL(AS_INTEGER(value));
+			}
+
+			if (IS_FLOAT(value)) {
+				result = copyLiteral(value);
 			}
 
 			if (IS_STRING(value)) {
@@ -1095,6 +1103,10 @@ static bool execValCast(Interpreter* interpreter) {
 				char buffer[128];
 				snprintf(buffer, 128, "%g", AS_FLOAT(value));
 				result = TO_STRING_LITERAL(copyString(buffer, strlen(buffer)), strlen(buffer));
+			}
+
+			if (IS_STRING(value)) {
+				result = copyLiteral(value);
 			}
 		break;
 
