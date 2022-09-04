@@ -190,7 +190,17 @@ int _get(Interpreter* interpreter, LiteralArray* arguments) {
 	Literal obj = arguments->literals[0];
 	Literal key = arguments->literals[1];
 
-	parseIdentifierToValue(interpreter, &obj);
+	bool freeObj = false;
+	if (IS_IDENTIFIER(obj)) {
+		parseIdentifierToValue(interpreter, &obj);
+		freeObj = true;
+	}
+
+	bool freeKey = false;
+	if (IS_IDENTIFIER(key)) {
+		parseIdentifierToValue(interpreter, &key);
+		freeKey = true;
+	}
 
 	switch(obj.type) {
 		case LITERAL_ARRAY: {
@@ -205,7 +215,15 @@ int _get(Interpreter* interpreter, LiteralArray* arguments) {
 			}
 
 			pushLiteralArray(&interpreter->stack, AS_ARRAY(obj)->literals[AS_INTEGER(key)]);
-			freeLiteral(obj);
+
+			if (freeObj) {
+				freeLiteral(obj);
+			}
+
+			if (freeKey) {
+				freeLiteral(key);
+			}
+
 			return 1;
 		}
 
@@ -213,7 +231,15 @@ int _get(Interpreter* interpreter, LiteralArray* arguments) {
 			Literal dict = getLiteralDictionary(AS_DICTIONARY(obj), key);
 			pushLiteralArray(&interpreter->stack, dict);
 			freeLiteral(dict);
-			freeLiteral(obj);
+
+			if (freeObj) {
+				freeLiteral(obj);
+			}
+
+			if (freeKey) {
+				freeLiteral(key);
+			}
+
 			return 1;
 		}
 
@@ -241,7 +267,12 @@ int _push(Interpreter* interpreter, LiteralArray* arguments) {
 	}
 
 	parseIdentifierToValue(interpreter, &obj);
-	parseIdentifierToValue(interpreter, &val);
+
+	bool freeVal = false;
+	if (IS_IDENTIFIER(val)) {
+		parseIdentifierToValue(interpreter, &val);
+		freeVal = true;
+	}
 
 	switch(obj.type) {
 		case LITERAL_ARRAY: {
@@ -266,6 +297,10 @@ int _push(Interpreter* interpreter, LiteralArray* arguments) {
 			}
 
 			freeLiteral(obj);
+
+			if (freeVal) {
+				freeLiteral(val);
+			}
 
 			return 0;
 		}

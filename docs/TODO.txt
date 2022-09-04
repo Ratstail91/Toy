@@ -26,6 +26,8 @@ DONE: assert needs to kill the whole script, not just functions
 DONE: native functions
 DONE: global functions _get, _set, _push, _pop, _length, clear available
 DONE: change comma to colon in dictionary definition
+DONE: Address circular references
+TODO: are compounds shallow or deep copies? Deep copies
 
 
 TODO: slice and dot notation around the _index function
@@ -33,13 +35,13 @@ TODO: ternary operator
 TODO: Nullish types
 TODO: A way to check the type of a variable (typeOf keyword)
 TODO: a = b = c = 1; ?
-TODO: are compounds shallow or deep copies?
-TODO: Address circular references?
 TODO: Assertion-based test scripts
 TODO: standard library
 TODO: external runner library
 TODO: document how it all works
 TODO: third output stream, for parser/compiler/interpreter errors
 TODO: better and more consistent error messages
+TODO: maximum recursion/function depth
+
 
 NOPE: functions return a set number of values

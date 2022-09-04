@@ -362,7 +362,7 @@ int hashLiteral(Literal lit) {
 
 		case LITERAL_ARRAY: {
 			unsigned int res = 0;
-			for (int i = 0; i < AS_DICTIONARY(lit)->count; i++) {
+			for (int i = 0; i < AS_ARRAY(lit)->count; i++) {
 				res += hashLiteral(AS_ARRAY(lit)->literals[i]);
 			}
 			return hash(res);
