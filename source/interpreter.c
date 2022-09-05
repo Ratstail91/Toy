@@ -120,8 +120,10 @@ void freeInterpreter(Interpreter* interpreter) {
 		interpreter->scope = popScope(interpreter->scope);
 	}
 
+	freeLiteralDictionary(interpreter->exports);
 	FREE(LiteralDictionary, interpreter->exports);
 	interpreter->exports = NULL;
+	freeLiteralDictionary(interpreter->exportTypes);
 	FREE(LiteralDictionary, interpreter->exportTypes);
 	interpreter->exportTypes = NULL;
 
