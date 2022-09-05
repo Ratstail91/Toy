@@ -102,6 +102,14 @@ void initInterpreter(Interpreter* interpreter) {
 }
 
 void freeInterpreter(Interpreter* interpreter) {
+	//BUGFIX: handle scopes/types in the exports
+	for (int i = 0; i < interpreter->exports->capacity; i++) {
+		freeLiteral(interpreter->exports->entries[i].key);
+		freeLiteral(interpreter->exports->entries[i].value);
+		freeLiteral(interpreter->exportTypes->entries[i].key);
+		freeLiteral(interpreter->exportTypes->entries[i].value);
+	}
+
 	//BUGFIX: handle scopes of functions, which refer to the parent scope (leaking memory)
 	while(interpreter->scope != NULL) {
 		for (int i = 0; i < interpreter->scope->variables.capacity; i++) {
