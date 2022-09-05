@@ -102,30 +102,21 @@ void initInterpreter(Interpreter* interpreter) {
 }
 
 void freeInterpreter(Interpreter* interpreter) {
-	//BUGFIX: handle scopes/types in the exports
-	for (int i = 0; i < interpreter->exports->capacity; i++) {
-		freeLiteral(interpreter->exports->entries[i].key);
-		freeLiteral(interpreter->exports->entries[i].value);
-		freeLiteral(interpreter->exportTypes->entries[i].key);
-		freeLiteral(interpreter->exportTypes->entries[i].value);
+	//free the interpreter scope
+	while(interpreter->scope != NULL) {
+		interpreter->scope = popScope(interpreter->scope);
 	}
 
-	//BUGFIX: handle scopes of functions, which refer to the parent scope (leaking memory)
-	while(interpreter->scope != NULL) {
-		for (int i = 0; i < interpreter->scope->variables.capacity; i++) {
-			//handle keys, just in case
-			if (IS_FUNCTION(interpreter->scope->variables.entries[i].key)) {
-				popScope(AS_FUNCTION(interpreter->scope->variables.entries[i].key).scope);
-				AS_FUNCTION(interpreter->scope->variables.entries[i].key).scope = NULL;
-			}
-
-			if (IS_FUNCTION(interpreter->scope->variables.entries[i].value)) {
-				popScope(AS_FUNCTION(interpreter->scope->variables.entries[i].value).scope);
-				AS_FUNCTION(interpreter->scope->variables.entries[i].value).scope = NULL;
-			}
+	//BUGFIX: handle scopes/types in the exports
+	for (int i = 0; i < interpreter->exports->capacity; i++) {
+		if (IS_FUNCTION(interpreter->exports->entries[i].key)) {
+			popScope(AS_FUNCTION(interpreter->exports->entries[i].key).scope);
+			AS_FUNCTION(interpreter->exports->entries[i].key).scope = NULL;
 		}
-
-		interpreter->scope = popScope(interpreter->scope);
+		if (IS_FUNCTION(interpreter->exports->entries[i].value)) {
+			popScope(AS_FUNCTION(interpreter->exports->entries[i].value).scope);
+			AS_FUNCTION(interpreter->exports->entries[i].value).scope = NULL;
+		}
 	}
 
 	freeLiteralDictionary(interpreter->exports);
@@ -1850,7 +1841,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 
 			//change the type to normal
 			interpreter->literalCache.literals[i] = TO_FUNCTION_LITERAL(bytes, size);
-			AS_FUNCTION(interpreter->literalCache.literals[i]).scope = pushScope(interpreter->scope); //BUGFIX
+			AS_FUNCTION(interpreter->literalCache.literals[i]).scope = NULL;
 		}
 	}
 

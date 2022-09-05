@@ -127,6 +127,20 @@ Scope* popScope(Scope* scope) {
 
 	Scope* ret = scope->ancestor;
 
+	//BUGFIX: when freeing a scope, free the function's scopes manually
+	for (int i = 0; i < scope->variables.capacity; i++) {
+		//handle keys, just in case
+		if (IS_FUNCTION(scope->variables.entries[i].key)) {
+			popScope(AS_FUNCTION(scope->variables.entries[i].key).scope);
+			AS_FUNCTION(scope->variables.entries[i].key).scope = NULL;
+		}
+
+		if (IS_FUNCTION(scope->variables.entries[i].value)) {
+			popScope(AS_FUNCTION(scope->variables.entries[i].value).scope);
+			AS_FUNCTION(scope->variables.entries[i].value).scope = NULL;
+		}
+	}
+
 	freeAncestorChain(scope);
 
 	return ret;

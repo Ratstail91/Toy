@@ -1195,6 +1195,9 @@ static void importStmt(Parser* parser, Node** nodeHandle) {
 	emitNodeImport(nodeHandle, NODE_IMPORT, idn, alias);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of import statement");
+
+	freeLiteral(idn);
+	freeLiteral(alias);
 }
 
 static void exportStmt(Parser* parser, Node** nodeHandle) {
@@ -1217,6 +1220,9 @@ static void exportStmt(Parser* parser, Node** nodeHandle) {
 	emitNodeImport(nodeHandle, NODE_EXPORT, idn, alias);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of export statement");
+
+	freeLiteral(idn);
+	freeLiteral(alias);
 }
 
 //precedence functions
