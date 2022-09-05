@@ -23,11 +23,13 @@ typedef enum NodeType {
 	NODE_PATH_IF, //for control flow
 	NODE_PATH_WHILE, //for control flow
 	NODE_PATH_FOR, //for control flow
-	NODE_PATH_BREAK,
-	NODE_PATH_CONTINUE,
+	NODE_PATH_BREAK, //for control flow
+	NODE_PATH_CONTINUE, //for control flow
 	NODE_PATH_RETURN,
 	NODE_INCREMENT_PREFIX,
 	NODE_INCREMENT_POSTFIX,
+	NODE_IMPORT,
+	NODE_EXPORT,
 } NodeType;
 
 typedef struct NodeLiteral {
@@ -116,6 +118,12 @@ typedef struct NodeIncrement {
 	int increment;
 } NodeIncrement;
 
+typedef struct NodeImport {
+	NodeType type;
+	Literal identifier;
+	Literal alias;
+} NodeImport;
+
 union _node {
 	NodeType type;
 	NodeLiteral atomic;
@@ -131,6 +139,7 @@ union _node {
 	NodeFnCall fnCall;
 	NodePath path;
 	NodeIncrement increment;
+	NodeImport import;
 };
 
 void freeNode(Node* node);
@@ -148,3 +157,4 @@ void emitNodeFnCollection(Node** nodeHandle);
 void emitNodePath(Node** nodeHandle, NodeType type, Node* preClause, Node* postClause, Node* condition, Node* thenPath, Node* elsePath);
 void emitNodePrefixIncrement(Node** nodeHandle, Literal identifier, int increment);
 void emitNodePostfixIncrement(Node** nodeHandle, Literal identifier, int increment);
+void emitNodeImport(Node** nodeHandle, NodeType mode, Literal identifier, Literal alias);

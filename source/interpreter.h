@@ -21,7 +21,8 @@ typedef struct Interpreter {
 	LiteralArray stack;
 
 	//output
-	// LiteralDictionary exports; //TODO: read-write - interface with Toy from C
+	LiteralDictionary* exports; //read-write - interface with Toy from C - this is a pointer, since it works at a script-level
+	LiteralDictionary* exportTypes;
 	PrintFn printOutput;
 	PrintFn assertOutput;
 	PrintFn errorOutput;

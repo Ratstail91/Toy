@@ -93,6 +93,12 @@ void freeNodeCustom(Node* node, bool freeSelf) {
 		case NODE_INCREMENT_POSTFIX:
 			freeLiteral(node->increment.identifier);
 		break;
+
+		case NODE_IMPORT:
+		case NODE_EXPORT:
+			freeLiteral(node->import.identifier);
+			freeLiteral(node->import.alias);
+		break;
 	}
 
 	if (freeSelf) {
@@ -243,6 +249,16 @@ void emitNodePostfixIncrement(Node** nodeHandle, Literal identifier, int increme
 	tmp->type = NODE_INCREMENT_POSTFIX;
 	tmp->increment.identifier = copyLiteral(identifier);
 	tmp->increment.increment = increment;
+
+	*nodeHandle = tmp;
+}
+
+void emitNodeImport(Node** nodeHandle, NodeType mode, Literal identifier, Literal alias) {
+	Node* tmp = ALLOCATE(Node, 1);
+
+	tmp->type = mode;
+	tmp->import.identifier = copyLiteral(identifier);
+	tmp->import.alias = copyLiteral(alias);
 
 	*nodeHandle = tmp;
 }

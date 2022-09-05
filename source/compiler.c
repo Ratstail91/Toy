@@ -716,6 +716,26 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_VAR_ASSIGN; //1 byte
 		}
 		break;
+
+		case NODE_IMPORT: {
+			//push the identifier, and the alias
+			writeLiteralToCompiler(compiler, node->import.identifier);
+			writeLiteralToCompiler(compiler, node->import.alias);
+
+			//push the import opcode
+			compiler->bytecode[compiler->count++] = (unsigned char)OP_IMPORT; //1 byte
+		}
+		break;
+
+		case NODE_EXPORT: {
+			//push the identifier, and the alias
+			writeLiteralToCompiler(compiler, node->import.identifier);
+			writeLiteralToCompiler(compiler, node->import.alias);
+
+			//push the import opcode
+			compiler->bytecode[compiler->count++] = (unsigned char)OP_EXPORT; //1 byte
+		}
+		break;
 	}
 }
 

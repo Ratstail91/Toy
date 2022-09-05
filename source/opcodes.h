@@ -44,6 +44,9 @@ typedef enum Opcode {
 
 	OP_TYPE_CAST,		//temporarily change a type of an atomic value
 
+	OP_IMPORT,
+	OP_EXPORT,
+
 	//comparion of values
 	OP_COMPARE_EQUAL,
 	OP_COMPARE_NOT_EQUAL,

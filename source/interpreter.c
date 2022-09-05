@@ -81,6 +81,11 @@ void initInterpreter(Interpreter* interpreter) {
 
 	initLiteralArray(&interpreter->stack);
 
+	interpreter->exports = ALLOCATE(LiteralDictionary, 1);
+	initLiteralDictionary(interpreter->exports);
+	interpreter->exportTypes = ALLOCATE(LiteralDictionary, 1);
+	initLiteralDictionary(interpreter->exportTypes);
+
 	setInterpreterPrint(interpreter, printWrapper);
 	setInterpreterAssert(interpreter, assertWrapper);
 	setInterpreterError(interpreter, errorWrapper);
@@ -114,6 +119,11 @@ void freeInterpreter(Interpreter* interpreter) {
 
 		interpreter->scope = popScope(interpreter->scope);
 	}
+
+	FREE(LiteralDictionary, interpreter->exports);
+	interpreter->exports = NULL;
+	FREE(LiteralDictionary, interpreter->exportTypes);
+	interpreter->exportTypes = NULL;
 
 	freeLiteralArray(&interpreter->literalCache);
 	freeLiteralArray(&interpreter->stack);
@@ -509,7 +519,7 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 		printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 
-		freeLiteral(identifier); //TODO: test this
+		freeLiteral(identifier);
 		freeLiteral(type);
 		freeLiteral(val);
 
@@ -1071,6 +1081,8 @@ static bool execFnCall(Interpreter* interpreter) {
 	inner.codeStart = -1;
 	inner.panic = false;
 	initLiteralArray(&inner.stack);
+	inner.exports = interpreter->exports;
+	inner.exportTypes = interpreter->exportTypes;
 	setInterpreterPrint(&inner, interpreter->printOutput);
 	setInterpreterAssert(&inner, interpreter->assertOutput);
 	setInterpreterError(&inner, interpreter->errorOutput);
@@ -1097,7 +1109,9 @@ static bool execFnCall(Interpreter* interpreter) {
 		//free, and skip out
 		freeLiteralArray(&arguments);
 		popScope(inner.scope);
-		freeInterpreter(&inner);
+
+		freeLiteralArray(&inner.stack);
+		freeLiteralArray(&inner.literalCache);
 
 		return false;
 	}
@@ -1111,7 +1125,9 @@ static bool execFnCall(Interpreter* interpreter) {
 			//free, and skip out
 			freeLiteralArray(&arguments);
 			popScope(inner.scope);
-			freeInterpreter(&inner);
+
+			freeLiteralArray(&inner.stack);
+			freeLiteralArray(&inner.literalCache);
 
 			return false;
 		}
@@ -1131,7 +1147,10 @@ static bool execFnCall(Interpreter* interpreter) {
 			freeLiteral(arg);
 			freeLiteralArray(&arguments);
 			popScope(inner.scope);
-			freeInterpreter(&inner);
+
+			
+			freeLiteralArray(&inner.stack);
+			freeLiteralArray(&inner.literalCache);
 
 			return false;
 		}
@@ -1162,7 +1181,9 @@ static bool execFnCall(Interpreter* interpreter) {
 			freeLiteralArray(&rest);
 			freeLiteralArray(&arguments);
 			popScope(inner.scope);
-			freeInterpreter(&inner);
+
+			freeLiteralArray(&inner.stack);
+			freeLiteralArray(&inner.literalCache);
 
 			return false;
 		}
@@ -1176,7 +1197,9 @@ static bool execFnCall(Interpreter* interpreter) {
 			freeLiteral(lit);
 			freeLiteralArray(&arguments);
 			popScope(inner.scope);
-			freeInterpreter(&inner);
+
+			freeLiteralArray(&inner.stack);
+			freeLiteralArray(&inner.literalCache);
 
 			return false;
 		}
@@ -1227,7 +1250,7 @@ static bool execFnCall(Interpreter* interpreter) {
 		freeLiteral(ret);
 	}
 
-	//free
+	//manual free
 	//BUGFIX: handle scopes of functions, which refer to the parent scope (leaking memory)
 	while(inner.scope != AS_FUNCTION(func).scope) {
 		for (int i = 0; i < inner.scope->variables.capacity; i++) {
@@ -1282,6 +1305,81 @@ static bool execFnReturn(Interpreter* interpreter) {
 
 	//finally
 	return false;
+}
+
+static bool execImport(Interpreter* interpreter) {
+	Literal alias = popLiteralArray(&interpreter->stack);
+	Literal identifier = popLiteralArray(&interpreter->stack);
+
+	Literal lit = getLiteralDictionary(interpreter->exports, identifier);
+	Literal type = getLiteralDictionary(interpreter->exportTypes, identifier);
+
+	//use the alias
+	if (!IS_NULL(alias)) {
+		if (!declareScopeVariable(interpreter->scope, alias, type)) {
+			interpreter->errorOutput("Can't redefine the variable \"");
+			printLiteralCustom(alias, interpreter->errorOutput);
+			interpreter->errorOutput("\"\n");
+
+			freeLiteral(lit);
+			freeLiteral(type);
+			freeLiteral(alias);
+			freeLiteral(identifier);
+			return false;
+		}
+
+		setScopeVariable(interpreter->scope, alias, lit, false);
+	}
+
+	//use the original identifier
+	else {
+		if (!declareScopeVariable(interpreter->scope, identifier, type)) {
+			interpreter->errorOutput("Can't redefine the variable \"");
+			printLiteralCustom(identifier, interpreter->errorOutput);
+			interpreter->errorOutput("\"\n");
+
+			freeLiteral(lit);
+			freeLiteral(type);
+			freeLiteral(alias);
+			freeLiteral(identifier);
+			return false;
+		}
+
+		setScopeVariable(interpreter->scope, identifier, lit, false);
+	}
+
+	//cleanup
+	freeLiteral(lit);
+	freeLiteral(type);
+	freeLiteral(alias);
+	freeLiteral(identifier);
+	return true;
+}
+
+static bool execExport(Interpreter* interpreter) {
+	Literal alias = popLiteralArray(&interpreter->stack);
+	Literal identifier = popLiteralArray(&interpreter->stack);
+
+	Literal lit = TO_NULL_LITERAL;
+
+	getScopeVariable(interpreter->scope, identifier, &lit);
+	Literal type = getScopeType(interpreter->scope, identifier);
+
+	if (!IS_NULL(alias)) {
+		setLiteralDictionary(interpreter->exports, alias, lit);
+		setLiteralDictionary(interpreter->exportTypes, alias, type);
+	}
+	else {
+		setLiteralDictionary(interpreter->exports, identifier, lit);
+		setLiteralDictionary(interpreter->exportTypes, identifier, type);
+	}
+
+	//cleanup
+	freeLiteral(lit);
+	freeLiteral(type);
+	freeLiteral(alias);
+	freeLiteral(identifier);
+	return true;
 }
 
 //the heart of toy
@@ -1469,6 +1567,18 @@ static void execInterpreter(Interpreter* interpreter) {
 
 			case OP_FN_RETURN:
 				if (!execFnReturn(interpreter)) {
+					return;
+				}
+			break;
+
+			case OP_IMPORT:
+				if (!execImport(interpreter)) {
+					return;
+				}
+			break;
+
+			case OP_EXPORT:
+				if (!execExport(interpreter)) {
 					return;
 				}
 			break;

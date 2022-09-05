@@ -30,9 +30,9 @@ DONE: Address circular references
 DONE: are compounds shallow or deep copies? Deep copies
 DONE: third output stream, for lexer/parser/compiler/interpreter errors
 DONE: Assertion-based test scripts
+DONE: Import/export keywords
 
 
-TODO: Import/export keywords
 TODO: slice and dot notation around the builtin _index function
 TODO: ternary operator
 TODO: Nullish types?

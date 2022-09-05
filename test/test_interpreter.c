@@ -162,13 +162,14 @@ int main() {
 
 	{
 		//run each file in ../scripts/test/
-		int count = 14;
+		int count = 15;
 		char* filenames[] = {
 			"arithmetic.toy",
 			"casting.toy",
 			"comparisons.toy",
 			"dot-and-matrix.toy",
 			"functions.toy",
+			"imports-and-exports.toy",
 			"jumps.toy",
 			"jumps-in-functions.toy",
 			"logicals.toy",

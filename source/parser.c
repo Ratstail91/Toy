@@ -1175,6 +1175,50 @@ static void returnStmt(Parser* parser, Node** nodeHandle) {
 	emitNodePath(nodeHandle, NODE_PATH_RETURN, NULL, NULL, NULL, returnValues, NULL);
 }
 
+static void importStmt(Parser* parser, Node** nodeHandle) {
+	//read the identifier
+	Node* node = NULL;
+	advance(parser);
+	identifier(parser, &node);
+	Literal idn = copyLiteral(node->atomic.literal);
+	freeNode(node);
+
+	Literal alias = TO_NULL_LITERAL;
+
+	if (match(parser, TOKEN_AS)) {
+		advance(parser);
+		identifier(parser, &node);
+		alias = copyLiteral(node->atomic.literal);
+		freeNode(node);
+	}
+
+	emitNodeImport(nodeHandle, NODE_IMPORT, idn, alias);
+
+	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of import statement");
+}
+
+static void exportStmt(Parser* parser, Node** nodeHandle) {
+	//read the identifier
+	Node* node = NULL;
+	advance(parser);
+	identifier(parser, &node);
+	Literal idn = copyLiteral(node->atomic.literal);
+	freeNode(node);
+
+	Literal alias = TO_NULL_LITERAL;
+
+	if (match(parser, TOKEN_AS)) {
+		advance(parser);
+		identifier(parser, &node);
+		alias = copyLiteral(node->atomic.literal);
+		freeNode(node);
+	}
+
+	emitNodeImport(nodeHandle, NODE_EXPORT, idn, alias);
+
+	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of export statement");
+}
+
 //precedence functions
 static void expressionStmt(Parser* parser, Node** nodeHandle) {
 	//BUGFIX: check for empty statements
@@ -1245,6 +1289,18 @@ static void statement(Parser* parser, Node** nodeHandle) {
 	//return
 	if (match(parser, TOKEN_RETURN)) {
 		returnStmt(parser, nodeHandle);
+		return;
+	}
+
+	//import
+	if (match(parser, TOKEN_IMPORT)) {
+		importStmt(parser, nodeHandle);
+		return;
+	}
+
+	//export
+	if (match(parser, TOKEN_EXPORT)) {
+		exportStmt(parser, nodeHandle);
 		return;
 	}
 

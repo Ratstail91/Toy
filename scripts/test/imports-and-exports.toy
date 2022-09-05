@@ -1,0 +1,37 @@
+//test basic import/export
+{
+	var variable: int = 42;
+	export variable as field;
+}
+
+{
+	import field as value;
+	assert value == 42, "import/export failed";
+}
+
+//test functions using import/export
+{
+	fn f() {
+		import field;
+
+		assert field == 42, "import in function failed";
+	}
+}
+
+//test importing/exporting of functions
+{
+	fn func() {
+		return 69;
+	}
+
+	export func;
+}
+
+{
+	import func;
+	assert func() == 69, "import/export of functions failed";
+}
+
+//TODO: test that variables retain their types with the typeOf keyword
+
+print "All good";
