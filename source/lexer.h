@@ -22,4 +22,5 @@ typedef struct {
 void initLexer(Lexer* lexer, char* source);
 Token scanLexer(Lexer* lexer);
 
+//for debugging
 void printToken(Token* token);

@@ -11,7 +11,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-//IO functions
+//supress the print output
+static void noPrintFn(const char* output) {
+	//NO OP
+}
+
+//compilation functions
 char* readFile(char* path, size_t* fileSize) {
 	FILE* file = fopen(path, "rb");
 
@@ -86,6 +91,10 @@ unsigned char* compileString(char* source, size_t* size) {
 void runBinary(unsigned char* tb, size_t size) {
 	Interpreter interpreter;
 	initInterpreter(&interpreter);
+
+	//NOTE: supress print output for testing
+	setInterpreterPrint(&interpreter, noPrintFn);
+
 	runInterpreter(&interpreter, tb, size);
 	freeInterpreter(&interpreter);
 }
@@ -137,6 +146,9 @@ int main() {
 		//collate
 		int size = 0;
 		unsigned char* bytecode = collateCompiler(&compiler, &size);
+
+		//NOTE: supress print output for testing
+		setInterpreterPrint(&interpreter, noPrintFn);
 
 		//run
 		runInterpreter(&interpreter, bytecode, size);

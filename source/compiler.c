@@ -184,7 +184,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 		freeLiteral(literal);
 	}
 	else {
-		fprintf(stderr, ERROR "[Internal] Unrecognized compound type in writeNodeCompoundToCache()" RESET);
+		fprintf(stderr, ERROR "[internal] Unrecognized compound type in writeNodeCompoundToCache()" RESET);
 	}
 
 	return index;
@@ -279,7 +279,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 	//determine node type
 	switch(node->type) {
 		case NODE_ERROR: {
-			fprintf(stderr, ERROR "[Internal] NODE_ERROR encountered in writeCompilerWithJumps()\n" RESET);
+			fprintf(stderr, ERROR "[internal] NODE_ERROR encountered in writeCompilerWithJumps()\n" RESET);
 			compiler->bytecode[compiler->count++] = OP_EOF; //1 byte
 		}
 		break;
@@ -338,7 +338,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 		break;
 
 		case NODE_PAIR:
-			fprintf(stderr, ERROR "[Internal] NODE_PAIR encountered in writeCompilerWithJumps()\n" RESET);
+			fprintf(stderr, ERROR "[internal] NODE_PAIR encountered in writeCompilerWithJumps()\n" RESET);
 		break;
 
 		case NODE_VAR_DECL: {

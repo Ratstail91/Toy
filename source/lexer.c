@@ -308,6 +308,7 @@ static void trim(char** s, int* l) { //all this to remove a newline?
 	while(**s && isspace( **(unsigned char**)(s)) ) { (*s)++; (*l)--; }
 }
 
+//for debugging
 void printToken(Token* token) {
 	if (token->type == TOKEN_ERROR) {
 		printf(ERROR "Error\t%d\t%.*s\n" RESET, token->line, token->length, token->lexeme);
