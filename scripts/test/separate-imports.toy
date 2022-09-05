@@ -1,0 +1,10 @@
+//test imports
+import field;
+//import function;
+
+//assert field == 42, "import field failed";
+
+//assert function() == 69, "import function failed";
+
+print "All good";
+

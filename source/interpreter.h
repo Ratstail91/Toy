@@ -35,13 +35,12 @@ typedef int (*NativeFn)(Interpreter* interpreter, LiteralArray* arguments);
 bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func);
 bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr);
 
-//init & free
-void initInterpreter(Interpreter* interpreter);
-void freeInterpreter(Interpreter* interpreter);
-
 //utilities for the host program
 void setInterpreterPrint(Interpreter* interpreter, PrintFn printOutput);
 void setInterpreterAssert(Interpreter* interpreter, PrintFn assertOutput);
 void setInterpreterError(Interpreter* interpreter, PrintFn errorOutput);
 
+//main access
+void initInterpreter(Interpreter* interpreter);
 void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length);
+void freeInterpreter(Interpreter* interpreter);

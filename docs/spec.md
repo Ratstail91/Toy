@@ -63,7 +63,7 @@ The following mathematical operators are available. A definition is omitted here
 Likewise, the following logical operators are available (`&&` is more tightly bound than `||` due to historical reasons):
 
 ```
-(  )  [  ]  {  }  !  !=  ==  <  >  <=  >=  &&  ||
+(  )  [  ]  {  } ?:  !  !=  ==  <  >  <=  >=  &&  ||
 ```
 
 Other operators used throughout the language are: the assignment, colon, semicolon, comma, dot, rest operators:
@@ -346,14 +346,14 @@ assert false, "This is not"; //Error!
 
 ## Import-As
 
-`import` is used to load variables from the host - several optional libraries will be provided this way, as well. The import keyword can only take a string as it's argument, followed by an optional "as" which stores the results under a different name.
+`import` is used to load variables from the host - several optional libraries will be provided this way, as well. The import keyword can only take a valid variable name as it's argument, followed by an optional "as" which stores the results under a different name.
 
 ```
-import "standard";
+import standard;
 
 print standard.clock(); //the clock function is provided by standard
 
-import "standard" as std;
+import standard as std;
 
 print std.clock(); //standard becomes a dictionary called "std"
 ```
@@ -530,7 +530,7 @@ The standard library has a number of utility functions available, and is provide
 
 ```
 //gain access to the standard functions
-import "standard";
+import standard;
 ```
 
 The following functions are available in the standard library.

@@ -191,6 +191,34 @@ int main() {
 		}
 	}
 
+	{
+		//read source
+		size_t dummy;
+		size_t exportSize, importSize;
+		char* exportSource = readFile("../scripts/test/separate-exports.toy", &dummy);
+		char* importSource = readFile("../scripts/test/separate-imports.toy", &dummy);
+
+		//compile
+		unsigned char* exportBinary = compileString(exportSource, &exportSize);
+		unsigned char* importBinary = compileString(importSource, &importSize);
+
+		//run the interpreter over both binaries
+		Interpreter interpreter;
+		initInterpreter(&interpreter);
+
+		//NOTE: supress print output for testing
+		setInterpreterPrint(&interpreter, noPrintFn);
+
+		runInterpreter(&interpreter, exportBinary, exportSize); //automatically frees the binary data
+		runInterpreter(&interpreter, importBinary, importSize); //automatically frees the binary data
+
+		freeInterpreter(&interpreter);
+
+		//cleanup
+		free((void*)exportSource);
+		free((void*)importSource);
+	}
+
 	printf(NOTICE "All good\n" RESET);
 	return 0;
 }

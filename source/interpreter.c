@@ -72,41 +72,19 @@ bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr) {
 }
 
 void initInterpreter(Interpreter* interpreter) {
-	initLiteralArray(&interpreter->literalCache);
-	interpreter->scope = pushScope(NULL);
-	interpreter->bytecode = NULL;
-	interpreter->length = 0;
-	interpreter->count = 0;
-	interpreter->codeStart = -1;
-
-	initLiteralArray(&interpreter->stack);
-
+	//NOTE: separate initialization for exports
 	interpreter->exports = ALLOCATE(LiteralDictionary, 1);
 	initLiteralDictionary(interpreter->exports);
 	interpreter->exportTypes = ALLOCATE(LiteralDictionary, 1);
 	initLiteralDictionary(interpreter->exportTypes);
 
+	//set up the output streams
 	setInterpreterPrint(interpreter, printWrapper);
 	setInterpreterAssert(interpreter, assertWrapper);
 	setInterpreterError(interpreter, errorWrapper);
-
-	//globally available functions (tmp?)
-	injectNativeFn(interpreter, "_set", _set);
-	injectNativeFn(interpreter, "_get", _get);
-	injectNativeFn(interpreter, "_push", _push);
-	injectNativeFn(interpreter, "_pop", _pop);
-	injectNativeFn(interpreter, "_length", _length);
-	injectNativeFn(interpreter, "_clear", _clear);
-
-	interpreter->panic = false;
 }
 
 void freeInterpreter(Interpreter* interpreter) {
-	//free the interpreter scope
-	while(interpreter->scope != NULL) {
-		interpreter->scope = popScope(interpreter->scope);
-	}
-
 	//BUGFIX: handle scopes/types in the exports
 	for (int i = 0; i < interpreter->exports->capacity; i++) {
 		if (IS_FUNCTION(interpreter->exports->entries[i].key)) {
@@ -125,9 +103,6 @@ void freeInterpreter(Interpreter* interpreter) {
 	freeLiteralDictionary(interpreter->exportTypes);
 	FREE(LiteralDictionary, interpreter->exportTypes);
 	interpreter->exportTypes = NULL;
-
-	freeLiteralArray(&interpreter->literalCache);
-	freeLiteralArray(&interpreter->stack);
 }
 
 //utilities for the host program
@@ -1849,6 +1824,32 @@ static void readInterpreterSections(Interpreter* interpreter) {
 }
 
 void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length) {
+	//check for export zone
+	if (!interpreter->exports || !interpreter->exportTypes) {
+		interpreter->errorOutput("Interpreter has no export region\n");
+		return;
+	}
+
+	//initialize here instead of initInterpreter()
+	initLiteralArray(&interpreter->literalCache);
+	interpreter->scope = pushScope(NULL);
+	interpreter->bytecode = NULL;
+	interpreter->length = 0;
+	interpreter->count = 0;
+	interpreter->codeStart = -1;
+
+	initLiteralArray(&interpreter->stack);
+
+	//globally available functions
+	injectNativeFn(interpreter, "_set", _set);
+	injectNativeFn(interpreter, "_get", _get);
+	injectNativeFn(interpreter, "_push", _push);
+	injectNativeFn(interpreter, "_pop", _pop);
+	injectNativeFn(interpreter, "_length", _length);
+	injectNativeFn(interpreter, "_clear", _clear);
+
+	interpreter->panic = false;
+
 	//prep the bytecode
 	interpreter->bytecode = bytecode;
 	interpreter->length = length;
@@ -1901,6 +1902,15 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 		freeLiteral(lit);
 	}
 
-	//free the bytecode immediately after use
+	//free the bytecode
 	FREE_ARRAY(unsigned char, interpreter->bytecode, interpreter->length);
+
+	//free the associated data
+	freeLiteralArray(&interpreter->literalCache);
+	freeLiteralArray(&interpreter->stack);
+
+	//free the interpreter scope
+	while(interpreter->scope != NULL) {
+		interpreter->scope = popScope(interpreter->scope);
+	}
 }

@@ -1,0 +1,11 @@
+//test exports
+var field: int = 42;
+
+fn function() {
+	return 69;
+}
+
+export field;
+export function;
+
+print "All good";
