@@ -624,7 +624,10 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 
 				case LITERAL_FUNCTION:
 					printToBuffer("function");
-					//TODO: how to print a function
+				break;
+
+				case LITERAL_FUNCTION_NATIVE:
+					printToBuffer("native");
 				break;
 
 				case LITERAL_IDENTIFIER:

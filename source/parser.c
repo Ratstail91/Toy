@@ -136,6 +136,13 @@ static Opcode forceType(Parser* parser, Node** nodeHandle) {
 	return OP_EOF;
 }
 
+static Opcode typeOf(Parser* parser, Node** nodeHandle) {
+	Node* rhs = NULL;
+	parsePrecedence(parser, &rhs, PREC_TERNARY);
+	emitNodeUnary(nodeHandle, OP_TYPE_OF, rhs);
+	return OP_EOF;
+}
+
 static Opcode compound(Parser* parser, Node** nodeHandle) {
 	//read either an array or a dictionary into a literal node
 
@@ -730,6 +737,7 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_PRINT,
 	{NULL, NULL, PREC_NONE},// TOKEN_RETURN,
 	{forceType, NULL, PREC_PRIMARY},// TOKEN_TYPE,
+	{typeOf, NULL, PREC_CALL},// TOKEN_TYPEOF,
 	{NULL, NULL, PREC_NONE},// TOKEN_VAR,
 	{NULL, NULL, PREC_NONE},// TOKEN_WHILE,
 
@@ -1044,14 +1052,14 @@ static void blockStmt(Parser* parser, Node** nodeHandle) {
 		//process the grammar rule for this line
 		declaration(parser, &node);
 
-		//BUGFIX: statements no longer require an existing node
-		((*nodeHandle)->block.nodes[(*nodeHandle)->block.count++]) = *node;
-		FREE(Node, node); //simply free the tmp node
-
 		// Ground floor: perfumery / Stationery and leather goods / Wigs and haberdashery / Kitchenware and food / Going up!
 		if (parser->panic) {
 			return;
 		}
+
+		//BUGFIX: statements no longer require an existing node
+		((*nodeHandle)->block.nodes[(*nodeHandle)->block.count++]) = *node;
+		FREE(Node, node); //simply free the tmp node
 	}
 }
 

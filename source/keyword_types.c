@@ -33,6 +33,7 @@ KeywordType keywordTypes[] = {
 	{TOKEN_PRINT,      "print"},
 	{TOKEN_RETURN,     "return"},
 	{TOKEN_TYPE,       "type"},
+	{TOKEN_TYPEOF,     "typeof"},
 	{TOKEN_VAR,        "var"},
 	{TOKEN_WHILE,      "while"},
 

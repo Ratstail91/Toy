@@ -43,6 +43,7 @@ typedef enum Opcode {
 	OP_VAR_MODULO_ASSIGN,
 
 	OP_TYPE_CAST,		//temporarily change a type of an atomic value
+	OP_TYPE_OF,			//get the type of a variable
 
 	OP_IMPORT,
 	OP_EXPORT,

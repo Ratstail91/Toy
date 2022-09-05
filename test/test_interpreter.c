@@ -210,6 +210,9 @@ int main() {
 		setInterpreterPrint(&interpreter, noPrintFn);
 
 		runInterpreter(&interpreter, exportBinary, exportSize); //automatically frees the binary data
+
+		resetInterpreter(&interpreter);
+
 		runInterpreter(&interpreter, importBinary, importSize); //automatically frees the binary data
 
 		freeInterpreter(&interpreter);

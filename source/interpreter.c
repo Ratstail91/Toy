@@ -71,40 +71,6 @@ bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr) {
 	return true;
 }
 
-void initInterpreter(Interpreter* interpreter) {
-	//NOTE: separate initialization for exports
-	interpreter->exports = ALLOCATE(LiteralDictionary, 1);
-	initLiteralDictionary(interpreter->exports);
-	interpreter->exportTypes = ALLOCATE(LiteralDictionary, 1);
-	initLiteralDictionary(interpreter->exportTypes);
-
-	//set up the output streams
-	setInterpreterPrint(interpreter, printWrapper);
-	setInterpreterAssert(interpreter, assertWrapper);
-	setInterpreterError(interpreter, errorWrapper);
-}
-
-void freeInterpreter(Interpreter* interpreter) {
-	//BUGFIX: handle scopes/types in the exports
-	for (int i = 0; i < interpreter->exports->capacity; i++) {
-		if (IS_FUNCTION(interpreter->exports->entries[i].key)) {
-			popScope(AS_FUNCTION(interpreter->exports->entries[i].key).scope);
-			AS_FUNCTION(interpreter->exports->entries[i].key).scope = NULL;
-		}
-		if (IS_FUNCTION(interpreter->exports->entries[i].value)) {
-			popScope(AS_FUNCTION(interpreter->exports->entries[i].value).scope);
-			AS_FUNCTION(interpreter->exports->entries[i].value).scope = NULL;
-		}
-	}
-
-	freeLiteralDictionary(interpreter->exports);
-	FREE(LiteralDictionary, interpreter->exports);
-	interpreter->exports = NULL;
-	freeLiteralDictionary(interpreter->exportTypes);
-	FREE(LiteralDictionary, interpreter->exportTypes);
-	interpreter->exportTypes = NULL;
-}
-
 //utilities for the host program
 void setInterpreterPrint(Interpreter* interpreter, PrintFn printOutput) {
 	interpreter->printOutput = printOutput;
@@ -717,6 +683,25 @@ static bool execValCast(Interpreter* interpreter) {
 
 	freeLiteral(result);
 	freeLiteral(value);
+	freeLiteral(type);
+
+	return true;
+}
+
+static bool execTypeOf(Interpreter* interpreter) {
+	Literal rhs = popLiteralArray(&interpreter->stack);
+	Literal type = TO_NULL_LITERAL;
+
+	if (IS_IDENTIFIER(rhs)) {
+		type = getScopeType(interpreter->scope, rhs);
+	}
+	else {
+		type = TO_TYPE_LITERAL(rhs.type, false);
+	}
+
+	pushLiteralArray(&interpreter->stack, type);
+
+	freeLiteral(rhs);
 	freeLiteral(type);
 
 	return true;
@@ -1469,6 +1454,12 @@ static void execInterpreter(Interpreter* interpreter) {
 				}
 			break;
 
+			case OP_TYPE_OF:
+				if (!execTypeOf(interpreter)) {
+					return;
+				}
+			break;
+
 			case OP_COMPARE_EQUAL:
 				if (!execCompareEqual(interpreter, false)) {
 					return;
@@ -1823,30 +1814,32 @@ static void readInterpreterSections(Interpreter* interpreter) {
 	consumeByte(interpreter, OP_SECTION_END, interpreter->bytecode, &interpreter->count); //terminate the function section
 }
 
-void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length) {
-	//check for export zone
-	if (!interpreter->exports || !interpreter->exportTypes) {
-		interpreter->errorOutput("Interpreter has no export region\n");
-		return;
-	}
+//exposed functions
+void initInterpreter(Interpreter* interpreter) {
+	//NOTE: separate initialization for exports
+	interpreter->exports = ALLOCATE(LiteralDictionary, 1);
+	initLiteralDictionary(interpreter->exports);
+	interpreter->exportTypes = ALLOCATE(LiteralDictionary, 1);
+	initLiteralDictionary(interpreter->exportTypes);
 
+	//set up the output streams
+	setInterpreterPrint(interpreter, printWrapper);
+	setInterpreterAssert(interpreter, assertWrapper);
+	setInterpreterError(interpreter, errorWrapper);
+
+	interpreter->scope = NULL;
+	resetInterpreter(interpreter);
+}
+
+void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length) {
 	//initialize here instead of initInterpreter()
 	initLiteralArray(&interpreter->literalCache);
-	interpreter->scope = pushScope(NULL);
 	interpreter->bytecode = NULL;
 	interpreter->length = 0;
 	interpreter->count = 0;
 	interpreter->codeStart = -1;
 
 	initLiteralArray(&interpreter->stack);
-
-	//globally available functions
-	injectNativeFn(interpreter, "_set", _set);
-	injectNativeFn(interpreter, "_get", _get);
-	injectNativeFn(interpreter, "_push", _push);
-	injectNativeFn(interpreter, "_pop", _pop);
-	injectNativeFn(interpreter, "_length", _length);
-	injectNativeFn(interpreter, "_clear", _clear);
 
 	interpreter->panic = false;
 
@@ -1902,15 +1895,54 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 		freeLiteral(lit);
 	}
 
-	//free the bytecode
+	//free the bytecode immediately after use
 	FREE_ARRAY(unsigned char, interpreter->bytecode, interpreter->length);
 
 	//free the associated data
 	freeLiteralArray(&interpreter->literalCache);
 	freeLiteralArray(&interpreter->stack);
+}
 
+void resetInterpreter(Interpreter* interpreter) {
 	//free the interpreter scope
 	while(interpreter->scope != NULL) {
 		interpreter->scope = popScope(interpreter->scope);
 	}
+
+	//prep the scope
+	interpreter->scope = pushScope(NULL);
+
+	//globally available functions
+	injectNativeFn(interpreter, "_set", _set);
+	injectNativeFn(interpreter, "_get", _get);
+	injectNativeFn(interpreter, "_push", _push);
+	injectNativeFn(interpreter, "_pop", _pop);
+	injectNativeFn(interpreter, "_length", _length);
+	injectNativeFn(interpreter, "_clear", _clear);
+}
+
+void freeInterpreter(Interpreter* interpreter) {
+	//free the interpreter scope
+	while(interpreter->scope != NULL) {
+		interpreter->scope = popScope(interpreter->scope);
+	}
+
+	//BUGFIX: handle scopes/types in the exports
+	for (int i = 0; i < interpreter->exports->capacity; i++) {
+		if (IS_FUNCTION(interpreter->exports->entries[i].key)) {
+			popScope(AS_FUNCTION(interpreter->exports->entries[i].key).scope);
+			AS_FUNCTION(interpreter->exports->entries[i].key).scope = NULL;
+		}
+		if (IS_FUNCTION(interpreter->exports->entries[i].value)) {
+			popScope(AS_FUNCTION(interpreter->exports->entries[i].value).scope);
+			AS_FUNCTION(interpreter->exports->entries[i].value).scope = NULL;
+		}
+	}
+
+	freeLiteralDictionary(interpreter->exports);
+	FREE(LiteralDictionary, interpreter->exports);
+	interpreter->exports = NULL;
+	freeLiteralDictionary(interpreter->exportTypes);
+	FREE(LiteralDictionary, interpreter->exportTypes);
+	interpreter->exportTypes = NULL;
 }

@@ -41,6 +41,7 @@ void setInterpreterAssert(Interpreter* interpreter, PrintFn assertOutput);
 void setInterpreterError(Interpreter* interpreter, PrintFn errorOutput);
 
 //main access
-void initInterpreter(Interpreter* interpreter);
-void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length);
-void freeInterpreter(Interpreter* interpreter);
+void initInterpreter(Interpreter* interpreter); //start of program
+void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length); //run the code
+void resetInterpreter(Interpreter* interpreter); //use this to reset the interpreter's environment between runs
+void freeInterpreter(Interpreter* interpreter); //end of program

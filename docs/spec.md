@@ -49,6 +49,7 @@ The following list of keywords cannot be used as names, due to their significanc
 * string
 * true
 * type
+* typeof
 * var
 * while
 
@@ -163,11 +164,7 @@ var bar = "hello world";
 var buzz;
 ```
 
-Variables can be used in place of values at any time, and can be altered and re-assigned. Multiple variables (which have been previously declared) can be assigned to the same value:
-
-```
-a = b = c = 1;
-```
+Variables can be used in place of values at any time, and can be altered and re-assigned.
 
 ## If-Else
 

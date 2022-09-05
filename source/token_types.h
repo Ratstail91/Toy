@@ -31,6 +31,7 @@ typedef enum TokenType {
 	TOKEN_PRINT,
 	TOKEN_RETURN,
 	TOKEN_TYPE,
+	TOKEN_TYPEOF,
 	TOKEN_VAR,
 	TOKEN_WHILE,
 
