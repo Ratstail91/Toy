@@ -717,6 +717,60 @@ static Opcode fnCall(Parser* parser, Node** nodeHandle) {
 	return OP_EOF;
 }
 
+static Opcode indexAccess(Parser* parser, Node** nodeHandle) {
+	advance(parser);
+
+	//val[first : second : third]
+
+	Node* first = NULL;
+	Node* second = NULL;
+	Node* third = NULL;
+
+	//eat the first
+	if (!match(parser, TOKEN_COLON)) {
+		parsePrecedence(parser, &first, PREC_TERNARY);
+	}
+
+	if (match(parser, TOKEN_BRACKET_RIGHT)) {
+		emitNodeIndex(nodeHandle, first, second, third);
+		return OP_INDEX;
+	}
+
+	consume(parser, TOKEN_COLON, "Expected ':' in index notation");
+
+	//eat the second
+	if (!match(parser, TOKEN_COLON)) {
+		parsePrecedence(parser, &second, PREC_TERNARY);
+	}
+
+	if (match(parser, TOKEN_BRACKET_RIGHT)) {
+		emitNodeIndex(nodeHandle, first, second, third);
+		return OP_INDEX;
+	}
+
+	consume(parser, TOKEN_COLON, "Expected ':' in index notation");
+
+	//eat the third
+	parsePrecedence(parser, &third, PREC_TERNARY);
+	emitNodeIndex(nodeHandle, first, second, third);
+
+	consume(parser, TOKEN_BRACKET_RIGHT, "Expected ']' in index notation");
+
+	return OP_INDEX;
+}
+
+static Opcode dot(Parser* parser, Node** nodeHandle) {
+	advance(parser); //for the dot
+	advance(parser); //for the identifier
+
+	Node* first = NULL;
+
+	identifier(parser, &first); //specific case
+	emitNodeDot(nodeHandle, first);
+
+	return OP_DOT;
+}
+
 ParseRule parseRules[] = { //must match the token types
 	//types
 	{atomic, NULL, PREC_PRIMARY},// TOKEN_NULL,
@@ -779,7 +833,7 @@ ParseRule parseRules[] = { //must match the token types
 	//logical operators
 	{grouping, fnCall, PREC_CALL},// TOKEN_PAREN_LEFT,
 	{NULL, NULL, PREC_NONE},// TOKEN_PAREN_RIGHT,
-	{compound, NULL, PREC_CALL},// TOKEN_BRACKET_LEFT,
+	{compound, indexAccess, PREC_CALL},// TOKEN_BRACKET_LEFT,
 	{NULL, NULL, PREC_NONE},// TOKEN_BRACKET_RIGHT,
 	{NULL, NULL, PREC_NONE},// TOKEN_BRACE_LEFT,
 	{NULL, NULL, PREC_NONE},// TOKEN_BRACE_RIGHT,
@@ -797,7 +851,7 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_COLON,
 	{NULL, NULL, PREC_NONE},// TOKEN_SEMICOLON,
 	{NULL, NULL, PREC_NONE},// TOKEN_COMMA,
-	{NULL, NULL, PREC_NONE},// TOKEN_DOT,
+	{NULL, dot, PREC_CALL},// TOKEN_DOT,
 	{NULL, NULL, PREC_NONE},// TOKEN_PIPE,
 	{NULL, NULL, PREC_NONE},// TOKEN_REST,
 

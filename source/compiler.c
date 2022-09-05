@@ -267,7 +267,7 @@ static int writeLiteralToCompiler(Compiler* compiler, Literal literal) {
 	return index;
 }
 
-static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAddressesPtr, void* continueAddressesPtr, int jumpOffsets) { //NOTE: jumpOfsets are included, because function arg and return indexes are embedded in the code body i.e. need to include thier sizes in the jump
+static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAddressesPtr, void* continueAddressesPtr, int jumpOffsets) { //NOTE: jumpOfsets are included, because function arg and return indexes are embedded in the code body i.e. need to include thier sizes in the jump
 	//grow if the bytecode space is too small
 	if (compiler->count + 32 > compiler->capacity) {
 		int oldCapacity = compiler->capacity;
@@ -295,11 +295,31 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			compiler->bytecode[compiler->count++] = (unsigned char)node->unary.opcode; //1 byte
 		break;
 
-		case NODE_BINARY:
+		//all infixes come here
+		case NODE_BINARY: {
 			//pass to the child nodes, then embed the binary command (math, etc.)
-			writeCompilerWithJumps(compiler, node->binary.left, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
-			writeCompilerWithJumps(compiler, node->binary.right, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+			Opcode override = writeCompilerWithJumps(compiler, node->binary.left, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+
+			//special case for when indexing
+			if (override != OP_EOF && node->binary.opcode >= OP_VAR_ASSIGN && node->binary.opcode <= OP_VAR_MODULO_ASSIGN) {
+				writeCompilerWithJumps(compiler, node->binary.right, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+				compiler->bytecode[compiler->count++] = (unsigned char)override + 2; //1 byte WARNING: enum arithmetic
+				compiler->bytecode[compiler->count++] = (unsigned char)node->binary.opcode; //1 byte
+				return OP_EOF;
+			}
+
+			//return from the index-binary
+			Opcode ret = writeCompilerWithJumps(compiler, node->binary.right, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+
+			//loopy logic - if opcode == index or dot
+			if (node->binary.opcode == OP_INDEX || node->binary.opcode == OP_DOT) {
+				return node->binary.opcode;
+			}
+
 			compiler->bytecode[compiler->count++] = (unsigned char)node->binary.opcode; //1 byte
+
+			return ret;
+		}
 		break;
 
 		case NODE_GROUPING:
@@ -339,6 +359,7 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 
 		case NODE_PAIR:
 			fprintf(stderr, ERROR "[internal] NODE_PAIR encountered in writeCompilerWithJumps()\n" RESET);
+			compiler->bytecode[compiler->count++] = OP_EOF; //1 byte
 		break;
 
 		case NODE_VAR_DECL: {
@@ -736,11 +757,66 @@ static void writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAd
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_EXPORT; //1 byte
 		}
 		break;
+
+		case NODE_INDEX: {
+			//pass to the child nodes, then embed the opcode
+
+			//first
+			if (!node->index.first) {
+				writeLiteralToCompiler(compiler, TO_NULL_LITERAL);
+			}
+			else {
+				writeCompilerWithJumps(compiler, node->index.first, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+			}
+
+			//second
+			if (!node->index.second) {
+				writeLiteralToCompiler(compiler, TO_NULL_LITERAL);
+			}
+			else {
+				writeCompilerWithJumps(compiler, node->index.second, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+			}
+
+			//third
+			if (!node->index.third) {
+				writeLiteralToCompiler(compiler, TO_NULL_LITERAL);
+			}
+			else {
+				writeCompilerWithJumps(compiler, node->index.third, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+			}
+
+			// compiler->bytecode[compiler->count++] = (unsigned char)OP_INDEX; //1 byte
+
+			return OP_INDEX_ASSIGN; //override binary's instruction IF it is assign
+		}
+		break;
+
+		case NODE_DOT: {
+			//pass to the child nodes, then embed the opcode
+			if (!node->index.first) {
+				writeLiteralToCompiler(compiler, TO_NULL_LITERAL);
+			}
+			else {
+				writeCompilerWithJumps(compiler, node->index.first, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+			}
+
+			// compiler->bytecode[compiler->count++] = (unsigned char)OP_DOT; //1 byte
+
+			return OP_DOT_ASSIGN;
+		}
+		break;
 	}
+
+	return OP_EOF;
 }
 
 void writeCompiler(Compiler* compiler, Node* node) {
-	writeCompilerWithJumps(compiler, node, NULL, NULL, 0);
+	Opcode op = writeCompilerWithJumps(compiler, node, NULL, NULL, 0);
+
+	//compensate for indexing & dot notation being screwy
+	if (op != OP_EOF) {
+		compiler->bytecode[compiler->count++] = (unsigned char)op; //1 byte
+	}
 }
 
 void freeCompiler(Compiler* compiler) {

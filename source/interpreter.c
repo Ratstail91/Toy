@@ -1345,6 +1345,430 @@ static bool execExport(Interpreter* interpreter) {
 	return true;
 }
 
+static bool execIndex(Interpreter* interpreter) {
+	//assume -> compound, first, second, third are all on the stack
+
+	Literal third = popLiteralArray(&interpreter->stack);
+	Literal second = popLiteralArray(&interpreter->stack);
+	Literal first = popLiteralArray(&interpreter->stack);
+	Literal compound = popLiteralArray(&interpreter->stack);
+
+	if (!IS_IDENTIFIER(compound)) {
+		interpreter->errorOutput("Unknown literal found in indexing notation\n");
+		freeLiteral(third);
+		freeLiteral(second);
+		freeLiteral(first);
+		freeLiteral(compound);
+		return false;
+	}
+
+	if (!parseIdentifierToValue(interpreter, &compound)) {
+		freeLiteral(third);
+		freeLiteral(second);
+		freeLiteral(first);
+		freeLiteral(compound);
+		return false;
+	}
+
+	if (!IS_ARRAY(compound) && !IS_DICTIONARY(compound) && !IS_STRING(compound)) {
+		interpreter->errorOutput("Unknown compound found in indexing notation\n");
+		freeLiteral(third);
+		freeLiteral(second);
+		freeLiteral(first);
+		freeLiteral(compound);
+		return false;
+	}
+
+	//get the index function
+	Literal func = TO_NULL_LITERAL;
+	char* keyStr = "_index";
+	Literal key = TO_IDENTIFIER_LITERAL(copyString(keyStr, strlen(keyStr)), strlen(keyStr));
+
+	if (!getScopeVariable(interpreter->scope, key, &func) || !IS_FUNCTION_NATIVE(func)) {
+		interpreter->errorOutput("couldn't get the _index function\n");
+		freeLiteral(third);
+		freeLiteral(second);
+		freeLiteral(first);
+		freeLiteral(compound);
+		freeLiteral(func);
+		freeLiteral(key);
+		return false;
+	}
+
+	//build the argument list
+	LiteralArray arguments;
+	initLiteralArray(&arguments);
+
+	pushLiteralArray(&arguments, compound);
+	pushLiteralArray(&arguments, first);
+	pushLiteralArray(&arguments, second);
+	pushLiteralArray(&arguments, third);
+	pushLiteralArray(&arguments, TO_NULL_LITERAL); //it expects an assignment command
+	pushLiteralArray(&arguments, TO_NULL_LITERAL); //it expects an assignment "opcode"
+
+	//call the function
+	NativeFn fn = (NativeFn)AS_FUNCTION(func).bytecode;
+	fn(interpreter, &arguments);
+
+	//clean up
+	freeLiteral(third);
+	freeLiteral(second);
+	freeLiteral(first);
+	freeLiteral(compound);
+	freeLiteral(func);
+	freeLiteralArray(&arguments);
+	freeLiteral(key);
+
+	return true;
+}
+
+static bool execDot(Interpreter* interpreter) {
+	//assume -> compound, first are all on the stack
+
+	Literal first = popLiteralArray(&interpreter->stack);
+	Literal compound = popLiteralArray(&interpreter->stack);
+
+	if (!IS_IDENTIFIER(compound)) {
+		interpreter->errorOutput("Unknown literal found in dot notation\n");
+		freeLiteral(first);
+		freeLiteral(compound);
+		return false;
+	}
+
+	if (!parseIdentifierToValue(interpreter, &compound)) {
+		freeLiteral(first);
+		freeLiteral(compound);
+		return false;
+	}
+
+	if (!IS_ARRAY(compound) && !IS_DICTIONARY(compound) && !IS_STRING(compound)) {
+		interpreter->errorOutput("Unknown compound found in dot notation\n");
+		freeLiteral(first);
+		freeLiteral(compound);
+		return false;
+	}
+
+	//get the index function
+	Literal func = TO_NULL_LITERAL;
+	char* keyStr = "_dot";
+	Literal key = TO_IDENTIFIER_LITERAL(copyString(keyStr, strlen(keyStr)), strlen(keyStr));
+
+	if (!getScopeVariable(interpreter->scope, key, &func) || !IS_FUNCTION_NATIVE(func)) {
+		interpreter->errorOutput("couldn't get the _dot function\n");
+		freeLiteral(first);
+		freeLiteral(compound);
+		freeLiteral(func);
+		freeLiteral(key);
+		return false;
+	}
+
+	//build the argument list
+	LiteralArray arguments;
+	initLiteralArray(&arguments);
+
+	pushLiteralArray(&arguments, compound);
+	pushLiteralArray(&arguments, first);
+	pushLiteralArray(&arguments, TO_NULL_LITERAL); //it expects an assignment command
+	pushLiteralArray(&arguments, TO_NULL_LITERAL); //it expects an assignment "opcode"
+
+	//call the function
+	NativeFn fn = (NativeFn)AS_FUNCTION(func).bytecode;
+	fn(interpreter, &arguments);
+
+	//clean up
+	freeLiteral(first);
+	freeLiteral(compound);
+	freeLiteral(func);
+	freeLiteralArray(&arguments);
+	freeLiteral(key);
+
+	return true;
+}
+
+static bool execIndexAssign(Interpreter* interpreter) {
+	//assume -> compound, first, second, third, assign are all on the stack
+
+	Literal assign = popLiteralArray(&interpreter->stack);
+	Literal third = popLiteralArray(&interpreter->stack);
+	Literal second = popLiteralArray(&interpreter->stack);
+	Literal first = popLiteralArray(&interpreter->stack);
+	Literal compound = popLiteralArray(&interpreter->stack);
+
+	if (!IS_IDENTIFIER(compound)) {
+		interpreter->errorOutput("Unknown literal found in index assigning notation\n");
+		freeLiteral(assign);
+		freeLiteral(third);
+		freeLiteral(second);
+		freeLiteral(first);
+		freeLiteral(compound);
+		return false;
+	}
+
+	Literal idn = copyLiteral(compound);
+
+	if (!parseIdentifierToValue(interpreter, &compound)) {
+		freeLiteral(assign);
+		freeLiteral(third);
+		freeLiteral(second);
+		freeLiteral(first);
+		freeLiteral(compound);
+		freeLiteral(idn);
+		return false;
+	}
+
+	if (!IS_ARRAY(compound) && !IS_DICTIONARY(compound) && !IS_STRING(compound)) {
+		interpreter->errorOutput("Unknown compound found in index assigning notation\n");
+		freeLiteral(assign);
+		freeLiteral(third);
+		freeLiteral(second);
+		freeLiteral(first);
+		freeLiteral(compound);
+		freeLiteral(idn);
+		return false;
+	}
+
+	//get the index function
+	Literal func = TO_NULL_LITERAL;
+	char* keyStr = "_index";
+	Literal key = TO_IDENTIFIER_LITERAL(copyString(keyStr, strlen(keyStr)), strlen(keyStr));
+
+	if (!getScopeVariable(interpreter->scope, key, &func) || !IS_FUNCTION_NATIVE(func)) {
+		interpreter->errorOutput("couldn't get the _index function\n");
+		freeLiteral(assign);
+		freeLiteral(third);
+		freeLiteral(second);
+		freeLiteral(first);
+		freeLiteral(compound);
+		freeLiteral(idn);
+		freeLiteral(func);
+		freeLiteral(key);
+		return false;
+	}
+
+	//build the opcode
+	unsigned char opcode = readByte(interpreter->bytecode, &interpreter->count);
+	char* opStr = "";
+	switch(opcode) {
+		case OP_VAR_ASSIGN:
+			opStr = "=";
+		break;
+		case OP_VAR_ADDITION_ASSIGN:
+			opStr = "+=";
+		break;
+		case OP_VAR_SUBTRACTION_ASSIGN:
+			opStr = "-=";
+		break;
+		case OP_VAR_MULTIPLICATION_ASSIGN:
+			opStr = "*=";
+		break;
+		case OP_VAR_DIVISION_ASSIGN:
+			opStr = "/=";
+		break;
+		case OP_VAR_MODULO_ASSIGN:
+			opStr = "%=";
+		break;
+
+		default:
+			interpreter->errorOutput("bad opcode in index assigning notation\n");
+			freeLiteral(assign);
+			freeLiteral(third);
+			freeLiteral(second);
+			freeLiteral(first);
+			freeLiteral(compound);
+			freeLiteral(idn);
+			freeLiteral(func);
+			freeLiteral(key);
+			return false;
+	}
+
+	Literal op = TO_STRING_LITERAL(copyString(opStr, strlen(opStr)), strlen(opStr));
+
+	//build the argument list
+	LiteralArray arguments;
+	initLiteralArray(&arguments);
+
+	pushLiteralArray(&arguments, compound);
+	pushLiteralArray(&arguments, first);
+	pushLiteralArray(&arguments, second);
+	pushLiteralArray(&arguments, third);
+	pushLiteralArray(&arguments, assign); //it expects an assignment command
+	pushLiteralArray(&arguments, op); //it expects an assignment "opcode"
+
+	//call the function
+	NativeFn fn = (NativeFn)AS_FUNCTION(func).bytecode;
+	fn(interpreter, &arguments);
+
+	//save the result (assume top of the interpreter stack is the new compound value)
+	Literal result = popLiteralArray(&interpreter->stack);
+	if (!setScopeVariable(interpreter->scope, idn, result, true)) {//TODO: check this const-ness
+		interpreter->errorOutput("Incorrect type assigned to compound member: ");
+		printLiteralCustom(result, interpreter->errorOutput);
+		interpreter->errorOutput("\n");
+
+		//clean up
+		freeLiteral(op);
+		freeLiteral(assign);
+		freeLiteral(third);
+		freeLiteral(second);
+		freeLiteral(first);
+		freeLiteral(compound);
+		freeLiteral(idn);
+		freeLiteral(func);
+		freeLiteralArray(&arguments);
+		freeLiteral(key);
+		freeLiteral(result);
+		return false;
+	}
+
+	//clean up
+	freeLiteral(op);
+	freeLiteral(assign);
+	freeLiteral(third);
+	freeLiteral(second);
+	freeLiteral(first);
+	freeLiteral(compound);
+	freeLiteral(idn);
+	freeLiteral(func);
+	freeLiteralArray(&arguments);
+	freeLiteral(key);
+	freeLiteral(result);
+
+	return true;
+}
+
+static bool execDotAssign(Interpreter* interpreter) {
+	//assume -> compound, first, assign are all on the stack
+
+	Literal assign = popLiteralArray(&interpreter->stack);
+	Literal first = popLiteralArray(&interpreter->stack);
+	Literal compound = popLiteralArray(&interpreter->stack);
+
+	if (!IS_IDENTIFIER(compound)) {
+		interpreter->errorOutput("Unknown literal found in dot assigning notation\n");
+		freeLiteral(assign);
+		freeLiteral(first);
+		freeLiteral(compound);
+		return false;
+	}
+
+	Literal idn = copyLiteral(compound);
+
+	if (!parseIdentifierToValue(interpreter, &compound)) {
+		freeLiteral(assign);
+		freeLiteral(first);
+		freeLiteral(compound);
+		freeLiteral(idn);
+		return false;
+	}
+
+	if (!IS_ARRAY(compound) && !IS_DICTIONARY(compound) && !IS_STRING(compound)) {
+		interpreter->errorOutput("Unknown compound found in dot assigning notation\n");
+		freeLiteral(assign);
+		freeLiteral(first);
+		freeLiteral(compound);
+		freeLiteral(idn);
+		return false;
+	}
+
+	//get the index function
+	Literal func = TO_NULL_LITERAL;
+	char* keyStr = "_dot";
+	Literal key = TO_IDENTIFIER_LITERAL(copyString(keyStr, strlen(keyStr)), strlen(keyStr));
+
+	if (!getScopeVariable(interpreter->scope, key, &func) || !IS_FUNCTION_NATIVE(func)) {
+		interpreter->errorOutput("couldn't get the _dot function\n");
+		freeLiteral(assign);
+		freeLiteral(first);
+		freeLiteral(compound);
+		freeLiteral(idn);
+		freeLiteral(func);
+		freeLiteral(key);
+		return false;
+	}
+
+	//build the opcode
+	unsigned char opcode = readByte(interpreter->bytecode, &interpreter->count);
+	char* opStr = "";
+	switch(opcode) {
+		case OP_VAR_ASSIGN:
+			opStr = "=";
+		break;
+		case OP_VAR_ADDITION_ASSIGN:
+			opStr = "+=";
+		break;
+		case OP_VAR_SUBTRACTION_ASSIGN:
+			opStr = "-=";
+		break;
+		case OP_VAR_MULTIPLICATION_ASSIGN:
+			opStr = "*=";
+		break;
+		case OP_VAR_DIVISION_ASSIGN:
+			opStr = "/=";
+		break;
+		case OP_VAR_MODULO_ASSIGN:
+			opStr = "%=";
+		break;
+
+		default:
+			interpreter->errorOutput("bad opcode in dot assigning notation\n");
+			freeLiteral(assign);
+			freeLiteral(first);
+			freeLiteral(compound);
+			freeLiteral(idn);
+			freeLiteral(func);
+			freeLiteral(key);
+			return false;
+	}
+
+	Literal op = TO_STRING_LITERAL(copyString(opStr, strlen(opStr)), strlen(opStr));
+
+	//build the argument list
+	LiteralArray arguments;
+	initLiteralArray(&arguments);
+
+	pushLiteralArray(&arguments, compound);
+	pushLiteralArray(&arguments, first);
+	pushLiteralArray(&arguments, assign); //it expects an assignment command
+	pushLiteralArray(&arguments, op); //it expects an assignment "opcode"
+
+	//call the function
+	NativeFn fn = (NativeFn)AS_FUNCTION(func).bytecode;
+	fn(interpreter, &arguments);
+
+	//save the result (assume top of the interpreter stack is the new compound value)
+	Literal result = popLiteralArray(&interpreter->stack);
+	if (!setScopeVariable(interpreter->scope, idn, result, true)) {//TODO: check this const-ness
+		interpreter->errorOutput("Incorrect type assigned to compound member: ");
+		printLiteralCustom(result, interpreter->errorOutput);
+		interpreter->errorOutput("\n");
+
+		//clean up
+		freeLiteral(op);
+		freeLiteral(assign);
+		freeLiteral(first);
+		freeLiteral(compound);
+		freeLiteral(idn);
+		freeLiteral(func);
+		freeLiteralArray(&arguments);
+		freeLiteral(key);
+		freeLiteral(result);
+		return false;
+	}
+
+	//clean up
+	freeLiteral(op);
+	freeLiteral(assign);
+	freeLiteral(first);
+	freeLiteral(compound);
+	freeLiteral(idn);
+	freeLiteral(func);
+	freeLiteralArray(&arguments);
+	freeLiteral(key);
+	freeLiteral(result);
+
+	return true;
+}
+
 //the heart of toy
 static void execInterpreter(Interpreter* interpreter) {
 	//set the starting point for the interpreter
@@ -1548,6 +1972,30 @@ static void execInterpreter(Interpreter* interpreter) {
 
 			case OP_EXPORT:
 				if (!execExport(interpreter)) {
+					return;
+				}
+			break;
+
+			case OP_INDEX:
+				if (!execIndex(interpreter)) {
+					return;
+				}
+			break;
+
+			case OP_DOT:
+				if (!execDot(interpreter)) {
+					return;
+				}
+			break;
+
+			case OP_INDEX_ASSIGN:
+				if (!execIndexAssign(interpreter)) {
+					return;
+				}
+			break;
+
+			case OP_DOT_ASSIGN:
+				if (!execDotAssign(interpreter)) {
 					return;
 				}
 			break;
@@ -1915,6 +2363,8 @@ void resetInterpreter(Interpreter* interpreter) {
 	interpreter->scope = pushScope(NULL);
 
 	//globally available functions
+	injectNativeFn(interpreter, "_index", _index);
+	injectNativeFn(interpreter, "_dot", _dot);
 	injectNativeFn(interpreter, "_set", _set);
 	injectNativeFn(interpreter, "_get", _get);
 	injectNativeFn(interpreter, "_push", _push);

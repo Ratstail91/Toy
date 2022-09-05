@@ -34,7 +34,9 @@ DONE: Import/export keywords
 DONE: A way to check the type of a variable (typeOf keyword)
 
 
-TODO: slice and dot notation around the builtin _index function
+TODO: slice and dot notation around the builtin _index and _dot functions
+
+
 TODO: ternary operator
 TODO: Nullish types?
 TODO: hooks on the external libraries, triggered on import
@@ -42,7 +44,8 @@ TODO: standard library
 TODO: external script runner library
 TODO: document how it all works - book?
 TODO: maximum recursion/function depth
-
+TODO: better API
+TODO: packaging for release?
 
 NOPE: a = b = c = 1;
 NOPE: functions return a set number of values

@@ -48,6 +48,13 @@ typedef enum Opcode {
 	OP_IMPORT,
 	OP_EXPORT,
 
+	//for indexing
+	OP_INDEX,
+	OP_DOT,
+
+	OP_INDEX_ASSIGN,
+	OP_DOT_ASSIGN,
+
 	//comparion of values
 	OP_COMPARE_EQUAL,
 	OP_COMPARE_NOT_EQUAL,

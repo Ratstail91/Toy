@@ -9,8 +9,9 @@ typedef struct LiteralArray {
 } LiteralArray;
 
 void initLiteralArray(LiteralArray* array);
+void freeLiteralArray(LiteralArray* array);
 int pushLiteralArray(LiteralArray* array, Literal literal);
 Literal popLiteralArray(LiteralArray* array);
-void freeLiteralArray(LiteralArray* array);
+//TODO: set & get
 
 int findLiteralIndex(LiteralArray* array, Literal literal);

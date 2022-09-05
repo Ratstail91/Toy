@@ -99,8 +99,6 @@ void freeLiteral(Literal literal);
 #define IS_TRUTHY(x) _isTruthy(x)
 
 #define MAX_STRING_LENGTH					4096
-// #define STRLEN(lit)							((lit).as.string.length)
-// #define STRLEN_I(lit)						((lit).as.identifier.length)
 #define HASH_I(lit)							((lit).as.identifier.hash)
 #define TYPE_PUSH_SUBTYPE(lit, subtype)		_typePushSubtype(lit, subtype)
 

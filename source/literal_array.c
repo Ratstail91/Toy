@@ -12,6 +12,16 @@ void initLiteralArray(LiteralArray* array) {
 	array->literals = NULL;
 }
 
+void freeLiteralArray(LiteralArray* array) {
+	//clean up memory
+	for(int i = 0; i < array->count; i++) {
+		freeLiteral(array->literals[i]);
+	}
+
+	FREE_ARRAY(Literal, array->literals, array->capacity);
+	initLiteralArray(array);
+}
+
 int pushLiteralArray(LiteralArray* array, Literal literal) {
 	if (array->capacity < array->count + 1) {
 		int oldCapacity = array->capacity;
@@ -37,16 +47,6 @@ Literal popLiteralArray(LiteralArray* array) {
 
 	array->count--;
 	return ret;
-}
-
-void freeLiteralArray(LiteralArray* array) {
-	//clean up memory
-	for(int i = 0; i < array->count; i++) {
-		freeLiteral(array->literals[i]);
-	}
-
-	FREE_ARRAY(Literal, array->literals, array->capacity);
-	initLiteralArray(array);
 }
 
 //find a literal in the array that matches the "literal" argument

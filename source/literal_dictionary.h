@@ -13,8 +13,8 @@ typedef struct _entry {
 typedef struct LiteralDictionary {
 	_entry* entries;
 	int capacity;
-	int contains; //count + tombstones
 	int count;
+	int contains; //count + tombstones, for internal use
 } LiteralDictionary;
 
 void initLiteralDictionary(LiteralDictionary* dictionary);

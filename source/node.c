@@ -99,6 +99,13 @@ void freeNodeCustom(Node* node, bool freeSelf) {
 			freeLiteral(node->import.identifier);
 			freeLiteral(node->import.alias);
 		break;
+
+		case NODE_INDEX:
+		case NODE_DOT:
+			freeNode(node->index.first);
+			freeNode(node->index.second);
+			freeNode(node->index.third);
+		break;
 	}
 
 	if (freeSelf) {
@@ -259,6 +266,28 @@ void emitNodeImport(Node** nodeHandle, NodeType mode, Literal identifier, Litera
 	tmp->type = mode;
 	tmp->import.identifier = copyLiteral(identifier);
 	tmp->import.alias = copyLiteral(alias);
+
+	*nodeHandle = tmp;
+}
+
+void emitNodeIndex(Node** nodeHandle, Node* first, Node* second, Node* third) {
+	Node* tmp = ALLOCATE(Node, 1);
+
+	tmp->type = NODE_INDEX;
+	tmp->index.first = first;
+	tmp->index.second = second;
+	tmp->index.third = third;
+
+	*nodeHandle = tmp;
+}
+
+void emitNodeDot(Node** nodeHandle, Node* first) {
+	Node* tmp = ALLOCATE(Node, 1);
+
+	tmp->type = NODE_DOT;
+	tmp->index.first = first;
+	tmp->index.second = NULL;
+	tmp->index.third = NULL;
 
 	*nodeHandle = tmp;
 }

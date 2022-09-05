@@ -30,6 +30,8 @@ typedef enum NodeType {
 	NODE_INCREMENT_POSTFIX,
 	NODE_IMPORT,
 	NODE_EXPORT,
+	NODE_INDEX,
+	NODE_DOT,
 } NodeType;
 
 typedef struct NodeLiteral {
@@ -124,6 +126,13 @@ typedef struct NodeImport {
 	Literal alias;
 } NodeImport;
 
+typedef struct NodeIndex {
+	NodeType type;
+	Node* first;
+	Node* second;
+	Node* third;
+} NodeIndex;
+
 union _node {
 	NodeType type;
 	NodeLiteral atomic;
@@ -140,6 +149,7 @@ union _node {
 	NodePath path;
 	NodeIncrement increment;
 	NodeImport import;
+	NodeIndex index;
 };
 
 void freeNode(Node* node);
@@ -158,3 +168,5 @@ void emitNodePath(Node** nodeHandle, NodeType type, Node* preClause, Node* postC
 void emitNodePrefixIncrement(Node** nodeHandle, Literal identifier, int increment);
 void emitNodePostfixIncrement(Node** nodeHandle, Literal identifier, int increment);
 void emitNodeImport(Node** nodeHandle, NodeType mode, Literal identifier, Literal alias);
+void emitNodeIndex(Node** nodeHandle, Node* first, Node* second, Node* third);
+void emitNodeDot(Node** nodeHandle, Node* first);

@@ -30,12 +30,13 @@ typedef struct Interpreter {
 	bool panic;
 } Interpreter;
 
-//for native function API
+//native function API
 typedef int (*NativeFn)(Interpreter* interpreter, LiteralArray* arguments);
 bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func);
-bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr);
+//TODO: injectNativeHook
 
 //utilities for the host program
+bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr);
 void setInterpreterPrint(Interpreter* interpreter, PrintFn printOutput);
 void setInterpreterAssert(Interpreter* interpreter, PrintFn assertOutput);
 void setInterpreterError(Interpreter* interpreter, PrintFn errorOutput);

@@ -2,6 +2,52 @@
 
 #include "memory.h"
 
+int _index(Interpreter* interpreter, LiteralArray* arguments) {
+	//_index(compound, first, second, third, assignValue, op)
+	Literal op = popLiteralArray(arguments);
+	Literal assign = popLiteralArray(arguments);
+	Literal third = popLiteralArray(arguments);
+	Literal second = popLiteralArray(arguments);
+	Literal first = popLiteralArray(arguments);
+	Literal compound = popLiteralArray(arguments);
+
+	printLiteralCustom(compound, interpreter->printOutput);
+	printLiteralCustom(first, interpreter->printOutput);
+	printLiteralCustom(second, interpreter->printOutput);
+	printLiteralCustom(third, interpreter->printOutput);
+	printLiteralCustom(op, interpreter->printOutput);
+	printLiteralCustom(assign, interpreter->printOutput);
+
+	freeLiteral(compound);
+	freeLiteral(first);
+	freeLiteral(second);
+	freeLiteral(third);
+	freeLiteral(op);
+	freeLiteral(assign);
+
+	return 0;
+}
+
+int _dot(Interpreter* interpreter, LiteralArray* arguments) {
+	//_dot(compound, first, assignValue, opcode)
+	Literal op = popLiteralArray(arguments);
+	Literal assign = popLiteralArray(arguments);
+	Literal first = popLiteralArray(arguments);
+	Literal compound = popLiteralArray(arguments);
+
+	printLiteralCustom(compound, interpreter->printOutput);
+	printLiteralCustom(first, interpreter->printOutput);
+	printLiteralCustom(op, interpreter->printOutput);
+	printLiteralCustom(assign, interpreter->printOutput);
+
+	freeLiteral(compound);
+	freeLiteral(first);
+	freeLiteral(op);
+	freeLiteral(assign);
+
+	return 0;
+}
+
 int _set(Interpreter* interpreter, LiteralArray* arguments) {
 	//if wrong number of arguments, fail
 	if (arguments->count != 3) {
