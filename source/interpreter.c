@@ -461,8 +461,10 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 		printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 
-		freeLiteral(identifier);
-		freeLiteral(type);
+		if (freeType) {
+			freeLiteral(type);
+		}
+
 		freeLiteral(val);
 
 		return false;
