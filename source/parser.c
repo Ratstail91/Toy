@@ -123,6 +123,12 @@ static Literal readTypeToLiteral(Parser* parser);
 static Opcode forceType(Parser* parser, Node** nodeHandle) {
 	Literal literal = readTypeToLiteral(parser);
 
+	if (!IS_TYPE(literal)) {
+		error(parser, parser->previous, "Expected type after 'type' keyword");
+		freeLiteral(literal);
+		return OP_EOF;
+	}
+
 	emitNodeLiteral(nodeHandle, literal);
 
 	freeLiteral(literal);
