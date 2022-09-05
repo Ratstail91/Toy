@@ -120,11 +120,11 @@ static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule ru
 static Literal readTypeToLiteral(Parser* parser);
 
 //the expression rules
-static Opcode forceType(Parser* parser, Node** nodeHandle) {
+static Opcode typeAs(Parser* parser, Node** nodeHandle) {
 	Literal literal = readTypeToLiteral(parser);
 
 	if (!IS_TYPE(literal)) {
-		error(parser, parser->previous, "Expected type after 'type' keyword");
+		error(parser, parser->previous, "Expected type after 'typeas' keyword");
 		freeLiteral(literal);
 		return OP_EOF;
 	}
@@ -509,6 +509,17 @@ static Opcode atomic(Parser* parser, Node** nodeHandle) {
 			return OP_EOF;
 		}
 
+		case TOKEN_TYPE: {
+			if (match(parser, TOKEN_CONST)) {
+				emitNodeLiteral(nodeHandle, TO_TYPE_LITERAL(LITERAL_TYPE, true));
+			}
+			else {
+				emitNodeLiteral(nodeHandle, TO_TYPE_LITERAL(LITERAL_TYPE, false));
+			}
+
+			return OP_EOF;
+		}
+
 		default:
 			error(parser, parser->previous, "Unexpected token passed to atomic precedence rule");
 			return OP_EOF;
@@ -736,7 +747,8 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_OF,
 	{NULL, NULL, PREC_NONE},// TOKEN_PRINT,
 	{NULL, NULL, PREC_NONE},// TOKEN_RETURN,
-	{forceType, NULL, PREC_PRIMARY},// TOKEN_TYPE,
+	{atomic, NULL, PREC_NONE},// TOKEN_TYPE,
+	{typeAs, NULL, PREC_PRIMARY},// TOKEN_TYPEAS,
 	{typeOf, NULL, PREC_CALL},// TOKEN_TYPEOF,
 	{NULL, NULL, PREC_NONE},// TOKEN_VAR,
 	{NULL, NULL, PREC_NONE},// TOKEN_WHILE,

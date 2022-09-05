@@ -42,7 +42,7 @@
 {
 	import t;
 
-	assert typeof t == type type, "type retention failed";
+	assert typeof t == type, "type retention failed";
 }
 
 print "All good";

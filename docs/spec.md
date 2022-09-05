@@ -49,6 +49,7 @@ The following list of keywords cannot be used as names, due to their significanc
 * string
 * true
 * type
+* typeas
 * typeof
 * var
 * while
@@ -117,12 +118,11 @@ var t: type = int;
 var u: t = 42;
 ```
 
-To force a type instead of an array, use the `type` keyword:
+To force a type instead of an array, use the `typeas` keyword:
 
 ```
-var a = [type type]; //array of types
-var b = type [type]; //type of array of types
-var c = [type]; //error!
+var a = [typeas type]; //array of types
+var b = typeas [type]; //type of array of types
 
 var d = b; //types can be re-assigned to other variables
 ```
