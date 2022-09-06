@@ -5,25 +5,246 @@
 
 #include <stdio.h>
 
-//static math utils
-static Literal addition(Literal lhs, Literal rhs) {
-	//TODO
+//static math utils, copied from the interpreter
+static Literal addition(Interpreter* interpreter, Literal lhs, Literal rhs) {
+	//special case for string concatenation ONLY
+	if (IS_STRING(lhs) && IS_STRING(rhs)) {
+		//check for overflow
+		if (strlen(AS_STRING(lhs)) + strlen(AS_STRING(rhs)) > MAX_STRING_LENGTH) {
+			interpreter->errorOutput("Can't concatenate these strings (result is too long)\n");
+			return TO_NULL_LITERAL;
+		}
+
+		//concat the strings
+		char buffer[MAX_STRING_LENGTH];
+		snprintf(buffer, MAX_STRING_LENGTH, "%s%s", AS_STRING(lhs), AS_STRING(rhs));
+		Literal literal = TO_STRING_LITERAL( copyString(buffer, strlen(buffer)), strlen(buffer) );
+		freeLiteral(lhs);
+		freeLiteral(rhs);
+
+		return literal;
+	}
+
+	//type coersion
+	if (IS_FLOAT(lhs) && IS_INTEGER(rhs)) {
+		rhs = TO_FLOAT_LITERAL(AS_INTEGER(rhs));
+	}
+
+	if (IS_INTEGER(lhs) && IS_FLOAT(rhs)) {
+		lhs = TO_FLOAT_LITERAL(AS_INTEGER(lhs));
+	}
+
+	//results
+	Literal result = TO_NULL_LITERAL;
+
+	if (IS_INTEGER(lhs) && IS_INTEGER(rhs)) {
+		result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) + AS_INTEGER(rhs) );
+
+		freeLiteral(lhs);
+		freeLiteral(rhs);
+
+		return result;
+	}
+
+	if (IS_FLOAT(lhs) && IS_FLOAT(rhs)) {
+		result = TO_FLOAT_LITERAL( AS_FLOAT(lhs) + AS_FLOAT(rhs) );
+
+		freeLiteral(lhs);
+		freeLiteral(rhs);
+
+		return result;
+	}
+
+	//wrong types
+	interpreter->errorOutput("Bad arithmetic argument ");
+	printLiteralCustom(lhs, interpreter->errorOutput);
+	interpreter->errorOutput(" and ");
+	printLiteralCustom(rhs, interpreter->errorOutput);
+	interpreter->errorOutput("\n");
+
+	freeLiteral(lhs);
+	freeLiteral(rhs);
+
+	return TO_NULL_LITERAL;
 }
 
-static Literal subtraction(Literal lhs, Literal rhs) {
-	//TODO
+static Literal subtraction(Interpreter* interpreter, Literal lhs, Literal rhs) {
+	//type coersion
+	if (IS_FLOAT(lhs) && IS_INTEGER(rhs)) {
+		rhs = TO_FLOAT_LITERAL(AS_INTEGER(rhs));
+	}
+
+	if (IS_INTEGER(lhs) && IS_FLOAT(rhs)) {
+		lhs = TO_FLOAT_LITERAL(AS_INTEGER(lhs));
+	}
+
+	//results
+	Literal result = TO_NULL_LITERAL;
+
+	if (IS_INTEGER(lhs) && IS_INTEGER(rhs)) {
+		result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) - AS_INTEGER(rhs) );
+
+		freeLiteral(lhs);
+		freeLiteral(rhs);
+
+		return result;
+	}
+
+	if (IS_FLOAT(lhs) && IS_FLOAT(rhs)) {
+		result = TO_FLOAT_LITERAL( AS_FLOAT(lhs) - AS_FLOAT(rhs) );
+
+		freeLiteral(lhs);
+		freeLiteral(rhs);
+
+		return result;
+	}
+
+	//wrong types
+	interpreter->errorOutput("Bad arithmetic argument ");
+	printLiteralCustom(lhs, interpreter->errorOutput);
+	interpreter->errorOutput(" and ");
+	printLiteralCustom(rhs, interpreter->errorOutput);
+	interpreter->errorOutput("\n");
+
+	freeLiteral(lhs);
+	freeLiteral(rhs);
+
+	return TO_NULL_LITERAL;
 }
 
-static Literal multiplication(Literal lhs, Literal rhs) {
-	//TODO
+static Literal multiplication(Interpreter* interpreter, Literal lhs, Literal rhs) {
+	//type coersion
+	if (IS_FLOAT(lhs) && IS_INTEGER(rhs)) {
+		rhs = TO_FLOAT_LITERAL(AS_INTEGER(rhs));
+	}
+
+	if (IS_INTEGER(lhs) && IS_FLOAT(rhs)) {
+		lhs = TO_FLOAT_LITERAL(AS_INTEGER(lhs));
+	}
+
+	//results
+	Literal result = TO_NULL_LITERAL;
+
+	if (IS_INTEGER(lhs) && IS_INTEGER(rhs)) {
+		result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) * AS_INTEGER(rhs) );
+
+		freeLiteral(lhs);
+		freeLiteral(rhs);
+
+		return result;
+	}
+
+	if (IS_FLOAT(lhs) && IS_FLOAT(rhs)) {
+		result = TO_FLOAT_LITERAL( AS_FLOAT(lhs) * AS_FLOAT(rhs) );
+
+		freeLiteral(lhs);
+		freeLiteral(rhs);
+
+		return result;
+	}
+
+	//wrong types
+	interpreter->errorOutput("Bad arithmetic argument ");
+	printLiteralCustom(lhs, interpreter->errorOutput);
+	interpreter->errorOutput(" and ");
+	printLiteralCustom(rhs, interpreter->errorOutput);
+	interpreter->errorOutput("\n");
+
+	freeLiteral(lhs);
+	freeLiteral(rhs);
+
+	return TO_NULL_LITERAL;
 }
 
-static Literal division(Literal lhs, Literal rhs) {
-	//TODO
+static Literal division(Interpreter* interpreter, Literal lhs, Literal rhs) {
+	//division check
+	if ((IS_INTEGER(rhs) && AS_INTEGER(rhs) == 0) || (IS_FLOAT(rhs) && AS_FLOAT(rhs) == 0)) {
+		interpreter->errorOutput("Can't divide by zero");
+	}
+
+	//type coersion
+	if (IS_FLOAT(lhs) && IS_INTEGER(rhs)) {
+		rhs = TO_FLOAT_LITERAL(AS_INTEGER(rhs));
+	}
+
+	if (IS_INTEGER(lhs) && IS_FLOAT(rhs)) {
+		lhs = TO_FLOAT_LITERAL(AS_INTEGER(lhs));
+	}
+
+	//results
+	Literal result = TO_NULL_LITERAL;
+
+	if (IS_INTEGER(lhs) && IS_INTEGER(rhs)) {
+		result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) + AS_INTEGER(rhs) );
+
+		freeLiteral(lhs);
+		freeLiteral(rhs);
+
+		return result;
+	}
+
+	if (IS_FLOAT(lhs) && IS_FLOAT(rhs)) {
+		result = TO_FLOAT_LITERAL( AS_FLOAT(lhs) + AS_FLOAT(rhs) );
+
+		freeLiteral(lhs);
+		freeLiteral(rhs);
+
+		return result;
+	}
+
+	//wrong types
+	interpreter->errorOutput("Bad arithmetic argument ");
+	printLiteralCustom(lhs, interpreter->errorOutput);
+	interpreter->errorOutput(" and ");
+	printLiteralCustom(rhs, interpreter->errorOutput);
+	interpreter->errorOutput("\n");
+
+	freeLiteral(lhs);
+	freeLiteral(rhs);
+
+	return TO_NULL_LITERAL;
 }
 
-static Literal modulo(Literal lhs, Literal rhs) {
-	//TODO
+static Literal modulo(Interpreter* interpreter, Literal lhs, Literal rhs) {
+	//division check
+	if ((IS_INTEGER(rhs) && AS_INTEGER(rhs) == 0) || (IS_FLOAT(rhs) && AS_FLOAT(rhs) == 0)) {
+		interpreter->errorOutput("Can't divide by zero");
+	}
+
+	//type coersion
+	if (IS_FLOAT(lhs) && IS_INTEGER(rhs)) {
+		rhs = TO_FLOAT_LITERAL(AS_INTEGER(rhs));
+	}
+
+	if (IS_INTEGER(lhs) && IS_FLOAT(rhs)) {
+		lhs = TO_FLOAT_LITERAL(AS_INTEGER(lhs));
+	}
+
+	//results
+	Literal result = TO_NULL_LITERAL;
+
+	if (IS_INTEGER(lhs) && IS_INTEGER(rhs)) {
+		result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) + AS_INTEGER(rhs) );
+
+		freeLiteral(lhs);
+		freeLiteral(rhs);
+
+		return result;
+	}
+
+	//NOTE: no float modulo
+
+	//wrong types
+	interpreter->errorOutput("Bad arithmetic argument ");
+	printLiteralCustom(lhs, interpreter->errorOutput);
+	interpreter->errorOutput(" and ");
+	printLiteralCustom(rhs, interpreter->errorOutput);
+	interpreter->errorOutput("\n");
+
+	freeLiteral(lhs);
+	freeLiteral(rhs);
+
+	return TO_NULL_LITERAL;
 }
 
 int _index(Interpreter* interpreter, LiteralArray* arguments) {
@@ -61,28 +282,40 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 		}
 
 		else if (!strcmp( AS_STRING(op), "+=")) {
-			setLiteralDictionary(AS_DICTIONARY(compound), first, addition(value, assign));
+			Literal lit = addition(interpreter, value, assign);
+			setLiteralDictionary(AS_DICTIONARY(compound), first, lit);
+			freeLiteral(lit);
 		}
 
 		else if (!strcmp( AS_STRING(op), "-=")) {
-			setLiteralDictionary(AS_DICTIONARY(compound), first, subtraction(value, assign));
+			Literal lit = subtraction(interpreter, value, assign);
+			setLiteralDictionary(AS_DICTIONARY(compound), first, lit);
+			freeLiteral(lit);
 		}
 
 		else if (!strcmp( AS_STRING(op), "*=")) {
-			setLiteralDictionary(AS_DICTIONARY(compound), first, multiplication(value, assign));
+			Literal lit = multiplication(interpreter, value, assign);
+			setLiteralDictionary(AS_DICTIONARY(compound), first, lit);
+			freeLiteral(lit);
 		}
 
 		else if (!strcmp( AS_STRING(op), "/=")) {
-			setLiteralDictionary(AS_DICTIONARY(compound), first, division(value, assign));
+			Literal lit = division(interpreter, value, assign);
+			setLiteralDictionary(AS_DICTIONARY(compound), first, lit);
+			freeLiteral(lit);
 		}
 
 		else if (!strcmp( AS_STRING(op), "%=")) {
-			setLiteralDictionary(AS_DICTIONARY(compound), first, modulo(value, assign));
+			Literal lit = modulo(interpreter, value, assign);
+			setLiteralDictionary(AS_DICTIONARY(compound), first, lit);
+			freeLiteral(lit);
 		}
 	}
 
 	//array - slicing
 	if (IS_ARRAY(compound)) {
+		value = getLiteralArray(AS_ARRAY(compound), first);
+
 		//array slice
 		if (IS_NULL(op)) {
 			//parse out the booleans & their defaults
@@ -310,23 +543,33 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 		}
 
 		else if (IS_STRING(op) && !strcmp( AS_STRING(op), "+=")) {
-			setLiteralArray(AS_ARRAY(compound), first, addition(value, assign));
+			Literal lit = addition(interpreter, value, assign);
+			setLiteralArray(AS_ARRAY(compound), first, lit);
+			freeLiteral(lit);
 		}
 
 		else if (IS_STRING(op) && !strcmp( AS_STRING(op), "-=")) {
-			setLiteralArray(AS_ARRAY(compound), first, subtraction(value, assign));
+			Literal lit = subtraction(interpreter, value, assign);
+			setLiteralArray(AS_ARRAY(compound), first, lit);
+			freeLiteral(lit);
 		}
 
 		else if (IS_STRING(op) && !strcmp( AS_STRING(op), "*=")) {
-			setLiteralArray(AS_ARRAY(compound), first, multiplication(value, assign));
+			Literal lit = multiplication(interpreter, value, assign);
+			setLiteralArray(AS_ARRAY(compound), first, lit);
+			freeLiteral(lit);
 		}
 
 		else if (IS_STRING(op) && !strcmp( AS_STRING(op), "/=")) {
-			setLiteralArray(AS_ARRAY(compound), first, division(value, assign));
+			Literal lit = division(interpreter, value, assign);
+			setLiteralArray(AS_ARRAY(compound), first, lit);
+			freeLiteral(lit);
 		}
 
 		else if (IS_STRING(op) && !strcmp( AS_STRING(op), "%=")) {
-			setLiteralArray(AS_ARRAY(compound), first, modulo(value, assign));
+			Literal lit = modulo(interpreter, value, assign);
+			setLiteralArray(AS_ARRAY(compound), first, lit);
+			freeLiteral(lit);
 		}
 	}
 
@@ -390,7 +633,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				return 1;
 			}
 
-			if (!IS_INTEGER(second) || (!IS_NULL(third) && !IS_INTEGER(third)) || AS_INTEGER(second) < 0 || AS_INTEGER(second) > strlen(AS_STRING(compound)) || AS_INTEGER(third) == 0) {
+			if (!IS_INTEGER(second) || (!IS_NULL(third) && !IS_INTEGER(third)) || AS_INTEGER(second) < 0 || AS_INTEGER(second) > (int)strlen(AS_STRING(compound)) || AS_INTEGER(third) == 0) {
 				//something is weird - skip out
 				freeLiteral(op);
 				freeLiteral(assign);
@@ -489,7 +732,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				return 1;
 			}
 
-			if (!IS_INTEGER(second) || (!IS_NULL(third) && !IS_INTEGER(third)) || AS_INTEGER(second) < 0 || AS_INTEGER(second) > strlen(AS_STRING(compound)) || AS_INTEGER(third) == 0) {
+			if (!IS_INTEGER(second) || (!IS_NULL(third) && !IS_INTEGER(third)) || AS_INTEGER(second) < 0 || AS_INTEGER(second) > (int)strlen(AS_STRING(compound)) || AS_INTEGER(third) == 0) {
 				//something is weird - skip out
 				freeLiteral(op);
 				freeLiteral(assign);
@@ -515,11 +758,11 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				int min = AS_INTEGER(third) > 0 ? 0 : strlen(AS_STRING(assign)) - 1;
 
 				//TODO: optimize strlen(assign)
-				for (int i = min; i >= 0 && i < strlen(AS_STRING(assign)); i += AS_INTEGER(third)) {
+				for (int i = min; i >= 0 && i < (int)strlen(AS_STRING(assign)); i += AS_INTEGER(third)) {
 					result[ resultIndex++ ] = AS_STRING(assign)[ i ];
 				}
 
-				for (int i = AS_INTEGER(second) + 1; i < strlen(AS_STRING(compound)); i++) {
+				for (int i = AS_INTEGER(second) + 1; i < (int)strlen(AS_STRING(compound)); i++) {
 					result[ resultIndex++ ] = AS_STRING(compound)[ i ];
 				}
 
@@ -534,7 +777,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				int min = AS_INTEGER(third) > 0 ? AS_INTEGER(first) : AS_INTEGER(second) - 1;
 
 				int assignIndex = 0;
-				for (int i = min; i >= AS_INTEGER(first) && i <= AS_INTEGER(second) && assignIndex < strlen(AS_STRING(assign)); i += AS_INTEGER(third)) {
+				for (int i = min; i >= AS_INTEGER(first) && i <= AS_INTEGER(second) && assignIndex < (int)strlen(AS_STRING(assign)); i += AS_INTEGER(third)) {
 					result[ i ] = AS_STRING(assign)[ assignIndex++ ];
 					resultIndex++;
 				}
@@ -548,7 +791,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 		}
 
 		else if (IS_STRING(op) && !strcmp( AS_STRING(op), "+=")) {
-			Literal tmp = addition(compound, value);
+			Literal tmp = addition(interpreter, compound, value);
 			freeLiteral(compound);
 			compound = tmp; //don't clear tmp
 		}
@@ -588,27 +831,37 @@ int _dot(Interpreter* interpreter, LiteralArray* arguments) {
 	}
 
 	else if (!strcmp( AS_STRING(op), "+=")) {
-		setLiteralDictionary(AS_DICTIONARY(compound), first, addition(value, assign));
+		Literal lit = addition(interpreter, value, assign);
+		setLiteralDictionary(AS_DICTIONARY(compound), first, lit);
+		freeLiteral(lit);
 		pushLiteralArray(&interpreter->stack, compound);
 	}
 
 	else if (!strcmp( AS_STRING(op), "-=")) {
-		setLiteralDictionary(AS_DICTIONARY(compound), first, subtraction(value, assign));
+		Literal lit = subtraction(interpreter, value, assign);
+		setLiteralDictionary(AS_DICTIONARY(compound), first, lit);
+		freeLiteral(lit);
 		pushLiteralArray(&interpreter->stack, compound);
 	}
 
 	else if (!strcmp( AS_STRING(op), "*=")) {
-		setLiteralDictionary(AS_DICTIONARY(compound), first, multiplication(value, assign));
+		Literal lit = multiplication(interpreter, value, assign);
+		setLiteralDictionary(AS_DICTIONARY(compound), first, lit);
+		freeLiteral(lit);
 		pushLiteralArray(&interpreter->stack, compound);
 	}
 
 	else if (!strcmp( AS_STRING(op), "/=")) {
-		setLiteralDictionary(AS_DICTIONARY(compound), first, division(value, assign));
+		Literal lit = division(interpreter, value, assign);
+		setLiteralDictionary(AS_DICTIONARY(compound), first, lit);
+		freeLiteral(lit);
 		pushLiteralArray(&interpreter->stack, compound);
 	}
 
 	else if (!strcmp( AS_STRING(op), "%=")) {
-		setLiteralDictionary(AS_DICTIONARY(compound), first, modulo(value, assign));
+		Literal lit = modulo(interpreter, value, assign);
+		setLiteralDictionary(AS_DICTIONARY(compound), first, lit);
+		freeLiteral(lit);
 		pushLiteralArray(&interpreter->stack, compound);
 	}
 
