@@ -162,7 +162,6 @@ int main() {
 
 	{
 		//run each file in ../scripts/test/
-		int count = 15;
 		char* filenames[] = {
 			"arithmetic.toy",
 			"casting.toy",
@@ -170,6 +169,9 @@ int main() {
 			"dot-and-matrix.toy",
 			"functions.toy",
 			"imports-and-exports.toy",
+			"index-arrays.toy",
+			"index-dictionaries.toy",
+			"index-strings.toy",
 			"jumps.toy",
 			"jumps-in-functions.toy",
 			"logicals.toy",
@@ -178,10 +180,11 @@ int main() {
 			"long-literals.toy",
 			"native-functions.toy",
 			"panic-within-functions.toy", 
-			"types.toy"
+			"types.toy",
+			NULL
 		};
 
-		for (int i = 0; i < count; i++) {
+		for (int i = 0; filenames[i]; i++) {
 			printf("Running %s\n", filenames[i]);
 
 			char buffer[128];

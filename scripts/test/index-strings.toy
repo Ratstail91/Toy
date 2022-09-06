@@ -1,0 +1,21 @@
+//test basic replacement
+var greeting: string = "hello world";
+
+greeting[0:4] = "goodnight";
+
+assert greeting == "goodnight world", "basic replacement failed";
+
+
+//test backwards string
+assert greeting[::-1] == "dlrow thgindoog", "backwards string failed";
+
+
+//test string weird manipulation
+var numbers = "0123456789";
+
+numbers[::-2] = "abc";
+
+assert numbers == "01234c6b8a", "string weird manipulation failed";
+
+
+print "All good";

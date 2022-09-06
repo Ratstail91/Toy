@@ -306,12 +306,17 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 			//pass to the child nodes, then embed the binary command (math, etc.)
 			Opcode override = writeCompilerWithJumps(compiler, node->binary.left, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
 
-			//special case for when indexing
+			//special case for when indexing and assigning
 			if (override != OP_EOF && node->binary.opcode >= OP_VAR_ASSIGN && node->binary.opcode <= OP_VAR_MODULO_ASSIGN) {
 				writeCompilerWithJumps(compiler, node->binary.right, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
 				compiler->bytecode[compiler->count++] = (unsigned char)override + 2; //1 byte WARNING: enum arithmetic
 				compiler->bytecode[compiler->count++] = (unsigned char)node->binary.opcode; //1 byte
 				return OP_EOF;
+			}
+
+			//compensate for... yikes
+			if (override != OP_EOF) {
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
 			}
 
 			//return from the index-binary

@@ -1355,6 +1355,8 @@ static bool execIndex(Interpreter* interpreter) {
 
 	if (!IS_IDENTIFIER(compound)) {
 		interpreter->errorOutput("Unknown literal found in indexing notation\n");
+		printLiteralCustom(compound, interpreter->errorOutput);
+		interpreter->errorOutput("\n");
 		freeLiteral(third);
 		freeLiteral(second);
 		freeLiteral(first);
@@ -1434,6 +1436,8 @@ static bool execDot(Interpreter* interpreter) {
 
 	if (!IS_IDENTIFIER(compound)) {
 		interpreter->errorOutput("Unknown literal found in dot notation\n");
+		printLiteralCustom(compound, interpreter->errorOutput);
+		interpreter->errorOutput("\n");
 		freeLiteral(first);
 		freeLiteral(compound);
 		return false;
@@ -1500,6 +1504,8 @@ static bool execIndexAssign(Interpreter* interpreter) {
 
 	if (!IS_IDENTIFIER(compound)) {
 		interpreter->errorOutput("Unknown literal found in index assigning notation\n");
+		printLiteralCustom(compound, interpreter->errorOutput);
+		interpreter->errorOutput("\n");
 		freeLiteral(assign);
 		freeLiteral(third);
 		freeLiteral(second);
@@ -1669,6 +1675,8 @@ static bool execDotAssign(Interpreter* interpreter) {
 
 	if (!IS_IDENTIFIER(compound)) {
 		interpreter->errorOutput("Unknown literal found in dot assigning notation\n");
+		printLiteralCustom(compound, interpreter->errorOutput);
+		interpreter->errorOutput("\n");
 		freeLiteral(assign);
 		freeLiteral(first);
 		freeLiteral(compound);

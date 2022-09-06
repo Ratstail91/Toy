@@ -42,7 +42,6 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 		value = getLiteralDictionary(AS_DICTIONARY(compound), first);
 
 		//dictionary
-		//dictionary
 		if (IS_NULL(op)) {
 			pushLiteralArray(&interpreter->stack, value);
 
@@ -525,6 +524,8 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				for (int i = AS_INTEGER(second) + 1; i < strlen(AS_STRING(compound)); i++) {
 					result[ resultIndex++ ] = AS_STRING(compound)[ i ];
 				}
+
+				result[ resultIndex++ ] = '\0';
 			}
 
 			//else override elements of the array instead
@@ -532,7 +533,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				//copy compound to result
 				snprintf(result, MAX_STRING_LENGTH, AS_STRING(compound));
 
-				int min = AS_INTEGER(third) > 0 ? AS_INTEGER(first) : AS_INTEGER(second);
+				int min = AS_INTEGER(third) > 0 ? AS_INTEGER(first) : AS_INTEGER(second) - 1;
 
 				int assignIndex = 0;
 				for (int i = min; i >= AS_INTEGER(first) && i <= AS_INTEGER(second) && assignIndex < strlen(AS_STRING(assign)); i += AS_INTEGER(third)) {

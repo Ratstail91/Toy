@@ -1,0 +1,29 @@
+//test basic replacement
+{
+	var week = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+	week[3] = "Holiday";
+
+	assert week == ["monday", "tuesday", "wednesday", "Holiday", "friday", "saturday", "sunday"], "basic replacement failed";
+}
+
+
+//test backwards
+{
+	var week = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+	assert week[::-1] == ["sunday", "saturday", "friday", "thursday", "wednesday", "tuesday", "monday"], "backwards failed";
+}
+
+
+//test array weird manipulation
+{
+	var week = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+	week[::-2] = ["first", "second", "third"];
+
+	assert week == ["monday", "tuesday", "third", "thursday", "second", "saturday", "first"], "array weird manipulation failed";
+}
+
+
+print "All good";

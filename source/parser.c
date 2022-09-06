@@ -530,6 +530,11 @@ static Opcode identifier(Parser* parser, Node** nodeHandle) {
 	//make a copy of the string
 	Token identifierToken = parser->previous;
 
+	if (identifierToken.type != TOKEN_IDENTIFIER) {
+		error(parser, parser->previous, "Expected identifier");
+		return OP_EOF;
+	}
+
 	int length = identifierToken.length;
 
 	//for safety
@@ -739,10 +744,10 @@ static Opcode indexAccess(Parser* parser, Node** nodeHandle) {
 	}
 
 	if (match(parser, TOKEN_BRACKET_RIGHT)) {
-		// freeNode(second);
-		// freeNode(third);
-		// second = NULL;
-		// third = NULL;
+		freeNode(second);
+		freeNode(third);
+		second = NULL;
+		third = NULL;
 
 		emitNodeIndex(nodeHandle, first, second, third);
 		return OP_INDEX;
@@ -756,8 +761,8 @@ static Opcode indexAccess(Parser* parser, Node** nodeHandle) {
 	}
 
 	if (match(parser, TOKEN_BRACKET_RIGHT)) {
-		// freeNode(third);
-		// third = NULL;
+		freeNode(third);
+		third = NULL;
 		emitNodeIndex(nodeHandle, first, second, third);
 		return OP_INDEX;
 	}
@@ -1267,6 +1272,11 @@ static void importStmt(Parser* parser, Node** nodeHandle) {
 	Node* node = NULL;
 	advance(parser);
 	identifier(parser, &node);
+
+	if (node == NULL) {
+		return;
+	}
+
 	Literal idn = copyLiteral(node->atomic.literal);
 	freeNode(node);
 
@@ -1292,6 +1302,11 @@ static void exportStmt(Parser* parser, Node** nodeHandle) {
 	Node* node = NULL;
 	advance(parser);
 	identifier(parser, &node);
+
+	if (node == NULL) {
+		return;
+	}
+
 	Literal idn = copyLiteral(node->atomic.literal);
 	freeNode(node);
 

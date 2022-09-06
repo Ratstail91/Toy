@@ -1,0 +1,21 @@
+//test basic insertion
+{
+	var d = [:];
+
+	d["foo"] = "bar";
+
+	assert d == ["foo":"bar"], "basic insertion failed";
+}
+
+
+//test dot insertion
+{
+	var d = [:];
+
+	d.foo = "bar";
+
+	assert d == ["foo":"bar"], "dot insertion failed";
+}
+
+
+print "All good";

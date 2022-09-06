@@ -55,7 +55,7 @@ typedef enum Opcode {
 	OP_INDEX_ASSIGN,
 	OP_DOT_ASSIGN,
 
-	//comparion of values
+	//comparison of values
 	OP_COMPARE_EQUAL,
 	OP_COMPARE_NOT_EQUAL,
 	OP_COMPARE_LESS,
