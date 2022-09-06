@@ -45,12 +45,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 		if (IS_NULL(op)) {
 			pushLiteralArray(&interpreter->stack, value);
 
-			freeLiteral(compound);
-			freeLiteral(first);
-			freeLiteral(second);
-			freeLiteral(third);
 			freeLiteral(op);
 			freeLiteral(assign);
+			freeLiteral(third);
+			freeLiteral(second);
+			freeLiteral(first);
+			freeLiteral(compound);
 			freeLiteral(value);
 
 			return 1;
@@ -83,8 +83,6 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 	//array - slicing
 	if (IS_ARRAY(compound)) {
-		value = getLiteralArray(AS_ARRAY(compound), first);
-
 		//array slice
 		if (IS_NULL(op)) {
 			//parse out the booleans & their defaults
@@ -110,12 +108,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			//handle each null case
 			if (IS_NULL(first) || !IS_INTEGER(first)) {
 				//something is weird - skip out
-				freeLiteral(compound);
-				freeLiteral(first);
-				freeLiteral(second);
-				freeLiteral(third);
 				freeLiteral(op);
 				freeLiteral(assign);
+				freeLiteral(third);
+				freeLiteral(second);
+				freeLiteral(first);
+				freeLiteral(compound);
 				freeLiteral(value);
 
 				return -1;
@@ -124,15 +122,16 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			if (IS_NULL(second)) { //assign only a single character
 				//get the "first" within the array, then skip out
 
+				freeLiteral(value);
 				value = getLiteralArray(AS_ARRAY(compound), first);
 				pushLiteralArray(&interpreter->stack, value);
 
-				freeLiteral(compound);
-				freeLiteral(first);
-				freeLiteral(second);
-				freeLiteral(third);
 				freeLiteral(op);
 				freeLiteral(assign);
+				freeLiteral(third);
+				freeLiteral(second);
+				freeLiteral(first);
+				freeLiteral(compound);
 				freeLiteral(value);
 
 				return 1;
@@ -140,12 +139,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 			if (!IS_INTEGER(second) || (!IS_NULL(third) && !IS_INTEGER(third)) || AS_INTEGER(second) < 0 || AS_INTEGER(second) > AS_ARRAY(compound)->count || AS_INTEGER(third) == 0) {
 				//something is weird - skip out
-				freeLiteral(compound);
-				freeLiteral(first);
-				freeLiteral(second);
-				freeLiteral(third);
 				freeLiteral(op);
 				freeLiteral(assign);
+				freeLiteral(third);
+				freeLiteral(second);
+				freeLiteral(first);
+				freeLiteral(compound);
 				freeLiteral(value);
 
 				return -1;
@@ -197,12 +196,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			//handle each null case
 			if (IS_NULL(first) || !IS_INTEGER(first)) {
 				//something is weird - skip out
-				freeLiteral(compound);
-				freeLiteral(first);
-				freeLiteral(second);
-				freeLiteral(third);
 				freeLiteral(op);
 				freeLiteral(assign);
+				freeLiteral(third);
+				freeLiteral(second);
+				freeLiteral(first);
+				freeLiteral(compound);
 				freeLiteral(value);
 
 				return -1;
@@ -214,12 +213,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 				pushLiteralArray(&interpreter->stack, compound);
 
-				freeLiteral(compound);
-				freeLiteral(first);
-				freeLiteral(second);
-				freeLiteral(third);
 				freeLiteral(op);
 				freeLiteral(assign);
+				freeLiteral(third);
+				freeLiteral(second);
+				freeLiteral(first);
+				freeLiteral(compound);
 				freeLiteral(value);
 
 				return 1;
@@ -227,12 +226,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 			if (!IS_INTEGER(second) || (!IS_NULL(third) && !IS_INTEGER(third)) || AS_INTEGER(second) < 0 || AS_INTEGER(second) > AS_ARRAY(compound)->count || AS_INTEGER(third) == 0) {
 				//something is weird - skip out
-				freeLiteral(compound);
-				freeLiteral(first);
-				freeLiteral(second);
-				freeLiteral(third);
 				freeLiteral(op);
 				freeLiteral(assign);
+				freeLiteral(third);
+				freeLiteral(second);
+				freeLiteral(first);
+				freeLiteral(compound);
 				freeLiteral(value);
 
 				return -1;
@@ -358,12 +357,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			//handle each null case
 			if (IS_NULL(first) || !IS_INTEGER(first)) {
 				//something is weird - skip out
-				freeLiteral(compound);
-				freeLiteral(first);
-				freeLiteral(second);
-				freeLiteral(third);
 				freeLiteral(op);
 				freeLiteral(assign);
+				freeLiteral(third);
+				freeLiteral(second);
+				freeLiteral(first);
+				freeLiteral(compound);
 				freeLiteral(value);
 
 				return -1;
@@ -380,12 +379,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 				pushLiteralArray(&interpreter->stack, value);
 
-				freeLiteral(compound);
-				freeLiteral(first);
-				freeLiteral(second);
-				freeLiteral(third);
 				freeLiteral(op);
 				freeLiteral(assign);
+				freeLiteral(third);
+				freeLiteral(second);
+				freeLiteral(first);
+				freeLiteral(compound);
 				freeLiteral(value);
 
 				return 1;
@@ -393,12 +392,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 			if (!IS_INTEGER(second) || (!IS_NULL(third) && !IS_INTEGER(third)) || AS_INTEGER(second) < 0 || AS_INTEGER(second) > strlen(AS_STRING(compound)) || AS_INTEGER(third) == 0) {
 				//something is weird - skip out
-				freeLiteral(compound);
-				freeLiteral(first);
-				freeLiteral(second);
-				freeLiteral(third);
 				freeLiteral(op);
 				freeLiteral(assign);
+				freeLiteral(third);
+				freeLiteral(second);
+				freeLiteral(first);
+				freeLiteral(compound);
 				freeLiteral(value);
 
 				return -1;
@@ -449,12 +448,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			//handle each null case
 			if (IS_NULL(first) || !IS_INTEGER(first)) {
 				//something is weird - skip out
-				freeLiteral(compound);
-				freeLiteral(first);
-				freeLiteral(second);
-				freeLiteral(third);
 				freeLiteral(op);
 				freeLiteral(assign);
+				freeLiteral(third);
+				freeLiteral(second);
+				freeLiteral(first);
+				freeLiteral(compound);
 				freeLiteral(value);
 
 				return -1;
@@ -464,13 +463,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				//set the "first" within the array, then skip out
 				if (strlen( AS_STRING(assign) ) != 1) {
 					//something is weird - skip out
-
-					freeLiteral(compound);
-					freeLiteral(first);
-					freeLiteral(second);
-					freeLiteral(third);
 					freeLiteral(op);
 					freeLiteral(assign);
+					freeLiteral(third);
+					freeLiteral(second);
+					freeLiteral(first);
+					freeLiteral(compound);
 					freeLiteral(value);
 
 					return -1;
@@ -480,12 +478,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 				pushLiteralArray(&interpreter->stack, compound);
 
-				freeLiteral(compound);
-				freeLiteral(first);
-				freeLiteral(second);
-				freeLiteral(third);
 				freeLiteral(op);
 				freeLiteral(assign);
+				freeLiteral(third);
+				freeLiteral(second);
+				freeLiteral(first);
+				freeLiteral(compound);
 				freeLiteral(value);
 
 				return 1;
@@ -493,12 +491,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 			if (!IS_INTEGER(second) || (!IS_NULL(third) && !IS_INTEGER(third)) || AS_INTEGER(second) < 0 || AS_INTEGER(second) > strlen(AS_STRING(compound)) || AS_INTEGER(third) == 0) {
 				//something is weird - skip out
-				freeLiteral(compound);
-				freeLiteral(first);
-				freeLiteral(second);
-				freeLiteral(third);
 				freeLiteral(op);
 				freeLiteral(assign);
+				freeLiteral(third);
+				freeLiteral(second);
+				freeLiteral(first);
+				freeLiteral(compound);
 				freeLiteral(value);
 
 				return -1;
@@ -559,12 +557,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 	//leave the compound on the stack
 	pushLiteralArray(&interpreter->stack, compound);
 
-	freeLiteral(compound);
-	freeLiteral(first);
-	freeLiteral(second);
-	freeLiteral(third);
 	freeLiteral(op);
 	freeLiteral(assign);
+	freeLiteral(third);
+	freeLiteral(second);
+	freeLiteral(first);
+	freeLiteral(compound);
 	freeLiteral(value);
 
 	return 1;
@@ -615,10 +613,10 @@ int _dot(Interpreter* interpreter, LiteralArray* arguments) {
 	}
 
 	//cleanup
-	freeLiteral(compound);
-	freeLiteral(first);
 	freeLiteral(op);
 	freeLiteral(assign);
+	freeLiteral(first);
+	freeLiteral(compound);
 	freeLiteral(value);
 
 	return 1;
