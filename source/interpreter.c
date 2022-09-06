@@ -1625,7 +1625,7 @@ static bool execIndexAssign(Interpreter* interpreter) {
 	LiteralArray arguments;
 	initLiteralArray(&arguments);
 
-	pushLiteralArray(&arguments, compound);
+	pushLiteralArray(&arguments, compound); //TODO: nested compounds?
 	pushLiteralArray(&arguments, first);
 	pushLiteralArray(&arguments, second);
 	pushLiteralArray(&arguments, third);
@@ -2267,7 +2267,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 				if (AS_TYPE(typeLiteral).typeOf == LITERAL_ARRAY) {
 					unsigned short vt = readShort(interpreter->bytecode, &interpreter->count);
 
-					TYPE_PUSH_SUBTYPE(&typeLiteral, interpreter->literalCache.literals[vt]);
+					TYPE_PUSH_SUBTYPE(&typeLiteral, copyLiteral(interpreter->literalCache.literals[vt]));
 				}
 
 				if (AS_TYPE(typeLiteral).typeOf == LITERAL_DICTIONARY) {

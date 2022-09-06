@@ -55,6 +55,10 @@ static bool checkType(Literal typeLiteral, Literal value) {
 		return false;
 	}
 
+	if (AS_TYPE(typeLiteral).typeOf == LITERAL_ARRAY && !IS_ARRAY(value)) {
+		return false;
+	}
+
 	if (IS_ARRAY(value)) {
 		//check value's type
 		if (AS_TYPE(typeLiteral).typeOf != LITERAL_ARRAY) {
@@ -67,6 +71,10 @@ static bool checkType(Literal typeLiteral, Literal value) {
 				return false;
 			}
 		}
+	}
+
+	if (AS_TYPE(typeLiteral).typeOf == LITERAL_DICTIONARY && !IS_DICTIONARY(value)) {
+		return false;
 	}
 
 	if (IS_DICTIONARY(value)) {
@@ -90,11 +98,8 @@ static bool checkType(Literal typeLiteral, Literal value) {
 		}
 	}
 
-	if (IS_FUNCTION(value)) {
-		//check value's type
-		if (AS_TYPE(typeLiteral).typeOf != LITERAL_FUNCTION) {
-			return false;
-		}
+	if (AS_TYPE(typeLiteral).typeOf == LITERAL_FUNCTION && !IS_FUNCTION(value)) {
+		return false;
 	}
 
 	if (AS_TYPE(typeLiteral).typeOf == LITERAL_TYPE && !IS_TYPE(value)) {
@@ -217,11 +222,13 @@ bool setScopeVariable(Scope* scope, Literal key, Literal value, bool constCheck)
 	Literal typeLiteral = getLiteralDictionary(&scope->types, key);
 
 	if (!checkType(typeLiteral, value)) {
+		freeLiteral(typeLiteral);
 		return false;
 	}
 
 	//const check
 	if (constCheck && (AS_TYPE(typeLiteral).constant)) {
+		freeLiteral(typeLiteral);
 		return false;
 	}
 

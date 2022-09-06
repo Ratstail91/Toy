@@ -1,0 +1,10 @@
+
+
+var t: type = typeas [[int]];
+
+var a: t = [
+	[1, 2, 3]
+];
+
+print a;
+print typeof a;

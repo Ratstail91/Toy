@@ -32,11 +32,7 @@ DONE: third output stream, for lexer/parser/compiler/interpreter errors
 DONE: Assertion-based test scripts
 DONE: Import/export keywords
 DONE: A way to check the type of a variable (typeOf keyword)
-
-
-TODO: slice and dot notation around the builtin _index and _dot functions
-//TODO: check this const-ness
-//TODO: add arithmetics
+DONE: slice and dot notation around the builtin _index and _dot functions
 
 
 TODO: ternary operator
@@ -47,6 +43,8 @@ TODO: external script runner library
 TODO: document how it all works - book?
 TODO: maximum recursion/function depth
 TODO: better API
+TODO: better sugar for _push and _pop
+TODO: nested compound assignment
 TODO: packaging for release?
 
 NOPE: a = b = c = 1;
