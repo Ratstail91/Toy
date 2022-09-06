@@ -1364,11 +1364,14 @@ static bool execIndex(Interpreter* interpreter) {
 		return false;
 	}
 
+	Literal idn = compound;
+
 	if (!parseIdentifierToValue(interpreter, &compound)) {
 		freeLiteral(third);
 		freeLiteral(second);
 		freeLiteral(first);
 		freeLiteral(compound);
+		freeLiteral(idn);
 		return false;
 	}
 
@@ -1378,6 +1381,7 @@ static bool execIndex(Interpreter* interpreter) {
 		freeLiteral(second);
 		freeLiteral(first);
 		freeLiteral(compound);
+		freeLiteral(idn);
 		return false;
 	}
 
@@ -1392,6 +1396,7 @@ static bool execIndex(Interpreter* interpreter) {
 		freeLiteral(second);
 		freeLiteral(first);
 		freeLiteral(compound);
+		freeLiteral(idn);
 		freeLiteral(func);
 		freeLiteral(key);
 		return false;
@@ -1417,9 +1422,10 @@ static bool execIndex(Interpreter* interpreter) {
 	freeLiteral(second);
 	freeLiteral(first);
 	freeLiteral(compound);
+	freeLiteral(idn);
 	freeLiteral(func);
-	freeLiteralArray(&arguments);
 	freeLiteral(key);
+	freeLiteralArray(&arguments);
 
 	return true;
 }
@@ -1443,9 +1449,12 @@ static bool execDot(Interpreter* interpreter) {
 		return false;
 	}
 
+	Literal idn = compound;
+
 	if (!parseIdentifierToValue(interpreter, &compound)) {
 		freeLiteral(first);
 		freeLiteral(compound);
+		freeLiteral(idn);
 		return false;
 	}
 
@@ -1453,6 +1462,7 @@ static bool execDot(Interpreter* interpreter) {
 		interpreter->errorOutput("Unknown compound found in dot notation\n");
 		freeLiteral(first);
 		freeLiteral(compound);
+		freeLiteral(idn);
 		return false;
 	}
 
@@ -1465,6 +1475,7 @@ static bool execDot(Interpreter* interpreter) {
 		interpreter->errorOutput("couldn't get the _dot function\n");
 		freeLiteral(first);
 		freeLiteral(compound);
+		freeLiteral(idn);
 		freeLiteral(func);
 		freeLiteral(key);
 		return false;
@@ -1486,9 +1497,10 @@ static bool execDot(Interpreter* interpreter) {
 	//clean up
 	freeLiteral(first);
 	freeLiteral(compound);
+	freeLiteral(idn);
 	freeLiteral(func);
-	freeLiteralArray(&arguments);
 	freeLiteral(key);
+	freeLiteralArray(&arguments);
 
 	return true;
 }
@@ -1514,7 +1526,7 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		return false;
 	}
 
-	Literal idn = copyLiteral(compound);
+	Literal idn = compound;
 
 	if (!parseIdentifierToValue(interpreter, &compound)) {
 		freeLiteral(assign);
@@ -1542,6 +1554,8 @@ static bool execIndexAssign(Interpreter* interpreter) {
 	if ((AS_TYPE(type).typeOf == LITERAL_ARRAY && AS_TYPE(((Literal*)(AS_TYPE(type).subtypes))[0]).constant) || (AS_TYPE(type).typeOf == LITERAL_DICTIONARY && AS_TYPE(((Literal*)(AS_TYPE(type).subtypes))[1]).constant)) {
 		interpreter->errorOutput("couldn't assign to constant within compound within index assigning notation\n");
 		freeLiteral(assign);
+		freeLiteral(third);
+		freeLiteral(second);
 		freeLiteral(first);
 		freeLiteral(compound);
 		freeLiteral(idn);
@@ -1562,9 +1576,9 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		freeLiteral(first);
 		freeLiteral(compound);
 		freeLiteral(idn);
+		freeLiteral(type);
 		freeLiteral(func);
 		freeLiteral(key);
-		freeLiteral(type);
 		return false;
 	}
 
@@ -1599,9 +1613,9 @@ static bool execIndexAssign(Interpreter* interpreter) {
 			freeLiteral(first);
 			freeLiteral(compound);
 			freeLiteral(idn);
+			freeLiteral(type);
 			freeLiteral(func);
 			freeLiteral(key);
-			freeLiteral(type);
 			return false;
 	}
 
@@ -1630,7 +1644,6 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		interpreter->errorOutput("\n");
 
 		//clean up
-		freeLiteral(op);
 		freeLiteral(assign);
 		freeLiteral(third);
 		freeLiteral(second);
@@ -1638,15 +1651,15 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		freeLiteral(compound);
 		freeLiteral(idn);
 		freeLiteral(func);
-		freeLiteralArray(&arguments);
-		freeLiteral(key);
 		freeLiteral(type);
+		freeLiteral(key);
+		freeLiteral(op);
+		freeLiteralArray(&arguments);
 		freeLiteral(result);
 		return false;
 	}
 
 	//clean up
-	freeLiteral(op);
 	freeLiteral(assign);
 	freeLiteral(third);
 	freeLiteral(second);
@@ -1654,9 +1667,10 @@ static bool execIndexAssign(Interpreter* interpreter) {
 	freeLiteral(compound);
 	freeLiteral(idn);
 	freeLiteral(func);
-	freeLiteralArray(&arguments);
-	freeLiteral(key);
 	freeLiteral(type);
+	freeLiteral(key);
+	freeLiteral(op);
+	freeLiteralArray(&arguments);
 	freeLiteral(result);
 
 	return true;
@@ -1789,16 +1803,16 @@ static bool execDotAssign(Interpreter* interpreter) {
 		interpreter->errorOutput("\n");
 
 		//clean up
-		freeLiteral(op);
 		freeLiteral(assign);
 		freeLiteral(first);
 		freeLiteral(compound);
 		freeLiteral(idn);
 		freeLiteral(func);
-		freeLiteralArray(&arguments);
 		freeLiteral(key);
 		freeLiteral(type);
 		freeLiteral(result);
+		freeLiteralArray(&arguments);
+		freeLiteral(op);
 		return false;
 	}
 
