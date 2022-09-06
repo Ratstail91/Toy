@@ -65,3 +65,34 @@ int findLiteralIndex(LiteralArray* array, Literal literal) {
 
 	return -1;
 }
+
+bool setLiteralArray(LiteralArray* array, Literal index, Literal value) {
+	if (!IS_INTEGER(index)) {
+		return false;
+	}
+
+	int idx = AS_INTEGER(index);
+
+	if (idx < 0 || idx >= array->count) {
+		return false;
+	}
+
+	freeLiteral(array->literals[idx]);
+	array->literals[idx] = copyLiteral(value);
+
+	return true;
+}
+
+Literal getLiteralArray(LiteralArray* array, Literal index) {
+	if (!IS_INTEGER(index)) {
+		return TO_NULL_LITERAL;
+	}
+
+	int idx = AS_INTEGER(index);
+
+	if (idx < 0 || idx >= array->count) {
+		return TO_NULL_LITERAL;
+	}
+
+	return copyLiteral(array->literals[idx]);
+}

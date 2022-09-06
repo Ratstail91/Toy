@@ -1428,6 +1428,10 @@ static bool execDot(Interpreter* interpreter) {
 	Literal first = popLiteralArray(&interpreter->stack);
 	Literal compound = popLiteralArray(&interpreter->stack);
 
+	Literal tmp = first;
+	first = TO_STRING_LITERAL(copyString(AS_IDENTIFIER(tmp), strlen(AS_IDENTIFIER(tmp))) , strlen(AS_IDENTIFIER(tmp)) );
+	freeLiteral(tmp);
+
 	if (!IS_IDENTIFIER(compound)) {
 		interpreter->errorOutput("Unknown literal found in dot notation\n");
 		freeLiteral(first);
@@ -1441,7 +1445,7 @@ static bool execDot(Interpreter* interpreter) {
 		return false;
 	}
 
-	if (!IS_ARRAY(compound) && !IS_DICTIONARY(compound) && !IS_STRING(compound)) {
+	if (!IS_DICTIONARY(compound)) {
 		interpreter->errorOutput("Unknown compound found in dot notation\n");
 		freeLiteral(first);
 		freeLiteral(compound);
@@ -1527,6 +1531,18 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		return false;
 	}
 
+	//check const-ness of "first" within "compound"
+	Literal type = getScopeType(interpreter->scope, idn);
+	if ((AS_TYPE(type).typeOf == LITERAL_ARRAY && AS_TYPE(((Literal*)(AS_TYPE(type).subtypes))[0]).constant) || (AS_TYPE(type).typeOf == LITERAL_DICTIONARY && AS_TYPE(((Literal*)(AS_TYPE(type).subtypes))[1]).constant)) {
+		interpreter->errorOutput("couldn't assign to constant within compound within index assigning notation\n");
+		freeLiteral(assign);
+		freeLiteral(first);
+		freeLiteral(compound);
+		freeLiteral(idn);
+		freeLiteral(type);
+		return false;
+	}
+
 	//get the index function
 	Literal func = TO_NULL_LITERAL;
 	char* keyStr = "_index";
@@ -1542,6 +1558,7 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		freeLiteral(idn);
 		freeLiteral(func);
 		freeLiteral(key);
+		freeLiteral(type);
 		return false;
 	}
 
@@ -1578,6 +1595,7 @@ static bool execIndexAssign(Interpreter* interpreter) {
 			freeLiteral(idn);
 			freeLiteral(func);
 			freeLiteral(key);
+			freeLiteral(type);
 			return false;
 	}
 
@@ -1616,6 +1634,7 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		freeLiteral(func);
 		freeLiteralArray(&arguments);
 		freeLiteral(key);
+		freeLiteral(type);
 		freeLiteral(result);
 		return false;
 	}
@@ -1631,6 +1650,7 @@ static bool execIndexAssign(Interpreter* interpreter) {
 	freeLiteral(func);
 	freeLiteralArray(&arguments);
 	freeLiteral(key);
+	freeLiteral(type);
 	freeLiteral(result);
 
 	return true;
@@ -1642,6 +1662,10 @@ static bool execDotAssign(Interpreter* interpreter) {
 	Literal assign = popLiteralArray(&interpreter->stack);
 	Literal first = popLiteralArray(&interpreter->stack);
 	Literal compound = popLiteralArray(&interpreter->stack);
+
+	Literal tmp = first;
+	first = TO_STRING_LITERAL(copyString(AS_IDENTIFIER(tmp), strlen(AS_IDENTIFIER(tmp))) , strlen(AS_IDENTIFIER(tmp)) );
+	freeLiteral(tmp);
 
 	if (!IS_IDENTIFIER(compound)) {
 		interpreter->errorOutput("Unknown literal found in dot assigning notation\n");
@@ -1661,12 +1685,24 @@ static bool execDotAssign(Interpreter* interpreter) {
 		return false;
 	}
 
-	if (!IS_ARRAY(compound) && !IS_DICTIONARY(compound) && !IS_STRING(compound)) {
+	if (!IS_DICTIONARY(compound)) {
 		interpreter->errorOutput("Unknown compound found in dot assigning notation\n");
 		freeLiteral(assign);
 		freeLiteral(first);
 		freeLiteral(compound);
 		freeLiteral(idn);
+		return false;
+	}
+
+	//check const-ness of "first" within "compound"
+	Literal type = getScopeType(interpreter->scope, idn);
+	if (AS_TYPE(type).typeOf == LITERAL_DICTIONARY && AS_TYPE(((Literal*)(AS_TYPE(type).subtypes))[1]).constant) {
+		interpreter->errorOutput("couldn't assign to constant within compound within dot assigning notation\n");
+		freeLiteral(assign);
+		freeLiteral(first);
+		freeLiteral(compound);
+		freeLiteral(idn);
+		freeLiteral(type);
 		return false;
 	}
 
@@ -1683,6 +1719,7 @@ static bool execDotAssign(Interpreter* interpreter) {
 		freeLiteral(idn);
 		freeLiteral(func);
 		freeLiteral(key);
+		freeLiteral(type);
 		return false;
 	}
 
@@ -1717,6 +1754,7 @@ static bool execDotAssign(Interpreter* interpreter) {
 			freeLiteral(idn);
 			freeLiteral(func);
 			freeLiteral(key);
+			freeLiteral(type);
 			return false;
 	}
 
@@ -1737,7 +1775,7 @@ static bool execDotAssign(Interpreter* interpreter) {
 
 	//save the result (assume top of the interpreter stack is the new compound value)
 	Literal result = popLiteralArray(&interpreter->stack);
-	if (!setScopeVariable(interpreter->scope, idn, result, true)) {//TODO: check this const-ness
+	if (!setScopeVariable(interpreter->scope, idn, result, true)) {
 		interpreter->errorOutput("Incorrect type assigned to compound member: ");
 		printLiteralCustom(result, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
@@ -1751,6 +1789,7 @@ static bool execDotAssign(Interpreter* interpreter) {
 		freeLiteral(func);
 		freeLiteralArray(&arguments);
 		freeLiteral(key);
+		freeLiteral(type);
 		freeLiteral(result);
 		return false;
 	}
@@ -1764,6 +1803,7 @@ static bool execDotAssign(Interpreter* interpreter) {
 	freeLiteral(func);
 	freeLiteralArray(&arguments);
 	freeLiteral(key);
+	freeLiteral(type);
 	freeLiteral(result);
 
 	return true;

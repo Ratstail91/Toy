@@ -289,10 +289,16 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_UNARY:
+		case NODE_UNARY: {
 			//pass to the child node, then embed the unary command (print, negate, etc.)
-			writeCompilerWithJumps(compiler, node->unary.child, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+			Opcode override = writeCompilerWithJumps(compiler, node->unary.child, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+
+			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
+
 			compiler->bytecode[compiler->count++] = (unsigned char)node->unary.opcode; //1 byte
+		}
 		break;
 
 		//all infixes come here
@@ -322,20 +328,28 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_GROUPING:
+		case NODE_GROUPING: {
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_GROUPING_BEGIN; //1 byte
-			writeCompilerWithJumps(compiler, node->grouping.child, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+			Opcode override = writeCompilerWithJumps(compiler, node->grouping.child, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_GROUPING_END; //1 byte
+		}
 		break;
 
-		case NODE_BLOCK:
+		case NODE_BLOCK: {
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_SCOPE_BEGIN; //1 byte
 
 			for (int i = 0; i < node->block.count; i++) {
-				writeCompilerWithJumps(compiler, &(node->block.nodes[i]), breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+				Opcode override = writeCompilerWithJumps(compiler, &(node->block.nodes[i]), breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+				if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+					compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+				}
 			}
 
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_SCOPE_END; //1 byte
+		}
 		break;
 
 		case NODE_COMPOUND: {
@@ -364,7 +378,10 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 
 		case NODE_VAR_DECL: {
 			//first, embed the expression (leaves it on the stack)
-			writeCompilerWithJumps(compiler, node->varDecl.expression, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+			Opcode override = writeCompilerWithJumps(compiler, node->varDecl.expression, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
 
 			//write each piece of the declaration to the bytecode
 			int identifierIndex = findLiteralIndex(&compiler->literalCache, node->varDecl.identifier);
@@ -400,7 +417,10 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 			initCompiler(fnCompiler);
 			writeCompiler(fnCompiler, node->fnDecl.arguments); //can be empty, but not NULL
 			writeCompiler(fnCompiler, node->fnDecl.returns); //can be empty, but not NULL
-			writeCompilerWithJumps(fnCompiler, node->fnDecl.block, NULL, NULL, -4); //can be empty, but not NULL
+			Opcode override = writeCompilerWithJumps(fnCompiler, node->fnDecl.block, NULL, NULL, -4); //can be empty, but not NULL
+			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
 
 			//create the function in the literal cache (by storing the compiler object)
 			Literal fnLiteral = TO_FUNCTION_LITERAL(fnCompiler, 0);
@@ -450,7 +470,10 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 			for (int i = 0; i < node->fnCall.arguments->fnCollection.count; i++) { //reverse order, to count from the beginning in the interpreter
 				//sub-calls
 				if (node->fnCall.arguments->fnCollection.nodes[i].type != NODE_LITERAL) {
-					writeCompilerWithJumps(compiler, &node->fnCall.arguments->fnCollection.nodes[i], breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+					Opcode override = writeCompilerWithJumps(compiler, &node->fnCall.arguments->fnCollection.nodes[i], breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+					if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+						compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+					}
 					continue;
 				}
 
@@ -503,7 +526,10 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 
 		case NODE_PATH_IF: {
 			//process the condition
-			writeCompilerWithJumps(compiler, node->path.condition, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+			Opcode override = writeCompilerWithJumps(compiler, node->path.condition, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
 
 			//cache the point to insert the jump distance at
 			compiler->bytecode[compiler->count++] = OP_IF_FALSE_JUMP; //1 byte
@@ -511,7 +537,10 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 			compiler->count += sizeof(unsigned short); //2 bytes
 
 			//write the then path
-			writeCompilerWithJumps(compiler, node->path.thenPath, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+			override = writeCompilerWithJumps(compiler, node->path.thenPath, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
 
 			int jumpToEnd = 0;
 
@@ -527,7 +556,10 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 
 			if (node->path.elsePath) {
 				//if there's an else path, write it and 
-				writeCompilerWithJumps(compiler, node->path.elsePath, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+				Opcode override = writeCompilerWithJumps(compiler, node->path.elsePath, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+				if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+					compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+				}
 
 				//update the jumpToEnd to point here
 				AS_USHORT(compiler->bytecode[jumpToEnd]) = compiler->count + jumpOffsets; //2 bytes
@@ -547,7 +579,10 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 			unsigned short jumpToStart = compiler->count;
 
 			//process the condition
-			writeCompilerWithJumps(compiler, node->path.condition, &breakAddresses, &continueAddresses, jumpOffsets);
+			Opcode override = writeCompilerWithJumps(compiler, node->path.condition, &breakAddresses, &continueAddresses, jumpOffsets);
+			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
 
 			//if false, jump to end
 			compiler->bytecode[compiler->count++] = OP_IF_FALSE_JUMP; //1 byte
@@ -555,7 +590,10 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 			compiler->count += sizeof(unsigned short); //2 bytes
 
 			//write the body
-			writeCompilerWithJumps(compiler, node->path.thenPath, &breakAddresses, &continueAddresses, jumpOffsets);
+			override = writeCompilerWithJumps(compiler, node->path.thenPath, &breakAddresses, &continueAddresses, jumpOffsets);
+			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
 
 			//jump to condition
 			compiler->bytecode[compiler->count++] = OP_JUMP; //1 byte
@@ -596,11 +634,17 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 			compiler->bytecode[compiler->count++] = OP_SCOPE_BEGIN; //1 byte
 
 			//initial setup
-			writeCompilerWithJumps(compiler, node->path.preClause, &breakAddresses, &continueAddresses, jumpOffsets);
+			Opcode override = writeCompilerWithJumps(compiler, node->path.preClause, &breakAddresses, &continueAddresses, jumpOffsets);
+			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
 
 			//conditional
 			unsigned short jumpToStart = compiler->count;
-			writeCompilerWithJumps(compiler, node->path.condition, &breakAddresses, &continueAddresses, jumpOffsets);
+			override = writeCompilerWithJumps(compiler, node->path.condition, &breakAddresses, &continueAddresses, jumpOffsets);
+			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
 
 			//if false jump to end
 			compiler->bytecode[compiler->count++] = OP_IF_FALSE_JUMP; //1 byte
@@ -609,14 +653,20 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 
 			//write the body
 			compiler->bytecode[compiler->count++] = OP_SCOPE_BEGIN; //1 byte
-			writeCompilerWithJumps(compiler, node->path.thenPath, &breakAddresses, &continueAddresses, jumpOffsets);
+			override = writeCompilerWithJumps(compiler, node->path.thenPath, &breakAddresses, &continueAddresses, jumpOffsets);
+			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
 			compiler->bytecode[compiler->count++] = OP_SCOPE_END; //1 byte
 
 			//for-breaks actually jump to the bottom
 			int jumpToIncrement = compiler->count;
 
 			//evaluate third clause, restart
-			writeCompilerWithJumps(compiler, node->path.postClause, &breakAddresses, &continueAddresses, jumpOffsets);
+			override = writeCompilerWithJumps(compiler, node->path.postClause, &breakAddresses, &continueAddresses, jumpOffsets);
+			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
 
 			compiler->bytecode[compiler->count++] = OP_JUMP; //1 byte
 			AS_USHORT(compiler->bytecode[compiler->count]) = jumpToStart + jumpOffsets;
@@ -685,7 +735,10 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		case NODE_PATH_RETURN: {
 			//read each returned literal onto the stack, and return the number of values to return
 			for (int i = 0; i < node->path.thenPath->fnCollection.count; i++) {
-				writeCompilerWithJumps(compiler, &node->path.thenPath->fnCollection.nodes[i], breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+				Opcode override = writeCompilerWithJumps(compiler, &node->path.thenPath->fnCollection.nodes[i], breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+				if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+					compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+				}
 			}
 
 			//push the return, with the number of literals
@@ -766,7 +819,10 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 				writeLiteralToCompiler(compiler, TO_NULL_LITERAL);
 			}
 			else {
-				writeCompilerWithJumps(compiler, node->index.first, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+				Opcode override = writeCompilerWithJumps(compiler, node->index.first, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+				if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+					compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+				}
 			}
 
 			//second
@@ -774,7 +830,10 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 				writeLiteralToCompiler(compiler, TO_NULL_LITERAL);
 			}
 			else {
-				writeCompilerWithJumps(compiler, node->index.second, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+				Opcode override = writeCompilerWithJumps(compiler, node->index.second, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+				if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+					compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+				}
 			}
 
 			//third
@@ -782,7 +841,10 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 				writeLiteralToCompiler(compiler, TO_NULL_LITERAL);
 			}
 			else {
-				writeCompilerWithJumps(compiler, node->index.third, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+				Opcode override = writeCompilerWithJumps(compiler, node->index.third, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+				if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+					compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+				}
 			}
 
 			// compiler->bytecode[compiler->count++] = (unsigned char)OP_INDEX; //1 byte
@@ -797,7 +859,10 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 				writeLiteralToCompiler(compiler, TO_NULL_LITERAL);
 			}
 			else {
-				writeCompilerWithJumps(compiler, node->index.first, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+				Opcode override = writeCompilerWithJumps(compiler, node->index.first, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
+				if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+					compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+				}
 			}
 
 			// compiler->bytecode[compiler->count++] = (unsigned char)OP_DOT; //1 byte
@@ -813,8 +878,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 void writeCompiler(Compiler* compiler, Node* node) {
 	Opcode op = writeCompilerWithJumps(compiler, node, NULL, NULL, 0);
 
-	//compensate for indexing & dot notation being screwy
-	if (op != OP_EOF) {
+	if (op != OP_EOF) {//compensate for indexing & dot notation being screwy
 		compiler->bytecode[compiler->count++] = (unsigned char)op; //1 byte
 	}
 }

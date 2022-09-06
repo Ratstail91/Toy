@@ -1,8 +1,23 @@
+var week = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+week[::-2] = ["first", "second", "third"];
+
+print week;
+
+
+var str = "0123456789";
+
+str[3:5:-2] = "abc";
+
+print str;
 
 
 
-{
-	fn f() {
-		return i;
-	}
-}
+str = "Hello world";
+
+print str; //Hello world
+print str[::2]; //Hlowrd
+print str[::-2]; //drwolH
+
+
+

@@ -726,31 +726,44 @@ static Opcode indexAccess(Parser* parser, Node** nodeHandle) {
 	Node* second = NULL;
 	Node* third = NULL;
 
+	//booleans indicate blank slice indexing
+	emitNodeLiteral(&first, TO_BOOLEAN_LITERAL(true));
+	emitNodeLiteral(&second, TO_BOOLEAN_LITERAL(true));
+	emitNodeLiteral(&third, TO_BOOLEAN_LITERAL(true));
+
 	//eat the first
 	if (!match(parser, TOKEN_COLON)) {
+		freeNode(first);
 		parsePrecedence(parser, &first, PREC_TERNARY);
+		match(parser, TOKEN_COLON);
 	}
 
 	if (match(parser, TOKEN_BRACKET_RIGHT)) {
+		// freeNode(second);
+		// freeNode(third);
+		// second = NULL;
+		// third = NULL;
+
 		emitNodeIndex(nodeHandle, first, second, third);
 		return OP_INDEX;
 	}
-
-	consume(parser, TOKEN_COLON, "Expected ':' in index notation");
 
 	//eat the second
 	if (!match(parser, TOKEN_COLON)) {
+		freeNode(second);
 		parsePrecedence(parser, &second, PREC_TERNARY);
+		match(parser, TOKEN_COLON);
 	}
 
 	if (match(parser, TOKEN_BRACKET_RIGHT)) {
+		// freeNode(third);
+		// third = NULL;
 		emitNodeIndex(nodeHandle, first, second, third);
 		return OP_INDEX;
 	}
 
-	consume(parser, TOKEN_COLON, "Expected ':' in index notation");
-
 	//eat the third
+	freeNode(third);
 	parsePrecedence(parser, &third, PREC_TERNARY);
 	emitNodeIndex(nodeHandle, first, second, third);
 
