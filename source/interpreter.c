@@ -1697,7 +1697,7 @@ static bool execDotAssign(Interpreter* interpreter) {
 		return false;
 	}
 
-	Literal idn = copyLiteral(compound);
+	Literal idn = compound;
 
 	if (!parseIdentifierToValue(interpreter, &compound)) {
 		freeLiteral(assign);
