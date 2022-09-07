@@ -1,8 +1,22 @@
+
+//test basic indexing
+{
+	var week = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+	assert week[1] == "tuesday", "basic indexing failed (single element)";
+
+	assert week[1:1] == ["tuesday"], "basic indexing failed (single element as array)";
+
+	assert week[:] == ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"], "basic default indexing failed (first and second)";
+	assert week[::] == ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"], "basic default indexing failed (first, second and third)";
+}
+
+
 //test basic replacement
 {
 	var week = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
-	week[3] = "Holiday";
+	week[3:3] = "Holiday";
 
 	assert week == ["monday", "tuesday", "wednesday", "Holiday", "friday", "saturday", "sunday"], "basic replacement failed";
 }

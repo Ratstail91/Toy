@@ -8,6 +8,15 @@ This is the Toy programming language interpreter, written in C.
 
 Special thanks to http://craftinginterpreters.com/ for their fantastic book that set me on this path.
 
+## Nifty Features
+
+* Simple C-like syntax
+* Bytecode intermediate compilation
+* `import` and `export` variables from the host program
+* Optional, but robust type system
+* functions and types are first-class citizens
+* Fancy slice notation for strings, arrays and dictionaries (`print greeting[0:4:-1]; //prints "olleh"`)
+
 ## Building
 
 Simply run make in the root directory.
@@ -15,7 +24,7 @@ Simply run make in the root directory.
 ## Syntax
 
 ```
-import "standard"; //for a bunch of utility functions
+import standard; //for a bunch of utility functions
 
 
 print "Hello world"; //"print" is a keyword
@@ -36,13 +45,13 @@ fn makeCounter() { //declare a function like this
 	return counter; //closures are explicitly supported
 }
 
-var counter = makeCounter();
+var tally = makeCounter();
 
-print counter(); //1
-print counter(); //2
-print counter(); //3
+print tally(); //1
+print tally(); //2
+print tally(); //3
 
-export makeCounter; //export this variable to the host program
+export tally; //export this variable to the host program
 ```
 
 # License

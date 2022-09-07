@@ -329,7 +329,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			if (!IS_NULL(second)) {
 				if (IS_BOOLEAN(second)) {
 					freeLiteral(second);
-					second = TO_INTEGER_LITERAL(AS_ARRAY(compound)->count);
+					second = TO_INTEGER_LITERAL(AS_ARRAY(compound)->count - 1);
 				}
 			}
 
@@ -387,10 +387,10 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			LiteralArray* result = ALLOCATE(LiteralArray, 1);
 			initLiteralArray(result);
 
-			int min = AS_INTEGER(third) > 0 ? 0 : AS_INTEGER(second) - 1;
+			int min = AS_INTEGER(third) > 0 ? AS_INTEGER(first) : AS_INTEGER(second);
 
 			//copy compound into result
-			for (int i = min; i >= 0 && i <= AS_ARRAY(compound)->count && i >= AS_INTEGER(first) && i < AS_INTEGER(second); i += AS_INTEGER(third)) {
+			for (int i = min; i >= 0 && i <= AS_ARRAY(compound)->count && i >= AS_INTEGER(first) && i <= AS_INTEGER(second); i += AS_INTEGER(third)) {
 				Literal idx = TO_INTEGER_LITERAL(i);
 				Literal tmp = getLiteralArray(AS_ARRAY(compound), idx);
 				pushLiteralArray(result, tmp);
@@ -417,7 +417,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			if (!IS_NULL(second)) {
 				if (IS_BOOLEAN(second)) {
 					freeLiteral(second);
-					second = TO_INTEGER_LITERAL(AS_ARRAY(compound)->count);
+					second = TO_INTEGER_LITERAL(AS_INTEGER(first));
 				}
 			}
 
@@ -487,15 +487,20 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 				int min = AS_INTEGER(third) > 0 ? 0 : AS_ARRAY(assign)->count - 1;
 
-				for (int i = min; i >= 0 && i < AS_ARRAY(assign)->count; i += AS_INTEGER(third)) {
-					Literal idx = TO_INTEGER_LITERAL(i);
-					Literal tmp = getLiteralArray(AS_ARRAY(assign), idx); //backwards
+				if (IS_ARRAY(assign)) { //push elements of an assigned array
+					for (int i = min; i >= 0 && i < AS_ARRAY(assign)->count; i += AS_INTEGER(third)) {
+						Literal idx = TO_INTEGER_LITERAL(i);
+						Literal tmp = getLiteralArray(AS_ARRAY(assign), idx); //backwards
 
-					//set result
-					pushLiteralArray(result, tmp);
+						//set result
+						pushLiteralArray(result, tmp);
 
-					freeLiteral(idx);
-					freeLiteral(tmp);
+						freeLiteral(idx);
+						freeLiteral(tmp);
+					}
+				}
+				else { //push just one element into the array
+					pushLiteralArray(result, assign);
 				}
 
 				for (int i = AS_INTEGER(second) + 1; i < AS_ARRAY(compound)->count; i++) {
@@ -649,11 +654,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			//start building a new string from the old one
 			char* result = ALLOCATE(char, MAX_STRING_LENGTH);
 
-			int min = AS_INTEGER(third) > 0 ? AS_INTEGER(first) : AS_INTEGER(second) - 1;
+			int lower = AS_INTEGER(third) > 0 ? AS_INTEGER(first) : AS_INTEGER(first) -1;
+			int min = AS_INTEGER(third) > 0 ? AS_INTEGER(first) : AS_INTEGER(second) -1;
 
 			//copy compound into result
 			int resultIndex = 0;
-			for (int i = min; i >= AS_INTEGER(first) && i < AS_INTEGER(second); i += AS_INTEGER(third)) {
+			for (int i = min; i >= lower && i <= AS_INTEGER(second); i += AS_INTEGER(third)) {
 				result[ resultIndex++ ] = AS_STRING(compound)[ i ];
 			}
 

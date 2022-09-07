@@ -1386,7 +1386,7 @@ static bool execIndex(Interpreter* interpreter) {
 		freeLiteral(second);
 		freeLiteral(first);
 		freeLiteral(compound);
-		freeLiteral(idn);
+		//freeLiteral(idn); //since compound is freed, idn is still pointing there
 		return false;
 	}
 

@@ -1,13 +1,24 @@
-//test basic replacement
+//test basic indexing
 var greeting: string = "hello world";
 
+assert greeting[1] == "e", "basic default index failed (first)";
+
+assert greeting[:] == "hello world", "basic default index failed (first and second)";
+
+assert greeting[::] == "hello world", "basic default index failed (first, second & third)";
+
+assert greeting[0:4] == "hello", "basic indexing failed";
+
+
+
+//test basic replacement
 greeting[0:4] = "goodnight";
 
 assert greeting == "goodnight world", "basic replacement failed";
 
-
 //test backwards string
 assert greeting[::-1] == "dlrow thgindoog", "backwards string failed";
+assert greeting[11:15:-1] == "dlrow", "backwards indexed string failed";
 
 
 //test string weird manipulation

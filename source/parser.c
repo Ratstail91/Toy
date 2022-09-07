@@ -736,17 +736,24 @@ static Opcode indexAccess(Parser* parser, Node** nodeHandle) {
 	emitNodeLiteral(&second, TO_BOOLEAN_LITERAL(true));
 	emitNodeLiteral(&third, TO_BOOLEAN_LITERAL(true));
 
+	bool readFirst = false; //pattern matching is bullcrap
+
 	//eat the first
 	if (!match(parser, TOKEN_COLON)) {
 		freeNode(first);
 		parsePrecedence(parser, &first, PREC_TERNARY);
 		match(parser, TOKEN_COLON);
+		readFirst = true;
 	}
 
 	if (match(parser, TOKEN_BRACKET_RIGHT)) {
-		freeNode(second);
+
+		if (readFirst) {
+			freeNode(second);
+			second = NULL;
+		}
+
 		freeNode(third);
-		second = NULL;
 		third = NULL;
 
 		emitNodeIndex(nodeHandle, first, second, third);
