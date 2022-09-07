@@ -1,8 +1,8 @@
 
 
 
-var complex: type = typeas [string: [int]];
-var deep: type = typeas [[[ int ]]];
+var complex: type = astype [string: [int]];
+var deep: type = astype [[[ int ]]];
 
 
 

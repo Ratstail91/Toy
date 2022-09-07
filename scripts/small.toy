@@ -2,14 +2,14 @@
 
 
 
-var t: type = typeas [int];
-var u: type = typeas [t];
+var t: type = astype [int];
+var u: type = astype [t];
 
 var a: u;
 
-t = typeas [float]; //redefnition
+t = astype [float]; //redefnition
 
 var b: u;
 
-print typeof a; //<[<int>]>
-print typeof b; //<[<float>]>
+print oftype a; //<[<int>]>
+print oftype b; //<[<float>]>

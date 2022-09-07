@@ -24,6 +24,7 @@ The following list of keywords cannot be used as names, due to their significanc
 
 * any
 * as
+* astype
 * assert
 * bool
 * break
@@ -44,13 +45,12 @@ The following list of keywords cannot be used as names, due to their significanc
 * int
 * null
 * of
+* oftype
 * print
 * return
 * string
 * true
 * type
-* typeas
-* typeof
 * var
 * while
 
@@ -118,11 +118,11 @@ var t: type = int;
 var u: t = 42;
 ```
 
-To force a type instead of an array, use the `typeas` keyword:
+To force a type instead of an array, use the `astype` keyword:
 
 ```
-var a = [typeas type]; //array of types
-var b = typeas [type]; //type of array of types
+var a = [type]; //array containing the type "type"
+var b = astype [type]; //type of array of types
 
 var d = b; //types can be re-assigned to other variables
 ```

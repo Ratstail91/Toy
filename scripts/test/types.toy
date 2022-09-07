@@ -7,15 +7,15 @@ assert u == 42, "first-class types are screwing with values";
 
 
 //differentiate by the "type" value
-var v: type = typeas [int];
+var v: type = astype [int];
 var w = [int];
 var x = v;
 
 assert w == [int], "defining an array of types failed";
-assert x == typeas [int], "re-assigning a type value failed";
+assert x == astype [int], "re-assigning a type value failed";
 
 //complex type
-var complex: type = typeas [string : [int]];
+var complex: type = astype [string : [int]];
 var dict: complex = [
 	"first array": [1, 2, 3],
 	"second array": [4, 5, 6],

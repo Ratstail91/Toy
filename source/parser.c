@@ -120,11 +120,11 @@ static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule ru
 static Literal readTypeToLiteral(Parser* parser);
 
 //the expression rules
-static Opcode typeAs(Parser* parser, Node** nodeHandle) {
+static Opcode asType(Parser* parser, Node** nodeHandle) {
 	Literal literal = readTypeToLiteral(parser);
 
 	if (!IS_TYPE(literal)) {
-		error(parser, parser->previous, "Expected type after 'typeas' keyword");
+		error(parser, parser->previous, "Expected type after 'astype' keyword");
 		freeLiteral(literal);
 		return OP_EOF;
 	}
@@ -136,7 +136,7 @@ static Opcode typeAs(Parser* parser, Node** nodeHandle) {
 	return OP_EOF;
 }
 
-static Opcode typeOf(Parser* parser, Node** nodeHandle) {
+static Opcode ofType(Parser* parser, Node** nodeHandle) {
 	Node* rhs = NULL;
 	parsePrecedence(parser, &rhs, PREC_TERNARY);
 	emitNodeUnary(nodeHandle, OP_TYPE_OF, rhs);
@@ -820,8 +820,8 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_PRINT,
 	{NULL, NULL, PREC_NONE},// TOKEN_RETURN,
 	{atomic, NULL, PREC_NONE},// TOKEN_TYPE,
-	{typeAs, NULL, PREC_PRIMARY},// TOKEN_TYPEAS,
-	{typeOf, NULL, PREC_CALL},// TOKEN_TYPEOF,
+	{asType, NULL, PREC_PRIMARY},// TOKEN_ASTYPE,
+	{ofType, NULL, PREC_CALL},// TOKEN_OFTYPE,
 	{NULL, NULL, PREC_NONE},// TOKEN_VAR,
 	{NULL, NULL, PREC_NONE},// TOKEN_WHILE,
 

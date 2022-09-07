@@ -32,7 +32,7 @@
 	assert func() == 69, "import/export of functions failed";
 }
 
-//test that variables retain their types with the typeof keyword
+//test that variables retain their types with the oftype keyword
 {
 	var t: type = int;
 
@@ -42,7 +42,7 @@
 {
 	import t;
 
-	assert typeof t == type, "type retention failed";
+	assert oftype t == type, "type retention failed";
 }
 
 print "All good";
