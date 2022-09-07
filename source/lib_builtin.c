@@ -737,7 +737,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 			//copy compound into result
 			int resultIndex = 0;
-			for (int i = min; i >= lower && i <= AS_INTEGER(second); i += AS_INTEGER(third)) {
+			for (int i = min; i >= 0 && i >= lower && i <= AS_INTEGER(second); i += AS_INTEGER(third)) {
 				result[ resultIndex++ ] = AS_STRING(compound)[ i ];
 			}
 
