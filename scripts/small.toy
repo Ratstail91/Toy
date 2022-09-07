@@ -1,25 +1,10 @@
 
 
 
+fn loop(count) {
+	print count++;
 
-fn makeCounter() {
-	var total: int = 0;
-
-	fn counter(): int {
-		return ++total;
-	}
-
-	return counter;
+	loop(count);
 }
 
-var tally = makeCounter();
-
-print tally(); //1
-print tally(); //2
-print tally(); //3
-
-export tally;
-
-//heck yeah!
-import tally as tally2;
-print tally2(); //4
+loop(0);

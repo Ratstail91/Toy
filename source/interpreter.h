@@ -27,6 +27,7 @@ typedef struct Interpreter {
 	PrintFn assertOutput;
 	PrintFn errorOutput;
 
+	int depth; //don't overflow
 	bool panic;
 } Interpreter;
 

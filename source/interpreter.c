@@ -991,6 +991,13 @@ static void execInterpreter(Interpreter*);
 static void readInterpreterSections(Interpreter* interpreter);
 
 static bool execFnCall(Interpreter* interpreter) {
+	//BUGFIX: depth check - don't drown!
+	if (interpreter->depth >= 1000) {
+		interpreter->errorOutput("Depth check failed\n");
+		interpreter->panic = true;
+		return false;
+	}
+
 	LiteralArray arguments;
 	initLiteralArray(&arguments);
 
@@ -1057,6 +1064,7 @@ static bool execFnCall(Interpreter* interpreter) {
 	inner.length = func.as.function.length;
 	inner.count = 0;
 	inner.codeStart = -1;
+	inner.depth = interpreter->depth + 1;
 	inner.panic = false;
 	initLiteralArray(&inner.stack);
 	inner.exports = interpreter->exports;
@@ -2368,6 +2376,7 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 
 	initLiteralArray(&interpreter->stack);
 
+	interpreter->depth = 0;
 	interpreter->panic = false;
 
 	//prep the bytecode
