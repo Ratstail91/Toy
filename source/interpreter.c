@@ -418,6 +418,24 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 	return false;
 }
 
+static Literal parseTypeToValue(Interpreter* interpreter, Literal type) {
+	//if an identifier is embedded in the type, figure out what it iss
+	if (IS_IDENTIFIER(type)) {
+		Literal idn = type;
+		parseIdentifierToValue(interpreter, &type);
+		freeLiteral(idn);
+	}
+
+	//if this is an array or dictionary, continue to the subtypes
+	if (IS_TYPE(type) && (AS_TYPE(type).typeOf == LITERAL_ARRAY || AS_TYPE(type).typeOf == LITERAL_DICTIONARY)) {
+		for (int i = 0; i < AS_TYPE(type).count; i++) {
+			((Literal*)(AS_TYPE(type).subtypes))[i] = parseTypeToValue(interpreter, ((Literal*)(AS_TYPE(type).subtypes))[i]);
+		}
+	}
+
+	return type;
+}
+
 static bool execVarDecl(Interpreter* interpreter, bool lng) {
 	//read the index in the cache
 	int identifierIndex = 0;
@@ -433,13 +451,16 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 	}
 
 	Literal identifier = interpreter->literalCache.literals[identifierIndex];
-	Literal type = interpreter->literalCache.literals[typeIndex];
+	Literal type = copyLiteral(interpreter->literalCache.literals[typeIndex]);
 
-	bool freeType = false;
 	if (IS_IDENTIFIER(type)) {
+		Literal orig = type;
 		parseIdentifierToValue(interpreter, &type);
-		freeType = true;
+		freeLiteral(orig);
 	}
+
+	//BUGFIX: because identifiers are getting embedded in type definitions
+	type = parseTypeToValue(interpreter, type);
 
 	if (!declareScopeVariable(interpreter->scope, identifier, type)) {
 		interpreter->errorOutput("Can't redefine the variable \"");
@@ -461,20 +482,14 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 		printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 
-		if (freeType) {
-			freeLiteral(type);
-		}
-
+		freeLiteral(type);
 		freeLiteral(val);
 
 		return false;
 	}
 
 	freeLiteral(val);
-
-	if (freeType) {
-		freeLiteral(type);
-	}
+	freeLiteral(type);
 
 	return true;
 }

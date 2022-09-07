@@ -385,11 +385,11 @@ int hashLiteral(Literal lit) {
 		case LITERAL_IDENTIFIER:
 			return HASH_I(lit); //pre-computed
 
-		// case LITERAL_TYPE:
-		// 	//not needed
+		case LITERAL_TYPE:
+			return AS_TYPE(lit).typeOf; //nothing else I can do
 
-		// case LITERAL_ANY:
-		// 	//not needed
+		case LITERAL_ANY:
+			return -1;
 
 		default:
 			//should never bee seen

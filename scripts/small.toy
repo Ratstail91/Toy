@@ -1,10 +1,15 @@
 
 
-var t: type = typeas [[int]];
 
-var a: t = [
-	[1, 2, 3]
-];
 
-print a;
-print typeof a;
+var t: type = typeas [int];
+var u: type = typeas [t];
+
+var a: u;
+
+t = typeas [float]; //redefnition
+
+var b: u;
+
+print typeof a; //<[<int>]>
+print typeof b; //<[<float>]>
