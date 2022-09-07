@@ -136,7 +136,7 @@ static Opcode asType(Parser* parser, Node** nodeHandle) {
 	return OP_EOF;
 }
 
-static Opcode ofType(Parser* parser, Node** nodeHandle) {
+static Opcode typeOf(Parser* parser, Node** nodeHandle) {
 	Node* rhs = NULL;
 	parsePrecedence(parser, &rhs, PREC_TERNARY);
 	emitNodeUnary(nodeHandle, OP_TYPE_OF, rhs);
@@ -821,7 +821,7 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_RETURN,
 	{atomic, NULL, PREC_NONE},// TOKEN_TYPE,
 	{asType, NULL, PREC_PRIMARY},// TOKEN_ASTYPE,
-	{ofType, NULL, PREC_CALL},// TOKEN_OFTYPE,
+	{typeOf, NULL, PREC_CALL},// TOKEN_TYPEOF,
 	{NULL, NULL, PREC_NONE},// TOKEN_VAR,
 	{NULL, NULL, PREC_NONE},// TOKEN_WHILE,
 

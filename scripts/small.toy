@@ -11,5 +11,5 @@ t = astype [float]; //redefnition
 
 var b: u;
 
-print oftype a; //<[<int>]>
-print oftype b; //<[<float>]>
+print typeof a; //<[<int>]>
+print typeof b; //<[<float>]>

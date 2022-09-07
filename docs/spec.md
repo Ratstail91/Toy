@@ -45,12 +45,12 @@ The following list of keywords cannot be used as names, due to their significanc
 * int
 * null
 * of
-* oftype
 * print
 * return
 * string
 * true
 * type
+* typeof
 * var
 * while
 
