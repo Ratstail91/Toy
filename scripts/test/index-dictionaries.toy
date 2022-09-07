@@ -38,4 +38,16 @@
 }
 
 
+//test dot calls
+{
+	fn f() {
+		return 42;
+	}
+
+	var d = ["foo":f];
+
+	assert d.foo() == 42, "dot calls failed";
+}
+
+
 print "All good";
