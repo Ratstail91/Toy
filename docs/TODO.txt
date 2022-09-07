@@ -37,8 +37,8 @@ DONE: maximum recursion/function depth
 
 
 TODO: nested compound assignment
-TODO: better sugar for _push and _pop
-TODO: ternary operator
+TODO: better sugar for _push, _pop, _length
+TODO: ternary operator?
 TODO: Nullish types?
 TODO: hooks on the external libraries, triggered on import
 TODO: standard library

@@ -29,4 +29,12 @@ numbers[::-2] = "abc";
 assert numbers == "01234c6b8a", "string weird manipulation failed";
 
 
+//test indexing with variables
+var first = 11;
+var second = 15;
+var third = -1;
+
+assert greeting[first:second:third] == "dlrow", "indexing with variables failed";
+
+
 print "All good";

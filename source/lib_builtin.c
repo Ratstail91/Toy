@@ -260,6 +260,24 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 	//dictionary - no slicing
 	if (IS_DICTIONARY(compound)) {
+		if (IS_IDENTIFIER(first)) {
+			Literal idn = first;
+			parseIdentifierToValue(interpreter, &first);
+			freeLiteral(idn);
+		}
+
+		if (IS_IDENTIFIER(second)) {
+			Literal idn = second;
+			parseIdentifierToValue(interpreter, &second);
+			freeLiteral(idn);
+		}
+
+		if (IS_IDENTIFIER(third)) {
+			Literal idn = third;
+			parseIdentifierToValue(interpreter, &third);
+			freeLiteral(idn);
+		}
+
 		value = getLiteralDictionary(AS_DICTIONARY(compound), first);
 
 		//dictionary
@@ -314,8 +332,6 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 	//array - slicing
 	if (IS_ARRAY(compound)) {
-		value = getLiteralArray(AS_ARRAY(compound), first);
-
 		//array slice
 		if (IS_NULL(op)) {
 			//parse out the booleans & their defaults
@@ -324,6 +340,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 					freeLiteral(first);
 					first = TO_INTEGER_LITERAL(0);
 				}
+
+				if (IS_IDENTIFIER(first)) {
+					Literal idn = first;
+					parseIdentifierToValue(interpreter, &first);
+					freeLiteral(idn);
+				}
 			}
 
 			if (!IS_NULL(second)) {
@@ -331,11 +353,23 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 					freeLiteral(second);
 					second = TO_INTEGER_LITERAL(AS_ARRAY(compound)->count - 1);
 				}
+
+				if (IS_IDENTIFIER(second)) {
+					Literal idn = second;
+					parseIdentifierToValue(interpreter, &second);
+					freeLiteral(idn);
+				}
 			}
 
 			if (IS_NULL(third) || IS_BOOLEAN(third)) {
 				freeLiteral(third);
 				third = TO_INTEGER_LITERAL(1);
+			}
+
+			if (IS_IDENTIFIER(third)) {
+				Literal idn = third;
+				parseIdentifierToValue(interpreter, &third);
+				freeLiteral(idn);
 			}
 
 			//handle each null case
@@ -405,12 +439,18 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 		}
 
 		//array slice assignment
-		else if (!strcmp( AS_STRING(op), "=")) {
+		if (IS_STRING(op) && !strcmp( AS_STRING(op), "=")) {
 			//parse out the booleans & their defaults
 			if (!IS_NULL(first)) {
 				if (IS_BOOLEAN(first)) {
 					freeLiteral(first);
 					first = TO_INTEGER_LITERAL(0);
+				}
+
+				if (IS_IDENTIFIER(first)) {
+					Literal idn = first;
+					parseIdentifierToValue(interpreter, &first);
+					freeLiteral(idn);
 				}
 			}
 
@@ -419,11 +459,23 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 					freeLiteral(second);
 					second = TO_INTEGER_LITERAL(AS_INTEGER(first));
 				}
+
+				if (IS_IDENTIFIER(second)) {
+					Literal idn = second;
+					parseIdentifierToValue(interpreter, &second);
+					freeLiteral(idn);
+				}
 			}
 
 			if (IS_NULL(third) || IS_BOOLEAN(third)) {
 				freeLiteral(third);
 				third = TO_INTEGER_LITERAL(1);
+			}
+
+			if (IS_IDENTIFIER(third)) {
+				Literal idn = third;
+				parseIdentifierToValue(interpreter, &third);
+				freeLiteral(idn);
 			}
 
 			//handle each null case
@@ -547,31 +599,39 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			compound = TO_ARRAY_LITERAL(result);
 		}
 
-		else if (IS_STRING(op) && !strcmp( AS_STRING(op), "+=")) {
+		if (IS_IDENTIFIER(first)) {
+			Literal idn = first;
+			parseIdentifierToValue(interpreter, &first);
+			freeLiteral(idn);
+		}
+
+		value = getLiteralArray(AS_ARRAY(compound), first);
+
+		if (IS_STRING(op) && !strcmp( AS_STRING(op), "+=")) {
 			Literal lit = addition(interpreter, value, assign);
 			setLiteralArray(AS_ARRAY(compound), first, lit);
 			freeLiteral(lit);
 		}
 
-		else if (IS_STRING(op) && !strcmp( AS_STRING(op), "-=")) {
+		if (IS_STRING(op) && !strcmp( AS_STRING(op), "-=")) {
 			Literal lit = subtraction(interpreter, value, assign);
 			setLiteralArray(AS_ARRAY(compound), first, lit);
 			freeLiteral(lit);
 		}
 
-		else if (IS_STRING(op) && !strcmp( AS_STRING(op), "*=")) {
+		if (IS_STRING(op) && !strcmp( AS_STRING(op), "*=")) {
 			Literal lit = multiplication(interpreter, value, assign);
 			setLiteralArray(AS_ARRAY(compound), first, lit);
 			freeLiteral(lit);
 		}
 
-		else if (IS_STRING(op) && !strcmp( AS_STRING(op), "/=")) {
+		if (IS_STRING(op) && !strcmp( AS_STRING(op), "/=")) {
 			Literal lit = division(interpreter, value, assign);
 			setLiteralArray(AS_ARRAY(compound), first, lit);
 			freeLiteral(lit);
 		}
 
-		else if (IS_STRING(op) && !strcmp( AS_STRING(op), "%=")) {
+		if (IS_STRING(op) && !strcmp( AS_STRING(op), "%=")) {
 			Literal lit = modulo(interpreter, value, assign);
 			setLiteralArray(AS_ARRAY(compound), first, lit);
 			freeLiteral(lit);
@@ -588,6 +648,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 					freeLiteral(first);
 					first = TO_INTEGER_LITERAL(0);
 				}
+
+				if (IS_IDENTIFIER(first)) {
+					Literal idn = first;
+					parseIdentifierToValue(interpreter, &first);
+					freeLiteral(idn);
+				}
 			}
 
 			if (!IS_NULL(second)) {
@@ -595,11 +661,23 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 					freeLiteral(second);
 					second = TO_INTEGER_LITERAL(strlen(AS_STRING(compound)));
 				}
+
+				if (IS_IDENTIFIER(second)) {
+					Literal idn = second;
+					parseIdentifierToValue(interpreter, &second);
+					freeLiteral(idn);
+				}
 			}
 
 			if (IS_NULL(third) || IS_BOOLEAN(third)) {
 				freeLiteral(third);
 				third = TO_INTEGER_LITERAL(1);
+			}
+
+			if (IS_IDENTIFIER(third)) {
+				Literal idn = third;
+				parseIdentifierToValue(interpreter, &third);
+				freeLiteral(idn);
 			}
 
 			//handle each null case
@@ -680,6 +758,12 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 					freeLiteral(first);
 					first = TO_INTEGER_LITERAL(0);
 				}
+
+				if (IS_IDENTIFIER(first)) {
+					Literal idn = first;
+					parseIdentifierToValue(interpreter, &first);
+					freeLiteral(idn);
+				}
 			}
 
 			if (!IS_NULL(second)) {
@@ -687,11 +771,23 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 					freeLiteral(second);
 					second = TO_INTEGER_LITERAL(strlen(AS_STRING(compound)));
 				}
+
+				if (IS_IDENTIFIER(second)) {
+					Literal idn = second;
+					parseIdentifierToValue(interpreter, &second);
+					freeLiteral(idn);
+				}
 			}
 
 			if (IS_NULL(third) || IS_BOOLEAN(third)) {
 				freeLiteral(third);
 				third = TO_INTEGER_LITERAL(1);
+			}
+
+			if (IS_IDENTIFIER(first)) {
+				Literal idn = first;
+				parseIdentifierToValue(interpreter, &first);
+				freeLiteral(idn);
 			}
 
 			//handle each null case
@@ -797,7 +893,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 		}
 
 		else if (IS_STRING(op) && !strcmp( AS_STRING(op), "+=")) {
-			Literal tmp = addition(interpreter, compound, value);
+			Literal tmp = addition(interpreter, compound, assign);
 			freeLiteral(compound);
 			compound = tmp; //don't clear tmp
 		}

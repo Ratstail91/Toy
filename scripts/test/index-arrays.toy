@@ -50,4 +50,15 @@
 }
 
 
+//test indexing with variables
+{
+	var week = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+	var first = 1;
+	var second = 2;
+	var third = -1;
+
+	assert week[first:second:third] == ["wednesday", "tuesday"], "indexing with variables failed";
+}
+
 print "All good";
