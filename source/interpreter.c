@@ -33,7 +33,8 @@ bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func) {
 		return false;
 	}
 
-	Literal identifier = TO_IDENTIFIER_LITERAL(copyString(name, strlen(name)), strlen(name));
+	int identifierLength = strlen(name);
+	Literal identifier = TO_IDENTIFIER_LITERAL(copyString(name, identifierLength), identifierLength);
 
 	//make sure the name isn't taken
 	if (existsLiteralDictionary(&interpreter->scope->variables, identifier)) {
@@ -299,7 +300,8 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 	//special case for string concatenation ONLY
 	if (IS_STRING(lhs) && IS_STRING(rhs)) {
 		//check for overflow
-		if (strlen(AS_STRING(lhs)) + strlen(AS_STRING(rhs)) > MAX_STRING_LENGTH) {
+		int totalLength = strlen(AS_STRING(lhs)) + strlen(AS_STRING(rhs));
+		if (totalLength > MAX_STRING_LENGTH) {
 			interpreter->errorOutput("Can't concatenate these strings (result is too long)\n");
 			return false;
 		}
@@ -307,7 +309,7 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 		//concat the strings
 		char buffer[MAX_STRING_LENGTH];
 		snprintf(buffer, MAX_STRING_LENGTH, "%s%s", AS_STRING(lhs), AS_STRING(rhs));
-		Literal literal = TO_STRING_LITERAL( copyString(buffer, strlen(buffer)), strlen(buffer) );
+		Literal literal = TO_STRING_LITERAL( copyString(buffer, totalLength), totalLength);
 		pushLiteralArray(&interpreter->stack, literal);
 		freeLiteral(literal);
 		freeLiteral(lhs);
@@ -668,19 +670,22 @@ static bool execValCast(Interpreter* interpreter) {
 			if (IS_BOOLEAN(value)) {
 				char* str = AS_BOOLEAN(value) ? "true" : "false";
 
-				result = TO_STRING_LITERAL(copyString(str, strlen(str)), strlen(str));
+				int length = strlen(str);
+				result = TO_STRING_LITERAL(copyString(str, length), length);
 			}
 
 			if (IS_INTEGER(value)) {
 				char buffer[128];
 				snprintf(buffer, 128, "%d", AS_INTEGER(value));
-				result = TO_STRING_LITERAL(copyString(buffer, strlen(buffer)), strlen(buffer));
+				int length = strlen(buffer);
+				result = TO_STRING_LITERAL(copyString(buffer, length), length);
 			}
 
 			if (IS_FLOAT(value)) {
 				char buffer[128];
 				snprintf(buffer, 128, "%g", AS_FLOAT(value));
-				result = TO_STRING_LITERAL(copyString(buffer, strlen(buffer)), strlen(buffer));
+				int length = strlen(buffer);
+				result = TO_STRING_LITERAL(copyString(buffer, length), length);
 			}
 
 			if (IS_STRING(value)) {
@@ -1435,7 +1440,8 @@ static bool execIndex(Interpreter* interpreter) {
 	//get the index function
 	Literal func = TO_NULL_LITERAL;
 	char* keyStr = "_index";
-	Literal key = TO_IDENTIFIER_LITERAL(copyString(keyStr, strlen(keyStr)), strlen(keyStr));
+	int keyStrLength = strlen(keyStr);
+	Literal key = TO_IDENTIFIER_LITERAL(copyString(keyStr, keyStrLength), keyStrLength);
 
 	if (!getScopeVariable(interpreter->scope, key, &func) || !IS_FUNCTION_NATIVE(func)) {
 		interpreter->errorOutput("couldn't get the _index function\n");
@@ -1538,7 +1544,8 @@ static bool execIndexAssign(Interpreter* interpreter) {
 	//get the index function
 	Literal func = TO_NULL_LITERAL;
 	char* keyStr = "_index";
-	Literal key = TO_IDENTIFIER_LITERAL(copyString(keyStr, strlen(keyStr)), strlen(keyStr));
+	int keyStrLength = strlen(keyStr);
+	Literal key = TO_IDENTIFIER_LITERAL(copyString(keyStr, keyStrLength), keyStrLength);
 
 	if (!getScopeVariable(interpreter->scope, key, &func) || !IS_FUNCTION_NATIVE(func)) {
 		interpreter->errorOutput("couldn't get the _index function\n");
@@ -1591,7 +1598,8 @@ static bool execIndexAssign(Interpreter* interpreter) {
 			return false;
 	}
 
-	Literal op = TO_STRING_LITERAL(copyString(opStr, strlen(opStr)), strlen(opStr));
+	int opLength = strlen(opStr);
+	Literal op = TO_STRING_LITERAL(copyString(opStr, opLength), opLength);
 
 	//build the argument list
 	LiteralArray arguments;
@@ -1949,7 +1957,8 @@ static void readInterpreterSections(Interpreter* interpreter) {
 
 			case LITERAL_STRING: {
 				char* s = readString(interpreter->bytecode, &interpreter->count);
-				Literal literal = TO_STRING_LITERAL( copyString(s, strlen(s)), strlen(s) );
+				int length = strlen(s);
+				Literal literal = TO_STRING_LITERAL( copyString(s, length), length);
 				pushLiteralArray(&interpreter->literalCache, literal);
 				freeLiteral(literal);
 
@@ -2036,7 +2045,8 @@ static void readInterpreterSections(Interpreter* interpreter) {
 			case LITERAL_IDENTIFIER: {
 				char* str = readString(interpreter->bytecode, &interpreter->count);
 
-				Literal identifier = TO_IDENTIFIER_LITERAL(copyString(str, strlen(str)), strlen(str));
+				int length = strlen(str);
+				Literal identifier = TO_IDENTIFIER_LITERAL(copyString(str, length), length);
 
 				pushLiteralArray(&interpreter->literalCache, identifier);
 

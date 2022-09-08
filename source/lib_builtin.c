@@ -10,7 +10,8 @@ static Literal addition(Interpreter* interpreter, Literal lhs, Literal rhs) {
 	//special case for string concatenation ONLY
 	if (IS_STRING(lhs) && IS_STRING(rhs)) {
 		//check for overflow
-		if (strlen(AS_STRING(lhs)) + strlen(AS_STRING(rhs)) > MAX_STRING_LENGTH) {
+		int totalLength = strlen(AS_STRING(lhs)) + strlen(AS_STRING(rhs));
+		if (totalLength > MAX_STRING_LENGTH) {
 			interpreter->errorOutput("Can't concatenate these strings (result is too long)\n");
 			return TO_NULL_LITERAL;
 		}
@@ -18,7 +19,7 @@ static Literal addition(Interpreter* interpreter, Literal lhs, Literal rhs) {
 		//concat the strings
 		char buffer[MAX_STRING_LENGTH];
 		snprintf(buffer, MAX_STRING_LENGTH, "%s%s", AS_STRING(lhs), AS_STRING(rhs));
-		Literal literal = TO_STRING_LITERAL( copyString(buffer, strlen(buffer)), strlen(buffer) );
+		Literal literal = TO_STRING_LITERAL(copyString(buffer, totalLength), totalLength);
 		freeLiteral(lhs);
 		freeLiteral(rhs);
 
@@ -656,10 +657,11 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				}
 			}
 
+			int compoundLength = strlen(AS_STRING(compound));
 			if (!IS_NULL(second)) {
 				if (IS_BOOLEAN(second)) {
 					freeLiteral(second);
-					second = TO_INTEGER_LITERAL(strlen(AS_STRING(compound)));
+					second = TO_INTEGER_LITERAL(compoundLength);
 				}
 
 				if (IS_IDENTIFIER(second)) {
@@ -701,7 +703,8 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				snprintf(buffer, 16, "%c", c);
 
 				freeLiteral(value);
-				value = TO_STRING_LITERAL(copyString(buffer, strlen(buffer)), strlen(buffer));
+				int totalLength = strlen(buffer);
+				value = TO_STRING_LITERAL(copyString(buffer, totalLength), totalLength);
 
 				pushLiteralArray(&interpreter->stack, value);
 
@@ -716,7 +719,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				return 1;
 			}
 
-			if (!IS_INTEGER(second) || (!IS_NULL(third) && !IS_INTEGER(third)) || AS_INTEGER(second) < 0 || AS_INTEGER(second) > (int)strlen(AS_STRING(compound)) || AS_INTEGER(third) == 0) {
+			if (!IS_INTEGER(second) || (!IS_NULL(third) && !IS_INTEGER(third)) || AS_INTEGER(second) < 0 || AS_INTEGER(second) > compoundLength || AS_INTEGER(third) == 0) {
 				//something is weird - skip out
 				freeLiteral(op);
 				freeLiteral(assign);
@@ -745,7 +748,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 			//finally, swap out the compound for the result
 			freeLiteral(compound);
-			compound = TO_STRING_LITERAL(copyString(result, strlen(result)), strlen(result));
+			compound = TO_STRING_LITERAL(copyString(result, resultIndex), resultIndex);
 
 			FREE_ARRAY(char, result, MAX_STRING_LENGTH);
 		}
@@ -766,10 +769,11 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				}
 			}
 
+			int compoundLength = strlen(AS_STRING(compound));
 			if (!IS_NULL(second)) {
 				if (IS_BOOLEAN(second)) {
 					freeLiteral(second);
-					second = TO_INTEGER_LITERAL(strlen(AS_STRING(compound)));
+					second = TO_INTEGER_LITERAL(compoundLength);
 				}
 
 				if (IS_IDENTIFIER(second)) {
@@ -834,7 +838,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				return 1;
 			}
 
-			if (!IS_INTEGER(second) || (!IS_NULL(third) && !IS_INTEGER(third)) || AS_INTEGER(second) < 0 || AS_INTEGER(second) > (int)strlen(AS_STRING(compound)) || AS_INTEGER(third) == 0) {
+			if (!IS_INTEGER(second) || (!IS_NULL(third) && !IS_INTEGER(third)) || AS_INTEGER(second) < 0 || AS_INTEGER(second) > compoundLength || AS_INTEGER(third) == 0) {
 				//something is weird - skip out
 				freeLiteral(op);
 				freeLiteral(assign);
@@ -857,14 +861,14 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 					result[ resultIndex++ ] = AS_STRING(compound)[ i ];
 				}
 
-				int min = AS_INTEGER(third) > 0 ? 0 : strlen(AS_STRING(assign)) - 1;
+				int assignLength = strlen(AS_STRING(assign));
+				int min = AS_INTEGER(third) > 0 ? 0 : assignLength - 1;
 
-				//TODO: optimize strlen(assign)
-				for (int i = min; i >= 0 && i < (int)strlen(AS_STRING(assign)); i += AS_INTEGER(third)) {
+				for (int i = min; i >= 0 && i < assignLength; i += AS_INTEGER(third)) {
 					result[ resultIndex++ ] = AS_STRING(assign)[ i ];
 				}
 
-				for (int i = AS_INTEGER(second) + 1; i < (int)strlen(AS_STRING(compound)); i++) {
+				for (int i = AS_INTEGER(second) + 1; i < compoundLength; i++) {
 					result[ resultIndex++ ] = AS_STRING(compound)[ i ];
 				}
 
@@ -876,18 +880,19 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				//copy compound to result
 				snprintf(result, MAX_STRING_LENGTH, AS_STRING(compound));
 
+				int assignLength = strlen(AS_STRING(assign));
 				int min = AS_INTEGER(third) > 0 ? AS_INTEGER(first) : AS_INTEGER(second) - 1;
 
 				int assignIndex = 0;
-				for (int i = min; i >= AS_INTEGER(first) && i <= AS_INTEGER(second) && assignIndex < (int)strlen(AS_STRING(assign)); i += AS_INTEGER(third)) {
+				for (int i = min; i >= AS_INTEGER(first) && i <= AS_INTEGER(second) && assignIndex < assignLength; i += AS_INTEGER(third)) {
 					result[ i ] = AS_STRING(assign)[ assignIndex++ ];
-					resultIndex++;
 				}
+				resultIndex = strlen(result);
 			}
 
 			//finally, swap out the compound for the result
 			freeLiteral(compound);
-			compound = TO_STRING_LITERAL(copyString(result, strlen(result)), strlen(result));
+			compound = TO_STRING_LITERAL(copyString(result, resultIndex), resultIndex);
 
 			FREE_ARRAY(char, result, MAX_STRING_LENGTH);
 		}
