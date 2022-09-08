@@ -327,6 +327,11 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 				return node->binary.opcode;
 			}
 
+			if (ret != OP_EOF && (node->binary.opcode == OP_AND || node->binary.opcode == OP_OR || (node->binary.opcode >= OP_COMPARE_EQUAL && node->binary.opcode <= OP_INVERT))) {
+				compiler->bytecode[compiler->count++] = (unsigned char)ret; //1 byte
+				ret = OP_EOF; //untangle in this case
+			}
+
 			compiler->bytecode[compiler->count++] = (unsigned char)node->binary.opcode; //1 byte
 
 			return ret;

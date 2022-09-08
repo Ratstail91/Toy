@@ -448,7 +448,7 @@ static Opcode unary(Parser* parser, Node** nodeHandle) {
 
 	else if (parser->previous.type == TOKEN_NOT) {
 		//temp handle to potentially negate values
-		parsePrecedence(parser, &tmpNode, PREC_TERNARY); //can be a literal
+		parsePrecedence(parser, &tmpNode, PREC_CALL); //can be a literal
 
 		//check for inverted booleans
 		if (tmpNode->type == NODE_LITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {

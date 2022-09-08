@@ -69,7 +69,7 @@ void freeLiteral(Literal literal) {
 
 bool _isTruthy(Literal x) {
 	if (IS_NULL(x)) {
-		fprintf(stderr, ERROR "ERROR: Null is neither true nor false" RESET);
+		fprintf(stderr, ERROR "ERROR: Null is neither true nor false\n" RESET);
 		return false;
 	}
 

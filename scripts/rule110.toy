@@ -1,0 +1,66 @@
+var size: int const = 100;
+
+var prev = [];
+for (var i = 0; i < size; i++) {
+	prev.push(false);
+}
+
+prev.set(size - 1, true);
+
+
+fn calc(p, i) {
+	if (p[i-1] && p[i] && p[i+1]) {
+		return false;
+	}
+
+	if (p[i-1] && p[i] && !p[i+1]) {
+		return true;
+	}
+
+	if (p[i-1] && !p[i] && p[i+1]) {
+		return true;
+	}
+
+	if (p[i-1] && !p[i] && !p[i+1]) {
+		return false;
+	}
+
+	if (!p[i-1] && p[i] && p[i+1]) {
+		return true;
+	}
+
+	if (!p[i-1] && p[i] && !p[i+1]) {
+		return true;
+	}
+
+	if (!p[i-1] && !p[i] && p[i+1]) {
+		return true;
+	}
+
+	if (!p[i-1] && !p[i] && !p[i+1]) {
+		return false;
+	}
+}
+
+
+
+for (var iteration = 0; iteration < 100; iteration++) {
+	var line = [false];
+	for (var i = 1; i < size-1; i++) {
+		line.push(calc(prev, i));
+	}
+	line.push(false);
+
+	var output = "";
+	for (var i = 0; i < line.length(); i++) {
+		if (line[i]) {
+			output += "*";
+		}
+		else {
+			output += " ";
+		}
+	}
+
+	print output;
+	prev = line;
+}
