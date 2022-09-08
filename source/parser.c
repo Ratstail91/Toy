@@ -677,7 +677,7 @@ static Opcode decrementInfix(Parser* parser, Node** nodeHandle) {
 }
 
 static Opcode fnCall(Parser* parser, Node** nodeHandle) {
-	advance(parser);
+	advance(parser); //skip the left paren
 
 	//binary() is an infix rule - so only get the RHS of the operator
 	switch(parser->previous.type) {
@@ -708,7 +708,7 @@ static Opcode fnCall(Parser* parser, Node** nodeHandle) {
 			}
 
 			//emit the call
-			emitFnCall(nodeHandle, arguments);
+			emitFnCall(nodeHandle, arguments, arguments->fnCollection.count);
 
 			return OP_FN_CALL;
 		}
@@ -786,14 +786,17 @@ static Opcode indexAccess(Parser* parser, Node** nodeHandle) {
 
 static Opcode dot(Parser* parser, Node** nodeHandle) {
 	advance(parser); //for the dot
-	advance(parser); //for the identifier
 
-	Node* first = NULL;
+	Node* node = NULL;
 
-	identifier(parser, &first); //specific case
-	emitNodeDot(nodeHandle, first);
+	parsePrecedence(parser, &node, PREC_CALL);
 
-	return OP_DOT;
+	//hijack the function call, and hack in an extra parameter
+	node->binary.right->fnCall.argumentCount++;
+	node->binary.opcode = OP_DOT;
+
+	(*nodeHandle) = node;
+	return OP_DOT; //signal that the function name and arguments are in the wrong order
 }
 
 ParseRule parseRules[] = { //must match the token types

@@ -8,16 +8,6 @@
 }
 
 
-//test dot insertion
-{
-	var d = [:];
-
-	d.foo = "bar";
-
-	assert d == ["foo":"bar"], "dot insertion failed";
-}
-
-
 //test index arithmetic
 {
 	var d = ["one":1, "two":2, "three":3];
@@ -25,28 +15,6 @@
 	d["three"] *= 3;
 
 	assert d == ["one":1, "two":2, "three":9], "index arithmetic failed";
-}
-
-
-//test dot arithmetic
-{
-	var d = ["one":1, "two":2, "three":3];
-
-	d.three *= 3;
-
-	assert d == ["one":1, "two":2, "three":9], "index arithmetic failed";
-}
-
-
-//test dot calls
-{
-	fn f() {
-		return 42;
-	}
-
-	var d = ["foo":f];
-
-	assert d.foo() == 42, "dot calls failed";
 }
 
 

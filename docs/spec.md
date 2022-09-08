@@ -433,15 +433,14 @@ var dict: [string const, int const] const = [
 ];
 ```
 
-Dictionaries can be indexed using traditional bracket notation, or the dot operator when the keys are strings. Existing elements can be accessed or overwritten, or new ones inserted if they don't already exist this way by using the standard library functions.
+Dictionaries can be indexed using traditional bracket notation. Existing elements can be accessed or overwritten, or new ones inserted if they don't already exist this way by using the standard library functions.
 
 ```
 dict["foo"] = "bar";
 print dict["foo"];
-print dict.foo; //syntactic sugar, only works if the key is not a built-in function
 ```
 
-## Indexing, Slice and Dot Notation
+## Slice Notation
 
 Strings, arrays and dictionaries can be indexed in several ways, via the globally available functions (see below). Elements can be accessed using traditional bracket notation:
 
@@ -485,11 +484,22 @@ print str[::-2]; //drwolH
 
 0 cannot be used as the third argument.
 
-### Globally available functions
+### Globally Available Functions
 
-The slice and dot notations (the latter of which only works on dictionaries) are simply syntactic sugar for the globally available functions.
+The dot notation can be used to acces the globally available functions, like so:
 
 ```
+obj.function(); //passes in obj as the first argument
+```
+
+A list of globally available functions is:
+
+```
+//usable with arrays, dictionaries and strings - probably a good idea not to use this one, just use index notation
+fn _index(self, first, second, third, assign, op) {
+	//native code
+}
+
 //usable with arrays and dictionaries
 fn _set(self, key, value) {
 	//native code

@@ -62,6 +62,16 @@ fn extra(one, two, ...rest) {
 extra("one", "two", "three", "four", "five", "six", "seven");
 
 
+//test underscore functions
+fn _example(self, a, b, c) {
+	assert a == "a", "underscore failed (a)";
+	assert b == "b", "underscore failed (b)";
+	assert c == "c", "underscore failed (c)";
+	return self;
+}
+
+assert "hello world".example("a", "b", "c") == "hello world", "underscore call failed";
+
 
 
 print "All good";

@@ -103,6 +103,7 @@ typedef struct NodeFnCollection {
 typedef struct NodeFnCall {
 	NodeType type;
 	Node* arguments;
+	int argumentCount;
 } NodeFnCall;
 
 typedef struct NodePath {
@@ -162,7 +163,7 @@ void emitNodeCompound(Node** nodeHandle, LiteralType literalType);
 void setNodePair(Node* node, Node* left, Node* right);
 void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal type, Node* expression);
 void emitNodeFnDecl(Node** nodeHandle, Literal identifier, Node* arguments, Node* returns, Node* block);
-void emitFnCall(Node** nodeHandle, Node* arguments);
+void emitFnCall(Node** nodeHandle, Node* arguments, int argumentCount);
 void emitNodeFnCollection(Node** nodeHandle);
 void emitNodePath(Node** nodeHandle, NodeType type, Node* preClause, Node* postClause, Node* condition, Node* thenPath, Node* elsePath);
 void emitNodePrefixIncrement(Node** nodeHandle, Literal identifier, int increment);

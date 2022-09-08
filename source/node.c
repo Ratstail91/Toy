@@ -207,11 +207,12 @@ void emitNodeFnDecl(Node** nodeHandle, Literal identifier, Node* arguments, Node
 	*nodeHandle = tmp;
 }
 
-void emitFnCall(Node** nodeHandle, Node* arguments) {
+void emitFnCall(Node** nodeHandle, Node* arguments, int argumentCount) {
 	Node* tmp = ALLOCATE(Node, 1);
 
 	tmp->type = NODE_FN_CALL;
 	tmp->fnCall.arguments = arguments;
+	tmp->fnCall.argumentCount = argumentCount;
 
 	*nodeHandle = tmp;
 }

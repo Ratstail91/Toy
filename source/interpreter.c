@@ -990,7 +990,7 @@ static bool execFalseJump(Interpreter* interpreter) {
 static void execInterpreter(Interpreter*);
 static void readInterpreterSections(Interpreter* interpreter);
 
-static bool execFnCall(Interpreter* interpreter) {
+static bool execFnCall(Interpreter* interpreter, bool looseFirstArgument) {
 	//BUGFIX: depth check - don't drown!
 	if (interpreter->depth >= 1000) {
 		interpreter->errorOutput("Depth check failed\n");
@@ -1004,13 +1004,37 @@ static bool execFnCall(Interpreter* interpreter) {
 	Literal stackSize = popLiteralArray(&interpreter->stack);
 
 	//unpack the stack of arguments
-	for (int i = 0; i < AS_INTEGER(stackSize); i++) {
+	for (int i = 0; i < AS_INTEGER(stackSize) - 1; i++) {
+		Literal lit = popLiteralArray(&interpreter->stack);
+		pushLiteralArray(&arguments, lit); //NOTE: also reverses the order
+		freeLiteral(lit);
+	}
+
+	//collect one more argument
+	if (!looseFirstArgument && AS_INTEGER(stackSize) > 0) {
 		Literal lit = popLiteralArray(&interpreter->stack);
 		pushLiteralArray(&arguments, lit); //NOTE: also reverses the order
 		freeLiteral(lit);
 	}
 
 	Literal identifier = popLiteralArray(&interpreter->stack);
+
+	//collect one more argument
+	if (looseFirstArgument) {
+		Literal lit = popLiteralArray(&interpreter->stack);
+		pushLiteralArray(&arguments, lit); //NOTE: also reverses the order
+		freeLiteral(lit);
+	}
+
+	//let's screw with the fn name, too
+	if (looseFirstArgument) {
+		int length = strlen(AS_IDENTIFIER(identifier)) + 1;
+		char buffer[MAX_STRING_LENGTH];
+		snprintf(buffer, MAX_STRING_LENGTH, "_%s", AS_IDENTIFIER(identifier)); //prepend an underscore
+
+		freeLiteral(identifier);
+		identifier = TO_IDENTIFIER_LITERAL(copyString(buffer, length), length);
+	}
 
 	Literal func = identifier;
 
@@ -1453,81 +1477,6 @@ static bool execIndex(Interpreter* interpreter) {
 	return true;
 }
 
-static bool execDot(Interpreter* interpreter) {
-	//assume -> compound, first are all on the stack
-
-	Literal first = popLiteralArray(&interpreter->stack);
-	Literal compound = popLiteralArray(&interpreter->stack);
-
-	Literal tmp = first;
-	first = TO_STRING_LITERAL(copyString(AS_IDENTIFIER(tmp), strlen(AS_IDENTIFIER(tmp))) , strlen(AS_IDENTIFIER(tmp)) );
-	freeLiteral(tmp);
-
-	if (!IS_IDENTIFIER(compound)) {
-		interpreter->errorOutput("Unknown literal found in dot notation\n");
-		printLiteralCustom(compound, interpreter->errorOutput);
-		interpreter->errorOutput("\n");
-		freeLiteral(first);
-		freeLiteral(compound);
-		return false;
-	}
-
-	Literal idn = compound;
-
-	if (!parseIdentifierToValue(interpreter, &compound)) {
-		freeLiteral(first);
-		freeLiteral(compound);
-		freeLiteral(idn);
-		return false;
-	}
-
-	if (!IS_DICTIONARY(compound)) {
-		interpreter->errorOutput("Unknown compound found in dot notation\n");
-		freeLiteral(first);
-		freeLiteral(compound);
-		freeLiteral(idn);
-		return false;
-	}
-
-	//get the index function
-	Literal func = TO_NULL_LITERAL;
-	char* keyStr = "_dot";
-	Literal key = TO_IDENTIFIER_LITERAL(copyString(keyStr, strlen(keyStr)), strlen(keyStr));
-
-	if (!getScopeVariable(interpreter->scope, key, &func) || !IS_FUNCTION_NATIVE(func)) {
-		interpreter->errorOutput("couldn't get the _dot function\n");
-		freeLiteral(first);
-		freeLiteral(compound);
-		freeLiteral(idn);
-		freeLiteral(func);
-		freeLiteral(key);
-		return false;
-	}
-
-	//build the argument list
-	LiteralArray arguments;
-	initLiteralArray(&arguments);
-
-	pushLiteralArray(&arguments, compound);
-	pushLiteralArray(&arguments, first);
-	pushLiteralArray(&arguments, TO_NULL_LITERAL); //it expects an assignment command
-	pushLiteralArray(&arguments, TO_NULL_LITERAL); //it expects an assignment "opcode"
-
-	//call the function
-	NativeFn fn = (NativeFn)AS_FUNCTION(func).bytecode;
-	fn(interpreter, &arguments);
-
-	//clean up
-	freeLiteral(first);
-	freeLiteral(compound);
-	freeLiteral(idn);
-	freeLiteral(func);
-	freeLiteral(key);
-	freeLiteralArray(&arguments);
-
-	return true;
-}
-
 static bool execIndexAssign(Interpreter* interpreter) {
 	//assume -> compound, first, second, third, assign are all on the stack
 
@@ -1694,161 +1643,6 @@ static bool execIndexAssign(Interpreter* interpreter) {
 	freeLiteral(key);
 	freeLiteral(op);
 	freeLiteralArray(&arguments);
-	freeLiteral(result);
-
-	return true;
-}
-
-static bool execDotAssign(Interpreter* interpreter) {
-	//assume -> compound, first, assign are all on the stack
-
-	Literal assign = popLiteralArray(&interpreter->stack);
-	Literal first = popLiteralArray(&interpreter->stack);
-	Literal compound = popLiteralArray(&interpreter->stack);
-
-	Literal tmp = first;
-	first = TO_STRING_LITERAL(copyString(AS_IDENTIFIER(tmp), strlen(AS_IDENTIFIER(tmp))) , strlen(AS_IDENTIFIER(tmp)) );
-	freeLiteral(tmp);
-
-	if (!IS_IDENTIFIER(compound)) {
-		interpreter->errorOutput("Unknown literal found in dot assigning notation\n");
-		printLiteralCustom(compound, interpreter->errorOutput);
-		interpreter->errorOutput("\n");
-		freeLiteral(assign);
-		freeLiteral(first);
-		freeLiteral(compound);
-		return false;
-	}
-
-	Literal idn = compound;
-
-	if (!parseIdentifierToValue(interpreter, &compound)) {
-		freeLiteral(assign);
-		freeLiteral(first);
-		freeLiteral(compound);
-		freeLiteral(idn);
-		return false;
-	}
-
-	if (!IS_DICTIONARY(compound)) {
-		interpreter->errorOutput("Unknown compound found in dot assigning notation\n");
-		freeLiteral(assign);
-		freeLiteral(first);
-		freeLiteral(compound);
-		freeLiteral(idn);
-		return false;
-	}
-
-	//check const-ness of "first" within "compound"
-	Literal type = getScopeType(interpreter->scope, idn);
-	if (AS_TYPE(type).typeOf == LITERAL_DICTIONARY && AS_TYPE(((Literal*)(AS_TYPE(type).subtypes))[1]).constant) {
-		interpreter->errorOutput("couldn't assign to constant within compound within dot assigning notation\n");
-		freeLiteral(assign);
-		freeLiteral(first);
-		freeLiteral(compound);
-		freeLiteral(idn);
-		freeLiteral(type);
-		return false;
-	}
-
-	//get the index function
-	Literal func = TO_NULL_LITERAL;
-	char* keyStr = "_dot";
-	Literal key = TO_IDENTIFIER_LITERAL(copyString(keyStr, strlen(keyStr)), strlen(keyStr));
-
-	if (!getScopeVariable(interpreter->scope, key, &func) || !IS_FUNCTION_NATIVE(func)) {
-		interpreter->errorOutput("couldn't get the _dot function\n");
-		freeLiteral(assign);
-		freeLiteral(first);
-		freeLiteral(compound);
-		freeLiteral(idn);
-		freeLiteral(func);
-		freeLiteral(key);
-		freeLiteral(type);
-		return false;
-	}
-
-	//build the opcode
-	unsigned char opcode = readByte(interpreter->bytecode, &interpreter->count);
-	char* opStr = "";
-	switch(opcode) {
-		case OP_VAR_ASSIGN:
-			opStr = "=";
-		break;
-		case OP_VAR_ADDITION_ASSIGN:
-			opStr = "+=";
-		break;
-		case OP_VAR_SUBTRACTION_ASSIGN:
-			opStr = "-=";
-		break;
-		case OP_VAR_MULTIPLICATION_ASSIGN:
-			opStr = "*=";
-		break;
-		case OP_VAR_DIVISION_ASSIGN:
-			opStr = "/=";
-		break;
-		case OP_VAR_MODULO_ASSIGN:
-			opStr = "%=";
-		break;
-
-		default:
-			interpreter->errorOutput("bad opcode in dot assigning notation\n");
-			freeLiteral(assign);
-			freeLiteral(first);
-			freeLiteral(compound);
-			freeLiteral(idn);
-			freeLiteral(func);
-			freeLiteral(key);
-			freeLiteral(type);
-			return false;
-	}
-
-	Literal op = TO_STRING_LITERAL(copyString(opStr, strlen(opStr)), strlen(opStr));
-
-	//build the argument list
-	LiteralArray arguments;
-	initLiteralArray(&arguments);
-
-	pushLiteralArray(&arguments, compound);
-	pushLiteralArray(&arguments, first);
-	pushLiteralArray(&arguments, assign); //it expects an assignment command
-	pushLiteralArray(&arguments, op); //it expects an assignment "opcode"
-
-	//call the function
-	NativeFn fn = (NativeFn)AS_FUNCTION(func).bytecode;
-	fn(interpreter, &arguments);
-
-	//save the result (assume top of the interpreter stack is the new compound value)
-	Literal result = popLiteralArray(&interpreter->stack);
-	if (!setScopeVariable(interpreter->scope, idn, result, true)) {
-		interpreter->errorOutput("Incorrect type assigned to compound member: ");
-		printLiteralCustom(result, interpreter->errorOutput);
-		interpreter->errorOutput("\n");
-
-		//clean up
-		freeLiteral(assign);
-		freeLiteral(first);
-		freeLiteral(compound);
-		freeLiteral(idn);
-		freeLiteral(func);
-		freeLiteral(key);
-		freeLiteral(type);
-		freeLiteral(result);
-		freeLiteralArray(&arguments);
-		freeLiteral(op);
-		return false;
-	}
-
-	//clean up
-	freeLiteral(op);
-	freeLiteral(assign);
-	freeLiteral(first);
-	freeLiteral(compound);
-	freeLiteral(idn);
-	freeLiteral(func);
-	freeLiteralArray(&arguments);
-	freeLiteral(key);
-	freeLiteral(type);
 	freeLiteral(result);
 
 	return true;
@@ -2038,10 +1832,17 @@ static void execInterpreter(Interpreter* interpreter) {
 			break;
 
 			case OP_FN_CALL:
-				if (!execFnCall(interpreter)) {
+				if (!execFnCall(interpreter, false)) {
 					return;
 				}
 			break;
+
+			case OP_DOT:
+				if (!execFnCall(interpreter, true)) { //compensate for the out-of-order arguments
+					return;
+				}
+			break;
+
 
 			case OP_FN_RETURN:
 				if (!execFnReturn(interpreter)) {
@@ -2067,20 +1868,8 @@ static void execInterpreter(Interpreter* interpreter) {
 				}
 			break;
 
-			case OP_DOT:
-				if (!execDot(interpreter)) {
-					return;
-				}
-			break;
-
 			case OP_INDEX_ASSIGN:
 				if (!execIndexAssign(interpreter)) {
-					return;
-				}
-			break;
-
-			case OP_DOT_ASSIGN:
-				if (!execDotAssign(interpreter)) {
 					return;
 				}
 			break;
@@ -2450,7 +2239,6 @@ void resetInterpreter(Interpreter* interpreter) {
 
 	//globally available functions
 	injectNativeFn(interpreter, "_index", _index);
-	injectNativeFn(interpreter, "_dot", _dot);
 	injectNativeFn(interpreter, "_set", _set);
 	injectNativeFn(interpreter, "_get", _get);
 	injectNativeFn(interpreter, "_push", _push);

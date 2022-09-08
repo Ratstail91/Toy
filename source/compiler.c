@@ -309,7 +309,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 			//special case for when indexing and assigning
 			if (override != OP_EOF && node->binary.opcode >= OP_VAR_ASSIGN && node->binary.opcode <= OP_VAR_MODULO_ASSIGN) {
 				writeCompilerWithJumps(compiler, node->binary.right, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
-				compiler->bytecode[compiler->count++] = (unsigned char)override + 2; //1 byte WARNING: enum arithmetic
+				compiler->bytecode[compiler->count++] = (unsigned char)override + 1; //1 byte WARNING: enum arithmetic
 				compiler->bytecode[compiler->count++] = (unsigned char)node->binary.opcode; //1 byte
 				return OP_EOF;
 			}
@@ -319,7 +319,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
 			}
 
-			//return from the index-binary
+			//return this if...
 			Opcode ret = writeCompilerWithJumps(compiler, node->binary.right, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
 
 			//loopy logic - if opcode == index or dot
@@ -504,7 +504,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 			}
 
 			//push the argument COUNT to the top of the stack
-			Literal argumentsCountLiteral =  TO_INTEGER_LITERAL(node->fnCall.arguments->fnCollection.count);
+			Literal argumentsCountLiteral =  TO_INTEGER_LITERAL(node->fnCall.argumentCount); //argumentCount is set elsewhere to support dot operator
 			int argumentsCountIndex = findLiteralIndex(&compiler->literalCache, argumentsCountLiteral);
 			if (argumentsCountIndex < 0) {
 				argumentsCountIndex = pushLiteralArray(&compiler->literalCache, argumentsCountLiteral);
@@ -859,20 +859,8 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		break;
 
 		case NODE_DOT: {
-			//pass to the child nodes, then embed the opcode
-			if (!node->index.first) {
-				writeLiteralToCompiler(compiler, TO_NULL_LITERAL);
-			}
-			else {
-				Opcode override = writeCompilerWithJumps(compiler, node->index.first, breakAddressesPtr, continueAddressesPtr, jumpOffsets);
-				if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
-					compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
-				}
-			}
-
-			// compiler->bytecode[compiler->count++] = (unsigned char)OP_DOT; //1 byte
-
-			return OP_DOT_ASSIGN;
+			fprintf(stderr, ERROR "[internal] NODE_DOT encountered in writeCompilerWithJumps()\n" RESET);
+			compiler->bytecode[compiler->count++] = OP_EOF; //1 byte
 		}
 		break;
 	}
