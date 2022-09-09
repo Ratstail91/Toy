@@ -997,8 +997,8 @@ static void readInterpreterSections(Interpreter* interpreter);
 
 static bool execFnCall(Interpreter* interpreter, bool looseFirstArgument) {
 	//BUGFIX: depth check - don't drown!
-	if (interpreter->depth >= 1000) {
-		interpreter->errorOutput("Depth check failed\n");
+	if (interpreter->depth >= 200) {
+		interpreter->errorOutput("Infinite recursion detected - panicking\n");
 		interpreter->panic = true;
 		return false;
 	}
