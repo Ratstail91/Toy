@@ -22,7 +22,12 @@ static void freeAncestorChain(Scope* scope) {
 }
 
 //return false if invalid type
-static bool checkType(Literal typeLiteral, Literal value) {
+static bool checkType(Literal typeLiteral, Literal original, Literal value, bool constCheck) {
+	//for constants, fail if original != value
+	if (constCheck && AS_TYPE(typeLiteral).constant && !literalsAreEqual(original, value)) {
+		return false;
+	}
+
 	//for any types
 	if (AS_TYPE(typeLiteral).typeOf == LITERAL_ANY) {
 		return true;
@@ -65,9 +70,18 @@ static bool checkType(Literal typeLiteral, Literal value) {
 			return false;
 		}
 
+		//if null, assume it's a new entry
+		if (IS_NULL(original)) {
+			return true;
+		}
+
 		//check children
 		for (int i = 0; i < AS_ARRAY(value)->count; i++) {
-			if (!checkType(((Literal*)(AS_TYPE(typeLiteral).subtypes))[0], AS_ARRAY(value)->literals[i])) {
+			if (AS_ARRAY(original)->count <= i) {
+				return true; //assume new entry pushed
+			}
+
+			if (!checkType(((Literal*)(AS_TYPE(typeLiteral).subtypes))[0], AS_ARRAY(original)->literals[i], AS_ARRAY(value)->literals[i], constCheck)) {
 				return false;
 			}
 		}
@@ -83,17 +97,39 @@ static bool checkType(Literal typeLiteral, Literal value) {
 			return false;
 		}
 
-		//check children
-		for (int i = 0; i < AS_DICTIONARY(value)->capacity; i++) {
-			//only assigned and non-tombstoned keys
-			if (!IS_NULL(AS_DICTIONARY(value)->entries[i].key)) {
-				if (!checkType(((Literal*)(AS_TYPE(typeLiteral).subtypes))[0], AS_DICTIONARY(value)->entries[i].key)) {
-					return false;
-				}
+		//if null, assume it's a new entry
+		if (IS_NULL(original)) {
+			return true;
+		}
 
-				if (!checkType(((Literal*)(AS_TYPE(typeLiteral).subtypes))[1], AS_DICTIONARY(value)->entries[i].value)) {
-					return false;
+		//check each child of value against the child of original
+		for (int i = 0; i < AS_DICTIONARY(value)->capacity; i++) {
+			if (IS_NULL(AS_DICTIONARY(value)->entries[i].key)) { //only non-tombstones
+				continue;
+			}
+
+			//find the internal child of original that matches this child of value
+			_entry* ptr = NULL;
+
+			for (int j = 0; j < AS_DICTIONARY(original)->capacity; j++) {
+				if (literalsAreEqual(AS_DICTIONARY(original)->entries[j].key, AS_DICTIONARY(value)->entries[i].key)) {
+					ptr = &AS_DICTIONARY(original)->entries[j];
+					break;
 				}
+			}
+
+			//if not found, assume it's a new entry
+			if (!ptr) {
+				continue;
+			}
+
+			//check the type of key and value
+			if (!checkType(((Literal*)(AS_TYPE(typeLiteral).subtypes))[0], ptr->key, AS_DICTIONARY(value)->entries[i].key, constCheck)) {
+				return false;
+			}
+
+			if (!checkType(((Literal*)(AS_TYPE(typeLiteral).subtypes))[1], ptr->value, AS_DICTIONARY(value)->entries[i].value, constCheck)) {
+				return false;
 			}
 		}
 	}
@@ -220,15 +256,11 @@ bool setScopeVariable(Scope* scope, Literal key, Literal value, bool constCheck)
 
 	//type checking
 	Literal typeLiteral = getLiteralDictionary(&scope->types, key);
+	Literal original = getLiteralDictionary(&scope->variables, key);
 
-	if (!checkType(typeLiteral, value)) {
+	if (!checkType(typeLiteral, original, value, constCheck)) {
 		freeLiteral(typeLiteral);
-		return false;
-	}
-
-	//const check
-	if (constCheck && (AS_TYPE(typeLiteral).constant)) {
-		freeLiteral(typeLiteral);
+		freeLiteral(original);
 		return false;
 	}
 
@@ -236,6 +268,7 @@ bool setScopeVariable(Scope* scope, Literal key, Literal value, bool constCheck)
 	setLiteralDictionary(&scope->variables, key, value);
 
 	freeLiteral(typeLiteral);
+	freeLiteral(original);
 
 	return true;
 }

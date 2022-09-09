@@ -1531,23 +1531,6 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		return false;
 	}
 
-	//TODO: come back to this
-	// //check const-ness of "first" within "compound"
-	// Literal type = getScopeType(interpreter->scope, idn);
-	// if ((AS_TYPE(type).typeOf == LITERAL_ARRAY && AS_TYPE(((Literal*)(AS_TYPE(type).subtypes))[0]).constant) || (AS_TYPE(type).typeOf == LITERAL_DICTIONARY && AS_TYPE(((Literal*)(AS_TYPE(type).subtypes))[1]).constant)) {
-	// 	interpreter->errorOutput("couldn't assign to constant within compound within index assigning notation\n");
-	// 	freeLiteral(assign);
-	// 	freeLiteral(third);
-	// 	freeLiteral(second);
-	// 	freeLiteral(first);
-	// 	freeLiteral(compound);
-	// 	if (freeIdn) {
-	// 		freeLiteral(idn);
-	// 	}
-	// 	freeLiteral(type);
-	// 	return false;
-	// }
-
 	//get the index function
 	Literal func = TO_NULL_LITERAL;
 	char* keyStr = "_index";
@@ -1564,7 +1547,6 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		if (freeIdn) {
 			freeLiteral(idn);
 		}
-		// freeLiteral(type);
 		freeLiteral(func);
 		freeLiteral(key);
 		return false;
@@ -1603,7 +1585,6 @@ static bool execIndexAssign(Interpreter* interpreter) {
 			if (freeIdn) {
 				freeLiteral(idn);
 			}
-			// freeLiteral(type);
 			freeLiteral(func);
 			freeLiteral(key);
 			return false;
@@ -1668,12 +1649,11 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		freeLiteral(idn);
 		idn = popLiteralArray(&interpreter->stack);
 		compound = idn;
-		// freeIdn = true;
 	}
 
 	if (IS_IDENTIFIER(idn) && !setScopeVariable(interpreter->scope, idn, result, true)) {
-		interpreter->errorOutput("Incorrect type assigned to compound member: ");
-		printLiteralCustom(result, interpreter->errorOutput);
+		interpreter->errorOutput("Incorrect type assigned to compound member ");
+		printLiteralCustom(idn, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
 
 		//clean up
@@ -1686,7 +1666,6 @@ static bool execIndexAssign(Interpreter* interpreter) {
 			freeLiteral(idn);
 		}
 		freeLiteral(func);
-		// freeLiteral(type);
 		freeLiteral(key);
 		freeLiteral(op);
 		freeLiteralArray(&arguments);
@@ -1704,7 +1683,6 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		freeLiteral(idn);
 	}
 	freeLiteral(func);
-	// freeLiteral(type);
 	freeLiteral(key);
 	freeLiteral(op);
 	freeLiteralArray(&arguments);
