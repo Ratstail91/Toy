@@ -1606,7 +1606,23 @@ static bool execIndexAssign(Interpreter* interpreter) {
 
 	//call the function
 	NativeFn fn = (NativeFn)AS_FUNCTION(func).bytecode;
-	fn(interpreter, &arguments);
+	if (fn(interpreter, &arguments) == -1) {
+		//clean up
+		freeLiteral(assign);
+		freeLiteral(third);
+		freeLiteral(second);
+		freeLiteral(first);
+		freeLiteral(compound);
+		if (freeIdn) {
+			freeLiteral(idn);
+		}
+		freeLiteral(func);
+		freeLiteral(key);
+		freeLiteral(op);
+		freeLiteralArray(&arguments);
+
+		return false;
+	}
 
 	//save the result (assume top of the interpreter stack is the new compound value)
 	Literal result = popLiteralArray(&interpreter->stack);

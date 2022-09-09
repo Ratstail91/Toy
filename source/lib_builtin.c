@@ -495,7 +495,19 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 			if (IS_NULL(second)) {
 				//set the "first" within the array, then skip out
-				setLiteralArray(AS_ARRAY(compound), first, assign);
+				if (!setLiteralArray(AS_ARRAY(compound), first, assign)) {
+					interpreter->errorOutput("Index assignment out of bounds\n");
+
+					freeLiteral(op);
+					freeLiteral(assign);
+					freeLiteral(third);
+					freeLiteral(second);
+					freeLiteral(first);
+					freeLiteral(compound);
+					freeLiteral(value);
+
+					return -1;
+				}
 
 				pushLiteralArray(&interpreter->stack, compound);
 
