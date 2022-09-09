@@ -35,9 +35,9 @@ DONE: A way to check the type of a variable (typeOf keyword)
 DONE: slice and dot notation around the builtin _index and _dot functions
 DONE: maximum recursion/function depth
 DONE: better sugar for _push, _pop, _length
+DONE: nested compound assignment bug
 
 
-TODO: nested compound assignment
 TODO: ternary operator?
 TODO: Nullish types?
 TODO: hooks on the external libraries, triggered on import

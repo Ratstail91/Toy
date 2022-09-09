@@ -1397,7 +1397,7 @@ static bool execExport(Interpreter* interpreter) {
 	return true;
 }
 
-static bool execIndex(Interpreter* interpreter) {
+static bool execIndex(Interpreter* interpreter, bool assignIntermediate) {
 	//assume -> compound, first, second, third are all on the stack
 
 	Literal third = popLiteralArray(&interpreter->stack);
@@ -1405,26 +1405,19 @@ static bool execIndex(Interpreter* interpreter) {
 	Literal first = popLiteralArray(&interpreter->stack);
 	Literal compound = popLiteralArray(&interpreter->stack);
 
-	if (!IS_IDENTIFIER(compound)) {
-		interpreter->errorOutput("Unknown literal found in indexing notation\n");
-		printLiteralCustom(compound, interpreter->errorOutput);
-		interpreter->errorOutput("\n");
-		freeLiteral(third);
-		freeLiteral(second);
-		freeLiteral(first);
-		freeLiteral(compound);
-		return false;
-	}
-
 	Literal idn = compound;
+	bool freeIdn = false;
 
-	if (!parseIdentifierToValue(interpreter, &compound)) {
-		freeLiteral(third);
-		freeLiteral(second);
-		freeLiteral(first);
-		freeLiteral(compound);
-		//freeLiteral(idn); //since compound is freed, idn is still pointing there
-		return false;
+	if (IS_IDENTIFIER(compound)) {
+		freeIdn = true;
+		if (!parseIdentifierToValue(interpreter, &compound)) {
+			freeLiteral(third);
+			freeLiteral(second);
+			freeLiteral(first);
+			freeLiteral(compound);
+			//freeLiteral(idn); //since compound is freed, idn is still pointing there
+			return false;
+		}
 	}
 
 	if (!IS_ARRAY(compound) && !IS_DICTIONARY(compound) && !IS_STRING(compound)) {
@@ -1433,7 +1426,9 @@ static bool execIndex(Interpreter* interpreter) {
 		freeLiteral(second);
 		freeLiteral(first);
 		freeLiteral(compound);
-		freeLiteral(idn);
+		if (freeIdn) {
+			freeLiteral(idn);
+		}
 		return false;
 	}
 
@@ -1449,7 +1444,9 @@ static bool execIndex(Interpreter* interpreter) {
 		freeLiteral(second);
 		freeLiteral(first);
 		freeLiteral(compound);
-		freeLiteral(idn);
+		if (freeIdn) {
+			freeLiteral(idn);
+		}
 		freeLiteral(func);
 		freeLiteral(key);
 		return false;
@@ -1466,6 +1463,17 @@ static bool execIndex(Interpreter* interpreter) {
 	pushLiteralArray(&arguments, TO_NULL_LITERAL); //it expects an assignment command
 	pushLiteralArray(&arguments, TO_NULL_LITERAL); //it expects an assignment "opcode"
 
+	//leave the idn and compound on the stack
+	if (assignIntermediate) {
+		if (IS_IDENTIFIER(idn)) {
+			pushLiteralArray(&interpreter->stack, idn);
+		}
+		pushLiteralArray(&interpreter->stack, compound);
+		pushLiteralArray(&interpreter->stack, first);
+		pushLiteralArray(&interpreter->stack, second);
+		pushLiteralArray(&interpreter->stack, third);
+	}
+
 	//call the function
 	NativeFn fn = (NativeFn)AS_FUNCTION(func).bytecode;
 	fn(interpreter, &arguments);
@@ -1475,7 +1483,9 @@ static bool execIndex(Interpreter* interpreter) {
 	freeLiteral(second);
 	freeLiteral(first);
 	freeLiteral(compound);
-	freeLiteral(idn);
+	if (freeIdn) {
+		freeLiteral(idn);
+	}
 	freeLiteral(func);
 	freeLiteral(key);
 	freeLiteralArray(&arguments);
@@ -1492,28 +1502,20 @@ static bool execIndexAssign(Interpreter* interpreter) {
 	Literal first = popLiteralArray(&interpreter->stack);
 	Literal compound = popLiteralArray(&interpreter->stack);
 
-	if (!IS_IDENTIFIER(compound)) {
-		interpreter->errorOutput("Unknown literal found in index assigning notation\n");
-		printLiteralCustom(compound, interpreter->errorOutput);
-		interpreter->errorOutput("\n");
-		freeLiteral(assign);
-		freeLiteral(third);
-		freeLiteral(second);
-		freeLiteral(first);
-		freeLiteral(compound);
-		return false;
-	}
-
 	Literal idn = compound;
+	bool freeIdn = false;
 
-	if (!parseIdentifierToValue(interpreter, &compound)) {
-		freeLiteral(assign);
-		freeLiteral(third);
-		freeLiteral(second);
-		freeLiteral(first);
-		freeLiteral(compound);
-		freeLiteral(idn);
-		return false;
+	if (IS_IDENTIFIER(compound)) {
+		freeIdn = true;
+		if (!parseIdentifierToValue(interpreter, &compound)) {
+			freeLiteral(assign);
+			freeLiteral(third);
+			freeLiteral(second);
+			freeLiteral(first);
+			freeLiteral(compound);
+			freeLiteral(idn);
+			return false;
+		}
 	}
 
 	if (!IS_ARRAY(compound) && !IS_DICTIONARY(compound) && !IS_STRING(compound)) {
@@ -1523,23 +1525,28 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		freeLiteral(second);
 		freeLiteral(first);
 		freeLiteral(compound);
-		freeLiteral(idn);
+		if (freeIdn) {
+			freeLiteral(idn);
+		}
 		return false;
 	}
 
-	//check const-ness of "first" within "compound"
-	Literal type = getScopeType(interpreter->scope, idn);
-	if ((AS_TYPE(type).typeOf == LITERAL_ARRAY && AS_TYPE(((Literal*)(AS_TYPE(type).subtypes))[0]).constant) || (AS_TYPE(type).typeOf == LITERAL_DICTIONARY && AS_TYPE(((Literal*)(AS_TYPE(type).subtypes))[1]).constant)) {
-		interpreter->errorOutput("couldn't assign to constant within compound within index assigning notation\n");
-		freeLiteral(assign);
-		freeLiteral(third);
-		freeLiteral(second);
-		freeLiteral(first);
-		freeLiteral(compound);
-		freeLiteral(idn);
-		freeLiteral(type);
-		return false;
-	}
+	//TODO: come back to this
+	// //check const-ness of "first" within "compound"
+	// Literal type = getScopeType(interpreter->scope, idn);
+	// if ((AS_TYPE(type).typeOf == LITERAL_ARRAY && AS_TYPE(((Literal*)(AS_TYPE(type).subtypes))[0]).constant) || (AS_TYPE(type).typeOf == LITERAL_DICTIONARY && AS_TYPE(((Literal*)(AS_TYPE(type).subtypes))[1]).constant)) {
+	// 	interpreter->errorOutput("couldn't assign to constant within compound within index assigning notation\n");
+	// 	freeLiteral(assign);
+	// 	freeLiteral(third);
+	// 	freeLiteral(second);
+	// 	freeLiteral(first);
+	// 	freeLiteral(compound);
+	// 	if (freeIdn) {
+	// 		freeLiteral(idn);
+	// 	}
+	// 	freeLiteral(type);
+	// 	return false;
+	// }
 
 	//get the index function
 	Literal func = TO_NULL_LITERAL;
@@ -1554,8 +1561,10 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		freeLiteral(second);
 		freeLiteral(first);
 		freeLiteral(compound);
-		freeLiteral(idn);
-		freeLiteral(type);
+		if (freeIdn) {
+			freeLiteral(idn);
+		}
+		// freeLiteral(type);
 		freeLiteral(func);
 		freeLiteral(key);
 		return false;
@@ -1591,8 +1600,10 @@ static bool execIndexAssign(Interpreter* interpreter) {
 			freeLiteral(second);
 			freeLiteral(first);
 			freeLiteral(compound);
-			freeLiteral(idn);
-			freeLiteral(type);
+			if (freeIdn) {
+				freeLiteral(idn);
+			}
+			// freeLiteral(type);
 			freeLiteral(func);
 			freeLiteral(key);
 			return false;
@@ -1618,7 +1629,49 @@ static bool execIndexAssign(Interpreter* interpreter) {
 
 	//save the result (assume top of the interpreter stack is the new compound value)
 	Literal result = popLiteralArray(&interpreter->stack);
-	if (!setScopeVariable(interpreter->scope, idn, result, true)) {//TODO: check this const-ness
+
+	//if idn is NOT an identifier, assign backwards while there are things on the stack (inner-compound assignment, BIG assumptions here)
+	if (!IS_IDENTIFIER(idn)) {
+		while (interpreter->stack.count > 1) {
+			//read the new values
+			freeLiteral(idn);
+			freeLiteral(third);
+			freeLiteral(second);
+			freeLiteral(first);
+			freeLiteralArray(&arguments);
+			initLiteralArray(&arguments);
+			freeLiteral(op);
+
+			third = popLiteralArray(&interpreter->stack);
+			second = popLiteralArray(&interpreter->stack);
+			first = popLiteralArray(&interpreter->stack);
+			idn = popLiteralArray(&interpreter->stack);
+
+			char* opStr = "="; //shadow, but force assignment
+			int opLength = strlen(opStr);
+			op = TO_STRING_LITERAL(copyString(opStr, opLength), opLength);
+
+			//assign to the idn / compound - with _index
+			pushLiteralArray(&arguments, idn);
+			pushLiteralArray(&arguments, first);
+			pushLiteralArray(&arguments, second);
+			pushLiteralArray(&arguments, third);
+			pushLiteralArray(&arguments, result);
+			pushLiteralArray(&arguments, op);
+
+			fn(interpreter, &arguments);
+
+			freeLiteral(result);
+			result = popLiteralArray(&interpreter->stack);
+		}
+
+		freeLiteral(idn);
+		idn = popLiteralArray(&interpreter->stack);
+		compound = idn;
+		// freeIdn = true;
+	}
+
+	if (IS_IDENTIFIER(idn) && !setScopeVariable(interpreter->scope, idn, result, true)) {
 		interpreter->errorOutput("Incorrect type assigned to compound member: ");
 		printLiteralCustom(result, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
@@ -1629,9 +1682,11 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		freeLiteral(second);
 		freeLiteral(first);
 		freeLiteral(compound);
-		freeLiteral(idn);
+		if (freeIdn) {
+			freeLiteral(idn);
+		}
 		freeLiteral(func);
-		freeLiteral(type);
+		// freeLiteral(type);
 		freeLiteral(key);
 		freeLiteral(op);
 		freeLiteralArray(&arguments);
@@ -1645,9 +1700,11 @@ static bool execIndexAssign(Interpreter* interpreter) {
 	freeLiteral(second);
 	freeLiteral(first);
 	freeLiteral(compound);
-	freeLiteral(idn);
+	if (freeIdn) {
+		freeLiteral(idn);
+	}
 	freeLiteral(func);
-	freeLiteral(type);
+	// freeLiteral(type);
 	freeLiteral(key);
 	freeLiteral(op);
 	freeLiteralArray(&arguments);
@@ -1871,7 +1928,13 @@ static void execInterpreter(Interpreter* interpreter) {
 			break;
 
 			case OP_INDEX:
-				if (!execIndex(interpreter)) {
+				if (!execIndex(interpreter, false)) {
+					return;
+				}
+			break;
+
+			case OP_INDEX_ASSIGN_INTERMEDIATE:
+				if (!execIndex(interpreter, true)) {
 					return;
 				}
 			break;

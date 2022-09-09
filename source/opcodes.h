@@ -51,6 +51,7 @@ typedef enum Opcode {
 	//for indexing
 	OP_INDEX,
 	OP_INDEX_ASSIGN,
+	OP_INDEX_ASSIGN_INTERMEDIATE,
 	OP_DOT,
 
 	//comparison of values

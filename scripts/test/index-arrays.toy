@@ -61,4 +61,15 @@
 	assert week[first:second:third] == ["wednesday", "tuesday"], "indexing with variables failed";
 }
 
+
+//test nested indexing
+{
+	var a = [[[0]]];
+
+	a[0][0][0] = 42;
+
+	assert a[0][0] == [42], "nested indexing failed";
+}
+
+
 print "All good";

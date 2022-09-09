@@ -27,4 +27,17 @@
 	assert d[first] == 2, "indexing with variables failed";
 }
 
+
+//test nested indexing
+{
+	var d = ["foo": ["bar": 0]];
+
+	d["foo"]["bar"] = 42;
+
+	print d;
+
+	assert d == ["foo": ["bar": 42]], "nested indexing failed";
+}
+
+
 print "All good";

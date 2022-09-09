@@ -1,10 +1,11 @@
 
 
+//test nested indexing
+{
+	var a = [[[0]]];
 
-fn loop(count) {
-	print count++;
-
-	loop(count);
+	a[0][0][0] = 42;
+print a;
+	assert a[0][0] == [42], "nested indexing failed";
 }
 
-loop(0);
