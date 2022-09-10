@@ -20,12 +20,10 @@ The host will provide all of the extensions needed on a case-by-case basis. Scri
 # Getting Started
 
 * [Quick Start Guide](quick-start-guide)
-* [Tutorials](tutorials)
-* [Developing With Toy](developing-with-toy)
+* ~~[Tutorials](tutorials)~~
+* ~~[Developing With Toy](developing-with-toy)~~
 * [Types](types)
-* [Functions](functions)
-* [Slice Notation](slice-notation)
-* [Standard Libary](standard-library)
+* ~~[Standard Libary](standard-library)~~
 
 # Version Differences
 

@@ -109,7 +109,7 @@ The `_index` function is simply used for slice notation, so it's recommended tha
 
 ## Slice Notation
 
-When indexing a compound value, you can use slice notation to manipulate it's elements
+When indexing a compound value, you can use slice notation to manipulate it's elements:
 
 ```
 var greeting = "Hello world";
