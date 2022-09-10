@@ -791,6 +791,11 @@ static Opcode dot(Parser* parser, Node** nodeHandle) {
 
 	parsePrecedence(parser, &node, PREC_CALL);
 
+	if (node == NULL || node->binary.right == NULL) {
+		error(parser, parser->previous, "Expected function call after dot operator");
+		return OP_EOF;
+	}
+
 	//hijack the function call, and hack in an extra parameter
 	node->binary.right->fnCall.argumentCount++;
 	node->binary.opcode = OP_DOT;

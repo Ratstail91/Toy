@@ -139,7 +139,7 @@ static Token makeIntegerOrFloat(Lexer* lexer) {
 
 	while(isDigit(lexer)) advance(lexer);
 
-	if (peek(lexer) == '.') {
+	if (peek(lexer) == '.' && (peekNext(lexer) >= '0' && peekNext(lexer) <= '9')) { //BUGFIX: peekNext == digit
 		type = TOKEN_LITERAL_FLOAT;
 		advance(lexer);
 		while(isDigit(lexer)) advance(lexer);
