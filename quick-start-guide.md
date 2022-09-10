@@ -115,5 +115,7 @@ When indexing a compound value, you can use slice notation to manipulate it's el
 var greeting = "Hello world";
 
 print greeting[::-1]; //dlrow olleH
+
+greeting[0:4] = "Goodnight"; //changes greeting to equal "Goodnight world"
 ```
 
