@@ -8,7 +8,7 @@ print typeof value;
 
 The types available are:
 
-| Type | signature | Description |
+| Type | Signature | Description |
 | --- | --- | --- |
 | null | null | Represents a lack of any meaningful value, also has the type of "null" |
 | boolean | bool | Either true or false |

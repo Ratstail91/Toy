@@ -21,9 +21,11 @@ The host will provide all of the extensions needed on a case-by-case basis. Scri
 
 * [Quick Start Guide](quick-start-guide)
 * [Tutorials](tutorials)
+* [Developing With Toy](developing-with-toy)
 * [Types](types)
 * [Functions](functions)
-* [Developing With Toy](developing-with-toy)
+* [Slice Notation](slice-notation)
+* [Standard Libary](standard-library)
 
 # Version Differences
 
