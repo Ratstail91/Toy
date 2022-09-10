@@ -124,7 +124,7 @@ void parseCompoundToPureValues(Interpreter* interpreter, Literal* literalPtr) {
 			freeLiteral(value);
 		}
 
-		freeLiteralDictionary(AS_DICTIONARY(*literalPtr));
+		freeLiteral(*literalPtr);
 		*literalPtr = TO_DICTIONARY_LITERAL(ret);
 	}
 }
