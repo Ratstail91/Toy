@@ -1,11 +1,6 @@
-
-
-//test nested indexing
-{
-	var a = [[[0]]];
-
-	a[0][0][0] = 42;
-print a;
-	assert a[0][0] == [42], "nested indexing failed";
+fn omitFirstInteger(arg1: int, ...rest) {
+	//rest comes in as an array of any
+	return rest;
 }
 
+print omitFirstInteger(1, 2, 3);

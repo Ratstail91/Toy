@@ -97,7 +97,7 @@ static bool checkType(Literal typeLiteral, Literal original, Literal value, bool
 			return false;
 		}
 
-		//if null, assume it's a new entry
+		//if null, assume it's a new entry to a parent
 		if (IS_NULL(original)) {
 			return true;
 		}

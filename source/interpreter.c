@@ -72,6 +72,63 @@ bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr) {
 	return true;
 }
 
+void parseCompoundToPureValues(Interpreter* interpreter, Literal* literalPtr) {
+	parseIdentifierToValue(interpreter, literalPtr);
+
+	//parse out an array
+	if (IS_ARRAY(*literalPtr)) {
+		for (int i = 0; i < AS_ARRAY(*literalPtr)->count; i++) {
+			Literal index = TO_INTEGER_LITERAL(i);
+			Literal entry = getLiteralArray(AS_ARRAY(*literalPtr), index);
+
+			if (IS_IDENTIFIER( entry )) {
+				Literal idn = entry;
+				parseCompoundToPureValues(interpreter, &entry);
+
+				setLiteralArray(AS_ARRAY(*literalPtr), index, entry);
+
+				freeLiteral(idn);
+			}
+
+			freeLiteral(index);
+			freeLiteral(entry);
+		}
+	}
+
+	//parse out a dictionary
+	if (IS_DICTIONARY(*literalPtr)) {
+		LiteralDictionary* ret = ALLOCATE(LiteralDictionary, 1);
+		initLiteralDictionary(ret);
+
+		for (int i = 0; i < AS_DICTIONARY(*literalPtr)->capacity; i++) {
+			if ( IS_NULL(AS_DICTIONARY(*literalPtr)->entries[i].key) ) {
+				continue;
+			}
+
+			Literal key = TO_NULL_LITERAL;
+			Literal value = TO_NULL_LITERAL;
+
+			key = copyLiteral(AS_DICTIONARY(*literalPtr)->entries[i].key);
+			value = copyLiteral(AS_DICTIONARY(*literalPtr)->entries[i].value);
+
+			//
+			if (IS_IDENTIFIER( key ) || IS_IDENTIFIER(value)) {
+				parseCompoundToPureValues(interpreter, &key);
+				parseCompoundToPureValues(interpreter, &value);
+			}
+
+			setLiteralDictionary(ret, key, value);
+
+			//
+			freeLiteral(key);
+			freeLiteral(value);
+		}
+
+		freeLiteralDictionary(AS_DICTIONARY(*literalPtr));
+		*literalPtr = TO_DICTIONARY_LITERAL(ret);
+	}
+}
+
 //utilities for the host program
 void setInterpreterPrint(Interpreter* interpreter, PrintFn printOutput) {
 	interpreter->printOutput = printOutput;
@@ -479,6 +536,10 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 		freeLiteral(idn);
 	}
 
+	if (IS_ARRAY(val) || IS_DICTIONARY(val)) {
+		parseCompoundToPureValues(interpreter, &val);
+	}
+
 	if (!IS_NULL(val) && !setScopeVariable(interpreter->scope, identifier, val, false)) {
 		interpreter->errorOutput("Incorrect type assigned to variable \"");
 		printLiteralCustom(identifier, interpreter->errorOutput);
@@ -547,6 +608,10 @@ static bool execVarAssign(Interpreter* interpreter) {
 		Literal idn = rhs;
 		parseIdentifierToValue(interpreter, &rhs);
 		freeLiteral(idn);
+	}
+
+	if (IS_ARRAY(rhs) || IS_DICTIONARY(rhs)) {
+		parseCompoundToPureValues(interpreter, &rhs);
 	}
 
 	if (!IS_IDENTIFIER(lhs)) {
@@ -1305,6 +1370,11 @@ static bool execFnReturn(Interpreter* interpreter) {
 			parseIdentifierToValue(interpreter, &lit);
 			freeLiteral(idn);
 		}
+
+		if (IS_ARRAY(lit) || IS_DICTIONARY(lit)) {
+			parseCompoundToPureValues(interpreter, &lit);
+		}
+
 		pushLiteralArray(&returns, lit); //reverses the order
 		freeLiteral(lit);
 	}

@@ -1,10 +1,6 @@
-# Preamble
-
-The Toy Programming Language is an experiment by yours truly to try and make a simple general purpose programming language. I've tried several times in the past to develop it, with varying levels of success. I'm currently writing this specification to hash out the basics of a potential version 0.6.0, which would be developed as a scripting language of some sort. I'm also marking this as RFC, since I want some feedback from the community - this post will be updated and developed as time progresses.
-
 # Premise
 
-The Toy programming language isn't intended to operate on it's own, but rather as part of another program (the "host"). This process should be able to allow a decent amount of easy customisation by the end user, by exposing logic in script files. Alternatively, binary files in a custom format can be used as well.
+The Toy programming language is a procedural bytecode-intermediate interpreted language. It isn't intended to operate on it's own, but rather as part of another program (the "host"). This process is intended to allow a decent amount of easy customisation by the host's end user, by exposing logic in script files. Alternatively, binary files in a custom format can be used as well.
 
 The host will provide all of the extensions needed on a case-by-case basis. Script files have the `.toy` file extension, while binary files have the `.tb` file extension.
 
@@ -12,7 +8,7 @@ The host will provide all of the extensions needed on a case-by-case basis. Scri
 
 ## Comments
 
-Toy supports two types of comments, `//single line` and `/* block */`. Comments are used to leave notes for yourself in the code; they are ignored by the parser.
+Toy supports two types of comments, `//single line` and `/* block */`. Comments are used to leave notes for yourself in the code; they are ignored by the lexer.
 
 ## Naming
 
@@ -28,23 +24,23 @@ The following list of keywords cannot be used as names, due to their significanc
 * assert
 * bool
 * break
-* class
+* class (reserved)
 * const
 * continue
-* do
+* do (reserved)
 * else
 * export
 * false
 * float
 * fn
 * for
-* foreach
+* foreach (reserved)
 * if
 * import
-* in
+* in (reserved)
 * int
 * null
-* of
+* of (reserved)
 * print
 * return
 * string
@@ -65,10 +61,10 @@ The following mathematical operators are available. A definition is omitted here
 Likewise, the following logical operators are available (`&&` is more tightly bound than `||` due to historical reasons):
 
 ```
-(  )  [  ]  {  } ?:  !  !=  ==  <  >  <=  >=  &&  ||
+(  )  [  ]  {  }  !  !=  ==  <  >  <=  >=  &&  ||
 ```
 
-Other operators used throughout the language are: the assignment, colon, semicolon, comma, dot, rest operators:
+Other operators used throughout the language are: the assignment, colon, semicolon, comma, dot and rest operators:
 
 ```
 = : ; , . ...
@@ -76,12 +72,12 @@ Other operators used throughout the language are: the assignment, colon, semicol
 
 ## Types
 
-Variable names in Toy may have a type. These types are:
+Variables in Toy may have a type. These types are:
 
-* null - no value assigned
+* null - no value assigned (cannot be specified as a type, only a value)
 * boolean - either `true` or `false`
-* integer - any whole number
-* float - any floating point number
+* integer - any whole number (limits are implementation dependant)
+* float - any floating point number (limits are implementation dependant)
 * string - a string of characters enclosed in double quotation marks
 * array - a collection of 0-indexed variables
 * dictionary - a collection of indexable key-value pairs
@@ -103,10 +99,10 @@ Types are not interoperable, but in some cases they can be converted from one ty
 var y : float = float x;
 ```
 
-Defining the type of a variable is not required - in such a case, the type is "any".
+Defining the type of a variable is not required - in such a case, the type defaults to "any".
 
 ```
-//define the variable named "v" with any type
+//define the variable named "z" with any type
 var z = 1;
 ```
 
@@ -118,13 +114,20 @@ var t: type = int;
 var u: t = 42;
 ```
 
-To force a type instead of an array, use the `astype` keyword:
+To force a type value instead of an array, use the `astype` keyword:
 
 ```
 var a = [type]; //array containing the type "type"
 var b = astype [type]; //type of array of types
 
 var d = b; //types can be re-assigned to other variables
+```
+
+When printed, a type is surrounded by `<>` markers in the output.
+
+```
+print a; //[<type>]
+print b; //<[<type>]>
 ```
 
 ## Const
@@ -137,7 +140,12 @@ var foo: int const = 42;
 foo++; //Error!
 ```
 
-Otherwise, constants act just like normal variables.
+Also, entire compounds (arrays or dictionaries) can be const, or the indiviudal members can be const without the entire compound being const.
+
+```
+var a: [int const] = [1, 2, 3]; //1, 2, and 3 can't be altered, but a can have new members added
+var b: [int] const = [1, 2, 3]; //1, 2, and 3 can't be altered, nor can b be altered
+```
 
 ## Truthyness
 
@@ -153,14 +161,13 @@ print "Hello world";
 
 ## Var
 
-To declare a variable, use the keyword `var`, followed by it's name, and an optional colon and type:
+To declare a variable, use the keyword `var`, followed by it's name, an optional colon and type, and finally an optional assign operator and initial value:
 
 ```
 var foo: int = 42;
 
 var bar = "hello world";
 
-//for "var", a value is not required
 var buzz;
 ```
 
@@ -168,7 +175,7 @@ Variables can be used in place of values at any time, and can be altered and re-
 
 ## If-Else
 
-The keywords `if` and `else` are used to determine different paths of execution that the program can take, based on a condition. If the condition is truthy, then the `if`-path executes, otherwise the `else`-path does. The else keyword and path are optional.
+The keywords `if` and `else` are used to determine different paths of execution that the program can take, based on a condition. If the condition is truthy (i.e. not `false`), then the `if`-path executes, otherwise the `else`-path does. The else keyword and path are optional.
 
 ```
 if (1 < 2) {
@@ -253,7 +260,7 @@ for (var i: int = 0; i < 10; i++) {
 
 //restart a loop early (will still execute the third clause before continuing)
 for (var i: int = 0; i < 10; i++) {
-	if (i >= 7) {
+	if (i > 7) {
 		continue;
 	}
 	print i;
@@ -270,38 +277,34 @@ fn doSomething() {
 }
 ```
 
-Functions can take a set number of parameters within the parenthesis following their names, and can return a number of values to the calling context using the return keyword.
+Functions can take a set number of parameters within the parenthesis following their names, and can return a value to the calling context using the return keyword.
 
 ```
-fn reverseOrder(a, b, c) { //return type isn't required by default
-	return c, b, a;
+fn combine(a, b, c) { //return type isn't required by default
+	return [a, b, c];
 }
 ```
 
-You can define the required return types using a colon after the parameter list, followed by a comma separated list of required returns.
+You can define the required return type using a colon after the parameter list, followed by the type.
 
 ```
-fn reverseIntegers(a: int, b: int, c: int): int, int, int {
-	return c, b, a; //must return three integers
+fn combine(a, b, c): [int] {
+	return [a, b, c];
 }
 ```
 
-Functions are called by invoking their names, followed by the parenthesis-enclosed list of arguments. When returning multiple values, the target variables are assigned from left to right until there is a mismatched number of variables or values (remaining variables become null).
+Functions are called by invoking their names, followed by the parenthesis-enclosed list of arguments.
 
 ```
 simple();
 
-var a, b, c = reverseOrder(1, 2, 3);
-
-var d, e, f = reverseIntegers(4, 5, 6);
-
-var g = reverseIntegers(7, 8, 9); //only 9 is returned
+var a = combine(1, 2, 3); //how to get a returned value from a function
 ```
 
 Functions are first-class citizens, meaning they can be declared and treated like variables. Closures are explicitly supported.
 
 ```
-fn counterFactory(): fn()(int) { //returns a function with 0 parameters and 1 integer return
+fn counterFactory(): fn { //returns a function
 	var total: int = 0;
 
 	fn counter(): int {
@@ -325,11 +328,6 @@ fn omitFirstArgument(arg1, ...rest) {
 	//"rest" comes in as an array of any type
 	return rest;
 }
-
-fn omitFirstInteger(arg1: int, ...rest: [int]) {
-	//rest comes in as an array of integers
-	return rest;
-}
 ```
 
 ## Assert
@@ -348,7 +346,7 @@ assert false, "This is not"; //Error!
 ```
 import standard;
 
-print standard.clock(); //the clock function is provided by standard
+print clock(); //the clock function is provided by standard, via a library hook
 
 import standard as std;
 
@@ -404,9 +402,7 @@ To create an array of constants, use the `const` keyword in the type definition 
 ```
 var arr: [int const] = [1, 2, 3]; //1, 2 and 3 are constant, but arr is not
 
-var arr: [int] const = [1, 2, 3]; //arr is constant, but it's members are not (the members can be altered)
-
-var arr: [int const] const = [1, 2, 3]; //both arr and it's members are constant
+var arr: [int] const = [1, 2, 3]; //the entire thing is constant
 ```
 
 Arrays can be indexed using traditional bracket notation.
@@ -416,24 +412,24 @@ Arrays can be indexed using traditional bracket notation.
 Dictionaries are key-value collections of variables. Every key has a single associated value; any missing value is considered `null`. `null` is an invalid key type. Nesting dictionaries within themselves is not allowed.
 
 ```
-var dict: [string, string] = ["key one": "value one", "key two": "value two"];
+var dict: [string:string] = ["key one": "value one", "key two": "value two"];
 
 print dict["key one"]; //value one
 
-var dictTwo: [int, int] = [:]; //empty dictionary
+var dictTwo: [int:int] = [:]; //empty dictionary
 ```
 
 Keys, values and dictionaries can be declared const, like so:
 
 ```
-var dict: [string const, int const] const = [
+var dict: [string const:int const] const = [
 	"one": 1,
 	"two": 2,
 	"three": 3
 ];
 ```
 
-Dictionaries can be indexed using traditional bracket notation. Existing elements can be accessed or overwritten, or new ones inserted if they don't already exist this way by using the standard library functions.
+Dictionaries can be indexed using traditional bracket notation. Existing elements can be accessed or overwritten, or new ones inserted if they don't already exist this way.
 
 ```
 dict["foo"] = "bar";
@@ -486,7 +482,7 @@ print str[::-2]; //drwolH
 
 ### Globally Available Functions
 
-The dot notation can be used to acces the globally available functions, like so:
+The dot notation can be used to access the globally available functions, like so:
 
 ```
 obj.function(); //passes in obj as the first argument
@@ -495,7 +491,7 @@ obj.function(); //passes in obj as the first argument
 A list of globally available functions is:
 
 ```
-//usable with arrays, dictionaries and strings - probably a good idea not to use this one, just use index notation
+//usable with arrays, dictionaries and strings - probably a good idea not to use this one, just use index and slice notation
 fn _index(self, first, second, third, assign, op) {
 	//native code
 }
@@ -531,7 +527,7 @@ fn _clear(self) {
 }
 ```
 
-## Standard Library
+# Standard Library
 
 The standard library has a number of utility functions available, and is provided by default.
 
@@ -579,6 +575,28 @@ The following features are under consideration, but will not be explicitly plann
 ## Foreach-Of and Foreach-In
 
 These could be used to iterate over the keys and values of dictionaries, respectfully. They could also be applied to arrays and strings.
+
+## Do-While
+
+An alternative version of the while-loop, this structure may be implemented at some point - for the time being, due to the incredibly rare usage, it has been omitted.
+
+## Ternary Operator
+
+The `?:` operator may be implemented at some point due to it's ubiquity.
+
+## Const-ness and Compounds
+
+Ideally, I'd like internal elements of compounds and external members to not share const-ness. Unfortunately, implementation details makes this unviable at this time.
+
+```
+var a: [int const] = [1, 2, 3]; //1, 2, and 3 can't be altered, but a can have new members added
+var b: [int] const = [1, 2, 3]; //1, 2, and 3 can be altered, but b can't be altered or re-assigned
+var c: [int const] const = [1, 2, 3]; //nothing here can change
+```
+
+## Multiple Return Types
+
+It would be nice to have mutliple return types from functions at some point.
 
 ## Classes, Inheritance and Prototypes
 

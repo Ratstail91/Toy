@@ -1471,7 +1471,9 @@ static Literal readTypeToLiteral(Parser* parser) {
 		}
 		break;
 
-		//TODO: function?
+		case TOKEN_FUNCTION:
+			AS_TYPE(literal).typeOf = LITERAL_FUNCTION;
+		break;
 
 		case TOKEN_ANY:
 			AS_TYPE(literal).typeOf = LITERAL_ANY;
