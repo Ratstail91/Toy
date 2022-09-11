@@ -8,20 +8,19 @@ ODIR = obj
 SRC = $(filter-out $(wildcard *main.c),$(wildcard *.c))
 OBJ = $(addprefix $(ODIR)/,$(SRC:.c=.o))
 
-OUTNAME = toy
-OUT = ../$(OUTDIR)/$(OUTNAME)
+OUTNAME=toy
 
 ifeq ($(findstring CYGWIN, $(shell uname)),CYGWIN)
 	LIBLINE =-Wl,--out-implib=../$(OUTDIR)/lib$(OUTNAME).dll.a -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--whole-archive $(OBJ) -Wl,--no-whole-archive
-	OUT +=.dll
+	OUT=../$(OUTDIR)/$(OUTNAME).dll
 else ifeq ($(shell uname),Linux)
 	#I can't get this working as a shared lib
 	LIBLINE=-Wl,--out-implib=../$(OUTDIR)/lib$(OUTNAME).a -Wl,--whole-archive $(OBJ) -Wl,--no-whole-archive
-	OUT = ../$(OUTDIR)/$(OUTNAME)
+	OUT=../$(OUTDIR)/$(OUTNAME)
 	CFLAGS += -fPIC
 else ifeq ($(OS),Windows_NT)
 	LIBLINE =-Wl,--out-implib=../$(OUTDIR)/lib$(OUTNAME).dll.a -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--whole-archive $(OBJ) -Wl,--no-whole-archive
-	OUT +=.dll
+	OUT=../$(OUTDIR)/$(OUTNAME).dll
 else
 	@echo "Platform test failed - what platform is this?"
 	exit 1
