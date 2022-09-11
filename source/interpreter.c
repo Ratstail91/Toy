@@ -56,24 +56,10 @@ bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func) {
 	return true;
 }
 
-bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr) {
-	//this converts identifiers to values
-	if (IS_IDENTIFIER(*literalPtr)) {
-	//	Literal idn = *literalPtr;
-		if (!getScopeVariable(interpreter->scope, *literalPtr, literalPtr)) {
-			interpreter->errorOutput("Undeclared variable ");;
-			printLiteralCustom(*literalPtr, interpreter->errorOutput);
-			interpreter->errorOutput("\n");
-			return false;
-		}
-	//	freeLiteral(idn);
-	}
-
-	return true;
-}
-
 void parseCompoundToPureValues(Interpreter* interpreter, Literal* literalPtr) {
-	parseIdentifierToValue(interpreter, literalPtr);
+	if (IS_IDENTIFIER(*literalPtr)) {
+		parseIdentifierToValue(interpreter, literalPtr);
+	}
 
 	//parse out an array
 	if (IS_ARRAY(*literalPtr)) {
@@ -127,6 +113,24 @@ void parseCompoundToPureValues(Interpreter* interpreter, Literal* literalPtr) {
 		freeLiteral(*literalPtr);
 		*literalPtr = TO_DICTIONARY_LITERAL(ret);
 	}
+}
+
+bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr) {
+	//this converts identifiers to values
+	if (IS_IDENTIFIER(*literalPtr)) {
+		if (!getScopeVariable(interpreter->scope, *literalPtr, literalPtr)) {
+			interpreter->errorOutput("Undeclared variable ");
+			printLiteralCustom(*literalPtr, interpreter->errorOutput);
+			interpreter->errorOutput("\n");
+			return false;
+		}
+	}
+
+	if (IS_ARRAY(*literalPtr) || IS_DICTIONARY(*literalPtr)) {
+		parseCompoundToPureValues(interpreter, literalPtr);
+	}
+
+	return true;
 }
 
 //utilities for the host program
