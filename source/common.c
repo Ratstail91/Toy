@@ -2,6 +2,20 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
+
+//test variable sizes based on platform
+#define STATIC_ASSERT(test_for_true) static_assert((test_for_true), "(" #test_for_true ") failed")
+
+STATIC_ASSERT(sizeof(char) == 1);
+STATIC_ASSERT(sizeof(short) == 2);
+STATIC_ASSERT(sizeof(int) == 4);
+STATIC_ASSERT(sizeof(float) == 4);
+STATIC_ASSERT(sizeof(unsigned char) == 1);
+STATIC_ASSERT(sizeof(unsigned short) == 2);
+STATIC_ASSERT(sizeof(unsigned int) == 4);
+
+#ifndef TOY_EXPORT
 
 //declare the singleton
 Command command;
@@ -107,3 +121,5 @@ void copyrightCommand(int argc, const char* argv[]) {
 	printf("2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.\n\n");
 	printf("3. This notice may not be removed or altered from any source distribution.\n\n");
 }
+
+#endif

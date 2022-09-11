@@ -109,10 +109,12 @@ static Token makeErrorToken(Lexer* lexer, char* msg) {
 	token.length = strlen(msg);
 	token.line = lexer->line;
 
+#ifndef TOY_EXPORT
 	if (command.verbose) {
 		printf("err:");
 		printToken(&token);
 	}
+#endif
 
 	return token;
 }
@@ -125,11 +127,13 @@ static Token makeToken(Lexer* lexer, TokenType type) {
 	token.lexeme = &lexer->source[lexer->current - token.length];
 	token.line = lexer->line;
 
+#ifndef TOY_EXPORT
 	//BUG #10: this shows TOKEN_EOF twice due to the overarching structure of the program - can't be fixed
 	if (command.verbose) {
 		printf("tok:");
 		printToken(&token);
 	}
+#endif
 
 	return token;
 }
@@ -152,6 +156,7 @@ static Token makeIntegerOrFloat(Lexer* lexer) {
 	token.length = lexer->current - lexer->start;
 	token.line = lexer->line;
 
+#ifndef TOY_EXPORT
 	if (command.verbose) {
 		if (type == TOKEN_LITERAL_INTEGER) {
 			printf("int:");
@@ -160,6 +165,7 @@ static Token makeIntegerOrFloat(Lexer* lexer) {
 		}
 		printToken(&token);
 	}
+#endif
 
 	return token;
 }
@@ -182,10 +188,12 @@ static Token makeString(Lexer* lexer, char terminator) {
 	token.length = lexer->current - lexer->start - 2;
 	token.line = lexer->line;
 
+#ifndef TOY_EXPORT
 	if (command.verbose) {
 		printf("str:");
 		printToken(&token);
 	}
+#endif
 
 	return token;
 }
@@ -207,10 +215,12 @@ static Token makeKeywordOrIdentifier(Lexer* lexer) {
 			token.length = lexer->current - lexer->start;
 			token.line = lexer->line;
 
+#ifndef TOY_EXPORT
 			if (command.verbose) {
 				printf("kwd:");
 				printToken(&token);
 			}
+#endif
 
 			return token;
 		}
@@ -224,10 +234,12 @@ static Token makeKeywordOrIdentifier(Lexer* lexer) {
 	token.length = lexer->current - lexer->start;
 	token.line = lexer->line;
 
+#ifndef TOY_EXPORT
 	if (command.verbose) {
 		printf("idf:");
 		printToken(&token);
 	}
+#endif
 
 	return token;
 }

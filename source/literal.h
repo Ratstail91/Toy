@@ -94,7 +94,7 @@ typedef struct {
 #define TO_IDENTIFIER_LITERAL(value, l)		_toIdentifierLiteral(value, l)
 #define TO_TYPE_LITERAL(value, c)			((Literal){ LITERAL_TYPE,		{ .type.typeOf = value, .type.constant = c, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
 
-void freeLiteral(Literal literal);
+TOY_API void freeLiteral(Literal literal);
 
 #define IS_TRUTHY(x) _isTruthy(x)
 
@@ -103,17 +103,16 @@ void freeLiteral(Literal literal);
 #define TYPE_PUSH_SUBTYPE(lit, subtype)		_typePushSubtype(lit, subtype)
 
 //BUGFIX: macros are not functions
-bool _isTruthy(Literal x);
-Literal _toStringLiteral(char* str, int length);
-Literal _toIdentifierLiteral(char* str, int length);
-Literal* _typePushSubtype(Literal* lit, Literal subtype);
+TOY_API bool _isTruthy(Literal x);
+TOY_API Literal _toStringLiteral(char* str, int length);
+TOY_API Literal _toIdentifierLiteral(char* str, int length);
+TOY_API Literal* _typePushSubtype(Literal* lit, Literal subtype);
 
 //utils
-Literal copyLiteral(Literal original);
-char* copyString(char* original, int length);
-bool literalsAreEqual(Literal lhs, Literal rhs);
-int hashLiteral(Literal lit);
+TOY_API Literal copyLiteral(Literal original);
+TOY_API char* copyString(char* original, int length);
+TOY_API bool literalsAreEqual(Literal lhs, Literal rhs);
+TOY_API int hashLiteral(Literal lit);
 
-void printLiteral(Literal literal);
-void printLiteralCustom(Literal literal, void (printFn)(const char*));
-
+TOY_API void printLiteral(Literal literal);
+TOY_API void printLiteralCustom(Literal literal, void (printFn)(const char*));

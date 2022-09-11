@@ -1,7 +1,6 @@
 #pragma once
 
-#include "parser.h"
-
+#include "common.h"
 #include "lexer.h"
 #include "node.h"
 
@@ -16,6 +15,6 @@ typedef struct {
 	Token previous;
 } Parser;
 
-void initParser(Parser* parser, Lexer* lexer);
-void freeParser(Parser* parser);
-Node* scanParser(Parser* parser);
+TOY_API void initParser(Parser* parser, Lexer* lexer);
+TOY_API void freeParser(Parser* parser);
+TOY_API Node* scanParser(Parser* parser);

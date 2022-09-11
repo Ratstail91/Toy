@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.h"
 #include "literal.h"
 #include "literal_array.h"
 #include "literal_dictionary.h"
@@ -33,17 +34,17 @@ typedef struct Interpreter {
 
 //native function API
 typedef int (*NativeFn)(Interpreter* interpreter, LiteralArray* arguments);
-bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func);
+TOY_API bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func);
 //TODO: injectNativeHook
 
 //utilities for the host program
-bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr);
-void setInterpreterPrint(Interpreter* interpreter, PrintFn printOutput);
-void setInterpreterAssert(Interpreter* interpreter, PrintFn assertOutput);
-void setInterpreterError(Interpreter* interpreter, PrintFn errorOutput);
+TOY_API bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr);
+TOY_API void setInterpreterPrint(Interpreter* interpreter, PrintFn printOutput);
+TOY_API void setInterpreterAssert(Interpreter* interpreter, PrintFn assertOutput);
+TOY_API void setInterpreterError(Interpreter* interpreter, PrintFn errorOutput);
 
 //main access
-void initInterpreter(Interpreter* interpreter); //start of program
-void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length); //run the code
-void resetInterpreter(Interpreter* interpreter); //use this to reset the interpreter's environment between runs
-void freeInterpreter(Interpreter* interpreter); //end of program
+TOY_API void initInterpreter(Interpreter* interpreter); //start of program
+TOY_API void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length); //run the code
+TOY_API void resetInterpreter(Interpreter* interpreter); //use this to reset the interpreter's environment between runs
+TOY_API void freeInterpreter(Interpreter* interpreter); //end of program

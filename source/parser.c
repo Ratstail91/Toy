@@ -59,9 +59,11 @@ static void consume(Parser* parser, TokenType tokenType, const char* msg) {
 }
 
 static void synchronize(Parser* parser) {
+#ifndef TOY_EXPORT
 	if (command.verbose) {
 		fprintf(stderr, ERROR "synchronizing\n" RESET);
 	}
+#endif
 
 	while (parser->current.type != TOKEN_EOF) {
 		switch(parser->current.type) {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.h"
 #include "literal.h"
 #include "opcodes.h"
 #include "token_types.h"
@@ -153,7 +154,8 @@ union _node {
 	NodeIndex index;
 };
 
-void freeNode(Node* node);
+TOY_API void freeNode(Node* node);
+
 void emitNodeLiteral(Node** nodeHandle, Literal literal);
 void emitNodeUnary(Node** nodeHandle, Opcode opcode, Node* child);
 void emitNodeBinary(Node** nodeHandle, Node* rhs, Opcode opcode); //handled node becomes lhs

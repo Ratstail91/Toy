@@ -1,7 +1,7 @@
 #pragma once
 
+#include "common.h"
 #include "opcodes.h"
-
 #include "node.h"
 #include "literal_array.h"
 
@@ -13,9 +13,9 @@ typedef struct Compiler {
 	int count;
 } Compiler;
 
-void initCompiler(Compiler* compiler);
-void writeCompiler(Compiler* compiler, Node* node);
-void freeCompiler(Compiler* compiler);
+TOY_API void initCompiler(Compiler* compiler);
+TOY_API void writeCompiler(Compiler* compiler, Node* node);
+TOY_API void freeCompiler(Compiler* compiler);
 
-//embed the header with version information, data section, code section, etc.
-unsigned char* collateCompiler(Compiler* compiler, int* size);
+//embed the header, data section, code section, function section, etc.
+TOY_API unsigned char* collateCompiler(Compiler* compiler, int* size);

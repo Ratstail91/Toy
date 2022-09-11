@@ -19,7 +19,7 @@ typedef struct {
 	int line;
 } Token;
 
-void initLexer(Lexer* lexer, char* source);
+TOY_API void initLexer(Lexer* lexer, char* source);
 Token scanLexer(Lexer* lexer);
 
 //for debugging

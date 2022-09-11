@@ -9,6 +9,26 @@
 #define TOY_VERSION_PATCH 0
 #define TOY_VERSION_BUILD __DATE__ " " __TIME__
 
+//platform exports/imports
+#if defined(WIN32) || defined(_WIN32)
+
+#if defined(TOY_EXPORT)
+#define TOY_API __declspec(dllexport)
+#else
+#define TOY_API __declspec(dllimport)
+#endif
+
+#elif defined(linux)
+
+#define TOY_API extern
+
+#else
+
+#define TOY_API
+
+#endif
+
+#ifndef TOY_EXPORT
 //for processing the command line arguments
 typedef struct {
 	bool error;
@@ -29,6 +49,7 @@ void initCommand(int argc, const char* argv[]);
 void usageCommand(int argc, const char* argv[]);
 void helpCommand(int argc, const char* argv[]);
 void copyrightCommand(int argc, const char* argv[]);
+#endif
 
 //NOTE: assigning to a byte from a short loses data
 #define AS_USHORT(value) (*(unsigned short*)(&(value)))

@@ -3,6 +3,12 @@ export OUTDIR = out
 all: $(OUTDIR)
 	$(MAKE) -C source
 
+library: clean $(OUTDIR)
+	$(MAKE) -C source library
+
+static: clean $(OUTDIR)
+	$(MAKE) -C source static
+
 test: clean $(OUTDIR)
 	$(MAKE) -C test
 
