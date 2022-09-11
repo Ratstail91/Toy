@@ -4,6 +4,33 @@ This guide is intended to get you writing Toy code as fast as possible. As such,
 
 Toy programs begin at the top of the file, and continue until the end, unless an error is encountered.
 
+## Import and Export
+
+The interpreter has a set of variables referred to collectively as the "exports region" - these are intended for interfacing with the host program. To access these from the scripts, use `import`, like so:
+
+```
+import variable;
+
+print variable; //prints whatever literal was given "variable" as the identifier
+```
+
+Alternatively, to add something to the exports region, use `export`:
+
+```
+var variable = 1;
+
+export variable;
+```
+
+In the event of naming conflicts, you can rename imported and exported variables using the `as` keyword:
+
+```
+//assume "table" exists in the export region
+import table as newName;
+
+export newName as table2;
+```
+
 ## Hello World
 
 This prints to the stdout, and has a newline appended to the end. This can be altered by the host program.
