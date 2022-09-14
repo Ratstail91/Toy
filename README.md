@@ -16,6 +16,7 @@ The host will provide all of the extensions needed on a case-by-case basis. Scri
 * Optional, but robust type system
 * functions and types are first-class citizens
 * Fancy slice notation for strings, arrays and dictionaries
+* Open source under the zlib license
 
 # Getting Started
 

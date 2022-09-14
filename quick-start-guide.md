@@ -6,7 +6,7 @@ Toy programs begin at the top of the file, and continue until the end, unless an
 
 ## Import and Export
 
-The interpreter has a set of variables referred to collectively as the "exports region" - these are intended for interfacing with the host program. To access these from the scripts, use `import`, like so:
+Although hello world should be first, lets instead have a look at how you interface with the host program. The interpreter has a set of variables referred to collectively as the "exports region" - these are intended for interfacing with the host. To access these from the scripts, use `import`, like so:
 
 ```
 import variable;
@@ -124,12 +124,12 @@ There are several underscore functions provided by default:
 
 ```
 _index(self, first, second, third, assign, op) //don't use this
-_set(self, key, value)
-_get(self, key)
-_push(self, value)
-_pop(self)
-_length(self)
-_clear(self)
+_set(self, key, value)                         //array, dictionary
+_get(self, key)                                //array, dictionary
+_push(self, value)                             //array
+_pop(self)                                     //array
+_length(self)                                  //array, dictionary, string
+_clear(self)                                   //array, dictionary
 ```
 
 The `_index` function is simply used for slice notation, so it's recommended that you don't use it or overwrite it.
@@ -146,3 +146,15 @@ print greeting[::-1]; //dlrow olleH
 greeting[0:4] = "Goodnight"; //changes greeting to equal "Goodnight world"
 ```
 
+## Assertion Tests
+
+For testing purposes, there is the `assert` keyword. `assert` takes two arguments, separated by a comma; if the first resolves to a truthy value, then the whole statement is a no-op. Otherwise, the second argument, which MUST be a string, is displayed as an error and the script exits.
+
+```
+var answer = 42;
+
+assert answer == 42, "This will not be seen";
+
+//both false and null trigger assert's exit condition
+assert null, "This will be seen before the script exits";
+```
