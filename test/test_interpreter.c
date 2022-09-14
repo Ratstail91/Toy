@@ -165,6 +165,7 @@ int main() {
 		char* filenames[] = {
 			"arithmetic.toy",
 			"casting.toy",
+			"coercions.toy",
 			"comparisons.toy",
 			"dot-and-matrix.toy",
 			"functions.toy",

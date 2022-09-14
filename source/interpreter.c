@@ -544,6 +544,11 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 		parseCompoundToPureValues(interpreter, &val);
 	}
 
+	//BUGFIX: allow easy coercion on decl
+	if (AS_TYPE(type).typeOf == LITERAL_FLOAT && IS_INTEGER(val)) {
+		val = TO_FLOAT_LITERAL(AS_INTEGER(val));
+	}
+
 	if (!IS_NULL(val) && !setScopeVariable(interpreter->scope, identifier, val, false)) {
 		interpreter->errorOutput("Incorrect type assigned to variable \"");
 		printLiteralCustom(identifier, interpreter->errorOutput);
@@ -635,6 +640,12 @@ static bool execVarAssign(Interpreter* interpreter) {
 		return false;
 	}
 
+	//BUGFIX: allow easy coercion on assign
+	Literal type = getScopeType(interpreter->scope, lhs);
+	if (AS_TYPE(type).typeOf == LITERAL_FLOAT && IS_INTEGER(rhs)) {
+		rhs = TO_FLOAT_LITERAL(AS_INTEGER(rhs));
+	}
+
 	if (!setScopeVariable(interpreter->scope, lhs, rhs, true)) {
 		interpreter->errorOutput("Incorrect type assigned to variable \"");
 		printLiteralCustom(lhs, interpreter->errorOutput);
@@ -642,11 +653,13 @@ static bool execVarAssign(Interpreter* interpreter) {
 
 		freeLiteral(lhs);
 		freeLiteral(rhs);
+		freeLiteral(type);
 		return false;
 	}
 
 	freeLiteral(lhs);
 	freeLiteral(rhs);
+	freeLiteral(type);
 
 	return true;
 }

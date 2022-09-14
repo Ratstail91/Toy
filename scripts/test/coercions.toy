@@ -1,0 +1,13 @@
+//test int -> float coercion
+{
+	var f: float = 0;
+
+	assert typeof f == float, "coercion on decl failed";
+
+	f = 42;
+
+	assert typeof f == float, "coercion on assign failed";
+}
+
+
+print "All good";
