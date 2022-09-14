@@ -10,10 +10,10 @@ The types available are:
 
 | Type | Signature | Description |
 | --- | --- | --- |
-| null | null | Represents a lack of any meaningful value, also has the type of "null" |
+| null | null | Represents a lack of any meaningful value |
 | boolean | bool | Either true or false |
-| integer | int | Any whole number. The limits are implementation dependant |
-| float | float | Any floating point number. The limits are implementation dependant |
+| integer | int | Any whole number. The limits are implementation dependent |
+| float | float | Any floating point number. The limits are implementation dependent |
 | string | string | A series of characters, forming text |
 | array | n/a | A series of values arranged sequentially in memory, indexable with an integer |
 | array | n/a | A series of key-value pairs stored in a hash-table, indexable with the keys |
@@ -23,7 +23,7 @@ The types available are:
 
 ## Specifying Types For Variables
 
-To specify a type for a variable, use `:` followed by the signature. In this example, the variable `total` can only ever hold integers:
+To specify a type for a variable, use `:` followed by the signature. In this example, the variable `total` can only ever hold integers (or  `null`):
 
 ```
 var total: int = 0;
