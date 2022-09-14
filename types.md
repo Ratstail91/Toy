@@ -19,7 +19,7 @@ The types available are:
 | array | n/a | A series of key-value pairs stored in a hash-table, indexable with the keys |
 | function | fn | A chunk of reusable code, which can potentially return a value of some kind |
 | type | type | The type of types |
-| any | any | Can hold any value except null |
+| any | any | Can hold any value |
 
 ## Specifying Types For Variables
 
