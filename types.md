@@ -75,7 +75,7 @@ var t: type = astype [int]; //t is a type, representing an array of integers
 var u: type = [int]; //Error! it tried to assign an array with the sole entry "int"
 ```
 
-## First-Class citizens
+## First-Class Citizens
 
 Types are first-class citizens. What this means is that they can be used just like any other value, as well as being stored in variables, and even returned from functions.
 
