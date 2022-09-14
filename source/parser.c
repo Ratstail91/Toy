@@ -1440,6 +1440,10 @@ static Literal readTypeToLiteral(Parser* parser) {
 	Literal literal = TO_TYPE_LITERAL(LITERAL_NULL, false);
 
 	switch(parser->previous.type) {
+		case TOKEN_NULL:
+			//NO-OP
+		break;
+
 		case TOKEN_BOOLEAN:
 			AS_TYPE(literal).typeOf = LITERAL_BOOLEAN;
 		break;
