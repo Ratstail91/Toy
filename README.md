@@ -21,11 +21,12 @@ The host will provide all of the extensions needed on a case-by-case basis. Scri
 # Getting Started
 
 * [Quick Start Guide](quick-start-guide)
-* ~~[Tutorials](tutorials)~~
-* ~~[Developing With Toy](developing-with-toy)~~
-* [Types](types)
-* ~~[Standard Libary](standard-library)~~
+* Tutorials
+  * ~~[Embedding Toy](embedding-toy)~~
+  * ~~[Standard Libary](standard-library)~~
+  * [Types](types)
+* [Developing Toy](developing-toy)
 
 # Version Differences
 
-There have been a number of versions of Toy over the years, the current actively developed version is called `0.6.0`. It is recommended that you don't use the older versions.
+There have been a number of versions of Toy over the years, the current actively developed version is called `0.6.0` for the time being. It is recommended that you use the most recent version available.
