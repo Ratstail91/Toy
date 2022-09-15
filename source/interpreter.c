@@ -287,7 +287,7 @@ static bool execNegate(Interpreter* interpreter) {
 		freeLiteral(idn);
 	}
 
-	else if (IS_INTEGER(lit)) {
+	if (IS_INTEGER(lit)) {
 		lit = TO_INTEGER_LITERAL(-AS_INTEGER(lit));
 	}
 	else if (IS_FLOAT(lit)) {
