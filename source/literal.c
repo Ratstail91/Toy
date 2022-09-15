@@ -112,7 +112,7 @@ Literal copyLiteral(Literal original) {
 			return original;
 
 		case LITERAL_STRING: {
-			return TO_STRING_LITERAL(copyString(AS_STRING(original), strlen(AS_STRING(original))), strlen(AS_STRING(original)));
+			return TO_STRING_LITERAL(copyString(AS_STRING(original), original.as.string.length), original.as.string.length);
 		}
 
 		case LITERAL_ARRAY: {
@@ -152,7 +152,7 @@ Literal copyLiteral(Literal original) {
 		}
 
 		case LITERAL_IDENTIFIER: {
-			 return TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(original), strlen(AS_IDENTIFIER(original)) ), strlen(AS_IDENTIFIER(original)));
+			 return TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(original), original.as.identifier.length), original.as.identifier.length);
 		}
 
 		case LITERAL_TYPE: {
@@ -246,10 +246,10 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 			return AS_FLOAT(lhs) == AS_FLOAT(rhs);
 
 		case LITERAL_STRING:
-			if (strlen(AS_STRING(lhs)) != strlen(AS_STRING(rhs))) {
+			if (lhs.as.string.length != rhs.as.string.length) {
 				return false;
 			}
-			return !strncmp(AS_STRING(lhs), AS_STRING(rhs), strlen(AS_STRING(lhs)));
+			return !strncmp(AS_STRING(lhs), AS_STRING(rhs), lhs.as.string.length);
 
 		case LITERAL_ARRAY:
 		case LITERAL_DICTIONARY_INTERMEDIATE: //BUGFIX
@@ -295,11 +295,11 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 
 		case LITERAL_IDENTIFIER:
 			//check shortcuts
-			if (HASH_I(lhs) != HASH_I(rhs) && strlen(AS_IDENTIFIER(lhs)) != strlen(AS_IDENTIFIER(rhs))) {
+			if (HASH_I(lhs) != HASH_I(rhs) && lhs.as.identifier.length != rhs.as.identifier.length) {
 				return false;
 			}
 
-			return !strncmp(AS_IDENTIFIER(lhs), AS_IDENTIFIER(rhs), strlen( AS_IDENTIFIER(lhs) ));
+			return !strncmp(AS_IDENTIFIER(lhs), AS_IDENTIFIER(rhs), lhs.as.identifier.length);
 
 		case LITERAL_TYPE:
 			//check types

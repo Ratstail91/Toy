@@ -13,16 +13,16 @@ typedef enum {
 	LITERAL_ARRAY,
 	LITERAL_DICTIONARY,
 	LITERAL_FUNCTION,
-
-	//these are meta-level types
 	LITERAL_IDENTIFIER,
 	LITERAL_TYPE,
+	LITERAL_ANY,
+
+	//these are meta-level types - not for general use
 	LITERAL_TYPE_INTERMEDIATE, //used to process types in the compiler only
 	LITERAL_DICTIONARY_INTERMEDIATE, //used to process dictionaries in the compiler only
 	LITERAL_FUNCTION_INTERMEDIATE, //used to process functions in the compiler only
-	LITERAL_FUNCTION_ARG_REST, //used to process function rest parameters
-	LITERAL_FUNCTION_NATIVE, //for handling native functions
-	LITERAL_ANY, //used by the type system only
+	LITERAL_FUNCTION_ARG_REST, //used to process function rest parameters only
+	LITERAL_FUNCTION_NATIVE, //for handling native functions only
 } LiteralType;
 
 typedef struct {

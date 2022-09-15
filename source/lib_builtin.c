@@ -749,14 +749,15 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 			int lower = AS_INTEGER(third) > 0 ? AS_INTEGER(first) : AS_INTEGER(first) -1;
 			int min = AS_INTEGER(third) > 0 ? AS_INTEGER(first) : AS_INTEGER(second) -1;
+			int max = AS_INTEGER(third) > 0 ? AS_INTEGER(second) + (AS_INTEGER(second) == compoundLength ? -1 : 0) : AS_INTEGER(second);
 
 			//copy compound into result
 			int resultIndex = 0;
-			for (int i = min; i >= 0 && i >= lower && i <= AS_INTEGER(second); i += AS_INTEGER(third)) {
+			for (int i = min; i >= 0 && i >= lower && i <= max; i += AS_INTEGER(third)) {
 				result[ resultIndex++ ] = AS_STRING(compound)[ i ];
 			}
 
-			result[ resultIndex++ ] = '\0';
+			result[ resultIndex ] = '\0';
 
 			//finally, swap out the compound for the result
 			freeLiteral(compound);
@@ -884,7 +885,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 					result[ resultIndex++ ] = AS_STRING(compound)[ i ];
 				}
 
-				result[ resultIndex++ ] = '\0';
+				result[ resultIndex ] = '\0';
 			}
 
 			//else override elements of the array instead

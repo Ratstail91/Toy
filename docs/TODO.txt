@@ -38,14 +38,14 @@ DONE: better sugar for _push, _pop, _length
 DONE: nested compound assignment bug
 
 
-TODO: ternary operator?
-TODO: Nullish types?
 TODO: hooks on the external libraries, triggered on import
 TODO: standard library
 TODO: external script runner library
-TODO: document how it all works - book?
-TODO: better API?
+TODO: document how it all works
 TODO: packaging for release?
+TODO: test embedding
 
 NOPE: a = b = c = 1;
 NOPE: functions return a set number of values
+NOPE: ternary operator?
+NOPE: Nullish types?
