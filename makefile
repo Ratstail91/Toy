@@ -1,12 +1,17 @@
 export OUTDIR = out
 
-all: $(OUTDIR)
-	$(MAKE) -C source
+all: $(OUTDIR) repl
 
-library: clean $(OUTDIR)
+repl: $(OUTDIR) library
+	$(MAKE) -C repl
+
+repl-static: $(OUTDIR) static
+	$(MAKE) -C repl
+
+library: $(OUTDIR)
 	$(MAKE) -C source library
 
-static: clean $(OUTDIR)
+static: $(OUTDIR)
 	$(MAKE) -C source static
 
 test: clean $(OUTDIR)

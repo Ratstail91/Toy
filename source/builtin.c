@@ -1,4 +1,4 @@
-#include "lib_builtin.h"
+#include "builtin.h"
 
 #include "memory.h"
 #include "literal.h"

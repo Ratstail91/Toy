@@ -6,7 +6,7 @@
 #include "keyword_types.h"
 #include "opcodes.h"
 
-#include "lib_builtin.h"
+#include "builtin.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -52,6 +52,32 @@ bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func) {
 
 	freeLiteral(identifier);
 	freeLiteral(type);
+
+	return true;
+}
+
+bool injectNativeHook(Interpreter* interpreter, char* name, HookFn hook) {
+	//reject reserved words
+	if (findTypeByKeyword(name) != TOKEN_EOF) {
+		interpreter->errorOutput("Can't inject a hook on an existing keyword\n");
+		return false;
+	}
+
+	int identifierLength = strlen(name);
+	Literal identifier = TO_IDENTIFIER_LITERAL(copyString(name, identifierLength), identifierLength);
+
+	//make sure the name isn't taken
+	if (existsLiteralDictionary(interpreter->hooks, identifier)) {
+		interpreter->errorOutput("Can't override an existing hook\n");
+		return false;
+	}
+
+	Literal fn = TO_FUNCTION_LITERAL((void*)hook, 0);
+	fn.type = LITERAL_FUNCTION_NATIVE;
+
+	setLiteralDictionary(interpreter->hooks, identifier, fn);
+
+	freeLiteral(identifier);
 
 	return true;
 }
@@ -1180,6 +1206,7 @@ static bool execFnCall(Interpreter* interpreter, bool looseFirstArgument) {
 	initLiteralArray(&inner.stack);
 	inner.exports = interpreter->exports;
 	inner.exportTypes = interpreter->exportTypes;
+	inner.hooks = interpreter->hooks;
 	setInterpreterPrint(&inner, interpreter->printOutput);
 	setInterpreterAssert(&inner, interpreter->assertOutput);
 	setInterpreterError(&inner, interpreter->errorOutput);
@@ -1412,6 +1439,31 @@ static bool execFnReturn(Interpreter* interpreter) {
 static bool execImport(Interpreter* interpreter) {
 	Literal alias = popLiteralArray(&interpreter->stack);
 	Literal identifier = popLiteralArray(&interpreter->stack);
+
+	//access the hooks
+	if (existsLiteralDictionary(interpreter->hooks, identifier)) {
+		Literal func = getLiteralDictionary(interpreter->hooks, identifier);
+
+		if (!IS_FUNCTION_NATIVE(func)) {
+			interpreter->errorOutput("Expected native function for a hook: ");
+			printLiteralCustom(identifier, interpreter->errorOutput);
+			interpreter->errorOutput("\"\n");
+
+			freeLiteral(func);
+			freeLiteral(alias);
+			freeLiteral(identifier);
+			return false;
+		}
+
+		HookFn fn = (HookFn)AS_FUNCTION(func).bytecode;
+
+		fn(interpreter, identifier, alias);
+
+		freeLiteral(func);
+		freeLiteral(alias);
+		freeLiteral(identifier);
+		return true;
+	}
 
 	Literal lit = getLiteralDictionary(interpreter->exports, identifier);
 	Literal type = getLiteralDictionary(interpreter->exportTypes, identifier);
@@ -2321,6 +2373,8 @@ void initInterpreter(Interpreter* interpreter) {
 	initLiteralDictionary(interpreter->exports);
 	interpreter->exportTypes = ALLOCATE(LiteralDictionary, 1);
 	initLiteralDictionary(interpreter->exportTypes);
+	interpreter->hooks = ALLOCATE(LiteralDictionary, 1);
+	initLiteralDictionary(interpreter->hooks);
 
 	//set up the output streams
 	setInterpreterPrint(interpreter, printWrapper);
@@ -2448,7 +2502,12 @@ void freeInterpreter(Interpreter* interpreter) {
 	freeLiteralDictionary(interpreter->exports);
 	FREE(LiteralDictionary, interpreter->exports);
 	interpreter->exports = NULL;
+
 	freeLiteralDictionary(interpreter->exportTypes);
 	FREE(LiteralDictionary, interpreter->exportTypes);
 	interpreter->exportTypes = NULL;
+
+	freeLiteralDictionary(interpreter->hooks);
+	FREE(LiteralDictionary, interpreter->hooks);
+	interpreter->hooks = NULL;
 }

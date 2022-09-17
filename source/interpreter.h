@@ -21,9 +21,11 @@ typedef struct Interpreter {
 	Scope* scope;
 	LiteralArray stack;
 
-	//output
 	LiteralDictionary* exports; //read-write - interface with Toy from C - this is a pointer, since it works at a script-level
 	LiteralDictionary* exportTypes;
+	LiteralDictionary* hooks;
+
+	//debug outputs
 	PrintFn printOutput;
 	PrintFn assertOutput;
 	PrintFn errorOutput;
@@ -32,10 +34,12 @@ typedef struct Interpreter {
 	bool panic;
 } Interpreter;
 
-//native function API
+//native API
 typedef int (*NativeFn)(Interpreter* interpreter, LiteralArray* arguments);
 TOY_API bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func);
-//TODO: injectNativeHook
+
+typedef int (*HookFn)(Interpreter* interpreter, Literal identifier, Literal alias);
+TOY_API bool injectNativeHook(Interpreter* interpreter, char* name, HookFn hook);
 
 //utilities for the host program
 TOY_API bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr);

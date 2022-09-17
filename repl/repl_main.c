@@ -9,6 +9,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+//extra libraries
+#include "lib_standard.h"
+
 //IO functions
 char* readFile(char* path, size_t* fileSize) {
 	FILE* file = fopen(path, "rb");
@@ -102,6 +105,10 @@ unsigned char* compileString(char* source, size_t* size) {
 void runBinary(unsigned char* tb, size_t size) {
 	Interpreter interpreter;
 	initInterpreter(&interpreter);
+
+	//inject the libs
+	injectNativeHook(&interpreter, "standard", hookStandard);
+
 	runInterpreter(&interpreter, tb, size);
 	freeInterpreter(&interpreter);
 }
@@ -123,12 +130,6 @@ void runSource(char* source) {
 		return;
 	}
 
-	//DEBUG
-	// for (size_t i = 0; i < size; i++) {
-	// 	printf("%d, ", tb[i]);
-	// }
-	// printf("\n");
-
 	runBinary(tb, size);
 }
 
@@ -149,6 +150,9 @@ void repl() {
 
 	Interpreter interpreter; //persist the interpreter for the scopes
 	initInterpreter(&interpreter);
+
+	//inject the libs
+	injectNativeHook(&interpreter, "standard", hookStandard);
 
 	for(;;) {
 		printf("> ");

@@ -21,7 +21,7 @@ Special thanks to http://craftinginterpreters.com/ for their fantastic book that
 
 For windows, simply run `make` in the root directory.
 
-For linux, run `make static` in the root directory (see [this issue for details](https://github.com/Ratstail91/Toy/issues/26)).
+For linux, run `make repl-static` in the root directory (see [this issue for details](https://github.com/Ratstail91/Toy/issues/26)).
 
 For mac, good luck.
 
