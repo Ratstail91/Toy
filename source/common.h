@@ -9,8 +9,12 @@
 #define TOY_VERSION_PATCH 0
 #define TOY_VERSION_BUILD __DATE__ " " __TIME__
 
-//platform exports/imports --was it needed?
+//platform exports/imports
+#if defined(__linux__)
 #define TOY_API extern
+#else
+#define TOY_API
+#endif
 
 #ifndef TOY_EXPORT
 //for processing the command line arguments
