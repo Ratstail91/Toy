@@ -9,24 +9,8 @@
 #define TOY_VERSION_PATCH 0
 #define TOY_VERSION_BUILD __DATE__ " " __TIME__
 
-//platform exports/imports
-#if defined(WIN32) || defined(_WIN32)
-
-#if defined(TOY_EXPORT)
-#define TOY_API __declspec(dllexport)
-#else
-#define TOY_API __declspec(dllimport)
-#endif
-
-#elif defined(linux)
-
+//platform exports/imports --was it needed?
 #define TOY_API extern
-
-#else
-
-#define TOY_API
-
-#endif
 
 #ifndef TOY_EXPORT
 //for processing the command line arguments
