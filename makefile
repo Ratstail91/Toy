@@ -1,3 +1,6 @@
+# Optimisation Options
+# export CFLAGS+=-O2 -mtune=native -march=native
+
 export TOY_OUTDIR = out
 
 all: $(TOY_OUTDIR) repl
