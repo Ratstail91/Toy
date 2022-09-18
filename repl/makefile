@@ -8,10 +8,10 @@ ODIR = obj
 SRC = $(wildcard *.c)
 OBJ = $(addprefix $(ODIR)/,$(SRC:.c=.o))
 
-OUT=../$(OUTDIR)/toyrepl
+OUT=../$(TOY_OUTDIR)/toyrepl
 
 all: $(OBJ)
-	$(CC) -DTOY_IMPORT $(CFLAGS) -o $(OUT) $(OBJ) -L$(realpath $(shell pwd)/../$(OUTDIR)) $(LIBS)
+	$(CC) -DTOY_IMPORT $(CFLAGS) -o $(OUT) $(OBJ) -L$(realpath $(shell pwd)/../$(TOY_OUTDIR)) $(LIBS)
 
 $(OBJ): | $(ODIR)
 

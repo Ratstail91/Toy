@@ -9,11 +9,11 @@ TARGETS = $(wildcard ../source/*.c) $(filter-out $(wildcard ../repl/*main.c),$(w
 TESTS = $(wildcard *.c)
 OBJ = $(addprefix $(ODIR)/,$(TARGETS:../source/%.c=%.o)) $(addprefix $(ODIR)/,$(TESTS:.c=.o))
 
-.PRECIOUS:  $(TESTS:%.c=../$(OUTDIR)/%.exe)
+.PRECIOUS:  $(TESTS:%.c=../$(TOY_OUTDIR)/%.exe)
 
-all: $(OBJ) $(TESTS:%.c=../$(OUTDIR)/%.exe)
+all: $(OBJ) $(TESTS:%.c=../$(TOY_OUTDIR)/%.exe)
 
-../$(OUTDIR)/%.exe: $(ODIR)/%.o
+../$(TOY_OUTDIR)/%.exe: $(ODIR)/%.o
 	@$(CC) -o $@ $< $(TARGETS:../source/%.c=$(ODIR)/%.o) $(CFLAGS) $(LIBS)
 ifeq ($(shell uname),Linux)
 	valgrind --leak-check=full --track-origins=yes $@

@@ -1,24 +1,24 @@
-export OUTDIR = out
+export TOY_OUTDIR = out
 
-all: $(OUTDIR) repl
+all: $(TOY_OUTDIR) repl
 
-repl: $(OUTDIR) library
+repl: $(TOY_OUTDIR) library
 	$(MAKE) -C repl
 
-repl-static: $(OUTDIR) static
+repl-static: $(TOY_OUTDIR) static
 	$(MAKE) -C repl
 
-library: $(OUTDIR)
+library: $(TOY_OUTDIR)
 	$(MAKE) -C source library
 
-static: $(OUTDIR)
+static: $(TOY_OUTDIR)
 	$(MAKE) -C source static
 
-test: clean $(OUTDIR)
+test: clean $(TOY_OUTDIR)
 	$(MAKE) -C test
 
-$(OUTDIR):
-	mkdir $(OUTDIR)
+$(TOY_OUTDIR):
+	mkdir $(TOY_OUTDIR)
 
 .PHONY: clean
 
