@@ -1,0 +1,42 @@
+//test the standard library, under a number of different circumstances
+
+//test basic import
+{
+	import standard;
+
+	//this depends on external factors, so only check the length
+	assert clock().length() == 24, "import library failed";
+}
+
+
+//test import within a function
+{
+	fn f() {
+		import standard;
+
+		assert clock != null, "import library within function failed";
+
+		return clock;
+	}
+
+	//invoke
+	assert f()().length() == 24, "import library within function and return failed";
+}
+
+
+//test closing over standard library element
+{
+	import standard;
+
+	fn f() {
+		assert clock != null, "import library outside function failed";
+
+		return clock;
+	}
+
+	//invoke
+	assert f()().length() == 24, "import library outside function and return failed";
+}
+
+
+print "All good";

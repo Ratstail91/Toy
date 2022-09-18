@@ -95,8 +95,9 @@ void runBinary(unsigned char* tb, size_t size) {
 	initInterpreter(&interpreter);
 
 	//NOTE: supress print output for testing
-//	setInterpreterPrint(&interpreter, noPrintFn);
+	setInterpreterPrint(&interpreter, noPrintFn);
 
+	//inject the standard libraries into this interpreter
 	injectNativeHook(&interpreter, "standard", hookStandard);
 
 	runInterpreter(&interpreter, tb, size);
@@ -123,6 +124,7 @@ int main() {
 	{
 		//run each file in ../scripts/test/
 		char* filenames[] = {
+			"interactions.toy",
 			"standard.toy",
 			NULL
 		};
