@@ -16,7 +16,7 @@ The types available are:
 | float | float | Any floating point number. The limits are implementation dependent |
 | string | string | A series of characters, forming text |
 | array | n/a | A series of values arranged sequentially in memory, indexable with an integer |
-| array | n/a | A series of key-value pairs stored in a hash-table, indexable with the keys |
+| dictionary | n/a | A series of key-value pairs stored in a hash-table, indexable with the keys |
 | function | fn | A chunk of reusable code, which can potentially return a value of some kind |
 | type | type | The type of types |
 | any | any | Can hold any value |

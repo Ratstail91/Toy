@@ -4,33 +4,6 @@ This guide is intended to get you writing Toy code as fast as possible. As such,
 
 Toy programs begin at the top of the file, and continue until the end, unless an error is encountered.
 
-## Import and Export
-
-Although hello world should be first, lets instead have a look at how you interface with the host program. The interpreter has a set of variables referred to collectively as the "exports region" - these are intended for interfacing with the host. To access these from the scripts, use `import`, like so:
-
-```
-import variable;
-
-print variable; //prints whatever literal was given "variable" as the identifier
-```
-
-Alternatively, to add something to the exports region, use `export`:
-
-```
-var variable = 1;
-
-export variable;
-```
-
-In the event of naming conflicts, you can rename imported and exported variables using the `as` keyword:
-
-```
-//assume "table" exists in the export region
-import table as newName;
-
-export newName as table2;
-```
-
 ## Hello World
 
 This prints to the stdout, and has a newline appended to the end. This can be altered by the host program.
@@ -41,7 +14,7 @@ print "Hello world";
 
 ## Names and Variables
 
-Variables can store data of any kind, unless a type is specified. See [types](types). Names can be up to 256 characters long.
+Variables can store data of any kind, unless a type is specified; see [types](types). Names can be up to 256 characters long.
 
 ```
 var b = true;
@@ -146,6 +119,43 @@ print greeting[::-1]; //dlrow olleH
 greeting[0:4] = "Goodnight"; //changes greeting to equal "Goodnight world"
 ```
 
+## Import and Export
+
+The interpreter has a set of variables referred to collectively as the "exports region" - these are intended for interfacing with the host. To access these from the scripts, use `import`, like so:
+
+```
+import variable;
+
+print variable; //prints whatever literal was given "variable" as the identifier
+```
+
+Alternatively, to add something to the exports region, use `export`:
+
+```
+var variable = 1;
+
+export variable;
+```
+
+In the event of naming conflicts, you can rename imported and exported variables using the `as` keyword:
+
+```
+//assume "table" exists in the export region
+import table as newName;
+
+export newName as table2;
+```
+
+## External Libraries
+
+The host may, at it's own discretion, make external libraries available to the scripts. To access these, you can use the `import` keyword once again:
+
+```
+import standard;
+
+print clock();
+```
+
 ## Assertion Tests
 
 For testing purposes, there is the `assert` keyword. `assert` takes two arguments, separated by a comma; if the first resolves to a truthy value, then the whole statement is a no-op. Otherwise, the second argument, which MUST be a string, is displayed as an error and the script exits.
@@ -158,3 +168,4 @@ assert answer == 42, "This will not be seen";
 //both false and null trigger assert's exit condition
 assert null, "This will be seen before the script exits";
 ```
+

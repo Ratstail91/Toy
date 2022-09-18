@@ -22,10 +22,11 @@ The host will provide all of the extensions needed on a case-by-case basis. Scri
 
 * [Quick Start Guide](quick-start-guide)
 * Tutorials
-  * ~~[Embedding Toy](embedding-toy)~~
+  * [Embedding Toy](embedding-toy)
   * ~~[Standard Libary](standard-library)~~
   * [Types](types)
 * [Developing Toy](developing-toy)
+* ~~[Roadmap](roadmap)~~
 
 # Version Differences
 
