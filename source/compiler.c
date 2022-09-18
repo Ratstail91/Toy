@@ -70,7 +70,7 @@ static int writeLiteralTypeToCache(LiteralArray* literalCache, Literal literal) 
 	return writeLiteralTypeToCacheOpt(literalCache, literal, false);
 }
 
-static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
+static int writeNodeCompoundToCache(Compiler* compiler, ASTNode* node) {
 	int index = -1;
 
 	//for both, stored as an array
@@ -83,7 +83,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 		for (int i = 0; i < node->compound.count; i++) {
 			//keys
 			switch(node->compound.nodes[i].pair.left->type) {
-				case NODE_LITERAL: {
+				case AST_NODELITERAL: {
 					//keys are literals
 					int key = findLiteralIndex(&compiler->literalCache, node->compound.nodes[i].pair.left->atomic.literal);
 					if (key < 0) {
@@ -96,7 +96,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 				}
 				break;
 
-				case NODE_COMPOUND: {
+				case AST_NODECOMPOUND: {
 						int key = writeNodeCompoundToCache(compiler, node->compound.nodes[i].pair.left);
 
 						Literal literal = TO_INTEGER_LITERAL(key);
@@ -112,7 +112,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 
 			//values
 			switch(node->compound.nodes[i].pair.right->type) {
-				case NODE_LITERAL: {
+				case AST_NODELITERAL: {
 					//values are literals
 					int val = findLiteralIndex(&compiler->literalCache, node->compound.nodes[i].pair.right->atomic.literal);
 					if (val < 0) {
@@ -125,7 +125,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 				}
 				break;
 
-				case NODE_COMPOUND: {
+				case AST_NODECOMPOUND: {
 						int val = writeNodeCompoundToCache(compiler, node->compound.nodes[i].pair.right);
 
 						Literal literal = TO_INTEGER_LITERAL(val);
@@ -150,7 +150,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 		//ensure each literal value is in the cache, individually
 		for (int i = 0; i < node->compound.count; i++) {
 			switch(node->compound.nodes[i].type) {
-				case NODE_LITERAL: {
+				case AST_NODELITERAL: {
 					//values
 					int val = findLiteralIndex(&compiler->literalCache, node->compound.nodes[i].atomic.literal);
 					if (val < 0) {
@@ -163,7 +163,7 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 				}
 				break;
 
-				case NODE_COMPOUND: {
+				case AST_NODECOMPOUND: {
 					int val = writeNodeCompoundToCache(compiler, &node->compound.nodes[i]);
 
 					Literal literal = TO_INTEGER_LITERAL(val);
@@ -190,14 +190,14 @@ static int writeNodeCompoundToCache(Compiler* compiler, Node* node) {
 	return index;
 }
 
-static int writeNodeCollectionToCache(Compiler* compiler, Node* node) {
+static int writeNodeCollectionToCache(Compiler* compiler, ASTNode* node) {
 	LiteralArray* store = ALLOCATE(LiteralArray, 1);
 	initLiteralArray(store);
 
 	//ensure each literal value is in the cache, individually
 	for (int i = 0; i < node->fnCollection.count; i++) {
 		switch(node->fnCollection.nodes[i].type) {
-			case NODE_VAR_DECL: {
+			case AST_NODEVAR_DECL: {
 				//write each piece of the declaration to the cache
 				int identifierIndex = pushLiteralArray(&compiler->literalCache, node->fnCollection.nodes[i].varDecl.identifier); //store without duplication optimisation
 				int typeIndex = writeLiteralTypeToCacheOpt(&compiler->literalCache, node->fnCollection.nodes[i].varDecl.typeLiteral, false);
@@ -212,7 +212,7 @@ static int writeNodeCollectionToCache(Compiler* compiler, Node* node) {
 			}
 			break;
 
-			case NODE_LITERAL: {
+			case AST_NODELITERAL: {
 				//write each piece of the declaration to the cache
 				int typeIndex = writeLiteralTypeToCacheOpt(&compiler->literalCache, node->fnCollection.nodes[i].atomic.literal, false);
 
@@ -269,7 +269,7 @@ static int writeLiteralToCompiler(Compiler* compiler, Literal literal) {
 
 //NOTE: jumpOfsets are included, because function arg and return indexes are embedded in the code body i.e. need to include thier sizes in the jump
 //NODE: rootNode should NOT include groupings and blocks
-static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* breakAddressesPtr, void* continueAddressesPtr, int jumpOffsets, Node* rootNode) {
+static Opcode writeCompilerWithJumps(Compiler* compiler, ASTNode* node, void* breakAddressesPtr, void* continueAddressesPtr, int jumpOffsets, ASTNode* rootNode) {
 	//grow if the bytecode space is too small
 	if (compiler->count + 32 > compiler->capacity) {
 		int oldCapacity = compiler->capacity;
@@ -280,18 +280,18 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 
 	//determine node type
 	switch(node->type) {
-		case NODE_ERROR: {
-			fprintf(stderr, ERROR "[internal] NODE_ERROR encountered in writeCompilerWithJumps()\n" RESET);
+		case AST_NODEERROR: {
+			fprintf(stderr, ERROR "[internal] AST_NODEERROR encountered in writeCompilerWithJumps()\n" RESET);
 			compiler->bytecode[compiler->count++] = OP_EOF; //1 byte
 		}
 		break;
 
-		case NODE_LITERAL: {
+		case AST_NODELITERAL: {
 			writeLiteralToCompiler(compiler, node->atomic.literal);
 		}
 		break;
 
-		case NODE_UNARY: {
+		case AST_NODEUNARY: {
 			//pass to the child node, then embed the unary command (print, negate, etc.)
 			Opcode override = writeCompilerWithJumps(compiler, node->unary.child, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
 
@@ -304,7 +304,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		break;
 
 		//all infixes come here
-		case NODE_BINARY: {
+		case AST_NODEBINARY: {
 			//pass to the child nodes, then embed the binary command (math, etc.)
 			Opcode override = writeCompilerWithJumps(compiler, node->binary.left, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
 
@@ -324,7 +324,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 			//return this if...
 			Opcode ret = writeCompilerWithJumps(compiler, node->binary.right, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
 
-			if (node->binary.opcode == OP_INDEX && rootNode->type == NODE_BINARY && rootNode->binary.opcode == OP_VAR_ASSIGN) { //why var assign?
+			if (node->binary.opcode == OP_INDEX && rootNode->type == AST_NODEBINARY && rootNode->binary.opcode == OP_VAR_ASSIGN) { //why var assign?
 				return OP_INDEX_ASSIGN_INTERMEDIATE;
 			}
 
@@ -344,7 +344,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_GROUPING: {
+		case AST_NODEGROUPING: {
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_GROUPING_BEGIN; //1 byte
 			Opcode override = writeCompilerWithJumps(compiler, node->grouping.child, breakAddressesPtr, continueAddressesPtr, jumpOffsets, node->grouping.child);
 			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
@@ -354,7 +354,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_BLOCK: {
+		case AST_NODEBLOCK: {
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_SCOPE_BEGIN; //1 byte
 
 			for (int i = 0; i < node->block.count; i++) {
@@ -368,7 +368,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_COMPOUND: {
+		case AST_NODECOMPOUND: {
 			int index = writeNodeCompoundToCache(compiler, node);
 
 			//push the node opcode to the bytecode
@@ -387,12 +387,12 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_PAIR:
-			fprintf(stderr, ERROR "[internal] NODE_PAIR encountered in writeCompilerWithJumps()\n" RESET);
+		case AST_NODEPAIR:
+			fprintf(stderr, ERROR "[internal] AST_NODEPAIR encountered in writeCompilerWithJumps()\n" RESET);
 			compiler->bytecode[compiler->count++] = OP_EOF; //1 byte
 		break;
 
-		case NODE_VAR_DECL: {
+		case AST_NODEVAR_DECL: {
 			//first, embed the expression (leaves it on the stack)
 			Opcode override = writeCompilerWithJumps(compiler, node->varDecl.expression, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
 			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
@@ -427,7 +427,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_FN_DECL: {
+		case AST_NODEFN_DECL: {
 			//run a compiler over the function
 			Compiler* fnCompiler = ALLOCATE(Compiler, 1);
 			initCompiler(fnCompiler);
@@ -471,7 +471,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_FN_COLLECTION: {
+		case AST_NODEFN_COLLECTION: {
 			//embed these in the bytecode...
 			int index = writeNodeCollectionToCache(compiler, node);
 
@@ -480,12 +480,12 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_FN_CALL: {
+		case AST_NODEFN_CALL: {
 			//NOTE: assume the function definition/name is above us
 
 			for (int i = 0; i < node->fnCall.arguments->fnCollection.count; i++) { //reverse order, to count from the beginning in the interpreter
 				//sub-calls
-				if (node->fnCall.arguments->fnCollection.nodes[i].type != NODE_LITERAL) {
+				if (node->fnCall.arguments->fnCollection.nodes[i].type != AST_NODELITERAL) {
 					Opcode override = writeCompilerWithJumps(compiler, &node->fnCall.arguments->fnCollection.nodes[i], breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
 					if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
 						compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
@@ -540,7 +540,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_PATH_IF: {
+		case AST_NODEPATH_IF: {
 			//process the condition
 			Opcode override = writeCompilerWithJumps(compiler, node->path.condition, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
 			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
@@ -583,7 +583,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_PATH_WHILE: {
+		case AST_NODEPATH_WHILE: {
 			//for breaks and continues
 			LiteralArray breakAddresses;
 			LiteralArray continueAddresses;
@@ -639,7 +639,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_PATH_FOR: {
+		case AST_NODEPATH_FOR: {
 			//for breaks and continues
 			LiteralArray breakAddresses;
 			LiteralArray continueAddresses;
@@ -712,7 +712,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_PATH_BREAK: {
+		case AST_NODEPATH_BREAK: {
 			if (!breakAddressesPtr) {
 				fprintf(stderr, ERROR "ERROR: Can't place a break statement here\n" RESET);
 				break;
@@ -730,7 +730,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_PATH_CONTINUE: {
+		case AST_NODEPATH_CONTINUE: {
 			if (!continueAddressesPtr) {
 				fprintf(stderr, ERROR "ERROR: Can't place a continue statement here\n" RESET);
 				break;
@@ -748,7 +748,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_PATH_RETURN: {
+		case AST_NODEPATH_RETURN: {
 			//read each returned literal onto the stack, and return the number of values to return
 			for (int i = 0; i < node->path.thenPath->fnCollection.count; i++) {
 				Opcode override = writeCompilerWithJumps(compiler, &node->path.thenPath->fnCollection.nodes[i], breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
@@ -765,7 +765,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_INCREMENT_PREFIX: {
+		case AST_NODEINCREMENT_PREFIX: {
 			//push the literal to the stack (twice)
 			writeLiteralToCompiler(compiler, node->increment.identifier);
 			writeLiteralToCompiler(compiler, node->increment.identifier);
@@ -786,7 +786,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_INCREMENT_POSTFIX: {
+		case AST_NODEINCREMENT_POSTFIX: {
 			//push the identifier's VALUE to the stack
 			writeLiteralToCompiler(compiler, node->increment.identifier);
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_LITERAL_RAW; //1 byte
@@ -807,7 +807,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_IMPORT: {
+		case AST_NODEIMPORT: {
 			//push the identifier, and the alias
 			writeLiteralToCompiler(compiler, node->import.identifier);
 			writeLiteralToCompiler(compiler, node->import.alias);
@@ -817,7 +817,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_EXPORT: {
+		case AST_NODEEXPORT: {
 			//push the identifier, and the alias
 			writeLiteralToCompiler(compiler, node->import.identifier);
 			writeLiteralToCompiler(compiler, node->import.alias);
@@ -827,7 +827,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_INDEX: {
+		case AST_NODEINDEX: {
 			//pass to the child nodes, then embed the opcode
 
 			//first
@@ -869,8 +869,8 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 		}
 		break;
 
-		case NODE_DOT: {
-			fprintf(stderr, ERROR "[internal] NODE_DOT encountered in writeCompilerWithJumps()\n" RESET);
+		case AST_NODEDOT: {
+			fprintf(stderr, ERROR "[internal] AST_NODEDOT encountered in writeCompilerWithJumps()\n" RESET);
 			compiler->bytecode[compiler->count++] = OP_EOF; //1 byte
 		}
 		break;
@@ -879,7 +879,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, Node* node, void* break
 	return OP_EOF;
 }
 
-void writeCompiler(Compiler* compiler, Node* node) {
+void writeCompiler(Compiler* compiler, ASTNode* node) {
 	Opcode op = writeCompilerWithJumps(compiler, node, NULL, NULL, 0, node); //pass in "node" as the root node
 
 	if (op != OP_EOF) {//compensate for indexing & dot notation being screwy

@@ -106,7 +106,7 @@ typedef enum {
 	PREC_PRIMARY,
 } PrecedenceRule;
 
-typedef Opcode (*ParseFn)(Parser* parser, Node** nodeHandle);
+typedef Opcode (*ParseFn)(Parser* parser, ASTNode** nodeHandle);
 
 typedef struct {
 	ParseFn prefix;
@@ -117,12 +117,12 @@ typedef struct {
 ParseRule parseRules[];
 
 //forward declarations
-static void declaration(Parser* parser, Node** nodeHandle);
-static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule rule);
+static void declaration(Parser* parser, ASTNode** nodeHandle);
+static void parsePrecedence(Parser* parser, ASTNode** nodeHandle, PrecedenceRule rule);
 static Literal readTypeToLiteral(Parser* parser);
 
 //the expression rules
-static Opcode asType(Parser* parser, Node** nodeHandle) {
+static Opcode asType(Parser* parser, ASTNode** nodeHandle) {
 	Literal literal = readTypeToLiteral(parser);
 
 	if (!IS_TYPE(literal)) {
@@ -131,35 +131,35 @@ static Opcode asType(Parser* parser, Node** nodeHandle) {
 		return OP_EOF;
 	}
 
-	emitNodeLiteral(nodeHandle, literal);
+	emitASTNodeLiteral(nodeHandle, literal);
 
 	freeLiteral(literal);
 
 	return OP_EOF;
 }
 
-static Opcode typeOf(Parser* parser, Node** nodeHandle) {
-	Node* rhs = NULL;
+static Opcode typeOf(Parser* parser, ASTNode** nodeHandle) {
+	ASTNode* rhs = NULL;
 	parsePrecedence(parser, &rhs, PREC_TERNARY);
-	emitNodeUnary(nodeHandle, OP_TYPE_OF, rhs);
+	emitASTNodeUnary(nodeHandle, OP_TYPE_OF, rhs);
 	return OP_EOF;
 }
 
-static Opcode compound(Parser* parser, Node** nodeHandle) {
+static Opcode compound(Parser* parser, ASTNode** nodeHandle) {
 	//read either an array or a dictionary into a literal node
 
 	int iterations = 0; //count the number of entries iterated over
 
 	//compound nodes to store what is read
-	Node* array = NULL;
-	Node* dictionary = NULL;
+	ASTNode* array = NULL;
+	ASTNode* dictionary = NULL;
 
 	while (!match(parser, TOKEN_BRACKET_RIGHT)) {
 		//if empty dictionary, there will be a colon between the brackets
 		if (iterations == 0 && match(parser, TOKEN_COLON)) {
 			consume(parser, TOKEN_BRACKET_RIGHT, "Expected ']' at the end of empty dictionary definition");
 			//emit an empty dictionary and finish
-			emitNodeCompound(&dictionary, LITERAL_DICTIONARY);
+			emitASTNodeCompound(&dictionary, LITERAL_DICTIONARY);
 			break;
 		}
 
@@ -169,8 +169,8 @@ static Opcode compound(Parser* parser, Node** nodeHandle) {
 
 		iterations++;
 
-		Node* left = NULL;
-		Node* right = NULL;
+		ASTNode* left = NULL;
+		ASTNode* right = NULL;
 
 		//store the left
 		parsePrecedence(parser, &left, PREC_PRIMARY);
@@ -197,7 +197,7 @@ static Opcode compound(Parser* parser, Node** nodeHandle) {
 
 			//init the dictionary
 			if (!dictionary) {
-				emitNodeCompound(&dictionary, LITERAL_DICTIONARY);
+				emitASTNodeCompound(&dictionary, LITERAL_DICTIONARY);
 			}
 
 			//grow the node if needed
@@ -205,11 +205,11 @@ static Opcode compound(Parser* parser, Node** nodeHandle) {
 				int oldCapacity = dictionary->compound.capacity;
 
 				dictionary->compound.capacity = GROW_CAPACITY(oldCapacity);
-				dictionary->compound.nodes = GROW_ARRAY(Node, dictionary->compound.nodes, oldCapacity, dictionary->compound.capacity);
+				dictionary->compound.nodes = GROW_ARRAY(ASTNode, dictionary->compound.nodes, oldCapacity, dictionary->compound.capacity);
 			}
 
 			//store the left and right in the node
-			setNodePair(&dictionary->compound.nodes[dictionary->compound.count++], left, right);
+			setASTNodePair(&dictionary->compound.nodes[dictionary->compound.count++], left, right);
 		}
 		//detect an array
 		else {
@@ -222,7 +222,7 @@ static Opcode compound(Parser* parser, Node** nodeHandle) {
 
 			//init the array
 			if (!array) {
-				emitNodeCompound(&array, LITERAL_ARRAY);
+				emitASTNodeCompound(&array, LITERAL_ARRAY);
 			}
 
 			//grow the node if needed
@@ -230,12 +230,12 @@ static Opcode compound(Parser* parser, Node** nodeHandle) {
 				int oldCapacity = array->compound.capacity;
 
 				array->compound.capacity = GROW_CAPACITY(oldCapacity);
-				array->compound.nodes = GROW_ARRAY(Node, array->compound.nodes, oldCapacity, array->compound.capacity);
+				array->compound.nodes = GROW_ARRAY(ASTNode, array->compound.nodes, oldCapacity, array->compound.capacity);
 			}
 
 			//copy into the array, and manually free the temp node
 			array->compound.nodes[array->compound.count++] = *left;
-			FREE(Node, left);
+			FREE(ASTNode, left);
 		}
 	}
 
@@ -248,7 +248,7 @@ static Opcode compound(Parser* parser, Node** nodeHandle) {
 	}
 	else {
 		//both are null, must be an array (because reasons)
-		emitNodeCompound(&array, LITERAL_ARRAY);
+		emitASTNodeCompound(&array, LITERAL_ARRAY);
 		(*nodeHandle) = array;
 	}
 
@@ -257,7 +257,7 @@ static Opcode compound(Parser* parser, Node** nodeHandle) {
 	return OP_EOF;
 }
 
-static Opcode string(Parser* parser, Node** nodeHandle) {
+static Opcode string(Parser* parser, ASTNode** nodeHandle) {
 	//handle strings
 	switch(parser->previous.type) {
 		case TOKEN_LITERAL_STRING: {
@@ -272,7 +272,7 @@ static Opcode string(Parser* parser, Node** nodeHandle) {
 			}
 
 			Literal literal = TO_STRING_LITERAL(copyString(parser->previous.lexeme, length), length);
-			emitNodeLiteral(nodeHandle, literal);
+			emitASTNodeLiteral(nodeHandle, literal);
 			freeLiteral(literal);
 			return OP_EOF;
 		}
@@ -285,7 +285,7 @@ static Opcode string(Parser* parser, Node** nodeHandle) {
 	}
 }
 
-static Opcode grouping(Parser* parser, Node** nodeHandle) {
+static Opcode grouping(Parser* parser, ASTNode** nodeHandle) {
 	//handle groupings with ()
 	switch(parser->previous.type) {
 		case TOKEN_PAREN_LEFT: {
@@ -293,7 +293,7 @@ static Opcode grouping(Parser* parser, Node** nodeHandle) {
 			consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of grouping");
 
 			//process the result without optimisations
-			emitNodeGrouping(nodeHandle);
+			emitASTNodeGrouping(nodeHandle);
 			return OP_EOF;
 		}
 
@@ -303,7 +303,7 @@ static Opcode grouping(Parser* parser, Node** nodeHandle) {
 	}
 }
 
-static Opcode binary(Parser* parser, Node** nodeHandle) {
+static Opcode binary(Parser* parser, ASTNode** nodeHandle) {
 	advance(parser);
 
 	//binary() is an infix rule - so only get the RHS of the operator
@@ -412,15 +412,15 @@ static Opcode binary(Parser* parser, Node** nodeHandle) {
 	}
 }
 
-static Opcode unary(Parser* parser, Node** nodeHandle) {
-	Node* tmpNode = NULL;
+static Opcode unary(Parser* parser, ASTNode** nodeHandle) {
+	ASTNode* tmpNode = NULL;
 
 	if (parser->previous.type == TOKEN_MINUS) {
 		//temp handle to potentially negate values
 		parsePrecedence(parser, &tmpNode, PREC_TERNARY); //can be a literal
 
 		//check for negative literals (optimisation)
-		if (tmpNode->type == NODE_LITERAL && (IS_INTEGER(tmpNode->atomic.literal) || IS_FLOAT(tmpNode->atomic.literal))) {
+		if (tmpNode->type == AST_NODELITERAL && (IS_INTEGER(tmpNode->atomic.literal) || IS_FLOAT(tmpNode->atomic.literal))) {
 			//negate directly, if int or float
 			Literal lit = tmpNode->atomic.literal;
 
@@ -439,13 +439,13 @@ static Opcode unary(Parser* parser, Node** nodeHandle) {
 		}
 
 		//check for negated boolean errors
-		if (tmpNode->type == NODE_LITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {
+		if (tmpNode->type == AST_NODELITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {
 			error(parser, parser->previous, "Negative booleans are not allowed");
 			return OP_EOF;
 		}
 
 		//actually emit the negation
-		emitNodeUnary(nodeHandle, OP_NEGATE, tmpNode);
+		emitASTNodeUnary(nodeHandle, OP_NEGATE, tmpNode);
 	}
 
 	else if (parser->previous.type == TOKEN_NOT) {
@@ -453,7 +453,7 @@ static Opcode unary(Parser* parser, Node** nodeHandle) {
 		parsePrecedence(parser, &tmpNode, PREC_CALL); //can be a literal
 
 		//check for inverted booleans
-		if (tmpNode->type == NODE_LITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {
+		if (tmpNode->type == AST_NODELITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {
 			//negate directly, if int or float
 			Literal lit = tmpNode->atomic.literal;
 
@@ -466,13 +466,13 @@ static Opcode unary(Parser* parser, Node** nodeHandle) {
 		}
 
 		//check for inverted number errors
-		if (tmpNode->type == NODE_LITERAL && (IS_INTEGER(tmpNode->atomic.literal) || IS_FLOAT(tmpNode->atomic.literal))) {
+		if (tmpNode->type == AST_NODELITERAL && (IS_INTEGER(tmpNode->atomic.literal) || IS_FLOAT(tmpNode->atomic.literal))) {
 			error(parser, parser->previous, "Inverted numbers are not allowed");
 			return OP_EOF;
 		}
 
 		//actually emit the negation
-		emitNodeUnary(nodeHandle, OP_INVERT, tmpNode);
+		emitASTNodeUnary(nodeHandle, OP_INVERT, tmpNode);
 	}
 
 	else {
@@ -483,40 +483,40 @@ static Opcode unary(Parser* parser, Node** nodeHandle) {
 	return OP_EOF;
 }
 
-static Opcode atomic(Parser* parser, Node** nodeHandle) {
+static Opcode atomic(Parser* parser, ASTNode** nodeHandle) {
 	switch(parser->previous.type) {
 		case TOKEN_NULL:
-			emitNodeLiteral(nodeHandle, TO_NULL_LITERAL);
+			emitASTNodeLiteral(nodeHandle, TO_NULL_LITERAL);
 			return OP_EOF;
 
 		case TOKEN_LITERAL_TRUE:
-			emitNodeLiteral(nodeHandle, TO_BOOLEAN_LITERAL(true));
+			emitASTNodeLiteral(nodeHandle, TO_BOOLEAN_LITERAL(true));
 			return OP_EOF;
 
 		case TOKEN_LITERAL_FALSE:
-			emitNodeLiteral(nodeHandle, TO_BOOLEAN_LITERAL(false));
+			emitASTNodeLiteral(nodeHandle, TO_BOOLEAN_LITERAL(false));
 			return OP_EOF;
 
 		case TOKEN_LITERAL_INTEGER: {
 			int value = 0;
 			sscanf(parser->previous.lexeme, "%d", &value);
-			emitNodeLiteral(nodeHandle, TO_INTEGER_LITERAL(value));
+			emitASTNodeLiteral(nodeHandle, TO_INTEGER_LITERAL(value));
 			return OP_EOF;
 		}
 
 		case TOKEN_LITERAL_FLOAT: {
 			float value = 0;
 			sscanf(parser->previous.lexeme, "%f", &value);
-			emitNodeLiteral(nodeHandle, TO_FLOAT_LITERAL(value));
+			emitASTNodeLiteral(nodeHandle, TO_FLOAT_LITERAL(value));
 			return OP_EOF;
 		}
 
 		case TOKEN_TYPE: {
 			if (match(parser, TOKEN_CONST)) {
-				emitNodeLiteral(nodeHandle, TO_TYPE_LITERAL(LITERAL_TYPE, true));
+				emitASTNodeLiteral(nodeHandle, TO_TYPE_LITERAL(LITERAL_TYPE, true));
 			}
 			else {
-				emitNodeLiteral(nodeHandle, TO_TYPE_LITERAL(LITERAL_TYPE, false));
+				emitASTNodeLiteral(nodeHandle, TO_TYPE_LITERAL(LITERAL_TYPE, false));
 			}
 
 			return OP_EOF;
@@ -528,7 +528,7 @@ static Opcode atomic(Parser* parser, Node** nodeHandle) {
 	}
 }
 
-static Opcode identifier(Parser* parser, Node** nodeHandle) {
+static Opcode identifier(Parser* parser, ASTNode** nodeHandle) {
 	//make a copy of the string
 	Token identifierToken = parser->previous;
 
@@ -548,39 +548,39 @@ static Opcode identifier(Parser* parser, Node** nodeHandle) {
 	char* cpy = copyString(identifierToken.lexeme, length);
 	Literal identifier = _toIdentifierLiteral(cpy, length); //BUGFIX: use this instead of the macro
 
-	emitNodeLiteral(nodeHandle, identifier);
+	emitASTNodeLiteral(nodeHandle, identifier);
 
 	freeLiteral(identifier); //don't leave it hanging
 
 	return OP_EOF;
 }
 
-static Opcode castingPrefix(Parser* parser, Node** nodeHandle) {
+static Opcode castingPrefix(Parser* parser, ASTNode** nodeHandle) {
 	switch(parser->previous.type) {
 		case TOKEN_BOOLEAN: {
 			Literal literal = TO_TYPE_LITERAL(LITERAL_BOOLEAN, false);
-			emitNodeLiteral(nodeHandle, literal);
+			emitASTNodeLiteral(nodeHandle, literal);
 			freeLiteral(literal);
 		}
 		break;
 
 		case TOKEN_INTEGER: {
 			Literal literal = TO_TYPE_LITERAL(LITERAL_INTEGER, false);
-			emitNodeLiteral(nodeHandle, literal);
+			emitASTNodeLiteral(nodeHandle, literal);
 			freeLiteral(literal);
 		}
 		break;
 
 		case TOKEN_FLOAT: {
 			Literal literal = TO_TYPE_LITERAL(LITERAL_FLOAT, false);
-			emitNodeLiteral(nodeHandle, literal);
+			emitASTNodeLiteral(nodeHandle, literal);
 			freeLiteral(literal);
 		}
 		break;
 
 		case TOKEN_STRING: {
 			Literal literal = TO_TYPE_LITERAL(LITERAL_STRING, false);
-			emitNodeLiteral(nodeHandle, literal);
+			emitASTNodeLiteral(nodeHandle, literal);
 			freeLiteral(literal);
 		}
 		break;
@@ -593,7 +593,7 @@ static Opcode castingPrefix(Parser* parser, Node** nodeHandle) {
 	return OP_EOF;
 }
 
-static Opcode castingInfix(Parser* parser, Node** nodeHandle) {
+static Opcode castingInfix(Parser* parser, ASTNode** nodeHandle) {
 	advance(parser);
 
 	switch(parser->previous.type) {
@@ -626,67 +626,67 @@ static Opcode castingInfix(Parser* parser, Node** nodeHandle) {
 	return OP_TYPE_CAST;
 }
 
-static Opcode incrementPrefix(Parser* parser, Node** nodeHandle) {
+static Opcode incrementPrefix(Parser* parser, ASTNode** nodeHandle) {
 	advance(parser);
 
-	Node* node = NULL;
+	ASTNode* node = NULL;
 	identifier(parser, &node);
 
-	emitNodePrefixIncrement(nodeHandle, node->atomic.literal, 1);
+	emitASTNodePrefixIncrement(nodeHandle, node->atomic.literal, 1);
 
 	freeNode(node);
 
 	return OP_EOF;
 }
 
-static Opcode incrementInfix(Parser* parser, Node** nodeHandle) {
-	Node* node = NULL;
+static Opcode incrementInfix(Parser* parser, ASTNode** nodeHandle) {
+	ASTNode* node = NULL;
 	identifier(parser, &node);
 
 	advance(parser);
 
-	emitNodePostfixIncrement(nodeHandle, node->atomic.literal, 1);
+	emitASTNodePostfixIncrement(nodeHandle, node->atomic.literal, 1);
 
 	freeNode(node);
 
 	return OP_EOF;
 }
 
-static Opcode decrementPrefix(Parser* parser, Node** nodeHandle) {
+static Opcode decrementPrefix(Parser* parser, ASTNode** nodeHandle) {
 	advance(parser);
 
-	Node* node = NULL;
+	ASTNode* node = NULL;
 	identifier(parser, &node); //weird
 
-	emitNodePrefixIncrement(nodeHandle, node->atomic.literal, -1);
+	emitASTNodePrefixIncrement(nodeHandle, node->atomic.literal, -1);
 
 	freeNode(node);
 
 	return OP_EOF;
 }
 
-static Opcode decrementInfix(Parser* parser, Node** nodeHandle) {
-	Node* node = NULL;
+static Opcode decrementInfix(Parser* parser, ASTNode** nodeHandle) {
+	ASTNode* node = NULL;
 	identifier(parser, &node);
 
 	advance(parser);
 
-	emitNodePostfixIncrement(nodeHandle, node->atomic.literal, -1);
+	emitASTNodePostfixIncrement(nodeHandle, node->atomic.literal, -1);
 
 	freeNode(node);
 
 	return OP_EOF;
 }
 
-static Opcode fnCall(Parser* parser, Node** nodeHandle) {
+static Opcode fnCall(Parser* parser, ASTNode** nodeHandle) {
 	advance(parser); //skip the left paren
 
 	//binary() is an infix rule - so only get the RHS of the operator
 	switch(parser->previous.type) {
 		//arithmetic
 		case TOKEN_PAREN_LEFT: {
-			Node* arguments = NULL;
-			emitNodeFnCollection(&arguments);
+			ASTNode* arguments = NULL;
+			emitASTNodeFnCollection(&arguments);
 
 			//if there's arguments
 			if (!match(parser, TOKEN_PAREN_RIGHT)) {
@@ -697,20 +697,20 @@ static Opcode fnCall(Parser* parser, Node** nodeHandle) {
 						int oldCapacity = arguments->fnCollection.capacity;
 
 						arguments->fnCollection.capacity = GROW_CAPACITY(oldCapacity);
-						arguments->fnCollection.nodes = GROW_ARRAY(Node, arguments->fnCollection.nodes, oldCapacity, arguments->fnCollection.capacity);
+						arguments->fnCollection.nodes = GROW_ARRAY(ASTNode, arguments->fnCollection.nodes, oldCapacity, arguments->fnCollection.capacity);
 					}
 
-					Node* node = NULL;
+					ASTNode* node = NULL;
 					parsePrecedence(parser, &node, PREC_TERNARY);
 					arguments->fnCollection.nodes[arguments->fnCollection.count++] = *node;
-					FREE(Node, node);
+					FREE(ASTNode, node);
 				} while(match(parser, TOKEN_COMMA));
 
 				consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of argument list");
 			}
 
 			//emit the call
-			emitFnCall(nodeHandle, arguments, arguments->fnCollection.count);
+			emitASTFnCall(nodeHandle, arguments, arguments->fnCollection.count);
 
 			return OP_FN_CALL;
 		}
@@ -724,19 +724,19 @@ static Opcode fnCall(Parser* parser, Node** nodeHandle) {
 	return OP_EOF;
 }
 
-static Opcode indexAccess(Parser* parser, Node** nodeHandle) {
+static Opcode indexAccess(Parser* parser, ASTNode** nodeHandle) {
 	advance(parser);
 
 	//val[first : second : third]
 
-	Node* first = NULL;
-	Node* second = NULL;
-	Node* third = NULL;
+	ASTNode* first = NULL;
+	ASTNode* second = NULL;
+	ASTNode* third = NULL;
 
 	//booleans indicate blank slice indexing
-	emitNodeLiteral(&first, TO_BOOLEAN_LITERAL(true));
-	emitNodeLiteral(&second, TO_BOOLEAN_LITERAL(true));
-	emitNodeLiteral(&third, TO_BOOLEAN_LITERAL(true));
+	emitASTNodeLiteral(&first, TO_BOOLEAN_LITERAL(true));
+	emitASTNodeLiteral(&second, TO_BOOLEAN_LITERAL(true));
+	emitASTNodeLiteral(&third, TO_BOOLEAN_LITERAL(true));
 
 	bool readFirst = false; //pattern matching is bullcrap
 
@@ -758,7 +758,7 @@ static Opcode indexAccess(Parser* parser, Node** nodeHandle) {
 		freeNode(third);
 		third = NULL;
 
-		emitNodeIndex(nodeHandle, first, second, third);
+		emitASTNodeIndex(nodeHandle, first, second, third);
 		return OP_INDEX;
 	}
 
@@ -772,24 +772,24 @@ static Opcode indexAccess(Parser* parser, Node** nodeHandle) {
 	if (match(parser, TOKEN_BRACKET_RIGHT)) {
 		freeNode(third);
 		third = NULL;
-		emitNodeIndex(nodeHandle, first, second, third);
+		emitASTNodeIndex(nodeHandle, first, second, third);
 		return OP_INDEX;
 	}
 
 	//eat the third
 	freeNode(third);
 	parsePrecedence(parser, &third, PREC_TERNARY);
-	emitNodeIndex(nodeHandle, first, second, third);
+	emitASTNodeIndex(nodeHandle, first, second, third);
 
 	consume(parser, TOKEN_BRACKET_RIGHT, "Expected ']' in index notation");
 
 	return OP_INDEX;
 }
 
-static Opcode dot(Parser* parser, Node** nodeHandle) {
+static Opcode dot(Parser* parser, ASTNode** nodeHandle) {
 	advance(parser); //for the dot
 
-	Node* node = NULL;
+	ASTNode* node = NULL;
 
 	parsePrecedence(parser, &node, PREC_CALL);
 
@@ -901,7 +901,7 @@ ParseRule* getRule(TokenType type) {
 }
 
 //constant folding
-static bool calcStaticBinaryArithmetic(Parser* parser, Node** nodeHandle) {
+static bool calcStaticBinaryArithmetic(Parser* parser, ASTNode** nodeHandle) {
 	switch((*nodeHandle)->binary.opcode) {
 		case OP_ADDITION:
 		case OP_SUBTRACTION:
@@ -921,16 +921,16 @@ static bool calcStaticBinaryArithmetic(Parser* parser, Node** nodeHandle) {
 	}
 
 	//recurse to the left and right
-	if ((*nodeHandle)->binary.left->type == NODE_BINARY) {
+	if ((*nodeHandle)->binary.left->type == AST_NODEBINARY) {
 		calcStaticBinaryArithmetic(parser, &(*nodeHandle)->binary.left);
 	}
 
-	if ((*nodeHandle)->binary.right->type == NODE_BINARY) {
+	if ((*nodeHandle)->binary.right->type == AST_NODEBINARY) {
 		calcStaticBinaryArithmetic(parser, &(*nodeHandle)->binary.right);
 	}
 
 	//make sure left and right are both literals
-	if (!((*nodeHandle)->binary.left->type == NODE_LITERAL && (*nodeHandle)->binary.right->type == NODE_LITERAL)) {
+	if (!((*nodeHandle)->binary.left->type == AST_NODELITERAL && (*nodeHandle)->binary.right->type == AST_NODELITERAL)) {
 		return true;
 	}
 
@@ -1076,13 +1076,13 @@ static bool calcStaticBinaryArithmetic(Parser* parser, Node** nodeHandle) {
 	freeNode((*nodeHandle)->binary.left);
 	freeNode((*nodeHandle)->binary.right);
 
-	(*nodeHandle)->type = NODE_LITERAL;
+	(*nodeHandle)->type = AST_NODELITERAL;
 	(*nodeHandle)->atomic.literal = result;
 
 	return true;
 }
 
-static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule rule) {
+static void parsePrecedence(Parser* parser, ASTNode** nodeHandle, PrecedenceRule rule) {
 	//every valid expression has a prefix rule
 	advance(parser);
 	ParseFn prefixRule = getRule(parser->previous.type)->prefix;
@@ -1106,7 +1106,7 @@ static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule ru
 			return;
 		}
 
-		Node* rhsNode = NULL;
+		ASTNode* rhsNode = NULL;
 		const Opcode opcode = infixRule(parser, &rhsNode); //NOTE: infix rule must advance the parser
 
 		if (opcode == OP_EOF) {
@@ -1115,7 +1115,7 @@ static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule ru
 			return; //we're done here
 		}
 
-		emitNodeBinary(nodeHandle, rhsNode, opcode);
+		emitASTNodeBinary(nodeHandle, rhsNode, opcode);
 
 		if (!calcStaticBinaryArithmetic(parser, nodeHandle)) {
 			return;
@@ -1129,15 +1129,15 @@ static void parsePrecedence(Parser* parser, Node** nodeHandle, PrecedenceRule ru
 }
 
 //expressions
-static void expression(Parser* parser, Node** nodeHandle) {
+static void expression(Parser* parser, ASTNode** nodeHandle) {
 	//delegate to the pratt table for expression precedence
 	parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
 }
 
 //statements
-static void blockStmt(Parser* parser, Node** nodeHandle) {
+static void blockStmt(Parser* parser, ASTNode** nodeHandle) {
 	//init
-	emitNodeBlock(nodeHandle);
+	emitASTNodeBlock(nodeHandle);
 
 	//sub-scope, compile it and push it up in a node
 	while (!match(parser, TOKEN_BRACE_RIGHT)) {
@@ -1145,10 +1145,10 @@ static void blockStmt(Parser* parser, Node** nodeHandle) {
 			int oldCapacity = (*nodeHandle)->block.capacity;
 
 			(*nodeHandle)->block.capacity = GROW_CAPACITY(oldCapacity);
-			(*nodeHandle)->block.nodes = GROW_ARRAY(Node, (*nodeHandle)->block.nodes, oldCapacity, (*nodeHandle)->block.capacity);
+			(*nodeHandle)->block.nodes = GROW_ARRAY(ASTNode, (*nodeHandle)->block.nodes, oldCapacity, (*nodeHandle)->block.capacity);
 		}
 
-		Node* node = NULL;
+		ASTNode* node = NULL;
 
 		//process the grammar rule for this line
 		declaration(parser, &node);
@@ -1160,23 +1160,23 @@ static void blockStmt(Parser* parser, Node** nodeHandle) {
 
 		//BUGFIX: statements no longer require an existing node
 		((*nodeHandle)->block.nodes[(*nodeHandle)->block.count++]) = *node;
-		FREE(Node, node); //simply free the tmp node
+		FREE(ASTNode, node); //simply free the tmp node
 	}
 }
 
-static void printStmt(Parser* parser, Node** nodeHandle) {
+static void printStmt(Parser* parser, ASTNode** nodeHandle) {
 	//set the node info
-	Node* node = NULL;
+	ASTNode* node = NULL;
 	expression(parser, &node);
-	emitNodeUnary(nodeHandle, OP_PRINT, node);
+	emitASTNodeUnary(nodeHandle, OP_PRINT, node);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of print statement");
 }
 
-static void assertStmt(Parser* parser, Node** nodeHandle) {
+static void assertStmt(Parser* parser, ASTNode** nodeHandle) {
 	//set the node info
-	(*nodeHandle) = ALLOCATE(Node, 1); //special case, because I'm lazy
-	(*nodeHandle)->type = NODE_BINARY;
+	(*nodeHandle) = ALLOCATE(ASTNode, 1); //special case, because I'm lazy
+	(*nodeHandle)->type = AST_NODEBINARY;
 	(*nodeHandle)->binary.opcode = OP_ASSERT;
 
 	parsePrecedence(parser, &((*nodeHandle)->binary.left), PREC_TERNARY);
@@ -1186,10 +1186,10 @@ static void assertStmt(Parser* parser, Node** nodeHandle) {
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of assert statement");
 }
 
-static void ifStmt(Parser* parser, Node** nodeHandle) {
-	Node* condition = NULL;
-	Node* thenPath = NULL;
-	Node* elsePath = NULL;
+static void ifStmt(Parser* parser, ASTNode** nodeHandle) {
+	ASTNode* condition = NULL;
+	ASTNode* thenPath = NULL;
+	ASTNode* elsePath = NULL;
 
 	//read the condition
 	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' at beginning of if clause");
@@ -1204,12 +1204,12 @@ static void ifStmt(Parser* parser, Node** nodeHandle) {
 		declaration(parser, &elsePath);
 	}
 
-	emitNodePath(nodeHandle, NODE_PATH_IF, NULL, NULL, condition, thenPath, elsePath);
+	emitASTNodePath(nodeHandle, AST_NODEPATH_IF, NULL, NULL, condition, thenPath, elsePath);
 }
 
-static void whileStmt(Parser* parser, Node** nodeHandle) {
-	Node* condition = NULL;
-	Node* thenPath = NULL;
+static void whileStmt(Parser* parser, ASTNode** nodeHandle) {
+	ASTNode* condition = NULL;
+	ASTNode* thenPath = NULL;
 
 	//read the condition
 	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' at beginning of while clause");
@@ -1219,14 +1219,14 @@ static void whileStmt(Parser* parser, Node** nodeHandle) {
 	consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of while clause");
 	declaration(parser, &thenPath);
 
-	emitNodePath(nodeHandle, NODE_PATH_WHILE, NULL, NULL, condition, thenPath, NULL);
+	emitASTNodePath(nodeHandle, AST_NODEPATH_WHILE, NULL, NULL, condition, thenPath, NULL);
 }
 
-static void forStmt(Parser* parser, Node** nodeHandle) {
-	Node* preClause = NULL;
-	Node* postClause = NULL;
-	Node* condition = NULL;
-	Node* thenPath = NULL;
+static void forStmt(Parser* parser, ASTNode** nodeHandle) {
+	ASTNode* preClause = NULL;
+	ASTNode* postClause = NULL;
+	ASTNode* condition = NULL;
+	ASTNode* thenPath = NULL;
 
 	//read the clauses
 	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' at beginning of for clause");
@@ -1242,24 +1242,24 @@ static void forStmt(Parser* parser, Node** nodeHandle) {
 	//read the path
 	declaration(parser, &thenPath);
 
-	emitNodePath(nodeHandle, NODE_PATH_FOR, preClause, postClause, condition, thenPath, NULL);
+	emitASTNodePath(nodeHandle, AST_NODEPATH_FOR, preClause, postClause, condition, thenPath, NULL);
 }
 
-static void breakStmt(Parser* parser, Node** nodeHandle) {
-	emitNodePath(nodeHandle, NODE_PATH_BREAK, NULL, NULL, NULL, NULL, NULL);
+static void breakStmt(Parser* parser, ASTNode** nodeHandle) {
+	emitASTNodePath(nodeHandle, AST_NODEPATH_BREAK, NULL, NULL, NULL, NULL, NULL);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of break statement");
 }
 
-static void continueStmt(Parser* parser, Node** nodeHandle) {
-	emitNodePath(nodeHandle, NODE_PATH_CONTINUE, NULL, NULL, NULL, NULL, NULL);
+static void continueStmt(Parser* parser, ASTNode** nodeHandle) {
+	emitASTNodePath(nodeHandle, AST_NODEPATH_CONTINUE, NULL, NULL, NULL, NULL, NULL);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of continue statement");
 }
 
-static void returnStmt(Parser* parser, Node** nodeHandle) {
-	Node* returnValues = NULL;
-	emitNodeFnCollection(&returnValues);
+static void returnStmt(Parser* parser, ASTNode** nodeHandle) {
+	ASTNode* returnValues = NULL;
+	emitASTNodeFnCollection(&returnValues);
 
 	if (!match(parser, TOKEN_SEMICOLON)) {
 		do { //loop for multiple returns (disabled later in the pipeline)
@@ -1268,25 +1268,25 @@ static void returnStmt(Parser* parser, Node** nodeHandle) {
 				int oldCapacity = returnValues->fnCollection.capacity;
 
 				returnValues->fnCollection.capacity = GROW_CAPACITY(oldCapacity);
-				returnValues->fnCollection.nodes = GROW_ARRAY(Node, returnValues->fnCollection.nodes, oldCapacity, returnValues->fnCollection.capacity);
+				returnValues->fnCollection.nodes = GROW_ARRAY(ASTNode, returnValues->fnCollection.nodes, oldCapacity, returnValues->fnCollection.capacity);
 			}
 
-			Node* node = NULL;
+			ASTNode* node = NULL;
 			parsePrecedence(parser, &node, PREC_TERNARY);
 
 			returnValues->fnCollection.nodes[returnValues->fnCollection.count++] = *node;
-			FREE(Node, node);
+			FREE(ASTNode, node);
 		} while(match(parser, TOKEN_COMMA));
 
 		consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of return statement");
 	}
 
-	emitNodePath(nodeHandle, NODE_PATH_RETURN, NULL, NULL, NULL, returnValues, NULL);
+	emitASTNodePath(nodeHandle, AST_NODEPATH_RETURN, NULL, NULL, NULL, returnValues, NULL);
 }
 
-static void importStmt(Parser* parser, Node** nodeHandle) {
+static void importStmt(Parser* parser, ASTNode** nodeHandle) {
 	//read the identifier
-	Node* node = NULL;
+	ASTNode* node = NULL;
 	advance(parser);
 	identifier(parser, &node);
 
@@ -1306,7 +1306,7 @@ static void importStmt(Parser* parser, Node** nodeHandle) {
 		freeNode(node);
 	}
 
-	emitNodeImport(nodeHandle, NODE_IMPORT, idn, alias);
+	emitASTNodeImport(nodeHandle, AST_NODEIMPORT, idn, alias);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of import statement");
 
@@ -1314,9 +1314,9 @@ static void importStmt(Parser* parser, Node** nodeHandle) {
 	freeLiteral(alias);
 }
 
-static void exportStmt(Parser* parser, Node** nodeHandle) {
+static void exportStmt(Parser* parser, ASTNode** nodeHandle) {
 	//read the identifier
-	Node* node = NULL;
+	ASTNode* node = NULL;
 	advance(parser);
 	identifier(parser, &node);
 
@@ -1336,7 +1336,7 @@ static void exportStmt(Parser* parser, Node** nodeHandle) {
 		freeNode(node);
 	}
 
-	emitNodeImport(nodeHandle, NODE_EXPORT, idn, alias);
+	emitASTNodeImport(nodeHandle, AST_NODEEXPORT, idn, alias);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of export statement");
 
@@ -1345,14 +1345,14 @@ static void exportStmt(Parser* parser, Node** nodeHandle) {
 }
 
 //precedence functions
-static void expressionStmt(Parser* parser, Node** nodeHandle) {
+static void expressionStmt(Parser* parser, ASTNode** nodeHandle) {
 	//BUGFIX: check for empty statements
 	if (match(parser, TOKEN_SEMICOLON)) {
-		emitNodeLiteral(nodeHandle, TO_NULL_LITERAL);
+		emitASTNodeLiteral(nodeHandle, TO_NULL_LITERAL);
 		return;
 	}
 
-	Node* ptr = NULL;
+	ASTNode* ptr = NULL;
 	expression(parser, &ptr);
 
 	if (ptr != NULL) {
@@ -1362,7 +1362,7 @@ static void expressionStmt(Parser* parser, Node** nodeHandle) {
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at the end of expression statement");
 }
 
-static void statement(Parser* parser, Node** nodeHandle) {
+static void statement(Parser* parser, ASTNode** nodeHandle) {
 	//block
 	if (match(parser, TOKEN_BRACE_LEFT)) {
 		blockStmt(parser, nodeHandle);
@@ -1523,7 +1523,7 @@ static Literal readTypeToLiteral(Parser* parser) {
 	return literal;
 }
 
-static void varDecl(Parser* parser, Node** nodeHandle) {
+static void varDecl(Parser* parser, ASTNode** nodeHandle) {
 	//read the identifier
 	consume(parser, TOKEN_IDENTIFIER, "Expected identifier after var keyword");
 	Token identifierToken = parser->previous;
@@ -1550,24 +1550,24 @@ static void varDecl(Parser* parser, Node** nodeHandle) {
 	}
 
 	//variable definition is an expression
-	Node* expressionNode = NULL;
+	ASTNode* expressionNode = NULL;
 	if (match(parser, TOKEN_ASSIGN)) {
 		expression(parser, &expressionNode);
 	}
 	else {
 		//values are null by default
-		emitNodeLiteral(&expressionNode, TO_NULL_LITERAL);
+		emitASTNodeLiteral(&expressionNode, TO_NULL_LITERAL);
 	}
 
 	//TODO: static type checking?
 
 	//declare it
-	emitNodeVarDecl(nodeHandle, identifier, typeLiteral, expressionNode);
+	emitASTNodeVarDecl(nodeHandle, identifier, typeLiteral, expressionNode);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of var declaration");
 }
 
-static void fnDecl(Parser* parser, Node** nodeHandle) {
+static void fnDecl(Parser* parser, ASTNode** nodeHandle) {
 	//read the identifier
 	consume(parser, TOKEN_IDENTIFIER, "Expected identifier after fn keyword");
 	Token identifierToken = parser->previous;
@@ -1587,8 +1587,8 @@ static void fnDecl(Parser* parser, Node** nodeHandle) {
 	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' after function identifier");
 
 	//for holding the array of arguments
-	Node* argumentNode = NULL;
-	emitNodeFnCollection(&argumentNode);
+	ASTNode* argumentNode = NULL;
+	emitASTNodeFnCollection(&argumentNode);
 
 	//read args
 	if (!match(parser, TOKEN_PAREN_RIGHT)) {
@@ -1618,15 +1618,15 @@ static void fnDecl(Parser* parser, Node** nodeHandle) {
 					int oldCapacity = argumentNode->fnCollection.capacity;
 
 					argumentNode->fnCollection.capacity = GROW_CAPACITY(oldCapacity);
-					argumentNode->fnCollection.nodes = GROW_ARRAY(Node, argumentNode->fnCollection.nodes, oldCapacity, argumentNode->fnCollection.capacity);
+					argumentNode->fnCollection.nodes = GROW_ARRAY(ASTNode, argumentNode->fnCollection.nodes, oldCapacity, argumentNode->fnCollection.capacity);
 				}
 
 				//store the arg in the array
-				Node* literalNode = NULL;
-				emitNodeVarDecl(&literalNode, argIdentifier, argTypeLiteral, NULL);
+				ASTNode* literalNode = NULL;
+				emitASTNodeVarDecl(&literalNode, argIdentifier, argTypeLiteral, NULL);
 
 				argumentNode->fnCollection.nodes[argumentNode->fnCollection.count++] = *literalNode;
-				FREE(Node, literalNode);
+				FREE(ASTNode, literalNode);
 
 				break;
 			}
@@ -1662,15 +1662,15 @@ static void fnDecl(Parser* parser, Node** nodeHandle) {
 				int oldCapacity = argumentNode->fnCollection.capacity;
 
 				argumentNode->fnCollection.capacity = GROW_CAPACITY(oldCapacity);
-				argumentNode->fnCollection.nodes = GROW_ARRAY(Node, argumentNode->fnCollection.nodes, oldCapacity, argumentNode->fnCollection.capacity);
+				argumentNode->fnCollection.nodes = GROW_ARRAY(ASTNode, argumentNode->fnCollection.nodes, oldCapacity, argumentNode->fnCollection.capacity);
 			}
 
 			//store the arg in the array
-			Node* literalNode = NULL;
-			emitNodeVarDecl(&literalNode, argIdentifier, argTypeLiteral, NULL);
+			ASTNode* literalNode = NULL;
+			emitASTNodeVarDecl(&literalNode, argIdentifier, argTypeLiteral, NULL);
 
 			argumentNode->fnCollection.nodes[argumentNode->fnCollection.count++] = *literalNode;
-			FREE(Node, literalNode);
+			FREE(ASTNode, literalNode);
 
 		} while (match(parser, TOKEN_COMMA)); //if comma is read, continue
 
@@ -1678,8 +1678,8 @@ static void fnDecl(Parser* parser, Node** nodeHandle) {
 	}
 
 	//read the return types, if present
-	Node* returnNode = NULL;
-	emitNodeFnCollection(&returnNode);
+	ASTNode* returnNode = NULL;
+	emitASTNodeFnCollection(&returnNode);
 
 	if (match(parser, TOKEN_COLON)) {
 		do {
@@ -1688,28 +1688,28 @@ static void fnDecl(Parser* parser, Node** nodeHandle) {
 				int oldCapacity = returnNode->fnCollection.capacity;
 
 				returnNode->fnCollection.capacity = GROW_CAPACITY(oldCapacity);
-				returnNode->fnCollection.nodes = GROW_ARRAY(Node, returnNode->fnCollection.nodes, oldCapacity, returnNode->fnCollection.capacity);
+				returnNode->fnCollection.nodes = GROW_ARRAY(ASTNode, returnNode->fnCollection.nodes, oldCapacity, returnNode->fnCollection.capacity);
 			}
 
-			Node* literalNode = NULL;
-			emitNodeLiteral(&literalNode, readTypeToLiteral(parser));
+			ASTNode* literalNode = NULL;
+			emitASTNodeLiteral(&literalNode, readTypeToLiteral(parser));
 
 			returnNode->fnCollection.nodes[returnNode->fnCollection.count++] = *literalNode;
-			FREE(Node, literalNode);
+			FREE(ASTNode, literalNode);
 		} while(match(parser, TOKEN_COMMA));
 	}
 
 	//read the function body
 	consume(parser, TOKEN_BRACE_LEFT, "Expected '{' after return list");
 
-	Node* blockNode = NULL;
+	ASTNode* blockNode = NULL;
 	blockStmt(parser, &blockNode);
 
 	//declare it
-	emitNodeFnDecl(nodeHandle, identifier, argumentNode, returnNode, blockNode);
+	emitASTNodeFnDecl(nodeHandle, identifier, argumentNode, returnNode, blockNode);
 }
 
-static void declaration(Parser* parser, Node** nodeHandle) { //assume nodeHandle holds a blank node
+static void declaration(Parser* parser, ASTNode** nodeHandle) { //assume nodeHandle holds a blank node
 	//variable declarations
 	if (match(parser, TOKEN_VAR)) {
 		varDecl(parser, nodeHandle);
@@ -1742,14 +1742,14 @@ void freeParser(Parser* parser) {
 	parser->current.type = TOKEN_NULL;
 }
 
-Node* scanParser(Parser* parser) {
+ASTNode* scanParser(Parser* parser) {
 	//check for EOF
 	if (match(parser, TOKEN_EOF)) {
 		return NULL;
 	}
 
 	//returns nodes on the heap
-	Node* node = NULL;
+	ASTNode* node = NULL;
 
 	//process the grammar rule for this line
 	declaration(parser, &node);
@@ -1758,8 +1758,8 @@ Node* scanParser(Parser* parser) {
 		synchronize(parser);
 		//return an error node for this iteration
 		freeNode(node);
-		node = ALLOCATE(Node, 1);
-		node->type = NODE_ERROR;
+		node = ALLOCATE(ASTNode, 1);
+		node->type = AST_NODEERROR;
 	}
 
 	return node;

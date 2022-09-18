@@ -1,4 +1,4 @@
-#include "node.h"
+#include "ast_node.h"
 
 #include "memory.h"
 #include "console_colors.h"
@@ -12,8 +12,8 @@ int main() {
 
 		Literal literal =  TO_STRING_LITERAL(copyString(str, strlen(str)), strlen(str));
 
-		Node* node;
-		emitNodeLiteral(&node, literal);
+		ASTNode* node;
+		emitASTNodeLiteral(&node, literal);
 		freeLiteral(literal);
 		freeNode(node);
 	}
@@ -23,27 +23,27 @@ int main() {
 		char* idn = "foobar";
 		char* str = "hello world";
 
-		Node* dictionary;
-		Node* left;
-		Node* right;
+		ASTNode* dictionary;
+		ASTNode* left;
+		ASTNode* right;
 
 		Literal identifier = TO_IDENTIFIER_LITERAL(copyString(idn, strlen(idn)), strlen(idn));
 		Literal string = TO_STRING_LITERAL(copyString(str, strlen(str)), strlen(str));
 
-		emitNodeCompound(&dictionary, LITERAL_DICTIONARY);
-		emitNodeLiteral(&left, identifier);
-		emitNodeLiteral(&right, string);
+		emitASTNodeCompound(&dictionary, LITERAL_DICTIONARY);
+		emitASTNodeLiteral(&left, identifier);
+		emitASTNodeLiteral(&right, string);
 
 		//grow the node if needed
 		if (dictionary->compound.capacity < dictionary->compound.count + 1) {
 			int oldCapacity = dictionary->compound.capacity;
 
 			dictionary->compound.capacity = GROW_CAPACITY(oldCapacity);
-			dictionary->compound.nodes = GROW_ARRAY(Node, dictionary->compound.nodes, oldCapacity, dictionary->compound.capacity);
+			dictionary->compound.nodes = GROW_ARRAY(ASTNode, dictionary->compound.nodes, oldCapacity, dictionary->compound.capacity);
 		}
 
 		//store the left and right in the node
-		setNodePair(&dictionary->compound.nodes[dictionary->compound.count++], left, right);
+		setASTNodePair(&dictionary->compound.nodes[dictionary->compound.count++], left, right);
 
 		//the real test
 		freeNode(dictionary);

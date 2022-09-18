@@ -65,7 +65,7 @@ int main() {
 		initParser(&parser, &lexer);
 		initCompiler(&compiler);
 
-		Node* node = scanParser(&parser);
+		ASTNode* node = scanParser(&parser);
 
 		//write
 		writeCompiler(&compiler, node);
@@ -95,9 +95,9 @@ int main() {
 		initParser(&parser, &lexer);
 		initCompiler(&compiler);
 
-		Node* node = scanParser(&parser);
+		ASTNode* node = scanParser(&parser);
 		while (node != NULL) {
-			if (node->type == NODE_ERROR) {
+			if (node->type == AST_NODEERROR) {
 				fprintf(stderr, ERROR "ERROR: Error node found" RESET);
 				return -1;
 			}

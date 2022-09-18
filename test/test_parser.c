@@ -64,21 +64,21 @@ int main() {
 		initLexer(&lexer, source);
 		initParser(&parser, &lexer);
 
-		Node* node = scanParser(&parser);
+		ASTNode* node = scanParser(&parser);
 
 		//inspect the node
 		if (node == NULL) {
-			fprintf(stderr, ERROR "ERROR: Node is null" RESET);
+			fprintf(stderr, ERROR "ERROR: ASTNode is null" RESET);
 			return -1;
 		}
 
-		if (node->type != NODE_UNARY || node->unary.opcode != OP_PRINT) {
-			fprintf(stderr, ERROR "ERROR: Node is not a print instruction" RESET);
+		if (node->type != AST_NODEUNARY || node->unary.opcode != OP_PRINT) {
+			fprintf(stderr, ERROR "ERROR: ASTNode is not a print instruction" RESET);
 			return -1;
 		}
 
-		if (node->unary.child->type != NODE_LITERAL || !IS_NULL(node->unary.child->atomic.literal)) {
-			fprintf(stderr, ERROR "ERROR: Node to be printed is not a null value" RESET);
+		if (node->unary.child->type != AST_NODELITERAL || !IS_NULL(node->unary.child->atomic.literal)) {
+			fprintf(stderr, ERROR "ERROR: ASTNode to be printed is not a null value" RESET);
 			return -1;
 		}
 
@@ -98,10 +98,10 @@ int main() {
 		initLexer(&lexer, source);
 		initParser(&parser, &lexer);
 
-		Node* node = scanParser(&parser);
+		ASTNode* node = scanParser(&parser);
 
 		while (node != NULL) {
-			if (node->type == NODE_ERROR) {
+			if (node->type == AST_NODEERROR) {
 				fprintf(stderr, ERROR "ERROR: Error node detected" RESET);
 				return -1;
 			}

@@ -1,87 +1,87 @@
-#include "node.h"
+#include "ast_node.h"
 
 #include "memory.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
-void freeNodeCustom(Node* node, bool freeSelf) {
+void freeNodeCustom(ASTNode* node, bool freeSelf) {
 	//don't free a NULL node
 	if (node == NULL) {
 		return;
 	}
 
 	switch(node->type) {
-		case NODE_ERROR:
+		case AST_NODEERROR:
 			//NO-OP
 		break;
 
-		case NODE_LITERAL:
+		case AST_NODELITERAL:
 			freeLiteral(node->atomic.literal);
 		break;
 
-		case NODE_UNARY:
+		case AST_NODEUNARY:
 			freeNode(node->unary.child);
 		break;
 
-		case NODE_BINARY:
+		case AST_NODEBINARY:
 			freeNode(node->binary.left);
 			freeNode(node->binary.right);
 		break;
 
-		case NODE_GROUPING:
+		case AST_NODEGROUPING:
 			freeNode(node->grouping.child);
 		break;
 
-		case NODE_BLOCK:
+		case AST_NODEBLOCK:
 			for (int i = 0; i < node->block.count; i++) {
 				freeNodeCustom(node->block.nodes + i, false);
 			}
-			FREE_ARRAY(Node, node->block.nodes, node->block.capacity);
+			FREE_ARRAY(ASTNode, node->block.nodes, node->block.capacity);
 		break;
 
-		case NODE_COMPOUND:
+		case AST_NODECOMPOUND:
 			for (int i = 0; i < node->compound.count; i++) {
 				freeNodeCustom(node->compound.nodes + i, false);
 			}
-			FREE_ARRAY(Node, node->compound.nodes, node->compound.capacity);
+			FREE_ARRAY(ASTNode, node->compound.nodes, node->compound.capacity);
 		break;
 
-		case NODE_PAIR:
+		case AST_NODEPAIR:
 			freeNode(node->pair.left);
 			freeNode(node->pair.right);
 		break;
 
-		case NODE_VAR_DECL:
+		case AST_NODEVAR_DECL:
 			freeLiteral(node->varDecl.identifier);
 			freeLiteral(node->varDecl.typeLiteral);
 			freeNode(node->varDecl.expression);
 		break;
 
-		case NODE_FN_DECL:
+		case AST_NODEFN_DECL:
 			freeLiteral(node->fnDecl.identifier);
 			freeNode(node->fnDecl.arguments);
 			freeNode(node->fnDecl.returns);
 			freeNode(node->fnDecl.block);
 		break;
 
-		case NODE_FN_COLLECTION:
+		case AST_NODEFN_COLLECTION:
 			for (int i = 0; i < node->fnCollection.count; i++) {
 				freeNodeCustom(node->fnCollection.nodes + i, false);
 			}
-			FREE_ARRAY(Node, node->fnCollection.nodes, node->fnCollection.capacity);
+			FREE_ARRAY(ASTNode, node->fnCollection.nodes, node->fnCollection.capacity);
 		break;
 
-		case NODE_FN_CALL:
+		case AST_NODEFN_CALL:
 			freeNode(node->fnCall.arguments);
 		break;
 
-		case NODE_PATH_IF:
-		case NODE_PATH_WHILE:
-		case NODE_PATH_FOR:
-		case NODE_PATH_BREAK:
-		case NODE_PATH_CONTINUE:
-		case NODE_PATH_RETURN:
+		case AST_NODEPATH_IF:
+		case AST_NODEPATH_WHILE:
+		case AST_NODEPATH_FOR:
+		case AST_NODEPATH_BREAK:
+		case AST_NODEPATH_CONTINUE:
+		case AST_NODEPATH_RETURN:
 			freeNode(node->path.preClause);
 			freeNode(node->path.postClause);
 			freeNode(node->path.condition);
@@ -89,19 +89,19 @@ void freeNodeCustom(Node* node, bool freeSelf) {
 			freeNode(node->path.elsePath);
 		break;
 
-		case NODE_INCREMENT_PREFIX:
-		case NODE_INCREMENT_POSTFIX:
+		case AST_NODEINCREMENT_PREFIX:
+		case AST_NODEINCREMENT_POSTFIX:
 			freeLiteral(node->increment.identifier);
 		break;
 
-		case NODE_IMPORT:
-		case NODE_EXPORT:
+		case AST_NODEIMPORT:
+		case AST_NODEEXPORT:
 			freeLiteral(node->import.identifier);
 			freeLiteral(node->import.alias);
 		break;
 
-		case NODE_INDEX:
-		case NODE_DOT:
+		case AST_NODEINDEX:
+		case AST_NODEDOT:
 			freeNode(node->index.first);
 			freeNode(node->index.second);
 			freeNode(node->index.third);
@@ -109,35 +109,35 @@ void freeNodeCustom(Node* node, bool freeSelf) {
 	}
 
 	if (freeSelf) {
-		FREE(Node, node);
+		FREE(ASTNode, node);
 	}
 }
 
-void freeNode(Node* node) {
+void freeNode(ASTNode* node) {
 	freeNodeCustom(node, true);
 }
 
-void emitNodeLiteral(Node** nodeHandle, Literal literal) {
+void emitASTNodeLiteral(ASTNode** nodeHandle, Literal literal) {
 	//allocate a new node
-	*nodeHandle = ALLOCATE(Node, 1);
+	*nodeHandle = ALLOCATE(ASTNode, 1);
 
-	(*nodeHandle)->type = NODE_LITERAL;
+	(*nodeHandle)->type = AST_NODELITERAL;
 	(*nodeHandle)->atomic.literal = copyLiteral(literal);
 }
 
-void emitNodeUnary(Node** nodeHandle, Opcode opcode, Node* child) {
+void emitASTNodeUnary(ASTNode** nodeHandle, Opcode opcode, ASTNode* child) {
 	//allocate a new node
-	*nodeHandle = ALLOCATE(Node, 1);
+	*nodeHandle = ALLOCATE(ASTNode, 1);
 
-	(*nodeHandle)->type = NODE_UNARY;
+	(*nodeHandle)->type = AST_NODEUNARY;
 	(*nodeHandle)->unary.opcode = opcode;
 	(*nodeHandle)->unary.child = child;
 }
 
-void emitNodeBinary(Node** nodeHandle, Node* rhs, Opcode opcode) {
-	Node* tmp = ALLOCATE(Node, 1);
+void emitASTNodeBinary(ASTNode** nodeHandle, ASTNode* rhs, Opcode opcode) {
+	ASTNode* tmp = ALLOCATE(ASTNode, 1);
 
-	tmp->type = NODE_BINARY;
+	tmp->type = AST_NODEBINARY;
 	tmp->binary.opcode = opcode;
 	tmp->binary.left = *nodeHandle;
 	tmp->binary.right = rhs;
@@ -145,19 +145,19 @@ void emitNodeBinary(Node** nodeHandle, Node* rhs, Opcode opcode) {
 	*nodeHandle = tmp;
 }
 
-void emitNodeGrouping(Node** nodeHandle) {
-	Node* tmp = ALLOCATE(Node, 1);
+void emitASTNodeGrouping(ASTNode** nodeHandle) {
+	ASTNode* tmp = ALLOCATE(ASTNode, 1);
 
-	tmp->type = NODE_GROUPING;
+	tmp->type = AST_NODEGROUPING;
 	tmp->grouping.child = *nodeHandle;
 
 	*nodeHandle = tmp;
 }
 
-void emitNodeBlock(Node** nodeHandle) {
-	Node* tmp = ALLOCATE(Node, 1);
+void emitASTNodeBlock(ASTNode** nodeHandle) {
+	ASTNode* tmp = ALLOCATE(ASTNode, 1);
 
-	tmp->type = NODE_BLOCK;
+	tmp->type = AST_NODEBLOCK;
 	tmp->block.nodes = NULL;
 	tmp->block.capacity = 0;
 	tmp->block.count = 0;
@@ -165,10 +165,10 @@ void emitNodeBlock(Node** nodeHandle) {
 	*nodeHandle = tmp;
 }
 
-void emitNodeCompound(Node** nodeHandle, LiteralType literalType) {
-	Node* tmp = ALLOCATE(Node, 1);
+void emitASTNodeCompound(ASTNode** nodeHandle, LiteralType literalType) {
+	ASTNode* tmp = ALLOCATE(ASTNode, 1);
 
-	tmp->type = NODE_COMPOUND;
+	tmp->type = AST_NODECOMPOUND;
 	tmp->compound.literalType = literalType;
 	tmp->compound.nodes = NULL;
 	tmp->compound.capacity = 0;
@@ -177,17 +177,17 @@ void emitNodeCompound(Node** nodeHandle, LiteralType literalType) {
 	*nodeHandle = tmp;
 }
 
-void setNodePair(Node* node, Node* left, Node* right) {
+void setASTNodePair(ASTNode* node, ASTNode* left, ASTNode* right) {
 	//assume the node has already been allocated
-	node->type = NODE_PAIR;
+	node->type = AST_NODEPAIR;
 	node->pair.left = left;
 	node->pair.right = right;
 }
 
-void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal typeLiteral, Node* expression) {
-	Node* tmp = ALLOCATE(Node, 1);
+void emitASTNodeVarDecl(ASTNode** nodeHandle, Literal identifier, Literal typeLiteral, ASTNode* expression) {
+	ASTNode* tmp = ALLOCATE(ASTNode, 1);
 
-	tmp->type = NODE_VAR_DECL;
+	tmp->type = AST_NODEVAR_DECL;
 	tmp->varDecl.identifier = identifier;
 	tmp->varDecl.typeLiteral = typeLiteral;
 	tmp->varDecl.expression = expression;
@@ -195,10 +195,10 @@ void emitNodeVarDecl(Node** nodeHandle, Literal identifier, Literal typeLiteral,
 	*nodeHandle = tmp;
 }
 
-void emitNodeFnDecl(Node** nodeHandle, Literal identifier, Node* arguments, Node* returns, Node* block) {
-	Node* tmp = ALLOCATE(Node, 1);
+void emitASTNodeFnDecl(ASTNode** nodeHandle, Literal identifier, ASTNode* arguments, ASTNode* returns, ASTNode* block) {
+	ASTNode* tmp = ALLOCATE(ASTNode, 1);
 
-	tmp->type = NODE_FN_DECL;
+	tmp->type = AST_NODEFN_DECL;
 	tmp->fnDecl.identifier = identifier;
 	tmp->fnDecl.arguments = arguments;
 	tmp->fnDecl.returns = returns;
@@ -207,20 +207,20 @@ void emitNodeFnDecl(Node** nodeHandle, Literal identifier, Node* arguments, Node
 	*nodeHandle = tmp;
 }
 
-void emitFnCall(Node** nodeHandle, Node* arguments, int argumentCount) {
-	Node* tmp = ALLOCATE(Node, 1);
+void emitASTFnCall(ASTNode** nodeHandle, ASTNode* arguments, int argumentCount) {
+	ASTNode* tmp = ALLOCATE(ASTNode, 1);
 
-	tmp->type = NODE_FN_CALL;
+	tmp->type = AST_NODEFN_CALL;
 	tmp->fnCall.arguments = arguments;
 	tmp->fnCall.argumentCount = argumentCount;
 
 	*nodeHandle = tmp;
 }
 
-void emitNodeFnCollection(Node** nodeHandle) { //a collection of nodes, intended for use with functions
-	Node* tmp = ALLOCATE(Node, 1);
+void emitASTNodeFnCollection(ASTNode** nodeHandle) { //a collection of nodes, intended for use with functions
+	ASTNode* tmp = ALLOCATE(ASTNode, 1);
 
-	tmp->type = NODE_FN_COLLECTION;
+	tmp->type = AST_NODEFN_COLLECTION;
 	tmp->fnCollection.nodes = NULL;
 	tmp->fnCollection.capacity = 0;
 	tmp->fnCollection.count = 0;
@@ -228,8 +228,8 @@ void emitNodeFnCollection(Node** nodeHandle) { //a collection of nodes, intended
 	*nodeHandle = tmp;
 }
 
-void emitNodePath(Node** nodeHandle, NodeType type, Node* preClause, Node* postClause, Node* condition, Node* thenPath, Node* elsePath) {
-	Node* tmp = ALLOCATE(Node, 1);
+void emitASTNodePath(ASTNode** nodeHandle, ASTNodeType type, ASTNode* preClause, ASTNode* postClause, ASTNode* condition, ASTNode* thenPath, ASTNode* elsePath) {
+	ASTNode* tmp = ALLOCATE(ASTNode, 1);
 
 	tmp->type = type;
 	tmp->path.preClause = preClause;
@@ -241,28 +241,28 @@ void emitNodePath(Node** nodeHandle, NodeType type, Node* preClause, Node* postC
 	*nodeHandle = tmp;
 }
 
-void emitNodePrefixIncrement(Node** nodeHandle, Literal identifier, int increment) {
-	Node* tmp = ALLOCATE(Node, 1);
+void emitASTNodePrefixIncrement(ASTNode** nodeHandle, Literal identifier, int increment) {
+	ASTNode* tmp = ALLOCATE(ASTNode, 1);
 
-	tmp->type = NODE_INCREMENT_PREFIX;
+	tmp->type = AST_NODEINCREMENT_PREFIX;
 	tmp->increment.identifier = copyLiteral(identifier);
 	tmp->increment.increment = increment;
 
 	*nodeHandle = tmp;
 }
 
-void emitNodePostfixIncrement(Node** nodeHandle, Literal identifier, int increment) {
-	Node* tmp = ALLOCATE(Node, 1);
+void emitASTNodePostfixIncrement(ASTNode** nodeHandle, Literal identifier, int increment) {
+	ASTNode* tmp = ALLOCATE(ASTNode, 1);
 
-	tmp->type = NODE_INCREMENT_POSTFIX;
+	tmp->type = AST_NODEINCREMENT_POSTFIX;
 	tmp->increment.identifier = copyLiteral(identifier);
 	tmp->increment.increment = increment;
 
 	*nodeHandle = tmp;
 }
 
-void emitNodeImport(Node** nodeHandle, NodeType mode, Literal identifier, Literal alias) {
-	Node* tmp = ALLOCATE(Node, 1);
+void emitASTNodeImport(ASTNode** nodeHandle, ASTNodeType mode, Literal identifier, Literal alias) {
+	ASTNode* tmp = ALLOCATE(ASTNode, 1);
 
 	tmp->type = mode;
 	tmp->import.identifier = copyLiteral(identifier);
@@ -271,10 +271,10 @@ void emitNodeImport(Node** nodeHandle, NodeType mode, Literal identifier, Litera
 	*nodeHandle = tmp;
 }
 
-void emitNodeIndex(Node** nodeHandle, Node* first, Node* second, Node* third) {
-	Node* tmp = ALLOCATE(Node, 1);
+void emitASTNodeIndex(ASTNode** nodeHandle, ASTNode* first, ASTNode* second, ASTNode* third) {
+	ASTNode* tmp = ALLOCATE(ASTNode, 1);
 
-	tmp->type = NODE_INDEX;
+	tmp->type = AST_NODEINDEX;
 	tmp->index.first = first;
 	tmp->index.second = second;
 	tmp->index.third = third;
@@ -282,10 +282,10 @@ void emitNodeIndex(Node** nodeHandle, Node* first, Node* second, Node* third) {
 	*nodeHandle = tmp;
 }
 
-void emitNodeDot(Node** nodeHandle, Node* first) {
-	Node* tmp = ALLOCATE(Node, 1);
+void emitASTNodeDot(ASTNode** nodeHandle, ASTNode* first) {
+	ASTNode* tmp = ALLOCATE(ASTNode, 1);
 
-	tmp->type = NODE_DOT;
+	tmp->type = AST_NODEDOT;
 	tmp->index.first = first;
 	tmp->index.second = NULL;
 	tmp->index.third = NULL;

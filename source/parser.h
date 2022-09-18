@@ -2,7 +2,7 @@
 
 #include "common.h"
 #include "lexer.h"
-#include "node.h"
+#include "ast_node.h"
 
 //DOCS: parsers are bound to a lexer, and turn the outputted tokens into AST nodes
 typedef struct {
@@ -17,4 +17,4 @@ typedef struct {
 
 TOY_API void initParser(Parser* parser, Lexer* lexer);
 TOY_API void freeParser(Parser* parser);
-TOY_API Node* scanParser(Parser* parser);
+TOY_API ASTNode* scanParser(Parser* parser);

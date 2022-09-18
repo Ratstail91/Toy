@@ -60,10 +60,10 @@ unsigned char* compileString(char* source, size_t* size) {
 	initCompiler(&compiler);
 
 	//run the parser until the end of the source
-	Node* node = scanParser(&parser);
+	ASTNode* node = scanParser(&parser);
 	while(node != NULL) {
 		//pack up and leave
-		if (node->type == NODE_ERROR) {
+		if (node->type == AST_NODEERROR) {
 			printf(ERROR "error node detected\n" RESET);
 			freeNode(node);
 			freeCompiler(&compiler);
@@ -138,7 +138,7 @@ int main() {
 		initCompiler(&compiler);
 		initInterpreter(&interpreter);
 
-		Node* node = scanParser(&parser);
+		ASTNode* node = scanParser(&parser);
 
 		//write
 		writeCompiler(&compiler, node);
