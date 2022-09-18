@@ -5,7 +5,7 @@ CFLAGS +=$(addprefix -I,$(IDIR)) -g -Wall -W -pedantic -Wno-unused-parameter -Wn
 LIBS +=
 
 ODIR = obj
-TARGETS = $(filter-out $(wildcard ../source/*main.c),$(wildcard ../source/*.c))
+TARGETS = $(wildcard ../source/*.c) $(filter-out $(wildcard ../repl/*main.c),$(wildcard ../repl/*.c))
 TESTS = $(wildcard *.c)
 OBJ = $(addprefix $(ODIR)/,$(TARGETS:../source/%.c=%.o)) $(addprefix $(ODIR)/,$(TESTS:.c=.o))
 

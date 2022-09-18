@@ -9,6 +9,7 @@
 	assert value == 42, "import/export failed";
 }
 
+
 //test functions using import/export
 {
 	fn f() {
@@ -17,6 +18,7 @@
 		assert field == 42, "import in function failed";
 	}
 }
+
 
 //test importing/exporting of functions
 {
@@ -32,6 +34,7 @@
 	assert func() == 69, "import/export of functions failed";
 }
 
+
 //test that variables retain their types with the typeof keyword
 {
 	var t: type = int;
@@ -44,5 +47,6 @@
 
 	assert typeof t == type, "type retention failed";
 }
+
 
 print "All good";

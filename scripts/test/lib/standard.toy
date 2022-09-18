@@ -1,0 +1,10 @@
+//test the standard library
+{
+	import standard;
+
+	//this depends on external factors, so only check the length
+	assert clock().length() == 24, "clock() import failed";
+}
+
+
+print "All good";
