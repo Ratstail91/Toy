@@ -40,3 +40,4 @@ In addition, the macros defined in [literal.h](https://github.com/Ratstail91/Toy
 * `IS_TRUTHY` - check if a literal is truthy
 * `MAX_STRING_LENGTH` - the maximum length of a string in Toy (can be altered if needed)
 
+When you create a new Literal object, be sure to call `freeLiteral()` on it afterwards! If you don't, your program will leak memory as Toy has no internal tracker for such things.
