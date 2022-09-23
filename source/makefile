@@ -21,6 +21,9 @@ else ifeq ($(shell uname),Linux)
 else ifeq ($(OS),Windows_NT)
 	LIBLINE =-Wl,--out-implib=../$(TOY_OUTDIR)/lib$(OUTNAME).dll.a -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--whole-archive $(OBJ) -Wl,--no-whole-archive
 	OUT=../$(TOY_OUTDIR)/$(OUTNAME).dll
+else ifeq ($(shell uname),Darwin)
+	LIBLINE = $(OBJ)
+	OUT=../$(TOY_OUTDIR)/lib$(OUTNAME).dylib
 else
 	@echo "Platform test failed - what platform is this?"
 	exit 1
