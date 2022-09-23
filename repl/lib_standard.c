@@ -96,4 +96,3 @@ int hookStandard(Interpreter* interpreter, Literal identifier, Literal alias) {
 
 	return 0;
 }
-

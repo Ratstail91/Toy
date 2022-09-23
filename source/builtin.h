@@ -9,4 +9,3 @@ int _push(Interpreter* interpreter, LiteralArray* arguments);
 int _pop(Interpreter* interpreter, LiteralArray* arguments);
 int _length(Interpreter* interpreter, LiteralArray* arguments);
 int _clear(Interpreter* interpreter, LiteralArray* arguments);
-
