@@ -45,6 +45,16 @@ else ifeq ($(shell uname),Linux)
 	find . -empty -type d -delete
 else ifeq ($(OS),Windows_NT)
 	$(RM) *.o *.a *.exe 
+else ifeq ($(shell uname),Darwin)
+	find . -type f -name '*.o' -exec rm -f -r -v {} \;
+	find . -type f -name '*.a' -exec rm -f -r -v {} \;
+	find . -type f -name '*.exe' -exec rm -f -r -v {} \;
+	find . -type f -name '*.dll' -exec rm -f -r -v {} \;
+	find . -type f -name '*.lib' -exec rm -f -r -v {} \;
+	find . -type f -name '*.dylib' -exec rm -f -r -v {} \;
+	find . -type f -name '*.so' -exec rm -f -r -v {} \;
+	rm -rf out
+	find . -empty -type d -delete
 else
 	@echo "Deletion failed - what platform is this?"
 endif
