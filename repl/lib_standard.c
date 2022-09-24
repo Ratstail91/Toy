@@ -42,22 +42,20 @@ int hookStandard(Interpreter* interpreter, Literal identifier, Literal alias) {
 		{NULL, NULL}
 	};
 
-	/* TODO: too exhuasted to fix this right now
 	//store the library in an aliased dictionary
 	if (!IS_NULL(alias)) {
-		//get the alias as a string
-		Literal dictName = TO_STRING_LITERAL( copyString(AS_IDENTIFIER(alias), alias.as.identifier.length), alias.as.identifier.length );
-
 		//make sure the name isn't taken
-		if (existsLiteralDictionary(&interpreter->scope->variables, dictName)) {
+		if (isDelcaredScopeVariable(interpreter->scope, alias)) {
 			interpreter->errorOutput("Can't override an existing variable\n");
-			freeLiteral(dictName);
+			freeLiteral(alias);
 			return false;
 		}
 
+		//create the dictionary to load up with functions
 		LiteralDictionary* dictionary = ALLOCATE(LiteralDictionary, 1);
 		initLiteralDictionary(dictionary);
 
+		//load the dict with functions
 		for (int i = 0; natives[i].name; i++) {
 			Literal name = TO_STRING_LITERAL(copyString(natives[i].name, strlen(natives[i].name)), strlen(natives[i].name));
 			Literal func = TO_FUNCTION_LITERAL((void*)natives[i].fn, 0);
@@ -78,16 +76,14 @@ int hookStandard(Interpreter* interpreter, Literal identifier, Literal alias) {
 
 		//set scope
 		Literal dict = TO_DICTIONARY_LITERAL(dictionary);
-		setLiteralDictionary(&interpreter->scope->variables, dictName, dict);
-		setLiteralDictionary(&interpreter->scope->types, dictName, type);
+		declareScopeVariable(interpreter->scope, alias, type);
+		setScopeVariable(interpreter->scope, alias, dict, false);
 
 		//cleanup
 		freeLiteral(dict);
 		freeLiteral(type);
-		freeLiteral(dictName);
 		return 0;
 	}
-	*/
 
 	//default
 	for (int i = 0; natives[i].name; i++) {

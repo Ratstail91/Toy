@@ -1,6 +1,5 @@
-fn omitFirstInteger(arg1: int, ...rest) {
-	//rest comes in as an array of any
-	return rest;
-}
 
-print omitFirstInteger(1, 2, 3);
+
+import standard as std;
+
+print std;

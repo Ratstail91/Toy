@@ -39,4 +39,12 @@
 }
 
 
+//test importing as an alias
+{
+	import standard as std;
+
+	assert std["clock"]().length() == 24, "import library as alias failed";
+}
+
+
 print "All good";

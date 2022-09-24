@@ -36,16 +36,14 @@ DONE: slice and dot notation around the builtin _index and _dot functions
 DONE: maximum recursion/function depth
 DONE: better sugar for _push, _pop, _length
 DONE: nested compound assignment bug
-
-
-TODO: hooks on the external libraries, triggered on import
+DONE: hooks on the external libraries, triggered on import
 
 
 TODO: standard library
 TODO: external script runner library
 TODO: document how it all works
 TODO: packaging for release?
-TODO: test embedding
+TODO: test embedding in a game
 
 NOPE: a = b = c = 1;
 NOPE: functions return a set number of values
