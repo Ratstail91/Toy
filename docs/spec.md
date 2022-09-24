@@ -538,34 +538,25 @@ import standard;
 
 The following functions are available in the standard library.
 
-* clock() - This function returns the number of seconds since January 1st, 1970.
+* clock() - This function returns the current timestamp.
 * concat(self: any, x: any): any - This function requires an array or dictionary with a matching type as "x". This function returns a new dictionary instance which contains the contents of the current array or dictionary combined with the contents of "x". In the event of a dictionary key clash, the key-value pair in the current dictionary is included, and the key-value pair from "x" is discarded.
 * containsKey(self: [any, any], k: any): bool - This function returns true if the dictionary contains a key "k", otherwise it returns false.
 * containsValue(self: any, v: any): bool - This function returns true if the array or dictionary contains a value "v", otherwise it returns false.
-* copy(self: any): any - This function returns a deep copy of the array, dictionary or string.
-* equals(self: any, x: any): bool - This returns true if the two values are equal - this does a deep type and value check on arrays and dictionaries.
 * every(self: any, cb: fn(k: any, v: any)(bool)): bool - This function calls "cb" once for every entry in the array or dictionary (self), with that element passed in as "k" and "v", until cb returns false, at which point "every" returns false. If it reaches the end of the array or dictionary, then "every" returns true.
 * filter(self: any, cb: fn(k: any, v: any)(bool)): any - This function calls "cb" once for every entry in the array or dictionary (self), with that key and value passed in as "k" and "v", respectfully. This returns a new array or dictionary that contains every key-value pair for which the call to "cb" returned true.
 * indexOf(self: string, str: string): int - This function returns the position of the first instance of "str" in the string "self".
 * insert(self: any, key: any, x: any) - This function inserts "value" at the index/key "key", shifting the remaining entry up 1 index if it's an array. This alters the memory.
-* isEmpty(self: any): bool - returns true of the array, dictionary or string is empty.
 * keys(self: any): [type] - This function returns an array containing each key in the dictionary. The order of the keys is undefined.
-* lastIndexOf(self: string, str: string): int - This function returns the position of the last instance of "str" in the calling string "self".
-* length(self: any): int - This function returns the length of the array, dictionary or string.
 * map(self: any, cb: fn(k: any, v: any)(any)): any - This function calls "cb" once for every entry in the array or dictionary, with that key passed in as "k" and value passed in as "v". It returns a new array or dictionary with the keys copied from the current "self", and values replaced with the results of calls to "cb".
 * reduce(self: any, default: any, cb: fn(acc: any, k: any, v: any): any): any - This function calls "cb" once for every element in the array or dictionary "self", with that element passed in as "k" and "v", and the value of the previous call passed in as "acc". For the first call to "cb", "default" is used for "acc". The final value of "acc" is returned by "reduce".
 * remove(self: any, k: any) - This function deletes the value at the index or key "k", shifting the remaining entries down 1 index if it's an array. This alters the memory.
 * replace(self: string, pat: string, rep: string): string - For each instance of "pat" that it finds in the calling string "self", it replaces it with "rep", then returns the new string.
-* reverse(self: any): any - This function returns the original array or string, except the entries or characters are reversed. The calling object is not modified.
-* shift(self: [any]): any - This function deletes the value at the beginning of the array, and returns that value.
 * some(self: [any, any], cb: fn(k: any, v: any)(bool)): bool - This function calls "cb" once for every entry in the array or dictionary (self), with that element passed in as "key" and "value", until cb returns true, at which point "some" returns true. If it reaches the end of the array or dictionary, then "some" returns false.
 * sort(self: [any], cb: fn(lhs: any, rhs: any)(int)): [any] - This function sorts the entries of an array according to the callback "cb". "cb" may be called any number of times during the sorting process. "cb" must be a function that takes two parameters, "lhs" and "rhs" and returns an integer. If "lhs" is less than "rhs", then the returned integer should be negative. If they are equal, then it should be 0. Otherwise it should be positive. This returns the sorted array, leaving the original intact.
 * toLower(self: string): string - This function returns a new string, which is the same as the calling string, except all characters are lower case.
 * toString(self: any): string - This function returns a string representation of the input "self". For arrays and dictionaries, each element is converted to a string where possible, and separated by commas (and colons for dictionaries). Finally, the whole string is surrounded by brackets.
 * toUpper(self: string): string - This function returns a new string, which is the same as the calling string, except all characters are upper case.
-* toValue(self: string): any - This function tries to convert the string representation of a literal value to it's original type, while retaining its value. If it fails, it simply returns null. The original string is not modified.
 * trim(self: string, chars: string): string - Every character in the string "chars" is removed from the calling string's beginning and end, and the new string is returned. The original string is not modified.
-* unshift(self: [any], x: any) - This function inserts the value of "x" at the beginning of the array.
 * values(self: [any, any]): [any] - This function returns an array containing each value in the dictionary. The order of the values is undefined.
 
 # For Consideration
