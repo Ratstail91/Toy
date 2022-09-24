@@ -19,11 +19,9 @@ Special thanks to http://craftinginterpreters.com/ for their fantastic book that
 
 ## Building
 
-For windows, simply run `make` in the root directory.
+For Windows and MacOS, simply run `make` in the root directory.
 
-For linux, run `make repl-static` in the root directory (see [this issue for details](https://github.com/Ratstail91/Toy/issues/26)).
-
-For mac, good luck.
+For Linux, run `make repl-static` in the root directory (see [this issue for details](https://github.com/Ratstail91/Toy/issues/26)).
 
 ## Syntax
 

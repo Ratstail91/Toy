@@ -7,11 +7,16 @@ LIBS+=-ltoy
 ODIR = obj
 SRC = $(wildcard *.c)
 OBJ = $(addprefix $(ODIR)/,$(SRC:.c=.o))
-
+OUTNAME=toy
 OUT=../$(TOY_OUTDIR)/toyrepl
 
 all: $(OBJ)
+ifeq ($(shell uname),Darwin)
+	cp $(PWD)/$(TOY_OUTDIR)/lib$(OUTNAME).dylib /usr/local/lib/
+	$(CC) -DTOY_IMPORT $(CFLAGS) -o $(OUT) $(OBJ) $(LIBS)
+else
 	$(CC) -DTOY_IMPORT $(CFLAGS) -o $(OUT) $(OBJ) -L$(realpath $(shell pwd)/../$(TOY_OUTDIR)) $(LIBS)
+endif
 
 $(OBJ): | $(ODIR)
 
@@ -25,3 +30,4 @@ $(ODIR)/%.o: %.c
 
 clean:
 	$(RM) $(ODIR)
+	rm /usr/local/lib/lib$(OUTNAME).dylib

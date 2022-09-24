@@ -4,6 +4,7 @@
 *.suo
 *.ncb
 *.user
+compile_commands.json
 
 #Directories
 Release/
@@ -12,6 +13,7 @@ Out/
 release/
 debug/
 out/
+.cache/
 
 #Project generated files
 *.db
