@@ -158,6 +158,11 @@ void repl() {
 		printf("> ");
 		fgets(input, size, stdin);
 
+		//escape the repl (length of 5 to accomodate the newline)
+		if (strlen(input) == 5 && (!strncmp(input, "exit", 4) || !strncmp(input, "quit", 4))) {
+			break;
+		}
+
 		//setup this iteration
 		Lexer lexer;
 		Parser parser;
