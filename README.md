@@ -23,6 +23,8 @@ For Windows and MacOS, simply run `make` in the root directory.
 
 For Linux, run `make repl-static` in the root directory (see [this issue for details](https://github.com/Ratstail91/Toy/issues/26)).
 
+Note: MacOS is not officially supported (no machines for testing), but we'll do our best!
+
 ## Syntax
 
 ```
