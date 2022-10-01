@@ -15,7 +15,7 @@ ifeq ($(shell uname),Darwin)
 	cp $(PWD)/$(TOY_OUTDIR)/lib$(OUTNAME).dylib /usr/local/lib/
 	$(CC) -DTOY_IMPORT $(CFLAGS) -o $(OUT) $(OBJ) $(LIBS)
 else
-	$(CC) -DTOY_IMPORT $(CFLAGS) -o $(OUT) $(OBJ) -L$(realpath $(shell pwd)/../$(TOY_OUTDIR)) $(LIBS)
+	$(CC) -DTOY_IMPORT $(CFLAGS) -o $(OUT) $(OBJ) -Wl,-rpath,. -L$(realpath $(shell pwd)/../$(TOY_OUTDIR)) $(LIBS)
 endif
 
 $(OBJ): | $(ODIR)

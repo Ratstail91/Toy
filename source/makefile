@@ -16,7 +16,7 @@ ifeq ($(findstring CYGWIN, $(shell uname)),CYGWIN)
 else ifeq ($(shell uname),Linux)
 	#I can't get this working as a shared lib
 	LIBLINE=-Wl,--out-implib=../$(TOY_OUTDIR)/lib$(OUTNAME).a -Wl,--whole-archive $(OBJ) -Wl,--no-whole-archive
-	OUT=../$(TOY_OUTDIR)/$(OUTNAME)
+	OUT=../$(TOY_OUTDIR)/lib$(OUTNAME).so
 	CFLAGS += -fPIC
 else ifeq ($(OS),Windows_NT)
 	LIBLINE =-Wl,--out-implib=../$(TOY_OUTDIR)/lib$(OUTNAME).dll.a -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--whole-archive $(OBJ) -Wl,--no-whole-archive
