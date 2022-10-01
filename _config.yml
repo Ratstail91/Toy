@@ -4,7 +4,7 @@ plugins:
 
 title: Toy | A Toy Programming Language
 description: A Toy Programming Language
-image: https://toylang.com/toylogo.png
+logo: /toylogo.png
 url: https://toylang.com
 
 author:
