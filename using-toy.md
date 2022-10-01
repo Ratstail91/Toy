@@ -72,7 +72,7 @@ int hookStandard(Interpreter* interpreter, Literal identifier, Literal alias) {
 		{NULL, NULL}
 	};
 
-    //inject each native C functions into the current scope
+	//inject each native C functions into the current scope
 	for (int i = 0; natives[i].name; i++) {
 		injectNativeFn(interpreter, natives[i].name, natives[i].fn);
 	}
