@@ -99,6 +99,7 @@ int main() {
 		size_t size = 0;
 		char* source = readFile("../scripts//test/call-from-host.toy", &size);
 		unsigned char* tb = compileString(source, &size);
+		free((void*)source);
 
 		if (!tb) {
 			return -1;
@@ -272,6 +273,8 @@ int main() {
 				freeLiteralArray(&arguments);
 				freeLiteralArray(&returns);
 			}
+
+			freeLiteral(counter);
 		}
 
 		//test assertion failure
