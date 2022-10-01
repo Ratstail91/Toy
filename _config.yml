@@ -2,16 +2,3 @@ remote_theme: pages-themes/slate@v0.2.0
 plugins:
 - jekyll-remote-theme # add this line to the plugins list if you already have one
 
-title: Toy | A Toy Programming Language
-description: A Toy Programming Language
-image: /assets/images/toylogo.png
-url: https://toylang.com
-
-author:
-  name: Kayne Ruse
-  github: Ratstail91
-  twitter: KRGameStudios
-
-twitter:
-  username: KRGameStudios
-  card: summary_large_image
