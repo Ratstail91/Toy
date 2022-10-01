@@ -2482,7 +2482,7 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 		freeLiteral(lit);
 	}
 
-	//free the bytecode immediately after use
+	//free the bytecode immediately after use TODO: because why?
 	FREE_ARRAY(unsigned char, interpreter->bytecode, interpreter->length);
 
 	//free the associated data

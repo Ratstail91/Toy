@@ -228,7 +228,7 @@ int main(int argc, const char* argv[]) {
 
 	//TODO: remove this when the interpreter meets the specification
 	if (command.verbose) {
-		printf(WARN "Warning! This interpreter is a work in progress, it does not yet meet the %d.%d.%d specification.\n" RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH);
+		printf(NOTICE "Toy Programming Language Version %d.%d.%d\n" RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH);
 	}
 
 	//run source file

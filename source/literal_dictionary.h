@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common.h"
+
 #include "literal.h"
 
 //TODO: benchmark this
@@ -17,11 +19,11 @@ typedef struct LiteralDictionary {
 	int contains; //count + tombstones, for internal use
 } LiteralDictionary;
 
-void initLiteralDictionary(LiteralDictionary* dictionary);
-void freeLiteralDictionary(LiteralDictionary* dictionary);
+TOY_API void initLiteralDictionary(LiteralDictionary* dictionary);
+TOY_API void freeLiteralDictionary(LiteralDictionary* dictionary);
 
-void setLiteralDictionary(LiteralDictionary* dictionary, Literal key, Literal value);
-Literal getLiteralDictionary(LiteralDictionary* dictionary, Literal key);
-void removeLiteralDictionary(LiteralDictionary* dictionary, Literal key);
+TOY_API void setLiteralDictionary(LiteralDictionary* dictionary, Literal key, Literal value);
+TOY_API Literal getLiteralDictionary(LiteralDictionary* dictionary, Literal key);
+TOY_API void removeLiteralDictionary(LiteralDictionary* dictionary, Literal key);
 
-bool existsLiteralDictionary(LiteralDictionary* dictionary, Literal key);
+TOY_API bool existsLiteralDictionary(LiteralDictionary* dictionary, Literal key);

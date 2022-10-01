@@ -109,7 +109,7 @@ void helpCommand(int argc, const char* argv[]) {
 	printf("-f\t| --file filename\tParse, compile and execute the source file.\n\n");
 	printf("-i\t| --input source\tParse, compile and execute this given string of source code.\n\n");
 	printf("-c\t| --compile filename\tParse and compile the specified source file into an output file.\n\n");
-	printf("-o\t| --output filename\tName of the file compiled with --compile (default: out.tb).\n\n");
+	printf("-o\t| --output outfile\tName of the output file built with --compile (default: out.tb).\n\n");
 }
 
 void copyrightCommand(int argc, const char* argv[]) {

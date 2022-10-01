@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common.h"
+
 #include "literal.h"
 
 typedef struct LiteralArray {
@@ -8,11 +10,11 @@ typedef struct LiteralArray {
 	int count;
 } LiteralArray;
 
-void initLiteralArray(LiteralArray* array);
-void freeLiteralArray(LiteralArray* array);
-int pushLiteralArray(LiteralArray* array, Literal literal);
-Literal popLiteralArray(LiteralArray* array);
-bool setLiteralArray(LiteralArray* array, Literal index, Literal value);
-Literal getLiteralArray(LiteralArray* array, Literal index);
+TOY_API void initLiteralArray(LiteralArray* array);
+TOY_API void freeLiteralArray(LiteralArray* array);
+TOY_API int pushLiteralArray(LiteralArray* array, Literal literal);
+TOY_API Literal popLiteralArray(LiteralArray* array);
+TOY_API bool setLiteralArray(LiteralArray* array, Literal index, Literal value);
+TOY_API Literal getLiteralArray(LiteralArray* array, Literal index);
 
 int findLiteralIndex(LiteralArray* array, Literal literal);
