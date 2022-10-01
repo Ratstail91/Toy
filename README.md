@@ -12,10 +12,11 @@ The host will provide all of the extensions needed on a case-by-case basis. Scri
 
 * Simple C-like syntax
 * Bytecode intermediate compilation
-* `import` and `export` variables from the host program
 * Optional, but robust type system
 * functions and types are first-class citizens
+* `import` and `export` variables from the host program
 * Fancy slice notation for strings, arrays and dictionaries
+* Can re-direct output, error and assertion failure messages
 * Open source under the zlib license
 
 # Getting Started
@@ -23,6 +24,8 @@ The host will provide all of the extensions needed on a case-by-case basis. Scri
 * [Quick Start Guide](quick-start-guide)
 * Tutorials
   * [Embedding Toy](embedding-toy)
+  * [Compiling Toy](compiling-toy)
+  * [Using Toy](using-toy)
   * ~~[Standard Libary](standard-library)~~
   * [Types](types)
 * [Developing Toy](developing-toy)

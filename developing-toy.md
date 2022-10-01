@@ -27,17 +27,3 @@ There are some strict rules when interpreting these values (mimicking, but not c
 All interpreter implementations retain the right to reject any bytecode whose header data does not conform to the above specification.
 
 The latest version information can be found in [common.h](https://github.com/Ratstail91/Toy/blob/0.6.0/source/common.h#L7-L10)
-
-## Embedded API
-
-The functions intended for usage by the API are prepended with the C macro `TOY_API`. The exact value of this macro can vary by platform, or even be empty.
-
-In addition, the macros defined in [literal.h](https://github.com/Ratstail91/Toy/blob/0.6.0/source/literal.h) are available for use when manipulating literals. These include:
-
-* `IS_*` - check if a literal is a specific type
-* `AS_*` - use the literal as a specific type
-* `TO_*` - create a literal of a specific type
-* `IS_TRUTHY` - check if a literal is truthy
-* `MAX_STRING_LENGTH` - the maximum length of a string in Toy (can be altered if needed)
-
-When you create a new Literal object, be sure to call `freeLiteral()` on it afterwards! If you don't, your program will leak memory as Toy has no internal tracker for such things.
