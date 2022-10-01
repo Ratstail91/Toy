@@ -92,7 +92,7 @@ void runBinary(unsigned char* tb, size_t size) {
 	Interpreter interpreter;
 	initInterpreter(&interpreter);
 
-	//NOTE: supress print output for testing
+	//NOTE: suppress print output for testing
 	setInterpreterPrint(&interpreter, noPrintFn);
 
 	runInterpreter(&interpreter, tb, size);

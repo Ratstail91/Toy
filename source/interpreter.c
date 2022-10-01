@@ -1189,7 +1189,26 @@ static bool execFnCall(Interpreter* interpreter, bool looseFirstArgument) {
 		return false;
 	}
 
+	bool ret = callLiteralFn(interpreter, func, &arguments, &interpreter->stack);
+
+	if (!ret) {
+		interpreter->errorOutput("Error encountered in function \"");
+		printLiteralCustom(identifier, interpreter->errorOutput);
+		interpreter->errorOutput("\"\n");
+	}
+
+	freeLiteralArray(&arguments);
+	freeLiteral(func);
 	freeLiteral(identifier);
+
+	return ret;
+}
+
+bool callLiteralFn(Interpreter* interpreter, Literal func, LiteralArray* arguments, LiteralArray* returns) {
+	if (!IS_FUNCTION(func)) {
+		interpreter->errorOutput("Function required in callLiteralFn()\n");
+		return false;
+	}
 
 	//set up a new interpreter
 	Interpreter inner;
@@ -1225,13 +1244,10 @@ static bool execFnCall(Interpreter* interpreter, bool looseFirstArgument) {
 	}
 
 	//check the param total is correct
-	if ((IS_NULL(restParam) && paramArray->count != arguments.count * 2) || (!IS_NULL(restParam) && paramArray->count -2 > arguments.count * 2)) {
-		interpreter->errorOutput("Incorrect number of arguments passed to function \"");
-		printLiteralCustom(identifier, interpreter->errorOutput);
-		interpreter->errorOutput("\"\n");
+	if ((IS_NULL(restParam) && paramArray->count != arguments->count * 2) || (!IS_NULL(restParam) && paramArray->count -2 > arguments->count * 2)) {
+		interpreter->errorOutput("Incorrect number of arguments passed to a function\n");
 
 		//free, and skip out
-		freeLiteralArray(&arguments);
 		popScope(inner.scope);
 
 		freeLiteralArray(&inner.stack);
@@ -1247,7 +1263,6 @@ static bool execFnCall(Interpreter* interpreter, bool looseFirstArgument) {
 			interpreter->errorOutput("[internal] Could not re-declare parameter\n");
 
 			//free, and skip out
-			freeLiteralArray(&arguments);
 			popScope(inner.scope);
 
 			freeLiteralArray(&inner.stack);
@@ -1256,7 +1271,7 @@ static bool execFnCall(Interpreter* interpreter, bool looseFirstArgument) {
 			return false;
 		}
 
-		Literal arg = popLiteralArray(&arguments);
+		Literal arg = popLiteralArray(arguments);
 
 		if (IS_IDENTIFIER(arg)) {
 			Literal idn = arg;
@@ -1269,10 +1284,8 @@ static bool execFnCall(Interpreter* interpreter, bool looseFirstArgument) {
 
 			//free, and skip out
 			freeLiteral(arg);
-			freeLiteralArray(&arguments);
 			popScope(inner.scope);
 
-			
 			freeLiteralArray(&inner.stack);
 			freeLiteralArray(&inner.literalCache);
 
@@ -1286,8 +1299,8 @@ static bool execFnCall(Interpreter* interpreter, bool looseFirstArgument) {
 		LiteralArray rest;
 		initLiteralArray(&rest);
 
-		while (arguments.count > 0) {
-			Literal lit = popLiteralArray(&arguments);
+		while (arguments->count > 0) {
+			Literal lit = popLiteralArray(arguments);
 			pushLiteralArray(&rest, lit);
 			freeLiteral(lit);
 		}
@@ -1303,7 +1316,6 @@ static bool execFnCall(Interpreter* interpreter, bool looseFirstArgument) {
 			//free, and skip out
 			freeLiteral(restType);
 			freeLiteralArray(&rest);
-			freeLiteralArray(&arguments);
 			popScope(inner.scope);
 
 			freeLiteralArray(&inner.stack);
@@ -1319,7 +1331,6 @@ static bool execFnCall(Interpreter* interpreter, bool looseFirstArgument) {
 			//free, and skip out
 			freeLiteral(restType);
 			freeLiteral(lit);
-			freeLiteralArray(&arguments);
 			popScope(inner.scope);
 
 			freeLiteralArray(&inner.stack);
@@ -1339,27 +1350,27 @@ static bool execFnCall(Interpreter* interpreter, bool looseFirstArgument) {
 	interpreter->panic = inner.panic;
 
 	//accept the stack as the results
-	LiteralArray returns;
-	initLiteralArray(&returns);
+	LiteralArray returnsFromInner;
+	initLiteralArray(&returnsFromInner);
 
 	//unpack the results
 	for (int i = 0; i < (returnArray->count || 1); i++) {
 		Literal lit = popLiteralArray(&inner.stack);
-		pushLiteralArray(&returns, lit); //NOTE: also reverses the order
+		pushLiteralArray(&returnsFromInner, lit); //NOTE: also reverses the order
 		freeLiteral(lit);
 	}
 
 	bool returnValue = true;
 
 	//TODO: remove this when multiple assignment is enabled - note the BUGFIX that balances the stack
-	if (returns.count > 1) {
+	if (returnsFromInner.count > 1) {
 		interpreter->errorOutput("Too many values returned (multiple returns not yet supported)\n");
 
 		returnValue = false;
 	}
 
-	for (int i = 0; i < returns.count && returnValue; i++) {
-		Literal ret = popLiteralArray(&returns);
+	for (int i = 0; i < returnsFromInner.count && returnValue; i++) {
+		Literal ret = popLiteralArray(&returnsFromInner);
 
 		//check the return types
 		if (returnArray->count > 0 && AS_TYPE(returnArray->literals[i]).typeOf != ret.type) {
@@ -1370,7 +1381,7 @@ static bool execFnCall(Interpreter* interpreter, bool looseFirstArgument) {
 			break;
 		}
 
-		pushLiteralArray(&interpreter->stack, ret); //NOTE: reverses again
+		pushLiteralArray(returns, ret); //NOTE: reverses again
 		freeLiteral(ret);
 	}
 
@@ -1392,14 +1403,31 @@ static bool execFnCall(Interpreter* interpreter, bool looseFirstArgument) {
 
 		inner.scope = popScope(inner.scope);
 	}
-	freeLiteralArray(&returns);
-	freeLiteralArray(&arguments);
+	freeLiteralArray(&returnsFromInner);
 	freeLiteralArray(&inner.stack);
 	freeLiteralArray(&inner.literalCache);
-	freeLiteral(func);
 
 	//actual bytecode persists until next call
 	return true;
+}
+
+bool callFn(Interpreter* interpreter, char* name, LiteralArray* arguments, LiteralArray* returns) {
+	Literal key = TO_IDENTIFIER_LITERAL(copyString(name, strlen(name)), strlen(name));
+	Literal val = TO_NULL_LITERAL;
+	
+	if (!isDelcaredScopeVariable(interpreter->scope, key)) {
+		interpreter->errorOutput("No function with that name\n");
+		return false;
+	}
+
+	getScopeVariable(interpreter->scope, key, &val);
+
+	bool ret = callLiteralFn(interpreter, val, arguments, returns);
+
+	freeLiteral(key);
+	freeLiteral(val);
+
+	return ret;
 }
 
 static bool execFnReturn(Interpreter* interpreter) {

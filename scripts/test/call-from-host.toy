@@ -1,0 +1,23 @@
+//create a bunch of toy functions as literals to be called from C
+
+fn answer() {
+	return 42;
+}
+
+fn identity(x) {
+	return x;
+}
+
+fn makeCounter() {
+	var total = 0;
+
+	fn counter() {
+		return ++total;
+	}
+
+	return counter;
+}
+
+fn fail() {
+	assert false, "Failed correctly";
+}

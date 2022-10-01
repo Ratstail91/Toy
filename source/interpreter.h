@@ -41,6 +41,9 @@ TOY_API bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func)
 typedef int (*HookFn)(Interpreter* interpreter, Literal identifier, Literal alias);
 TOY_API bool injectNativeHook(Interpreter* interpreter, char* name, HookFn hook);
 
+TOY_API bool callLiteralFn(Interpreter* interpreter, Literal func, LiteralArray* arguments, LiteralArray* returns);
+TOY_API bool callFn(Interpreter* interpreter, char* name, LiteralArray* arguments, LiteralArray* returns);
+
 //utilities for the host program
 TOY_API bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr);
 TOY_API void setInterpreterPrint(Interpreter* interpreter, PrintFn printOutput);
