@@ -8,6 +8,24 @@ The Toy programming language is a procedural bytecode-intermediate interpreted l
 
 The host will provide all of the extensions needed on a case-by-case basis. Script files have the `.toy` file extension, while binary files have the `.tb` file extension.
 
+```
+fn makeCounter() { //declare a function like this
+	var total: int = 0; //declare a variable with a type like this
+
+	fn counter(): int { //declare a return type like this
+		return ++total;
+	}
+
+	return counter; //closures are explicitly supported
+}
+
+var tally = makeCounter();
+
+print tally(); //1
+print tally(); //2
+print tally(); //3
+```
+
 # Nifty Features
 
 * Simple C-like syntax
