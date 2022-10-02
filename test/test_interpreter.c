@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-//supress the print output
+//suppress the print output
 static void noPrintFn(const char* output) {
 	//NO OP
 }
