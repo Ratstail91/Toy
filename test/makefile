@@ -1,11 +1,11 @@
 CC=gcc
 
-IDIR +=. ../source
+IDIR +=. ../source ../repl
 CFLAGS +=$(addprefix -I,$(IDIR)) -g -Wall -W -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
 LIBS +=
 
 ODIR = obj
-TARGETS = $(wildcard ../source/*.c) $(filter-out $(wildcard ../repl/*main.c),$(wildcard ../repl/*.c))
+TARGETS = $(wildcard ../source/*.c) $(wildcard ../repl/lib_*.c)
 TESTS = $(wildcard *.c)
 OBJ = $(addprefix $(ODIR)/,$(TARGETS:../source/%.c=%.o)) $(addprefix $(ODIR)/,$(TESTS:.c=.o))
 
