@@ -47,7 +47,8 @@ print tally(); //3
   * ~~[Standard Libary](standard-library)~~
   * [Types](types)
 * [Developing Toy](developing-toy)
-* ~~[Roadmap](roadmap)~~
+* [Roadmap](roadmap)
+* ~~[Game Engine](game-engine)~~
 
 # Version Differences
 
