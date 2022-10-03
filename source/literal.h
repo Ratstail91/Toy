@@ -60,7 +60,10 @@ typedef struct {
 			int count;
 		} type;
 
-		void* opaque;
+		struct {
+			void* ptr;
+			int tag;
+		} opaque;
 	} as;
 } Literal;
 
@@ -86,7 +89,7 @@ typedef struct {
 #define AS_FUNCTION(value)					((value).as.function)
 #define AS_IDENTIFIER(value)				((value).as.identifier.ptr)
 #define AS_TYPE(value)						((value).as.type)
-#define AS_OPAQUE(value)					((value).as.opaque)
+#define AS_OPAQUE(value)					((value).as.opaque.ptr)
 
 #define TO_NULL_LITERAL						((Literal){LITERAL_NULL,		{ .integer = 0 }})
 #define TO_BOOLEAN_LITERAL(value)			((Literal){LITERAL_BOOLEAN,		{ .boolean = value }})
@@ -98,7 +101,7 @@ typedef struct {
 #define TO_FUNCTION_LITERAL(value, l)		((Literal){LITERAL_FUNCTION,	{ .function.bytecode = value, .function.scope = NULL, .function.length = l }})
 #define TO_IDENTIFIER_LITERAL(value, l)		_toIdentifierLiteral(value, l)
 #define TO_TYPE_LITERAL(value, c)			((Literal){ LITERAL_TYPE,		{ .type.typeOf = value, .type.constant = c, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
-#define TO_OPAQUE_LITERAL(value)			((Literal){ LITERAL_OPAQUE,		{ .opaque = value }})
+#define TO_OPAQUE_LITERAL(value, t)			((Literal){ LITERAL_OPAQUE,		{ .opaque.ptr = value, .opaque.tag = t }})
 
 TOY_API void freeLiteral(Literal literal);
 
@@ -107,6 +110,7 @@ TOY_API void freeLiteral(Literal literal);
 #define MAX_STRING_LENGTH					4096
 #define HASH_I(lit)							((lit).as.identifier.hash)
 #define TYPE_PUSH_SUBTYPE(lit, subtype)		_typePushSubtype(lit, subtype)
+#define OPAQUE_TAG(o)						o.as.opaque.tag
 
 //BUGFIX: macros are not functions
 TOY_API bool _isTruthy(Literal x);

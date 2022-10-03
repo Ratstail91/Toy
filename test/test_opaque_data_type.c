@@ -101,7 +101,7 @@ static int produce(Interpreter* interpreter, LiteralArray* arguments) {
 	ArbitraryData* data = ALLOCATE(ArbitraryData, 1);
 	data->value = 42;
 
-	Literal o = TO_OPAQUE_LITERAL(data);
+	Literal o = TO_OPAQUE_LITERAL(data, 0);
 
 	pushLiteralArray(&interpreter->stack, o);
 
