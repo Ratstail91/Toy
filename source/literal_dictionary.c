@@ -136,13 +136,18 @@ void freeLiteralDictionary(LiteralDictionary* dictionary) {
 
 void setLiteralDictionary(LiteralDictionary* dictionary, Literal key, Literal value) {
 	if (IS_NULL(key)) {
-		fprintf(stderr, ERROR "Dictionaries can't have null keys (get)\n" RESET);
+		fprintf(stderr, ERROR "Dictionaries can't have null keys (set)\n" RESET);
 		return;
 	}
 
 	//BUGFIX: Can't hash a function
 	if (IS_FUNCTION(key) || IS_FUNCTION_NATIVE(key)) {
-		fprintf(stderr, ERROR "Dictionaries can't have function keys (get)\n" RESET);
+		fprintf(stderr, ERROR "Dictionaries can't have function keys (set)\n" RESET);
+		return;
+	}
+
+	if (IS_OPAQUE(key)) {
+		fprintf(stderr, ERROR "Dictionaries can't have opaque keys (set)\n" RESET);
 		return;
 	}
 
@@ -156,13 +161,18 @@ void setLiteralDictionary(LiteralDictionary* dictionary, Literal key, Literal va
 
 Literal getLiteralDictionary(LiteralDictionary* dictionary, Literal key) {
 	if (IS_NULL(key)) {
-		fprintf(stderr, ERROR "Dictionaries can't have null keys (set)\n" RESET);
+		fprintf(stderr, ERROR "Dictionaries can't have null keys (get)\n" RESET);
 		return TO_NULL_LITERAL;
 	}
 
 	//BUGFIX: Can't hash a function
 	if (IS_FUNCTION(key) || IS_FUNCTION_NATIVE(key)) {
-		fprintf(stderr, ERROR "Dictionaries can't have function keys (set)\n" RESET);
+		fprintf(stderr, ERROR "Dictionaries can't have function keys (get)\n" RESET);
+		return TO_NULL_LITERAL;
+	}
+
+	if (IS_OPAQUE(key)) {
+		fprintf(stderr, ERROR "Dictionaries can't have opaque keys (get)\n" RESET);
 		return TO_NULL_LITERAL;
 	}
 
@@ -185,6 +195,11 @@ void removeLiteralDictionary(LiteralDictionary* dictionary, Literal key) {
 	//BUGFIX: Can't hash a function
 	if (IS_FUNCTION(key) || IS_FUNCTION_NATIVE(key)) {
 		fprintf(stderr, ERROR "Dictionaries can't have function keys (remove)\n" RESET);
+		return;
+	}
+
+	if (IS_OPAQUE(key)) {
+		fprintf(stderr, ERROR "Dictionaries can't have opaque keys (remove)\n" RESET);
 		return;
 	}
 

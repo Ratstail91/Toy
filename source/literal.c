@@ -165,6 +165,10 @@ Literal copyLiteral(Literal original) {
 			return lit;
 		}
 
+		case LITERAL_OPAQUE: {
+			return original; //literally a shallow copy
+		}
+
 		case LITERAL_DICTIONARY_INTERMEDIATE: {
 			LiteralArray* array = ALLOCATE(LiteralArray, 1);
 			initLiteralArray(array);
@@ -327,6 +331,9 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 			}
 			return true;
 
+		case LITERAL_OPAQUE:
+			return false; //IDK what this is!
+
 		case LITERAL_ANY:
 			return true;
 
@@ -389,6 +396,7 @@ int hashLiteral(Literal lit) {
 		case LITERAL_TYPE:
 			return AS_TYPE(lit).typeOf; //nothing else I can do
 
+		case LITERAL_OPAQUE:
 		case LITERAL_ANY:
 			return -1;
 
@@ -639,6 +647,10 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 					printToBuffer("type");
 				break;
 
+				case LITERAL_OPAQUE:
+					printToBuffer("opaque");
+				break;
+
 				case LITERAL_ANY:
 					printToBuffer("any");
 				break;
@@ -674,6 +686,10 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 		case LITERAL_TYPE_INTERMEDIATE:
 		case LITERAL_FUNCTION_INTERMEDIATE:
 			printFn("Unprintable literal found");
+		break;
+
+		case LITERAL_OPAQUE:
+			printFn("(opaque)");
 		break;
 
 		case LITERAL_ANY:

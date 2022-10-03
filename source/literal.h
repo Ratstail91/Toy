@@ -15,6 +15,7 @@ typedef enum {
 	LITERAL_FUNCTION,
 	LITERAL_IDENTIFIER,
 	LITERAL_TYPE,
+	LITERAL_OPAQUE,
 	LITERAL_ANY,
 
 	//these are meta-level types - not for general use
@@ -58,6 +59,8 @@ typedef struct {
 			int capacity;
 			int count;
 		} type;
+
+		void* opaque;
 	} as;
 } Literal;
 
@@ -72,6 +75,7 @@ typedef struct {
 #define IS_FUNCTION_NATIVE(value)			((value).type == LITERAL_FUNCTION_NATIVE)
 #define IS_IDENTIFIER(value)				((value).type == LITERAL_IDENTIFIER)
 #define IS_TYPE(value)						((value).type == LITERAL_TYPE)
+#define IS_OPAQUE(value)					((value).type == LITERAL_OPAQUE)
 
 #define AS_BOOLEAN(value)					((value).as.boolean)
 #define AS_INTEGER(value)					((value).as.integer)
@@ -82,6 +86,7 @@ typedef struct {
 #define AS_FUNCTION(value)					((value).as.function)
 #define AS_IDENTIFIER(value)				((value).as.identifier.ptr)
 #define AS_TYPE(value)						((value).as.type)
+#define AS_OPAQUE(value)					((value).as.opaque)
 
 #define TO_NULL_LITERAL						((Literal){LITERAL_NULL,		{ .integer = 0 }})
 #define TO_BOOLEAN_LITERAL(value)			((Literal){LITERAL_BOOLEAN,		{ .boolean = value }})
@@ -93,6 +98,7 @@ typedef struct {
 #define TO_FUNCTION_LITERAL(value, l)		((Literal){LITERAL_FUNCTION,	{ .function.bytecode = value, .function.scope = NULL, .function.length = l }})
 #define TO_IDENTIFIER_LITERAL(value, l)		_toIdentifierLiteral(value, l)
 #define TO_TYPE_LITERAL(value, c)			((Literal){ LITERAL_TYPE,		{ .type.typeOf = value, .type.constant = c, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
+#define TO_OPAQUE_LITERAL(value)			((Literal){ LITERAL_OPAQUE,		{ .opaque = value }})
 
 TOY_API void freeLiteral(Literal literal);
 
