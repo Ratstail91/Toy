@@ -19,6 +19,7 @@ The types available are:
 | dictionary | n/a | A series of key-value pairs stored in a hash-table, indexable with the keys |
 | function | fn | A chunk of reusable code, which can potentially return a value of some kind |
 | type | type | The type of types |
+| opaque | opaque | Arbitrary data passed from the host, which Toy can't natively understand |
 | any | any | Can hold any value |
 
 ## Specifying Types For Variables
@@ -93,3 +94,17 @@ var t = decide(true);
 
 var number: t = 0; //what if it had been false?
 ```
+
+## Opaque Data
+
+Sometimes, you may need to pass data through Toy that Toy can't normally handle. This data is called "opaque" data, and is passed around by reference rather than value. Anything can be passed in as opaque data, as long as it's represented as a void pointer in C.
+
+```c
+Literal opaque = TO_OPAQUE_LITERAL(&data);
+
+//...
+
+void* dataPtr = AS_OPAQUE(opaque);
+```
+
+Managing and cleaning up opaque data is a task left entirely to the host program.

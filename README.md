@@ -30,7 +30,7 @@ print tally(); //3
 
 * Simple C-like syntax
 * Bytecode intermediate compilation
-* Optional, but robust type system
+* Optional, but robust type system (including `opaque` for arbitrary data)
 * functions and types are first-class citizens
 * `import` and `export` variables from the host program
 * Fancy slice notation for strings, arrays and dictionaries
