@@ -816,6 +816,7 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_ARRAY,
 	{NULL, NULL, PREC_NONE},// TOKEN_DICTIONARY,
 	{NULL, NULL, PREC_NONE},// TOKEN_FUNCTION,
+	{NULL, NULL, PREC_NONE},// TOKEN_OPAQUE,
 	{NULL, NULL, PREC_NONE},// TOKEN_ANY,
 
 	//keywords and reserved words
@@ -1484,6 +1485,10 @@ static Literal readTypeToLiteral(Parser* parser) {
 
 		case TOKEN_FUNCTION:
 			AS_TYPE(literal).typeOf = LITERAL_FUNCTION;
+		break;
+
+		case TOKEN_OPAQUE:
+			AS_TYPE(literal).typeOf = LITERAL_OPAQUE;
 		break;
 
 		case TOKEN_ANY:

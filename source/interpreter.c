@@ -570,6 +570,8 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 		parseCompoundToPureValues(interpreter, &val);
 	}
 
+	//TODO: could restrict opaque data to only opaque variables
+
 	//BUGFIX: allow easy coercion on decl
 	if (AS_TYPE(type).typeOf == LITERAL_FLOAT && IS_INTEGER(val)) {
 		val = TO_FLOAT_LITERAL(AS_INTEGER(val));

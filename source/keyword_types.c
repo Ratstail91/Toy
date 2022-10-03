@@ -12,6 +12,7 @@ KeywordType keywordTypes[] = {
 	{TOKEN_FLOAT,      "float"},
 	{TOKEN_STRING,     "string"},
 	{TOKEN_FUNCTION,   "fn"},
+	{TOKEN_OPAQUE,     "opaque"},
 	{TOKEN_ANY,        "any"},
 
 	//other keywords

@@ -10,6 +10,7 @@ typedef enum TokenType {
 	TOKEN_ARRAY,
 	TOKEN_DICTIONARY,
 	TOKEN_FUNCTION,
+	TOKEN_OPAQUE,
 	TOKEN_ANY,
 
 	//keywords and reserved words
@@ -89,4 +90,3 @@ typedef enum TokenType {
 	TOKEN_ERROR,
 	TOKEN_EOF,
 } TokenType;
-
