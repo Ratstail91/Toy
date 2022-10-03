@@ -116,7 +116,7 @@ static int consume(Interpreter* interpreter, LiteralArray* arguments) {
 	Literal idn = o;
 
 	if (parseIdentifierToValue(interpreter, &o)) {
-		freeLiteral(o);
+		freeLiteral(idn);
 	}
 
 	if (IS_OPAQUE(o) && ((ArbitraryData*)(AS_OPAQUE(o)))->value == 42) {
