@@ -8,14 +8,16 @@ This is the Toy programming language interpreter, written in C.
 
 Special thanks to http://craftinginterpreters.com/ for their fantastic book that set me on this path.
 
-## Nifty Features
+# Nifty Features
 
 * Simple C-like syntax
 * Bytecode intermediate compilation
-* `import` and `export` variables from the host program
-* Optional, but robust type system
+* Optional, but robust type system (including `opaque` for arbitrary data)
 * functions and types are first-class citizens
-* Fancy slice notation for strings, arrays and dictionaries (`print greeting[0:4:-1]; //prints "olleh"`)
+* `import` and `export` variables from the host program
+* Fancy slice notation for strings, arrays and dictionaries
+* Can re-direct output, error and assertion failure messages
+* Open source under the zlib license
 
 ## Building
 
