@@ -22,6 +22,7 @@ Some things I'd like to add in the future include:
 * An external script runner utility
 * Multiple return values from functions
 * Ternary operator
+* interpolated strings
 
 These have always been planned, but were sidelined or are incomplete for one reason or another.
 
