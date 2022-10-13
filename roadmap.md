@@ -19,12 +19,14 @@ This is probably the easiest goal to accomplish, but also the least urgent. The 
 Some things I'd like to add in the future include:
 
 * A fully featured standard library
-* An external script runner utility
+* An external script runner utility library
+* A threading library
+* A random generation library (numbers, perlin noise, wave function collapse?)
 * Multiple return values from functions
 * Ternary operator
 * interpolated strings
 
-These have always been planned, but were sidelined or are incomplete for one reason or another.
+Some of these have always been planned, but were sidelined or are incomplete for one reason or another.
 
 ## Nope Features
 
