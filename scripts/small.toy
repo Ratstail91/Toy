@@ -1,5 +1,56 @@
 
 
-import standard as std;
+fn _b(self) {
+	print "running _b";
+	print self;
+	return self;
+}
 
-print std;
+fn _c(self) {
+	print "running _c";
+	print self;
+	return self;
+}
+
+fn _d(self) {
+	print "running _d";
+	print self;
+	return self;
+}
+
+fn _e(self) {
+	print "running _e";
+	print self;
+	return self;
+}
+
+fn _f(self) {
+	print "running _f";
+	print self;
+	return self;
+}
+
+
+fn b() {
+	print "running b";
+}
+
+fn c() {
+	print "running c";
+}
+
+fn d() {
+	print "running d";
+}
+
+fn e() {
+	print "running e";
+}
+
+fn f() {
+	print "running f";
+}
+
+var a = 42;
+
+print a.b().c().d().e().f();

@@ -799,8 +799,10 @@ static Opcode dot(Parser* parser, ASTNode** nodeHandle) {
 	}
 
 	//hijack the function call, and hack in an extra parameter
-	node->binary.right->fnCall.argumentCount++;
-	node->binary.opcode = OP_DOT;
+	if (node->binary.opcode == OP_FN_CALL) {
+		node->binary.right->fnCall.argumentCount++;
+		node->binary.opcode = OP_DOT;
+	}
 
 	(*nodeHandle) = node;
 	return OP_DOT; //signal that the function name and arguments are in the wrong order
@@ -1083,6 +1085,17 @@ static bool calcStaticBinaryArithmetic(Parser* parser, ASTNode** nodeHandle) {
 	return true;
 }
 
+static void dottify(Parser* parser, ASTNode** nodeHandle) {
+	//only if this is chained from a higher binary "fn_call"
+	if ((*nodeHandle)->type == AST_NODEBINARY) {
+		if ((*nodeHandle)->binary.opcode == OP_FN_CALL) {
+			(*nodeHandle)->binary.opcode = OP_DOT;
+		}
+		dottify(parser, &(*nodeHandle)->binary.left);
+		dottify(parser, &(*nodeHandle)->binary.right);
+	}
+}
+
 static void parsePrecedence(Parser* parser, ASTNode** nodeHandle, PrecedenceRule rule) {
 	//every valid expression has a prefix rule
 	advance(parser);
@@ -1114,6 +1127,11 @@ static void parsePrecedence(Parser* parser, ASTNode** nodeHandle, PrecedenceRule
 			freeNode(*nodeHandle);
 			*nodeHandle = rhsNode;
 			return; //we're done here
+		}
+
+		//BUGFIX: dot-chaining
+		if (opcode == OP_DOT) {
+			dottify(parser, &rhsNode);
 		}
 
 		emitASTNodeBinary(nodeHandle, rhsNode, opcode);

@@ -1,0 +1,22 @@
+//test function chaining with the dot operator
+
+fn _identity(self) {
+	return self;
+}
+
+fn _check(self) {
+	assert self == 42, "dot chaining failed";
+	return self;
+}
+
+var val = 42;
+
+val
+	.identity()
+	.check()
+	.identity()
+	.check()
+	;
+
+
+print "All good";
