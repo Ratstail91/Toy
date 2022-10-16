@@ -19,4 +19,12 @@ val
 	;
 
 
+//test the value is actually altered
+fn _increment(self) {
+	return self + 1;
+}
+
+assert 3.increment().increment() == 5, "dot chaining increment failed";
+
+
 print "All good";
