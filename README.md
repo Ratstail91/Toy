@@ -48,7 +48,7 @@ print tally(); //3
   * [Types](types)
 * [Developing Toy](developing-toy)
 * [Roadmap](roadmap)
-* ~~[Game Engine](game-engine)~~
+* [Game Engine](game-engine)
 
 # Version Differences
 
