@@ -44,7 +44,7 @@ print tally(); //3
   * [Embedding Toy](embedding-toy)
   * [Compiling Toy](compiling-toy)
   * [Using Toy](using-toy)
-  * ~~[Standard Libary](standard-library)~~
+  * [Standard Libary](standard-library)
   * [Types](types)
 * [Developing Toy](developing-toy)
 * [Roadmap](roadmap)

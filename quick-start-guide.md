@@ -23,6 +23,8 @@ var f = 3.14;
 var s = "Hello world";
 ```
 
+See [Reserved Keywords](#reserved-keywords) for a list of keywords that can't be used as a name.
+
 ## Compounds
 
 Larger containers of data are available - arrays and dictionaries. Arrays are collections of data stored sequentially, while dictionaries are hash-maps of key-value pairs:
@@ -167,5 +169,61 @@ assert answer == 42, "This will not be seen";
 
 //both false and null trigger assert's exit condition
 assert null, "This will be seen before the script exits";
+```
+
+## Reserved Keywords
+
+The following list cannot be used as names, due to their significance (or potential later use) in the language.
+
+* any
+* as
+* astype
+* assert
+* bool
+* break
+* class (reserved)
+* const
+* continue
+* do (reserved)
+* else
+* export
+* false
+* float
+* fn
+* for
+* foreach (reserved)
+* if
+* import
+* in (reserved)
+* int
+* null
+* of (reserved)
+* print
+* return
+* string
+* true
+* type
+* typeof
+* var
+* while
+
+## Full List of Operators
+
+The following mathematical operators are available. A definition is omitted here, as they are commonly used in most programming languages.
+
+```
++  -  *  /  %  +=  -=  *=  /=  %=  ++(prefix)  --(prefix)  (postfix)++  (postfix)--
+```
+
+Likewise, the following logical operators are available (`&&` is more tightly bound than `||` due to historical reasons):
+
+```
+(  )  [  ]  {  }  !  !=  ==  <  >  <=  >=  &&  ||
+```
+
+Other operators used throughout the language are: the assignment, colon, semicolon, comma, dot and rest operators:
+
+```
+= : ; , . ...
 ```
 
