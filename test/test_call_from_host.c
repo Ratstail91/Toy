@@ -281,6 +281,8 @@ int main() {
 		{
 			interpreter.printOutput("Testing assertion failure");
 
+			setInterpreterAssert(&interpreter, noPrintFn);
+
 			LiteralArray arguments;
 			initLiteralArray(&arguments);
 			LiteralArray returns;

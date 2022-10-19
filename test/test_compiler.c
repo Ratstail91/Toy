@@ -84,7 +84,7 @@ int main() {
 	{
 		//source
 		size_t sourceLength = 0;
-		char* source = readFile("sample_code.toy", &sourceLength);
+		char* source = readFile("../scripts/test/sample_code.toy", &sourceLength);
 
 		//test basic compilation & collation
 		Lexer lexer;

@@ -16,6 +16,18 @@ static void noPrintFn(const char* output) {
 	//NO OP
 }
 
+int ignoredAssertions = 0;
+static void noAssertFn(const char* output) {
+	if (strncmp(output, "!ignore", 7) == 0) {
+		ignoredAssertions++;
+	}
+	else {
+		fprintf(stderr, ERROR "Assertion failure: ");
+		fprintf(stderr, "%s", output);
+		fprintf(stderr, "\n" RESET); //default new line
+	}
+}
+
 //compilation functions
 char* readFile(char* path, size_t* fileSize) {
 	FILE* file = fopen(path, "rb");
@@ -94,6 +106,7 @@ void runBinary(unsigned char* tb, size_t size) {
 
 	//NOTE: suppress print output for testing
 	setInterpreterPrint(&interpreter, noPrintFn);
+	setInterpreterAssert(&interpreter, noAssertFn);
 
 	runInterpreter(&interpreter, tb, size);
 	freeInterpreter(&interpreter);
@@ -147,8 +160,9 @@ int main() {
 		int size = 0;
 		unsigned char* bytecode = collateCompiler(&compiler, &size);
 
-		//NOTE: supress print output for testing
+		//NOTE: suppress print output for testing
 		setInterpreterPrint(&interpreter, noPrintFn);
+		setInterpreterAssert(&interpreter, noAssertFn);
 
 		//run
 		runInterpreter(&interpreter, bytecode, size);
@@ -213,6 +227,7 @@ int main() {
 
 		//NOTE: supress print output for testing
 		setInterpreterPrint(&interpreter, noPrintFn);
+		setInterpreterAssert(&interpreter, noAssertFn);
 
 		runInterpreter(&interpreter, exportBinary, exportSize); //automatically frees the binary data
 
@@ -225,6 +240,12 @@ int main() {
 		//cleanup
 		free((void*)exportSource);
 		free((void*)importSource);
+	}
+
+	//1, to allow for the assertion test
+	if (ignoredAssertions > 1) {
+		fprintf(stderr, ERROR "Assertions hidden: %d\n", ignoredAssertions);
+		return -1;
 	}
 
 	printf(NOTICE "All good\n" RESET);

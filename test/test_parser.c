@@ -90,7 +90,7 @@ int main() {
 	{
 		//get the source file
 		size_t size = 0;
-		char* source = readFile("sample_code.toy", &size);
+		char* source = readFile("../scripts/test/sample_code.toy", &size);
 
 		//test parsing a chunk of junk (valgrind will find leaks)
 		Lexer lexer;

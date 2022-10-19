@@ -1,7 +1,7 @@
 
 
 fn panic() {
-	assert false, "This should only be seen once";
+	assert false, "!ignore panicking within a function";
 }
 
 panic();
