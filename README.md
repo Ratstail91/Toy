@@ -2,6 +2,8 @@
   <image src="toylogo.png" />
 </p>
 
+[![Running Comprehensive Tests](https://github.com/Ratstail91/Toy/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/Ratstail91/Toy/actions/workflows/c-cpp.yml)
+
 # Preamble
 
 The Toy programming language is a procedural bytecode-intermediate interpreted language. It isn't intended to operate on it's own, but rather as part of another program, the "host". This process is intended to allow a decent amount of easy customisation by the host's end user, by exposing logic in script files. Alternatively, binary files in a custom format can be used as well.
