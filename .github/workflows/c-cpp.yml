@@ -1,4 +1,4 @@
-name: Running Comprehensive Tests
+name: Comprehensive Tests
 
 on:
   push:
