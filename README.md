@@ -54,4 +54,4 @@ print tally(); //3
 
 # Version Differences
 
-There have been a number of versions of Toy over the years, the current actively developed version is called `0.6.0` for the time being. It is recommended that you use the most recent version available.
+There have been a number of versions of Toy over the years, the current actively developed version is called `main` for the time being. It is recommended that you use the most recent release available.
