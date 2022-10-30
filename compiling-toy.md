@@ -12,7 +12,7 @@ There are four main phases to running a Toy source file. These are:
 lexing -> parsing -> compiling -> interpreting
 ```
 
-Each phases has a dedicated set of functions and structures, and there are intermediate structures between these stages that carry the information from one set to another.
+Each phase has a dedicated set of functions and structures, and there are intermediate structures between these stages that carry the information from one set to another.
 
 ```
 source   -> lexer       -> token
