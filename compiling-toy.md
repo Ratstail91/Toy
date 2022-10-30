@@ -30,7 +30,7 @@ Lexer lexer;
 initLexer(&lexer, source);
 ```
 
-The lexer, when invoked, will produce a break down the string of characters into individual `Tokens`.
+The lexer, when invoked, will break down the string of characters into individual `Tokens`.
 
 The lexer does not need to be freed after use, however the source code does.
 
