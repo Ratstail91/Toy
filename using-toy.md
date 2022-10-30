@@ -4,7 +4,7 @@ This tutorial assumes that you've managed to embed Toy into your program by foll
 
 Here, we'll look at some ways in which you can utilize Toy's C API within your host program.
 
-Be ware that when you create a new Literal object, you must call `freeLiteral()` on it afterwards! If you don't, your program will leak memory as Toy has no internal tracker for such things.
+Be aware that when you create a new Literal object, you must call `freeLiteral()` on it afterwards! If you don't, your program will leak memory as Toy has no internal tracker for such things.
 
 ## Embedded API Macros
 
