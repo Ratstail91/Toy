@@ -42,12 +42,11 @@ print tally(); //3
 # Getting Started
 
 * [Quick Start Guide](quick-start-guide)
-* Tutorials
-  * [Embedding Toy](embedding-toy)
-  * [Compiling Toy](compiling-toy)
-  * [Using Toy](using-toy)
-  * [Standard Libary](standard-library)
-  * [Types](types)
+* [Types](types)
+* [Embedding Toy](embedding-toy)
+* [Using Toy](using-toy)
+* [Compiling Toy](compiling-toy)
+* [Standard Libary](standard-library)
 * [Developing Toy](developing-toy)
 * [Roadmap](roadmap)
 * [Game Engine](game-engine)
