@@ -12,13 +12,13 @@ repl-static: $(TOY_OUTDIR) static
 	$(MAKE) -C repl
 
 library: $(TOY_OUTDIR)
-	$(MAKE) -C source library
+	$(MAKE) -j8 -C source library
 
 static: $(TOY_OUTDIR)
-	$(MAKE) -C source static
+	$(MAKE) -j8 -C source static
 
 test: clean $(TOY_OUTDIR)
-	$(MAKE) -C test
+	$(MAKE) -j8 -C test
 
 $(TOY_OUTDIR):
 	mkdir $(TOY_OUTDIR)
