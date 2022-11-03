@@ -182,6 +182,7 @@ int main() {
 			"coercions.toy",
 			"comparisons.toy",
 			"dot-and-matrix.toy",
+			"dot-assignments-bugfix.toy",
 			"dot-chaining.toy",
 			"functions.toy",
 			"imports-and-exports.toy",

@@ -1,0 +1,20 @@
+/*
+
+NOTES: For some reason, this code results in the error:
+	Undeclared variable "inner"
+
+It only occurs under these very specific conditions.
+
+It appears to be a compiler issue, see issue #38 for more info.
+
+*/
+
+fn _getValue(self) {
+	return self;
+}
+
+var cache;
+cache = 42.getValue(); //assignment, rather than declaration, allows the bug
+
+
+print "All good";
