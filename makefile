@@ -18,7 +18,7 @@ static: $(TOY_OUTDIR)
 	$(MAKE) -j8 -C source static
 
 test: clean $(TOY_OUTDIR)
-	$(MAKE) -j8 -C test
+	$(MAKE) -C test
 
 $(TOY_OUTDIR):
 	mkdir $(TOY_OUTDIR)
