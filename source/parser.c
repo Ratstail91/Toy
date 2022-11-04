@@ -798,12 +798,6 @@ static Opcode dot(Parser* parser, ASTNode** nodeHandle) {
 		return OP_EOF;
 	}
 
-	//hijack the function call, and hack in an extra parameter
-	if (node->binary.opcode == OP_FN_CALL) {
-		node->binary.right->fnCall.argumentCount++;
-		node->binary.opcode = OP_DOT;
-	}
-
 	(*nodeHandle) = node;
 	return OP_DOT; //signal that the function name and arguments are in the wrong order
 }
@@ -1090,6 +1084,7 @@ static void dottify(Parser* parser, ASTNode** nodeHandle) {
 	if ((*nodeHandle)->type == AST_NODEBINARY) {
 		if ((*nodeHandle)->binary.opcode == OP_FN_CALL) {
 			(*nodeHandle)->binary.opcode = OP_DOT;
+			(*nodeHandle)->binary.right->fnCall.argumentCount++;
 		}
 		dottify(parser, &(*nodeHandle)->binary.left);
 		dottify(parser, &(*nodeHandle)->binary.right);

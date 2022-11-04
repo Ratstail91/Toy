@@ -184,6 +184,7 @@ int main() {
 			"dot-and-matrix.toy",
 			"dot-assignments-bugfix.toy",
 			"dot-chaining.toy",
+			"dottify-bugfix.toy",
 			"functions.toy",
 			"imports-and-exports.toy",
 			"index-arrays.toy",

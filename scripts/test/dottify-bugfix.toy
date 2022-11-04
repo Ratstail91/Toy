@@ -1,0 +1,9 @@
+
+fn _add(self, inc) {
+	return self + inc;
+}
+
+assert 1.add(2).add(3).add(4) == 10, "dottify bugfix failed";
+
+
+print "All good";
