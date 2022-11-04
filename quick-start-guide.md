@@ -31,7 +31,7 @@ Larger containers of data are available - arrays and dictionaries. Arrays are co
 
 ```
 var array = []; //define an array
-var dict = [:]; //define a a dictionary
+var dict = [:]; //define a dictionary
 
 dict["foo"] = "bar"; //you can use indexing to add to a dictionary
 array.push(42); //you must use a function to push to an array
