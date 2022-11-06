@@ -2,7 +2,7 @@
   <image src="toylogo.png" />
 </p>
 
-# Toy 0.6.0
+# Toy
 
 This is the Toy programming language interpreter, written in C.
 
