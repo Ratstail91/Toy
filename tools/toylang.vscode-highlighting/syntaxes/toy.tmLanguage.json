@@ -44,7 +44,7 @@
 			},
 			{
 				"name": "keyword.type.toy",
-				"match": "\\b(any|bool|const|float|int|string|type)\\b"
+				"match": "\\b(any|bool|const|float|int|opaque|string|type)\\b"
 			},
 			{
 				"name": "keyword.other.toy",
