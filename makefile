@@ -23,6 +23,10 @@ test: clean $(TOY_OUTDIR)
 $(TOY_OUTDIR):
 	mkdir $(TOY_OUTDIR)
 
+#utils
+install-tools:
+	cp -rf tools/toylang.vscode-highlighting ~/.vscode/extensions
+
 .PHONY: clean
 
 clean:
