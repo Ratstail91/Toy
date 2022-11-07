@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "toy_common.h"
 
 char* readFile(char* path, size_t* fileSize);
 void writeFile(char* path, unsigned char* bytes, size_t size);

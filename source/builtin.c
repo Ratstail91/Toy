@@ -891,7 +891,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			//else override elements of the array instead
 			else {
 				//copy compound to result
-				snprintf(result, MAX_STRING_LENGTH, AS_STRING(compound));
+				snprintf(result, MAX_STRING_LENGTH, "%s", AS_STRING(compound));
 
 				int assignLength = strlen(AS_STRING(assign));
 				int min = AS_INTEGER(third) > 0 ? AS_INTEGER(first) : AS_INTEGER(second) - 1;

@@ -1,6 +1,6 @@
 #include "keyword_types.h"
 
-#include "common.h"
+#include "toy_common.h"
 
 #include <string.h>
 

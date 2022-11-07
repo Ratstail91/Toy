@@ -1,7 +1,7 @@
 #include "interpreter.h"
 #include "console_colors.h"
 
-#include "common.h"
+#include "toy_common.h"
 #include "memory.h"
 #include "keyword_types.h"
 #include "opcodes.h"

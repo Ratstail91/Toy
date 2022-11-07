@@ -1,7 +1,5 @@
 #include "parser.h"
 
-#include "common.h"
-
 #include "memory.h"
 #include "literal.h"
 #include "opcodes.h"

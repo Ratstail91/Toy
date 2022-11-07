@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "toy_common.h"
 #include "literal.h"
 #include "opcodes.h"
 #include "token_types.h"

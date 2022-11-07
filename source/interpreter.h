@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "toy_common.h"
 #include "literal.h"
 #include "literal_array.h"
 #include "literal_dictionary.h"

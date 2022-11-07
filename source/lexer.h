@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "toy_common.h"
 #include "token_types.h"
 
 //lexers are bound to a string of code, and return a single token every time scan is called
