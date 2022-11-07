@@ -1,0 +1,85 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Toy",
+	"patterns": [
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#numbers"
+		},
+		{
+			"include": "#booleans"
+		},
+		{
+			"include": "#null"
+		},
+		{
+			"include": "#reserved"
+		}
+	],
+	"repository": {
+		"comments": {
+			"patterns": [{
+				"name": "comment.line.toy",
+				"begin": "\/\/",
+				"end": "\\n"
+			},
+			{
+				"name": "comment.block.toy",
+				"begin": "/\\*",
+				"end": "\\*/"
+			}]
+		},
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.toy",
+				"match": "\\b(if|else|while|for|return|break|continue)\\b"
+			},
+			{
+				"name": "keyword.type.toy",
+				"match": "\\b(any|bool|const|float|int|string|type)\\b"
+			},
+			{
+				"name": "keyword.other.toy",
+				"match": "\\b(as|astype|assert|export|fn|import|print|typeof|var)\\b"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.toy",
+			"begin": "\"",
+			"end": "\""
+		},
+		"numbers": {
+			"patterns": [{
+				"match": "[-]?[0-9]+(.[0-9]+)?",
+				"name": "constant.numeric.toy"
+			}]
+		},
+		"booleans": {
+			"patterns": [{
+				"match": "\\b(true|false)\\b",
+				"name": "constant.numeric.toy"
+			}]
+		},
+		"null": {
+			"patterns": [{
+				"match": "\\b(null)\\b",
+				"name": "constant.numeric.toy"
+			}]
+		},
+		"reserved": {
+			"patterns": [{
+				"name": "keyword.reserved.toy",
+				"match": "\\b(class|do|foreach|in|of)\\b"
+			}]
+		}
+	},
+	"scopeName": "source.toy"
+}

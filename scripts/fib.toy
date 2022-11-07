@@ -6,7 +6,7 @@ fn fib(n : int) {
     return fib(n-1) + fib(n-2);
 }
 
-for (var i = 0; i < 40; i++) {
+for (var i = 0; i < 20; i++) {
 	var res = fib(i);
-	print (string)i + ": " + (string)res;
+	print string i + ": " + string res;
 }

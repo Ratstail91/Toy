@@ -1,0 +1,25 @@
+{
+  "name": "toy-syntax-highlighting",
+  "displayName": "Toy Syntax Highlighting",
+  "description": "A toy programming language",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.73.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "toy",
+      "aliases": ["Toy", "toy"],
+      "extensions": [".toy"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "toy",
+      "scopeName": "source.toy",
+      "path": "./syntaxes/toy.tmLanguage.json"
+    }]
+  }
+}
