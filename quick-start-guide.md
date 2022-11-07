@@ -198,6 +198,7 @@ The following list cannot be used as names, due to their significance (or potent
 * int
 * null
 * of (reserved)
+* opaque
 * print
 * return
 * string
