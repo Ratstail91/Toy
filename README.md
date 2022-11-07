@@ -27,6 +27,12 @@ Note: For Linux, you may need to `cd` into the `out` directory before running.
 
 Note: MacOS is not officially supported (no machines for testing), but we'll do our best!
 
+## Tools
+
+Run `make install-tools` to install a number of tools, including:
+
+* VSCode syntax highlighting
+
 ## Syntax
 
 ```
