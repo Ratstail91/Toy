@@ -16,6 +16,8 @@
 
 {
 	//create a timer, run it for a short time
+	import timer;
+
 	var timerA: opaque = createTimer();
 
 	timerA.startTimer();
@@ -41,6 +43,8 @@
 
 {
 	//set a timer to check string representation
+	import timer;
+
 	var timer: opaque = createTimer();
 
 	timer.setTimer(42, 999);
