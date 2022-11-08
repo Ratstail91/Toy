@@ -1,5 +1,6 @@
 #include "repl_tools.h"
 #include "lib_standard.h"
+#include "lib_timer.h"
 
 #include "console_colors.h"
 
@@ -25,6 +26,7 @@ void repl() {
 
 	//inject the libs
 	injectNativeHook(&interpreter, "standard", hookStandard);
+	injectNativeHook(&interpreter, "timer", hookTimer);
 
 	for(;;) {
 		printf("> ");

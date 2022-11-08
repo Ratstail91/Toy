@@ -12,10 +12,24 @@
 #include <string.h>
 
 #include "../repl/lib_standard.h"
+#include "../repl/lib_timer.h"
 
 //supress the print output
 static void noPrintFn(const char* output) {
 	//NO OP
+}
+
+static int failedAsserts = 0;
+static void assertWrapper(const char* output) {
+	failedAsserts++;
+	fprintf(stderr, ERROR "Assertion failure: ");
+	fprintf(stderr, "%s", output);
+	fprintf(stderr, "\n" RESET); //default new line
+}
+
+static void errorWrapper(const char* output) {
+	failedAsserts++;
+	fprintf(stderr, ERROR "%s" RESET, output);
 }
 
 //compilation functions
@@ -90,56 +104,65 @@ unsigned char* compileString(char* source, size_t* size) {
 	return tb;
 }
 
-void runBinary(unsigned char* tb, size_t size) {
+void runBinaryWithLibrary(unsigned char* tb, size_t size, char* library, HookFn hook) {
 	Interpreter interpreter;
 	initInterpreter(&interpreter);
 
 	//NOTE: supress print output for testing
 	setInterpreterPrint(&interpreter, noPrintFn);
+	setInterpreterAssert(&interpreter, assertWrapper);
+	setInterpreterError(&interpreter, errorWrapper);
 
 	//inject the standard libraries into this interpreter
-	injectNativeHook(&interpreter, "standard", hookStandard);
+	injectNativeHook(&interpreter, library, hook);
 
 	runInterpreter(&interpreter, tb, size);
 	freeInterpreter(&interpreter);
 }
 
-void runSource(char* source) {
-	size_t size = 0;
-	unsigned char* tb = compileString(source, &size);
-	if (!tb) {
-		return;
-	}
-	runBinary(tb, size);
-}
-
-void runSourceFile(char* fname) {
-	size_t size = 0; //not used
-	char* source = readFile(fname, &size);
-	runSource(source);
-	free((void*)source);
-}
+typedef struct Payload {
+	char* fname;
+	char* libname;
+	HookFn hook;
+} Payload;
 
 int main() {
 	{
 		//run each file in ../scripts/test/
-		char* filenames[] = {
-			"interactions.toy",
-			"standard.toy",
-			NULL
+		Payload payloads[] = {
+			{"interactions.toy", "standard", hookStandard}, //interactions needs standard
+			{"standard.toy", "standard", hookStandard},
+			// {"timer.toy", "timer", hookTimer},
+			{NULL, NULL, NULL}
 		};
 
-		for (int i = 0; filenames[i]; i++) {
-			printf("Running %s\n", filenames[i]);
+		for (int i = 0; payloads[i].fname; i++) {
+			printf("Running %s\n", payloads[i].fname);
 
-			char buffer[128];
-			snprintf(buffer, 128, "../scripts/test/lib/%s", filenames[i]);
+			char fname[128];
+			snprintf(fname, 128, "../scripts/test/lib/%s", payloads[i].fname);
 
-			runSourceFile(buffer);
+			//compile the source
+			size_t size = 0;
+			char* source = readFile(fname, &size);
+			unsigned char* tb = compileString(source, &size);
+			free((void*)source);
+
+			if (!tb) {
+				printf(ERROR "Failed to compile file: %s" RESET, fname);
+			}
+
+			runBinaryWithLibrary(tb, size, payloads[i].libname, payloads[i].hook);
 		}
 	}
 
-	printf(NOTICE "All good\n" RESET);
-	return 0;
+	if (!failedAsserts) {
+		printf(NOTICE "All good\n" RESET);
+	}
+	else {
+		printf(WARN "Problems detected in libraries\n" RESET);
+	}
+
+	return failedAsserts;
 }
 

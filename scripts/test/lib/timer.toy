@@ -1,0 +1,52 @@
+//test the timer library
+{
+	//create a timer, manipulate it's values
+	import timer;
+
+	//create a timer
+	var timer: opaque = createTimer();
+
+	//set the timer
+	timer.setTimer(42, 8891);
+
+	//check the timer values
+	assert timer.getTimerSeconds() == 42, "getTimerSeconds() failed";
+	assert timer.getTimerMicroseconds() == 42, "getTimerMicroseconds() failed";
+}
+
+{
+	//create a timer, run it for a short time
+	var timerA: opaque = createTimer();
+
+	timerA.startTimer();
+	for (var i: int = 0; i < 1000 * 1000; i++);
+	timerA.stopTimer();
+
+	//create another timer, run it for a longer time
+	var timerB: opaque = createTimer();
+
+	timerB.startTimer();
+	for (var i: int = 0; i < 1000 * 1000 * 10; i++);
+	timerB.stopTimer();
+
+	//check to ensure that the second timer took longer than the first
+	//WARNING: this has the small possibility of failing due to external factors
+	var difference: opaque = timerA.compareTimer(timerB);
+
+	assert difference.getTimerSeconds() >= 0, "compareTimer() (seconds) failed";
+	if (difference.getTimerSeconds() == 0) {
+		assert difference.getTimerMicroseconds() >= 0, "compareTimer() (microseconds) failed";
+	}
+}
+
+{
+	//set a timer to check string representation
+	var timer: opaque = createTimer();
+
+	timer.setTimer(42, 999);
+
+	assert timer.timerToString() == "42.999", "timerToString() failed";
+}
+
+
+print "All good";
