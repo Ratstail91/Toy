@@ -43,7 +43,7 @@
 				"match": "\\b(if|else|while|for|return|break|continue)\\b"
 			},
 			{
-				"name": "entity.name.type",
+				"name": "entity.name.type.toy",
 				"match": "\\b(any|bool|const|float|int|opaque|string|type)\\b"
 			},
 			{
