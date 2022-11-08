@@ -1,4 +1,4 @@
-#include "common.h"
+#include "toy_common.h"
 
 #include <stdio.h>
 #include <string.h>

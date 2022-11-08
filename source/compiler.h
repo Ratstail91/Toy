@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "toy_common.h"
 #include "opcodes.h"
 #include "ast_node.h"
 #include "literal_array.h"
