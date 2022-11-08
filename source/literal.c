@@ -15,7 +15,7 @@ static unsigned int hashString(const char* string, int length) {
 
 	for (int i = 0; i < length; i++) {
 		hash *= string[i];
-		hash *= 16777619;
+		hash ^= 16777619;
 	}
 
 	return hash;
