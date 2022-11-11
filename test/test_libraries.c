@@ -128,7 +128,7 @@ typedef struct Payload {
 
 int main() {
 	{
-		//run each file in ../scripts/test/
+		//run each file in test/scripts
 		Payload payloads[] = {
 			{"interactions.toy", "standard", hookStandard}, //interactions needs standard
 			{"standard.toy", "standard", hookStandard},
@@ -140,7 +140,7 @@ int main() {
 			printf("Running %s\n", payloads[i].fname);
 
 			char fname[128];
-			snprintf(fname, 128, "../scripts/test/lib/%s", payloads[i].fname);
+			snprintf(fname, 128, "scripts/lib/%s", payloads[i].fname);
 
 			//compile the source
 			size_t size = 0;

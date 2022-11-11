@@ -138,7 +138,7 @@ static int consume(Interpreter* interpreter, LiteralArray* arguments) {
 int main() {
 	{
 		size_t size = 0;
-		char* source = readFile("../scripts/test/opaque-data-type.toy", &size);
+		char* source = readFile("scripts/opaque-data-type.toy", &size);
 		unsigned char* tb = compileString(source, &size);
 		free((void*)source);
 

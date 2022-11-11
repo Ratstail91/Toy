@@ -175,7 +175,7 @@ int main() {
 	}
 
 	{
-		//run each file in ../scripts/test/
+		//run each file in tests/scripts/
 		char* filenames[] = {
 			"arithmetic.toy",
 			"casting.toy",
@@ -206,7 +206,7 @@ int main() {
 			printf("Running %s\n", filenames[i]);
 
 			char buffer[128];
-			snprintf(buffer, 128, "../scripts/test/%s", filenames[i]);
+			snprintf(buffer, 128, "scripts/%s", filenames[i]);
 
 			runSourceFile(buffer);
 		}
@@ -216,8 +216,8 @@ int main() {
 		//read source
 		size_t dummy;
 		size_t exportSize, importSize;
-		char* exportSource = readFile("../scripts/test/separate-exports.toy", &dummy);
-		char* importSource = readFile("../scripts/test/separate-imports.toy", &dummy);
+		char* exportSource = readFile("scripts/separate-exports.toy", &dummy);
+		char* importSource = readFile("scripts/separate-imports.toy", &dummy);
 
 		//compile
 		unsigned char* exportBinary = compileString(exportSource, &exportSize);

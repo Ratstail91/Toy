@@ -97,7 +97,7 @@ void error(char* msg) {
 int main() {
 	{
 		size_t size = 0;
-		char* source = readFile("../scripts//test/call-from-host.toy", &size);
+		char* source = readFile("scripts/call-from-host.toy", &size);
 		unsigned char* tb = compileString(source, &size);
 		free((void*)source);
 
