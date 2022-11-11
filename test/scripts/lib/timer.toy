@@ -1,55 +1,59 @@
 //test the timer library
 {
-	//create a timer, manipulate it's values
+	//create a timer, run it for a short period
 	import timer;
 
-	//create a timer
-	var timer: opaque = createTimer();
-
-	//set the timer
-	timer.setTimer(42, 8891);
-
-	//check the timer values
-	assert timer.getTimerSeconds() == 42, "getTimerSeconds() failed";
-	assert timer.getTimerMicroseconds() == 42, "getTimerMicroseconds() failed";
-}
-
-{
-	//create a timer, run it for a short time
-	import timer;
-
-	var timerA: opaque = createTimer();
-
-	timerA.startTimer();
+	var timerA: opaque = startTimer();
 	for (var i: int = 0; i < 1000 * 1000; i++);
-	timerA.stopTimer();
+	var diffA: opaque = timerA.stopTimer();
 
-	//create another timer, run it for a longer time
-	var timerB: opaque = createTimer();
-
-	timerB.startTimer();
+	//create another timer, run it for a longer period
+	var timerB: opaque = startTimer();
 	for (var i: int = 0; i < 1000 * 1000 * 10; i++);
-	timerB.stopTimer();
+	var diffB: opaque = timerB.stopTimer();
 
 	//check to ensure that the second timer took longer than the first
 	//WARNING: this has the small possibility of failing due to external factors
-	var difference: opaque = timerA.compareTimer(timerB);
+	var difference: opaque = diffA.compareTimer(diffB);
 
 	assert difference.getTimerSeconds() >= 0, "compareTimer() (seconds) failed";
 	if (difference.getTimerSeconds() == 0) {
 		assert difference.getTimerMicroseconds() >= 0, "compareTimer() (microseconds) failed";
 	}
+
+	//all timers must be destroyed after use
+	timerA.destroyTimer();
+	timerB.destroyTimer();
+	diffA.destroyTimer();
+	diffB.destroyTimer();
+	difference.destroyTimer();
+}
+
+{
+	//create a timer, manipulate it's values
+	import timer;
+
+	//set the timer values manually
+	var timer: opaque = createTimer(42, 8891);
+
+	//check the timer values
+	assert timer.getTimerSeconds() == 42, "getTimerSeconds() failed";
+	assert timer.getTimerMicroseconds() == 8891, "getTimerMicroseconds() failed";
+
+	//all timers must be destroyed after use
+	timer.destroyTimer();
 }
 
 {
 	//set a timer to check string representation
 	import timer;
 
-	var timer: opaque = createTimer();
+	var timer: opaque = createTimer(42, 999);
 
-	timer.setTimer(42, 999);
+	assert timer.timerToString() == "42.000999", "timerToString() failed";
 
-	assert timer.timerToString() == "42.999", "timerToString() failed";
+	//all timers must be destroyed after use
+	timer.destroyTimer();
 }
 
 

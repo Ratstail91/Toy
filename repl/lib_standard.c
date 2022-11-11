@@ -2,7 +2,7 @@
 
 #include "memory.h"
 
-#include <time.h>
+#include <sys/time.h>
 
 static int nativeClock(Interpreter* interpreter, LiteralArray* arguments) {
 	//no arguments

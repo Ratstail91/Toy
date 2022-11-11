@@ -1,5 +1,6 @@
 #include "repl_tools.h"
 #include "lib_standard.h"
+#include "lib_timer.h"
 
 #include "console_colors.h"
 
@@ -108,6 +109,7 @@ void runBinary(unsigned char* tb, size_t size) {
 
 	//inject the libs
 	injectNativeHook(&interpreter, "standard", hookStandard);
+	injectNativeHook(&interpreter, "timer", hookTimer);
 
 	runInterpreter(&interpreter, tb, size);
 	freeInterpreter(&interpreter);

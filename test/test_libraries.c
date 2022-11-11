@@ -132,7 +132,7 @@ int main() {
 		Payload payloads[] = {
 			{"interactions.toy", "standard", hookStandard}, //interactions needs standard
 			{"standard.toy", "standard", hookStandard},
-			// {"timer.toy", "timer", hookTimer},
+			{"timer.toy", "timer", hookTimer},
 			{NULL, NULL, NULL}
 		};
 

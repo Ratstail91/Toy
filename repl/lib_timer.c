@@ -2,23 +2,321 @@
 
 #include "memory.h"
 
+#include <stdio.h>
 #include <time.h>
+#include <sys/time.h>
 
 /*
-//using sys/time.h
-var timer: opaque = createTimer();
+//using time.h
+var timer: opaque = startTimer();
+var diff: opaque = timer.stopTimer();
 
-timer.startTimer();
-timer.stopTimer();
+...
 
-timer.setTimer(seconds, microseconds);
-timer.getTimerSeconds();
-timer.getTimerMicroseconds();
+var timer = createTimer(seconds, microseconds);
+print timer.getTimerSeconds();
+print timer.getTimerMicroseconds();
 
-var diffTimer: opaque = timer.compareTimer(rhs); //expects a stopped timer for both arguments
+...
 
-timer.timerToString(); //string representation of the timer
+var diff: opaque = timer.compareTimers(rhs); //expects another timer
+
+...
+
+print timer.timerToString(); //string representation of the timer
+
+timer.destroyTimer(); //needed to free the memory
 */
+
+//god damn it
+static struct timeval* diff(struct timeval* lhs, struct timeval* rhs) {
+	struct timeval* d = ALLOCATE(struct timeval, 1);
+
+	d->tv_sec = rhs->tv_sec - lhs->tv_sec;
+	d->tv_usec = rhs->tv_usec - lhs->tv_usec;
+
+	if (d->tv_usec < 0) {
+		d->tv_sec--;
+		d->tv_usec += 1000 * 1000;
+	}
+
+	return d;
+}
+
+static int nativeStartTimer(Interpreter* interpreter, LiteralArray* arguments) {
+	//no arguments
+	if (arguments->count != 0) {
+		interpreter->errorOutput("Incorrect number of arguments to startTimer\n");
+		return -1;
+	}
+
+	//get the timeinfo from C
+	struct timeval* timeinfo = ALLOCATE(struct timeval, 1);
+	gettimeofday(timeinfo, NULL);
+
+	//wrap in an opaque literal for Toy
+	Literal timeLiteral = TO_OPAQUE_LITERAL(timeinfo, -1);
+	pushLiteralArray(&interpreter->stack, timeLiteral);
+
+	freeLiteral(timeLiteral);
+
+	return 1;
+}
+
+static int nativeStopTimer(Interpreter* interpreter, LiteralArray* arguments) {
+	//no arguments
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to _stopTimer\n");
+		return -1;
+	}
+
+	//get the timeinfo from C
+	struct timeval timerStop;
+	gettimeofday(&timerStop, NULL);
+
+	//unwrap the opaque literal
+	Literal timeLiteral = popLiteralArray(arguments);
+
+	Literal timeLiteralIdn = timeLiteral;
+	if (IS_IDENTIFIER(timeLiteral) && parseIdentifierToValue(interpreter, &timeLiteral)) {
+		freeLiteral(timeLiteralIdn);
+	}
+
+	if (!IS_OPAQUE(timeLiteral)) {
+		freeLiteral(timeLiteral);
+		return -1;
+	}
+
+	struct timeval* timerStart = AS_OPAQUE(timeLiteral);
+
+	//determine the difference, and wrap it
+	struct timeval* d = diff(timerStart, &timerStop);
+	Literal diffLiteral = TO_OPAQUE_LITERAL(d, -1);
+	pushLiteralArray(&interpreter->stack, diffLiteral);
+
+	//cleanup
+	freeLiteral(timeLiteral);
+	freeLiteral(diffLiteral);
+
+	return 1;
+}
+
+static int nativeCreateTimer(Interpreter* interpreter, LiteralArray* arguments) {
+	//no arguments
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments to createTimer\n");
+		return -1;
+	}
+
+	//get the args
+	Literal microsecondLiteral = popLiteralArray(arguments);
+	Literal secondLiteral = popLiteralArray(arguments);
+
+	Literal secondLiteralIdn = secondLiteral;
+	if (IS_IDENTIFIER(secondLiteral) && parseIdentifierToValue(interpreter, &secondLiteral)) {
+		freeLiteral(secondLiteralIdn);
+	}
+
+	Literal microsecondLiteralIdn = microsecondLiteral;
+	if (IS_IDENTIFIER(microsecondLiteral) && parseIdentifierToValue(interpreter, &microsecondLiteral)) {
+		freeLiteral(microsecondLiteralIdn);
+	}
+
+	if (!IS_INTEGER(secondLiteral) || !IS_INTEGER(microsecondLiteral)) {
+		freeLiteral(secondLiteral);
+		freeLiteral(microsecondLiteral);
+		return -1;
+	}
+
+	//get the timeinfo from toy
+	struct timeval* timeinfo = ALLOCATE(struct timeval, 1);
+	timeinfo->tv_sec = AS_INTEGER(secondLiteral);
+	timeinfo->tv_usec = AS_INTEGER(microsecondLiteral);
+
+	//wrap in an opaque literal for Toy
+	Literal timeLiteral = TO_OPAQUE_LITERAL(timeinfo, -1);
+	pushLiteralArray(&interpreter->stack, timeLiteral);
+
+	freeLiteral(timeLiteral);
+	freeLiteral(secondLiteral);
+	freeLiteral(microsecondLiteral);
+
+	return 1;
+}
+
+static int nativeGetTimerSeconds(Interpreter* interpreter, LiteralArray* arguments) {
+	//no arguments
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to getTimerSeconds\n");
+		return -1;
+	}
+
+	//unwrap the opaque literal
+	Literal timeLiteral = popLiteralArray(arguments);
+
+	Literal timeLiteralIdn = timeLiteral;
+	if (IS_IDENTIFIER(timeLiteral) && parseIdentifierToValue(interpreter, &timeLiteral)) {
+		freeLiteral(timeLiteralIdn);
+	}
+
+	if (!IS_OPAQUE(timeLiteral)) {
+		freeLiteral(timeLiteral);
+		return -1;
+	}
+
+	struct timeval* timer = AS_OPAQUE(timeLiteral);
+
+	//create the result literal
+	Literal result = TO_INTEGER_LITERAL(timer->tv_sec);
+	pushLiteralArray(&interpreter->stack, result);
+
+	//cleanup
+	freeLiteral(timeLiteral);
+	freeLiteral(result);
+
+	return 1;
+}
+
+static int nativeGetTimerMicroseconds(Interpreter* interpreter, LiteralArray* arguments) {
+	//no arguments
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to getTimerSeconds\n");
+		return -1;
+	}
+
+	//unwrap the opaque literal
+	Literal timeLiteral = popLiteralArray(arguments);
+
+	Literal timeLiteralIdn = timeLiteral;
+	if (IS_IDENTIFIER(timeLiteral) && parseIdentifierToValue(interpreter, &timeLiteral)) {
+		freeLiteral(timeLiteralIdn);
+	}
+
+	if (!IS_OPAQUE(timeLiteral)) {
+		freeLiteral(timeLiteral);
+		return -1;
+	}
+
+	struct timeval* timer = AS_OPAQUE(timeLiteral);
+
+	//create the result literal
+	Literal result = TO_INTEGER_LITERAL(timer->tv_usec);
+	pushLiteralArray(&interpreter->stack, result);
+
+	//cleanup
+	freeLiteral(timeLiteral);
+	freeLiteral(result);
+
+	return 1;
+}
+
+static int nativeCompareTimer(Interpreter* interpreter, LiteralArray* arguments) {
+	//no arguments
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments to _stopTimer\n");
+		return -1;
+	}
+
+	//unwrap the opaque literals
+	Literal rhsLiteral = popLiteralArray(arguments);
+	Literal lhsLiteral = popLiteralArray(arguments);
+
+	Literal lhsLiteralIdn = lhsLiteral;
+	if (IS_IDENTIFIER(lhsLiteral) && parseIdentifierToValue(interpreter, &lhsLiteral)) {
+		freeLiteral(lhsLiteralIdn);
+	}
+
+	Literal rhsLiteralIdn = rhsLiteral;
+	if (IS_IDENTIFIER(rhsLiteral) && parseIdentifierToValue(interpreter, &rhsLiteral)) {
+		freeLiteral(rhsLiteralIdn);
+	}
+
+	if (!IS_OPAQUE(lhsLiteral) || !IS_OPAQUE(rhsLiteral)) {
+		freeLiteral(lhsLiteral);
+		freeLiteral(rhsLiteral);
+		return -1;
+	}
+
+	struct timeval* lhsTimer = AS_OPAQUE(lhsLiteral);
+	struct timeval* rhsTimer = AS_OPAQUE(rhsLiteral);
+
+	//determine the difference, and wrap it
+	struct timeval* d = diff(lhsTimer, rhsTimer);
+	Literal diffLiteral = TO_OPAQUE_LITERAL(d, -1);
+	pushLiteralArray(&interpreter->stack, diffLiteral);
+
+	//cleanup
+	freeLiteral(lhsLiteral);
+	freeLiteral(rhsLiteral);
+	freeLiteral(diffLiteral);
+
+	return 1;
+}
+
+static int nativeTimerToString(Interpreter* interpreter, LiteralArray* arguments) {
+	//no arguments
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to _timerToString\n");
+		return -1;
+	}
+
+	//unwrap in an opaque literal
+	Literal timeLiteral = popLiteralArray(arguments);
+
+	Literal timeLiteralIdn = timeLiteral;
+	if (IS_IDENTIFIER(timeLiteral) && parseIdentifierToValue(interpreter, &timeLiteral)) {
+		freeLiteral(timeLiteralIdn);
+	}
+
+	if (!IS_OPAQUE(timeLiteral)) {
+		freeLiteral(timeLiteral);
+		return -1;
+	}
+
+	struct timeval* timer = AS_OPAQUE(timeLiteral);
+
+	//create the string literal
+	char buffer[128];
+	snprintf(buffer, 128, "%ld.%06ld", timer->tv_sec, timer->tv_usec);
+	Literal resultLiteral = TO_STRING_LITERAL( copyString(buffer, strlen(buffer)), strlen(buffer));
+
+	pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	//cleanup
+	freeLiteral(timeLiteral);
+	freeLiteral(resultLiteral);
+
+	return 1;
+}
+
+static int nativeDestroyTimer(Interpreter* interpreter, LiteralArray* arguments) {
+	//no arguments
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to _desroyTimer\n");
+		return -1;
+	}
+
+		//unwrap in an opaque literal
+	Literal timeLiteral = popLiteralArray(arguments);
+
+	Literal timeLiteralIdn = timeLiteral;
+	if (IS_IDENTIFIER(timeLiteral) && parseIdentifierToValue(interpreter, &timeLiteral)) {
+		freeLiteral(timeLiteralIdn);
+	}
+
+	if (!IS_OPAQUE(timeLiteral)) {
+		freeLiteral(timeLiteral);
+		return -1;
+	}
+
+	struct timeval* timer = AS_OPAQUE(timeLiteral);
+
+	FREE(struct timeval, timer);
+
+	freeLiteral(timeLiteral);
+
+	return 0;
+}
 
 //call the hook
 typedef struct Natives {
@@ -29,7 +327,14 @@ typedef struct Natives {
 int hookTimer(Interpreter* interpreter, Literal identifier, Literal alias) {
 	//build the natives list
 	Natives natives[] = {
-		// {"clock", nativeClock},
+		{"startTimer", nativeStartTimer},
+		{"_stopTimer", nativeStopTimer},
+		{"createTimer", nativeCreateTimer},
+		{"_getTimerSeconds", nativeGetTimerSeconds},
+		{"_getTimerMicroseconds", nativeGetTimerMicroseconds},
+		{"_compareTimer", nativeCompareTimer},
+		{"_timerToString", nativeTimerToString},
+		{"_destroyTimer", nativeDestroyTimer},
 		{NULL, NULL}
 	};
 
