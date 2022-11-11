@@ -12,8 +12,17 @@
 //platform exports/imports
 #if defined(__linux__)
 #define TOY_API extern
+#include <time.h>
+
+#elif defined(_WIN32) || defined(WIN32)
+#define TOY_API
+#include <sys/time.h>
+#include <time.h>
+
 #else
 #define TOY_API
+#include <time.h>
+
 #endif
 
 #ifndef TOY_EXPORT

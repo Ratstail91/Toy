@@ -3,30 +3,7 @@
 #include "memory.h"
 
 #include <stdio.h>
-#include <time.h>
-#include <sys/time.h>
-
-/*
-//using time.h
-var timer: opaque = startTimer();
-var diff: opaque = timer.stopTimer();
-
-...
-
-var timer = createTimer(seconds, microseconds);
-print timer.getTimerSeconds();
-print timer.getTimerMicroseconds();
-
-...
-
-var diff: opaque = timer.compareTimers(rhs); //expects another timer
-
-...
-
-print timer.timerToString(); //string representation of the timer
-
-timer.destroyTimer(); //needed to free the memory
-*/
+#include "toy_common.h"
 
 //god damn it
 static struct timeval* diff(struct timeval* lhs, struct timeval* rhs) {
