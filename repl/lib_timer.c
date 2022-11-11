@@ -1,9 +1,9 @@
 #include "lib_timer.h"
 
+#include "toy_common.h"
 #include "memory.h"
 
 #include <stdio.h>
-#include "toy_common.h"
 
 //god damn it
 static struct timeval* diff(struct timeval* lhs, struct timeval* rhs) {
