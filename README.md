@@ -46,7 +46,7 @@ print tally(); //3
 * [Embedding Toy](embedding-toy)
 * [Using Toy](using-toy)
 * [Compiling Toy](compiling-toy)
-* [Standard Libary](standard-library)
+* [Standard Library](standard-library)
 * [Developing Toy](developing-toy)
 * [Roadmap](roadmap)
 * [Game Engine](game-engine)
