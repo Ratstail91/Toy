@@ -43,13 +43,18 @@ print tally(); //3
 
 * [Quick Start Guide](quick-start-guide)
 * [Types](types)
+* [Standard Library](standard-library)
+* ~~Timer Library~~ Under Development
+* [Game Engine](game-engine)
+
+# Deep Dive
+
 * [Embedding Toy](embedding-toy)
 * [Using Toy](using-toy)
 * [Compiling Toy](compiling-toy)
-* [Standard Library](standard-library)
 * [Developing Toy](developing-toy)
+* [Testing Toy](testing-toy)
 * [Roadmap](roadmap)
-* [Game Engine](game-engine)
 
 # Version Differences
 

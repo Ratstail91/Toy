@@ -18,10 +18,11 @@ This is probably the easiest goal to accomplish, but also the least urgent. The 
 
 Some things I'd like to add in the future include:
 
-* A fully featured standard library
+* A fully featured standard library (see below)
 * An external script runner utility library
 * A threading library
 * A random generation library (numbers, perlin noise, wave function collapse?)
+* A timer library (under development)
 * Multiple return values from functions
 * Ternary operator
 * interpolated strings
@@ -29,6 +30,8 @@ Some things I'd like to add in the future include:
 Some of these have always been planned, but were sidelined or are incomplete for one reason or another.
 
 ## Planned Standard Library Functions
+
+This is just random ideas for now, dumped here from another file.
 
 * _concat(self: any, x: any): any - This function requires an array or dictionary with a matching type as "x". This function returns a new dictionary instance which contains the contents of the current array or dictionary combined with the contents of "x". In the event of a dictionary key clash, the key-value pair in the current dictionary is included, and the key-value pair from "x" is discarded.
 * _containsKey(self: [any : any], k: any): bool - This function returns true if the dictionary contains a key "k", otherwise it returns false.
