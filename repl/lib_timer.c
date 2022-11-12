@@ -129,7 +129,7 @@ static int nativeCreateTimer(Interpreter* interpreter, LiteralArray* arguments) 
 		return -1;
 	}
 
-	if (AS_INTEGER(microsecondLiteral) <= -1000 * 1000 || AS_INTEGER(microsecondLiteral) >= 1000 * 1000) {
+	if (AS_INTEGER(microsecondLiteral) <= -1000 * 1000 || AS_INTEGER(microsecondLiteral) >= 1000 * 1000 || (AS_INTEGER(secondLiteral) != 0 && AS_INTEGER(microsecondLiteral) < 0) ) {
 		interpreter->errorOutput("Microseconds out of range in createTimer\n");
 		freeLiteral(secondLiteral);
 		freeLiteral(microsecondLiteral);
