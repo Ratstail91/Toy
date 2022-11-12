@@ -44,7 +44,7 @@ print tally(); //3
 * [Quick Start Guide](quick-start-guide)
 * [Types](types)
 * [Standard Library](standard-library)
-* ~~Timer Library~~ Under Development
+* [Timer Library](timer-library)
 * [Game Engine](game-engine)
 
 # Deep Dive
