@@ -10,5 +10,5 @@ import standard;
 
 ## clock()
 
-This function returns the current timestamp.
+This function returns a string representation of the current timestamp.
 
