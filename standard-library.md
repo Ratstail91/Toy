@@ -8,7 +8,7 @@ The standard library can usually be accessed with the `import` keyword:
 import standard;
 ```
 
-## fn clock(): string
+## clock()
 
 This function returns the current timestamp.
 
