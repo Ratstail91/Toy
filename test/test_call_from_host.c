@@ -90,7 +90,7 @@ unsigned char* compileString(char* source, size_t* size) {
 }
 
 void error(char* msg) {
-	printf(msg);
+	printf("%s", msg);
 	exit(-1);
 }
 
