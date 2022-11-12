@@ -5,21 +5,43 @@
 
 #include <stdio.h>
 
+//GOD DAMN IT: https://stackoverflow.com/questions/15846762/timeval-subtract-explanation
+int timeval_subtract(struct timeval *result, struct timeval *x, struct timeval *y) {
+	//normallize
+	if (x->tv_usec > 999999) {
+		x->tv_sec += x->tv_usec / 1000000;
+		x->tv_usec %= 1000000;
+	}
+
+	if (y->tv_usec > 999999) {
+		y->tv_sec += y->tv_usec / 1000000;
+		y->tv_usec %= 1000000;
+	}
+
+	//calc
+	result->tv_sec = x->tv_sec - y->tv_sec;
+
+	if ((result->tv_usec = x->tv_usec - y->tv_usec) < 0) {
+		if (result->tv_sec != 0) { //only works far from 0
+			result->tv_usec += 1000000;
+			result->tv_sec--; // borrow
+		}
+	}
+
+	return result->tv_sec < 0 || (result->tv_sec == 0 && result->tv_usec < 0);
+}
+
 //god damn it
 static struct timeval* diff(struct timeval* lhs, struct timeval* rhs) {
 	struct timeval* d = ALLOCATE(struct timeval, 1);
 
-	d->tv_sec = rhs->tv_sec - lhs->tv_sec;
-	d->tv_usec = rhs->tv_usec - lhs->tv_usec;
-
-	if (d->tv_usec < 0) {
-		d->tv_sec--;
-		d->tv_usec += 1000 * 1000;
-	}
+	//I gave up, copied from SO
+	timeval_subtract(d, rhs, lhs);
 
 	return d;
 }
 
+//callbacks
 static int nativeStartTimer(Interpreter* interpreter, LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 0) {
@@ -102,6 +124,13 @@ static int nativeCreateTimer(Interpreter* interpreter, LiteralArray* arguments) 
 
 	if (!IS_INTEGER(secondLiteral) || !IS_INTEGER(microsecondLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to createTimer\n");
+		freeLiteral(secondLiteral);
+		freeLiteral(microsecondLiteral);
+		return -1;
+	}
+
+	if (AS_INTEGER(microsecondLiteral) <= -1000 * 1000 || AS_INTEGER(microsecondLiteral) >= 1000 * 1000) {
+		interpreter->errorOutput("Microseconds out of range in createTimer\n");
 		freeLiteral(secondLiteral);
 		freeLiteral(microsecondLiteral);
 		return -1;
@@ -259,9 +288,17 @@ static int nativeTimerToString(Interpreter* interpreter, LiteralArray* arguments
 	struct timeval* timer = AS_OPAQUE(timeLiteral);
 
 	//create the string literal
-	char buffer[128];
-	snprintf(buffer, 128, "%ld.%06ld", timer->tv_sec, timer->tv_usec);
-	Literal resultLiteral = TO_STRING_LITERAL( copyString(buffer, strlen(buffer)), strlen(buffer));
+	Literal resultLiteral = TO_NULL_LITERAL;
+	if (timer->tv_sec == 0 && timer->tv_usec < 0) { //special case, for when the negative sign is encoded in the usec
+		char buffer[128];
+		snprintf(buffer, 128, "-%ld.%06ld", timer->tv_sec, -timer->tv_usec);
+		resultLiteral = TO_STRING_LITERAL( copyString(buffer, strlen(buffer)), strlen(buffer));
+	}
+	else { //normal case
+		char buffer[128];
+		snprintf(buffer, 128, "%ld.%06ld", timer->tv_sec, timer->tv_usec);
+		resultLiteral = TO_STRING_LITERAL( copyString(buffer, strlen(buffer)), strlen(buffer));
+	}
 
 	pushLiteralArray(&interpreter->stack, resultLiteral);
 

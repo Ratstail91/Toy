@@ -1,0 +1,13 @@
+import timer;
+
+var a = createTimer(1, 0);
+var b = createTimer(2, 0);
+
+print a.compareTimer(b).timerToString();
+print b.compareTimer(a).timerToString();
+
+var c = createTimer(0, 1);
+var d = createTimer(0, 2);
+
+print c.compareTimer(d).timerToString();
+print d.compareTimer(c).timerToString();

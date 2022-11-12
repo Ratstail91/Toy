@@ -56,5 +56,37 @@
 	timer.destroyTimer();
 }
 
+{
+	//test positive and negative values of timers
+	import timer;
+
+	var a = createTimer(1, 0);
+	var b = createTimer(2, 0);
+
+	var acmp = a.compareTimer(b);
+	var bcmp = b.compareTimer(a);
+
+	var c = createTimer(0, 1);
+	var d = createTimer(0, 2);
+
+	var ccmp = c.compareTimer(d);
+	var dcmp = d.compareTimer(c);
+
+	assert acmp.timerToString() == "1.000000", "positive and negative tests failed (acmp)";
+	assert bcmp.timerToString() == "-1.000000", "positive and negative tests failed (bcmp)";
+	assert ccmp.timerToString() == "0.000001", "positive and negative tests failed (ccmp)";
+	assert dcmp.timerToString() == "-0.000001", "positive and negative tests failed (dcmp)";
+
+	a.destroyTimer();
+	b.destroyTimer();
+	c.destroyTimer();
+	d.destroyTimer();
+	acmp.destroyTimer();
+	bcmp.destroyTimer();
+	ccmp.destroyTimer();
+	dcmp.destroyTimer();
+}
+
 
 print "All good";
+
