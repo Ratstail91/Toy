@@ -60,6 +60,7 @@ static int nativeStopTimer(Interpreter* interpreter, LiteralArray* arguments) {
 	}
 
 	if (!IS_OPAQUE(timeLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to _stopTimer\n");
 		freeLiteral(timeLiteral);
 		return -1;
 	}
@@ -100,6 +101,7 @@ static int nativeCreateTimer(Interpreter* interpreter, LiteralArray* arguments) 
 	}
 
 	if (!IS_INTEGER(secondLiteral) || !IS_INTEGER(microsecondLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to createTimer\n");
 		freeLiteral(secondLiteral);
 		freeLiteral(microsecondLiteral);
 		return -1;
@@ -124,7 +126,7 @@ static int nativeCreateTimer(Interpreter* interpreter, LiteralArray* arguments) 
 static int nativeGetTimerSeconds(Interpreter* interpreter, LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to getTimerSeconds\n");
+		interpreter->errorOutput("Incorrect number of arguments to _getTimerSeconds\n");
 		return -1;
 	}
 
@@ -137,6 +139,7 @@ static int nativeGetTimerSeconds(Interpreter* interpreter, LiteralArray* argumen
 	}
 
 	if (!IS_OPAQUE(timeLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to _getTimerSeconds\n");
 		freeLiteral(timeLiteral);
 		return -1;
 	}
@@ -157,7 +160,7 @@ static int nativeGetTimerSeconds(Interpreter* interpreter, LiteralArray* argumen
 static int nativeGetTimerMicroseconds(Interpreter* interpreter, LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to getTimerSeconds\n");
+		interpreter->errorOutput("Incorrect number of arguments to _getTimerMicroseconds\n");
 		return -1;
 	}
 
@@ -170,6 +173,7 @@ static int nativeGetTimerMicroseconds(Interpreter* interpreter, LiteralArray* ar
 	}
 
 	if (!IS_OPAQUE(timeLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to _getTimerMicroseconds\n");
 		freeLiteral(timeLiteral);
 		return -1;
 	}
@@ -190,7 +194,7 @@ static int nativeGetTimerMicroseconds(Interpreter* interpreter, LiteralArray* ar
 static int nativeCompareTimer(Interpreter* interpreter, LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _stopTimer\n");
+		interpreter->errorOutput("Incorrect number of arguments to _compareTimer\n");
 		return -1;
 	}
 
@@ -209,6 +213,7 @@ static int nativeCompareTimer(Interpreter* interpreter, LiteralArray* arguments)
 	}
 
 	if (!IS_OPAQUE(lhsLiteral) || !IS_OPAQUE(rhsLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to _compareTimer\n");
 		freeLiteral(lhsLiteral);
 		freeLiteral(rhsLiteral);
 		return -1;
@@ -246,6 +251,7 @@ static int nativeTimerToString(Interpreter* interpreter, LiteralArray* arguments
 	}
 
 	if (!IS_OPAQUE(timeLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to _timerToString\n");
 		freeLiteral(timeLiteral);
 		return -1;
 	}
@@ -269,7 +275,7 @@ static int nativeTimerToString(Interpreter* interpreter, LiteralArray* arguments
 static int nativeDestroyTimer(Interpreter* interpreter, LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _desroyTimer\n");
+		interpreter->errorOutput("Incorrect number of arguments to _destroyTimer\n");
 		return -1;
 	}
 
@@ -282,6 +288,7 @@ static int nativeDestroyTimer(Interpreter* interpreter, LiteralArray* arguments)
 	}
 
 	if (!IS_OPAQUE(timeLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to _destroyTimer\n");
 		freeLiteral(timeLiteral);
 		return -1;
 	}
