@@ -18,6 +18,9 @@ else
 	$(CC) -DTOY_IMPORT $(CFLAGS) -o $(OUT) $(OBJ) -Wl,-rpath,. -L$(realpath $(shell pwd)/../$(TOY_OUTDIR)) $(LIBS)
 endif
 
+release: all
+	strip $(OUT)
+
 $(OBJ): | $(ODIR)
 
 $(ODIR):

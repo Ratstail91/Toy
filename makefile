@@ -5,18 +5,33 @@ export TOY_OUTDIR = out
 
 all: $(TOY_OUTDIR) repl
 
+#repl builds
 repl: $(TOY_OUTDIR) library
 	$(MAKE) -C repl
 
 repl-static: $(TOY_OUTDIR) static
 	$(MAKE) -C repl
 
+repl-release: clean $(TOY_OUTDIR) library-release
+	$(MAKE) -C repl release
+
+repl-static-release: clean $(TOY_OUTDIR) static-release
+	$(MAKE) -C repl release
+
+#lib builds
 library: $(TOY_OUTDIR)
 	$(MAKE) -j8 -C source library
 
 static: $(TOY_OUTDIR)
 	$(MAKE) -j8 -C source static
 
+library-release: $(TOY_OUTDIR)
+	$(MAKE) -j8 -C source library-release
+
+static-release: $(TOY_OUTDIR)
+	$(MAKE) -j8 -C source static-release
+
+#utils
 test: clean $(TOY_OUTDIR)
 	$(MAKE) -C test
 

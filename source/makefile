@@ -34,6 +34,12 @@ library: $(OBJ)
 static: $(OBJ)
 	ar crs ../$(TOY_OUTDIR)/lib$(OUTNAME).a $(OBJ)
 
+library-release: $(OBJ) library
+	strip $(OUT)
+
+static-release: $(OBJ) static
+	strip -d ../$(TOY_OUTDIR)/lib$(OUTNAME).a
+
 $(OBJ): | $(ODIR)
 
 $(ODIR):
