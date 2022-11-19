@@ -94,3 +94,26 @@ The first argument must be an interpreter. The third argument is a pointer to a 
 
 The second arguments to these functions are either the function to be called as a `Literal`, or the name of the function within the interpreter's scope. The latter API simply finds the specified `Literal` if it exists and calls the former. As with most APIs, these return `false` if something went wrong.
 
+## Memory Allocation
+
+Depending on your platform of choice, you may want to alter how the memory is allocated within Toy. You can do this with the simple memory API:
+
+```c
+//signature returns the new pointer to be used
+typedef void* (*AllocatorFn)(void* pointer, size_t oldSize, size_t newSize);
+TOY_API void setAllocator(AllocatorFn);
+```
+
+Pass it a function which matches the above signature, and it'll be callable via the following macros:
+
+* ALLOCATE(type, count)
+* FREE(type, pointer)
+* GROW_ARRAY(type, pointer, oldCount, newCount)
+* SHRINK_ARRAY(type, pointer, oldCount, newCount)
+* FREE_ARRAY(type, pointer, oldCount)
+
+Also, the following macros are provided to calculate the ideal array capacities (the latter of which is for rapidly growing structures):
+
+* GROW_CAPACITY(capacity)
+* GROW_CAPACITY_FAST(capacity)
+
