@@ -12,6 +12,6 @@
 
 //implementation details
 typedef void* (*AllocatorFn)(void* pointer, size_t oldSize, size_t newSize);
-void setAllocator(AllocatorFn);
+TOY_API void setAllocator(AllocatorFn);
 
 void* reallocate(void* pointer, size_t oldSize, size_t newSize);
