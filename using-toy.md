@@ -106,14 +106,14 @@ TOY_API void setAllocator(AllocatorFn);
 
 Pass it a function which matches the above signature, and it'll be callable via the following macros:
 
-* ALLOCATE(type, count)
-* FREE(type, pointer)
-* GROW_ARRAY(type, pointer, oldCount, newCount)
-* SHRINK_ARRAY(type, pointer, oldCount, newCount)
-* FREE_ARRAY(type, pointer, oldCount)
+* `ALLOCATE(type, count)`
+* `FREE(type, pointer)`
+* `GROW_ARRAY(type, pointer, oldCount, newCount)`
+* `SHRINK_ARRAY(type, pointer, oldCount, newCount)`
+* `FREE_ARRAY(type, pointer, oldCount)`
 
 Also, the following macros are provided to calculate the ideal array capacities (the latter of which is for rapidly growing structures):
 
-* GROW_CAPACITY(capacity)
-* GROW_CAPACITY_FAST(capacity)
+* `GROW_CAPACITY(capacity)`
+* `GROW_CAPACITY_FAST(capacity)`
 
