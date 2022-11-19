@@ -10,5 +10,8 @@
 #define SHRINK_ARRAY(type, pointer, oldCount, count) (type*)reallocate((type*)pointer, sizeof(type) * (oldCount), sizeof(type) * (count))
 #define FREE_ARRAY(type, pointer, oldCount) reallocate((type*)pointer, sizeof(type) * (oldCount), 0)
 
-void* reallocate(void* pointer, size_t oldSize, size_t newSize);
+//implementation details
+typedef void* (*AllocatorFn)(void* pointer, size_t oldSize, size_t newSize);
+void setAllocator(AllocatorFn);
 
+void* reallocate(void* pointer, size_t oldSize, size_t newSize);
