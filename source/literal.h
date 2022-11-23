@@ -2,6 +2,8 @@
 
 #include "toy_common.h"
 
+#include "refstring.h"
+
 #include <string.h>
 
 typedef enum {
@@ -33,8 +35,8 @@ typedef struct {
 		int integer;
 		float number;
 		struct {
-			char* ptr;
-			int length;
+			RefString* ptr;
+			//string hash?
 		} string;
 
 		void* array;
@@ -47,8 +49,7 @@ typedef struct {
 		} function;
 
 		struct { //for variable names
-            char* ptr;
-            int length;
+            RefString* ptr;
 			int hash;
         } identifier;
 
@@ -62,7 +63,7 @@ typedef struct {
 
 		struct {
 			void* ptr;
-			int tag;
+			int tag; //TODO: remove tags?
 		} opaque;
 	} as;
 } Literal;
@@ -95,11 +96,11 @@ typedef struct {
 #define TO_BOOLEAN_LITERAL(value)			((Literal){LITERAL_BOOLEAN,		{ .boolean = value }})
 #define TO_INTEGER_LITERAL(value)			((Literal){LITERAL_INTEGER,		{ .integer = value }})
 #define TO_FLOAT_LITERAL(value)				((Literal){LITERAL_FLOAT,		{ .number = value }})
-#define TO_STRING_LITERAL(value, l)			_toStringLiteral(value, l)
+#define TO_STRING_LITERAL(value)			_toStringLiteral(value)
 #define TO_ARRAY_LITERAL(value)				((Literal){LITERAL_ARRAY,		{ .array = value }})
 #define TO_DICTIONARY_LITERAL(value)		((Literal){LITERAL_DICTIONARY,	{ .dictionary = value }})
 #define TO_FUNCTION_LITERAL(value, l)		((Literal){LITERAL_FUNCTION,	{ .function.bytecode = value, .function.scope = NULL, .function.length = l }})
-#define TO_IDENTIFIER_LITERAL(value, l)		_toIdentifierLiteral(value, l)
+#define TO_IDENTIFIER_LITERAL(value)		_toIdentifierLiteral(value)
 #define TO_TYPE_LITERAL(value, c)			((Literal){ LITERAL_TYPE,		{ .type.typeOf = value, .type.constant = c, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
 #define TO_OPAQUE_LITERAL(value, t)			((Literal){ LITERAL_OPAQUE,		{ .opaque.ptr = value, .opaque.tag = t }})
 
@@ -114,13 +115,12 @@ TOY_API void freeLiteral(Literal literal);
 
 //BUGFIX: macros are not functions
 TOY_API bool _isTruthy(Literal x);
-TOY_API Literal _toStringLiteral(char* str, int length);
-TOY_API Literal _toIdentifierLiteral(char* str, int length);
+TOY_API Literal _toStringLiteral(RefString* ptr);
+TOY_API Literal _toIdentifierLiteral(RefString* ptr);
 TOY_API Literal* _typePushSubtype(Literal* lit, Literal subtype);
 
 //utils
 TOY_API Literal copyLiteral(Literal original);
-TOY_API char* copyString(char* original, int length);
 TOY_API bool literalsAreEqual(Literal lhs, Literal rhs);
 TOY_API int hashLiteral(Literal lit);
 

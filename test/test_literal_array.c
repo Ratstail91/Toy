@@ -46,10 +46,10 @@ int main() {
 		char* str_raw = "hello world";
 		char* idn_raw = "foobar";
 
-		Literal string = TO_STRING_LITERAL(copyString(str_raw, strlen(str_raw)), strlen(str_raw));
-		Literal identifier = TO_IDENTIFIER_LITERAL(copyString(idn_raw, strlen(idn_raw)), strlen(idn_raw));
+		Literal string = TO_STRING_LITERAL(createRefString(str_raw));
+		Literal identifier = TO_IDENTIFIER_LITERAL(createRefString(idn_raw));
 
-		//[string, string]
+		//[string : string]
 		Literal type = TO_TYPE_LITERAL(LITERAL_DICTIONARY, false);
 		TYPE_PUSH_SUBTYPE(&type, TO_TYPE_LITERAL(LITERAL_STRING, false));
 		TYPE_PUSH_SUBTYPE(&type, TO_TYPE_LITERAL(LITERAL_STRING, false));

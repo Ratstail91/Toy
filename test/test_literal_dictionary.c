@@ -18,8 +18,8 @@ int main() {
 		char* idn_raw = "foobar";
 		char* str_raw = "hello world";
 
-		Literal identifier = TO_IDENTIFIER_LITERAL(copyString(idn_raw, strlen(idn_raw)), strlen(idn_raw));
-		Literal string = TO_STRING_LITERAL(copyString(str_raw, strlen(str_raw)), strlen(str_raw));
+		Literal identifier = TO_IDENTIFIER_LITERAL(createRefString(idn_raw));
+		Literal string = TO_STRING_LITERAL(createRefString(str_raw));
 
 		LiteralDictionary dictionary;
 		initLiteralDictionary(&dictionary);

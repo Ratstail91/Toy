@@ -16,7 +16,7 @@ int main() {
 		//prerequisites
 		char* idn_raw = "foobar";
 
-		Literal identifier = TO_IDENTIFIER_LITERAL(copyString(idn_raw, strlen(idn_raw)), strlen(idn_raw));
+		Literal identifier = TO_IDENTIFIER_LITERAL(createRefString(idn_raw));
 		Literal value = TO_INTEGER_LITERAL(42);
 		Literal type = TO_TYPE_LITERAL(value.type, false);
 
@@ -46,7 +46,7 @@ int main() {
 		//prerequisites
 		char* idn_raw = "foobar";
 
-		Literal identifier = TO_IDENTIFIER_LITERAL(copyString(idn_raw, strlen(idn_raw)), strlen(idn_raw));
+		Literal identifier = TO_IDENTIFIER_LITERAL(createRefString(idn_raw));
 		Literal type = TO_TYPE_LITERAL(LITERAL_INTEGER, false);
 
 		//test declarations & assignments

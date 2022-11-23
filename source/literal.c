@@ -21,7 +21,7 @@ static unsigned int hashString(const char* string, int length) {
 	return hash;
 }
 
-static unsigned int hash(unsigned int x) {
+static unsigned int hashUInt(unsigned int x) {
     x = ((x >> 16) ^ x) * 0x45d9f3b;
     x = ((x >> 16) ^ x) * 0x45d9f3b;
     x = (x >> 16) ^ x;
@@ -30,11 +30,18 @@ static unsigned int hash(unsigned int x) {
 
 //exposed functions
 void freeLiteral(Literal literal) {
+	//refstrings
 	if (IS_STRING(literal)) {
-		FREE_ARRAY(char, AS_STRING(literal), literal.as.string.length + 1);
+		deleteRefString(AS_STRING(literal));
 		return;
 	}
 
+	if (IS_IDENTIFIER(literal)) {
+		deleteRefString(AS_IDENTIFIER(literal));
+		return;
+	}
+
+	//compounds
 	if (IS_ARRAY(literal) || literal.type == LITERAL_DICTIONARY_INTERMEDIATE || literal.type == LITERAL_TYPE_INTERMEDIATE) {
 		freeLiteralArray(AS_ARRAY(literal));
 		FREE(LiteralArray, AS_ARRAY(literal));
@@ -47,15 +54,11 @@ void freeLiteral(Literal literal) {
 		return;
 	}
 
+	//complex literals
 	if (IS_FUNCTION(literal)) {
 		popScope(AS_FUNCTION(literal).scope);
 		AS_FUNCTION(literal).scope = NULL;
 		FREE_ARRAY(unsigned char, AS_FUNCTION(literal).bytecode, AS_FUNCTION(literal).length);
-	}
-
-	if (IS_IDENTIFIER(literal)) {
-		FREE_ARRAY(char, AS_IDENTIFIER(literal), literal.as.identifier.length + 1);
-		return;
 	}
 
 	if (IS_TYPE(literal)) {
@@ -80,12 +83,12 @@ bool _isTruthy(Literal x) {
 	return true;
 }
 
-Literal _toStringLiteral(char* str, int length) {
-	return ((Literal){LITERAL_STRING, { .string.ptr = (char*)str, .string.length = length }});
+Literal _toStringLiteral(RefString* ptr) {
+	return ((Literal){LITERAL_STRING, { .string.ptr = ptr }});
 }
 
-Literal _toIdentifierLiteral(char* str, int length) {
-	return ((Literal){LITERAL_IDENTIFIER,{ .identifier.ptr = (char*)str, .identifier.length = length, .identifier.hash = hashString(str, length) }});
+Literal _toIdentifierLiteral(RefString* ptr) {
+	return ((Literal){LITERAL_IDENTIFIER,{ .identifier.ptr = ptr, .identifier.hash = hashString(toCString(ptr), lengthRefString(ptr)) }});
 }
 
 Literal* _typePushSubtype(Literal* lit, Literal subtype) {
@@ -112,7 +115,7 @@ Literal copyLiteral(Literal original) {
 			return original;
 
 		case LITERAL_STRING: {
-			return TO_STRING_LITERAL(copyString(AS_STRING(original), original.as.string.length), original.as.string.length);
+			return TO_STRING_LITERAL(copyRefString(AS_STRING(original)));
 		}
 
 		case LITERAL_ARRAY: {
@@ -152,7 +155,7 @@ Literal copyLiteral(Literal original) {
 		}
 
 		case LITERAL_IDENTIFIER: {
-			 return TO_IDENTIFIER_LITERAL(copyString(AS_IDENTIFIER(original), original.as.identifier.length), original.as.identifier.length);
+			 return TO_IDENTIFIER_LITERAL(copyRefString(AS_IDENTIFIER(original)));
 		}
 
 		case LITERAL_TYPE: {
@@ -212,14 +215,6 @@ Literal copyLiteral(Literal original) {
 	}
 }
 
-char* copyString(char* original, int length) {
-	//make a local copy of the char array
-	char* buffer = ALLOCATE(char, length + 1);
-	strncpy(buffer, original, length);
-	buffer[length] = '\0';
-	return buffer;
-}
-
 bool literalsAreEqual(Literal lhs, Literal rhs) {
 	//utility for other things
 	if (lhs.type != rhs.type) {
@@ -250,10 +245,7 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 			return AS_FLOAT(lhs) == AS_FLOAT(rhs);
 
 		case LITERAL_STRING:
-			if (lhs.as.string.length != rhs.as.string.length) {
-				return false;
-			}
-			return !strncmp(AS_STRING(lhs), AS_STRING(rhs), lhs.as.string.length);
+			return equalsRefString(AS_STRING(lhs), AS_STRING(rhs));
 
 		case LITERAL_ARRAY:
 		case LITERAL_DICTIONARY_INTERMEDIATE: //BUGFIX
@@ -299,11 +291,11 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 
 		case LITERAL_IDENTIFIER:
 			//check shortcuts
-			if (HASH_I(lhs) != HASH_I(rhs) && lhs.as.identifier.length != rhs.as.identifier.length) {
+			if (HASH_I(lhs) != HASH_I(rhs)) {
 				return false;
 			}
 
-			return !strncmp(AS_IDENTIFIER(lhs), AS_IDENTIFIER(rhs), lhs.as.identifier.length);
+			return equalsRefString(AS_IDENTIFIER(lhs), AS_IDENTIFIER(rhs));
 
 		case LITERAL_TYPE:
 			//check types
@@ -359,20 +351,20 @@ int hashLiteral(Literal lit) {
 			return AS_BOOLEAN(lit) ? 1 : 0;
 
 		case LITERAL_INTEGER:
-			return hash((unsigned int)AS_INTEGER(lit));
+			return hashUInt((unsigned int)AS_INTEGER(lit));
 
 		case LITERAL_FLOAT:
-			return hash(*(unsigned int*)(&AS_FLOAT(lit)));
+			return hashUInt(*(unsigned int*)(&AS_FLOAT(lit)));
 
 		case LITERAL_STRING:
-			return hashString(AS_STRING(lit), strlen(AS_STRING(lit)));
+			return hashString(toCString(AS_STRING(lit)), lengthRefString(AS_STRING(lit)));
 
 		case LITERAL_ARRAY: {
 			unsigned int res = 0;
 			for (int i = 0; i < AS_ARRAY(lit)->count; i++) {
 				res += hashLiteral(AS_ARRAY(lit)->literals[i]);
 			}
-			return hash(res);
+			return hashUInt(res);
 		}
 
 		case LITERAL_DICTIONARY: {
@@ -383,7 +375,7 @@ int hashLiteral(Literal lit) {
 					res += hashLiteral(AS_DICTIONARY(lit)->entries[i].value);
 				}
 			}
-			return hash(res);
+			return hashUInt(res);
 		}
 
 		case LITERAL_FUNCTION:
@@ -464,10 +456,10 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 		case LITERAL_STRING: {
 			char buffer[MAX_STRING_LENGTH];
 			if (!quotes) {
-				snprintf(buffer, MAX_STRING_LENGTH, "%.*s", (int)strlen(AS_STRING(literal)), AS_STRING(literal));
+				snprintf(buffer, MAX_STRING_LENGTH, "%.*s", lengthRefString(AS_STRING(literal)), toCString(AS_STRING(literal)));
 			}
 			else {
-				snprintf(buffer, MAX_STRING_LENGTH, "%c%.*s%c", quotes, (int)strlen(AS_STRING(literal)), AS_STRING(literal), quotes);
+				snprintf(buffer, MAX_STRING_LENGTH, "%c%.*s%c", quotes, lengthRefString(AS_STRING(literal)), toCString(AS_STRING(literal)), quotes);
 			}
 			printFn(buffer);
 		}
@@ -573,7 +565,7 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 
 		case LITERAL_IDENTIFIER: {
 			char buffer[256];
-			snprintf(buffer, 256, "%.*s", (int)strlen( AS_IDENTIFIER(literal) ), AS_IDENTIFIER(literal));
+			snprintf(buffer, 256, "%.*s", lengthRefString(AS_IDENTIFIER(literal)), toCString(AS_IDENTIFIER(literal)));
 			printFn(buffer);
 		}
 		break;
