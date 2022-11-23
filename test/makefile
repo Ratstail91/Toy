@@ -7,7 +7,14 @@ LIBS +=
 ODIR = obj
 #TARGETS = $(wildcard ../source/*.c) $(wildcard ../repl/lib_*.c)
 
-TARGETS = ../source/memory.c ../source/refstring.c ../source/literal.c ../source/literal_array.c ../source/literal_dictionary.c ../source/scope.c
+#literal primitive
+TARGETS+=../source/memory.c ../source/refstring.c ../source/literal.c ../source/literal_array.c ../source/literal_dictionary.c ../source/scope.c
+
+#lexer
+TARGETS+=../source/toy_common.c ../source/keyword_types.c ../source/lexer.c
+
+#parser
+#TARGETS+=
 
 TESTS = $(wildcard test_*.c)
 OBJ = $(addprefix $(ODIR)/,$(TARGETS:../source/%.c=%.o)) $(addprefix $(ODIR)/,$(TESTS:.c=.o))
