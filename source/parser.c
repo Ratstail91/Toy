@@ -1170,7 +1170,7 @@ static void blockStmt(Parser* parser, ASTNode** nodeHandle) {
 			return;
 		}
 
-		//BUGFIX: statements no longer require an existing node
+		//BUGFIX: statements no longer require the existing node
 		((*nodeHandle)->block.nodes[(*nodeHandle)->block.count++]) = *node;
 		FREE(ASTNode, node); //simply free the tmp node
 	}

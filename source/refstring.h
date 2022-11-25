@@ -16,6 +16,7 @@ typedef struct RefString {
 
 //API
 RefString* createRefString(char* cstring);
+RefString* createRefStringLength(char* cstring, int length);
 void deleteRefString(RefString* refString);
 int countRefString(RefString* refString);
 int lengthRefString(RefString* refString);
@@ -23,3 +24,4 @@ RefString* copyRefString(RefString* refString);
 RefString* deepCopyRefString(RefString* refString);
 char* toCString(RefString* refString);
 bool equalsRefString(RefString* lhs, RefString* rhs);
+bool equalsRefStringCString(RefString* lhs, char* cstring);

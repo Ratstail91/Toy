@@ -21,6 +21,10 @@ void setRefStringAllocatorFn(RefStringAllocatorFn allocator) {
 RefString* createRefString(char* cstring) {
 	int length = strlen(cstring);
 
+	return createRefStringLength(cstring, length);
+}
+
+RefString* createRefStringLength(char* cstring, int length) {
 	//allocate the memory area (including metadata space)
 	RefString* refString = (RefString*)allocate(NULL, 0, sizeof(int) * 2 + sizeof(char) * length + 1);
 
@@ -83,4 +87,17 @@ bool equalsRefString(RefString* lhs, RefString* rhs) {
 
 	//same string
 	return strncmp(lhs->data, rhs->data, lhs->length) == 0;
+}
+
+bool equalsRefStringCString(RefString* lhs, char* cstring) {
+	//get the rhs length
+	int length = strlen(cstring);
+
+	//different length
+	if (lhs->length != length) {
+		return false;
+	}
+
+	//same string
+	return strncmp(lhs->data, cstring, lhs->length) == 0;
 }
