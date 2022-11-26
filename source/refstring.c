@@ -57,17 +57,14 @@ int lengthRefString(RefString* refString) {
 }
 
 RefString* copyRefString(RefString* refString) {
+	//Cheaty McCheater Face
 	refString->refcount++;
 	return refString;
 }
 
 RefString* deepCopyRefString(RefString* refString) {
-	//deep copy, which can be modified immediately
-	RefString* newRefString = (RefString*)allocate(NULL, 0, sizeof(int) * 2 + refString->length + 1);
-
-	memcpy(newRefString, refString, refString->length + 1);
-
-	return newRefString;
+	//create a new string, with a new refcount
+	return createRefStringLength(refString->data, refString->length);
 }
 
 char* toCString(RefString* refString) {
