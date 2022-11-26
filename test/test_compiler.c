@@ -76,7 +76,7 @@ int main() {
 
 		//cleanup
 		FREE_ARRAY(unsigned char, bytecode, size);
-		freeNode(node);
+		freeASTNode(node);
 		freeParser(&parser);
 		freeCompiler(&compiler);
 	}
@@ -97,14 +97,14 @@ int main() {
 
 		ASTNode* node = scanParser(&parser);
 		while (node != NULL) {
-			if (node->type == AST_NODEERROR) {
+			if (node->type == AST_NODE_ERROR) {
 				fprintf(stderr, ERROR "ERROR: Error node found" RESET);
 				return -1;
 			}
 
 			//write
 			writeCompiler(&compiler, node);
-			freeNode(node);
+			freeASTNode(node);
 
 			node = scanParser(&parser);
 		}

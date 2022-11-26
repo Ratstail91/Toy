@@ -19,6 +19,9 @@ TARGETS+=../source/ast_node.c
 #parser
 TARGETS+=../source/parser.c
 
+#compiler
+TARGETS+=../source/compiler.c
+
 TESTS = $(wildcard test_*.c)
 OBJ = $(addprefix $(ODIR)/,$(TARGETS:../source/%.c=%.o)) $(addprefix $(ODIR)/,$(TESTS:.c=.o))
 

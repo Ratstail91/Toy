@@ -250,7 +250,7 @@ union _node {
 	NodeFnDecl fnDecl;
 	NodeFnCall fnCall;
 	NodeFnReturn returns;
-	NodeIf pathIf;
+	NodeIf pathIf; //TODO: rename these to ifStmt?
 	NodeWhile pathWhile;
 	NodeFor pathFor;
 	NodeBreak pathBreak;
