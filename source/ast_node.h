@@ -141,16 +141,16 @@ typedef struct NodeFnDecl {
 } NodeFnDecl;
 
 //function call
-void emitASTFnCall(ASTNode** nodeHandle, ASTNode* arguments, int argumentCount);
+void emitASTNodeFnCall(ASTNode** nodeHandle, ASTNode* arguments);
 
 typedef struct NodeFnCall {
 	ASTNodeType type;
 	ASTNode* arguments;
-	int argumentCount;
+	int argumentCount; //NOTE: leave this, so it can be hacked by dottify()
 } NodeFnCall;
 
 //function return
-void emitASTFnReturn(ASTNode* nodeHandle, ASTNode* returns);
+void emitASTNodeFnReturn(ASTNode** nodeHandle, ASTNode* returns);
 
 typedef struct NodeFnReturn {
 	ASTNodeType type;

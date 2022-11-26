@@ -3,8 +3,8 @@ CC=gcc
 IDIR +=. ../source ../repl
 CFLAGS +=$(addprefix -I,$(IDIR)) -g -Wall -W -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
 LIBS +=
-
 ODIR = obj
+
 #TARGETS = $(wildcard ../source/*.c) $(wildcard ../repl/lib_*.c)
 
 #literal primitives
@@ -17,7 +17,7 @@ TARGETS+=../source/toy_common.c ../source/keyword_types.c ../source/lexer.c
 TARGETS+=../source/ast_node.c
 
 #parser
-#TARGETS+=
+TARGETS+=../source/parser.c
 
 TESTS = $(wildcard test_*.c)
 OBJ = $(addprefix $(ODIR)/,$(TARGETS:../source/%.c=%.o)) $(addprefix $(ODIR)/,$(TESTS:.c=.o))

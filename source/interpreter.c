@@ -320,7 +320,7 @@ static bool execNegate(Interpreter* interpreter) {
 		lit = TO_FLOAT_LITERAL(-AS_FLOAT(lit));
 	}
 	else {
-		interpreter->errorOutput("[internal] The interpreter can't negate that literal: ");
+		interpreter->errorOutput("Can't negate that literal: ");
 		printLiteralCustom(lit, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
 
@@ -352,7 +352,7 @@ static bool execInvert(Interpreter* interpreter) {
 		lit = TO_BOOLEAN_LITERAL(!AS_BOOLEAN(lit));
 	}
 	else {
-		interpreter->errorOutput("[internal] The interpreter can't invert that literal: ");
+		interpreter->errorOutput("Can't invert that literal: ");
 		printLiteralCustom(lit, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
 

@@ -258,12 +258,12 @@ void emitASTNodeFnDecl(ASTNode** nodeHandle, Literal identifier, ASTNode* argume
 	*nodeHandle = tmp;
 }
 
-void emitASTFnCall(ASTNode** nodeHandle, ASTNode* arguments, int argumentCount) {
+void emitASTNodeFnCall(ASTNode** nodeHandle, ASTNode* arguments) {
 	ASTNode* tmp = ALLOCATE(ASTNode, 1);
 
 	tmp->type = AST_NODE_FN_CALL;
 	tmp->fnCall.arguments = arguments;
-	tmp->fnCall.argumentCount = argumentCount;
+	tmp->fnCall.argumentCount = arguments->fnCollection.count;
 
 	*nodeHandle = tmp;
 }
