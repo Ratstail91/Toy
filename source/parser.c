@@ -1616,7 +1616,7 @@ static void fnDecl(Parser* parser, ASTNode** nodeHandle) {
 					error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
 				}
 
-				Literal argIdentifier = TO_IDENTIFIER_LITERAL(createRefStringLength(identifierToken.lexeme, length));
+				Literal argIdentifier = TO_IDENTIFIER_LITERAL(createRefStringLength(argIdentifierToken.lexeme, length));
 
 				//set the type (array of any types)
 				Literal argTypeLiteral = TO_TYPE_LITERAL(LITERAL_FUNCTION_ARG_REST, false);
@@ -1651,7 +1651,7 @@ static void fnDecl(Parser* parser, ASTNode** nodeHandle) {
 				error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
 			}
 
-			Literal argIdentifier = TO_IDENTIFIER_LITERAL(createRefStringLength(identifierToken.lexeme, length));
+			Literal argIdentifier = TO_IDENTIFIER_LITERAL(createRefStringLength(argIdentifierToken.lexeme, length));
 
 			//read optional type of the identifier
 			Literal argTypeLiteral;

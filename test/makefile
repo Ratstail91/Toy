@@ -22,6 +22,9 @@ TARGETS+=../source/parser.c
 #compiler
 TARGETS+=../source/compiler.c
 
+#interpreter
+TARGETS+=../source/interpreter.c ../source/builtin.c
+
 TESTS = $(wildcard test_*.c)
 OBJ = $(addprefix $(ODIR)/,$(TARGETS:../source/%.c=%.o)) $(addprefix $(ODIR)/,$(TESTS:.c=.o))
 

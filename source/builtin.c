@@ -10,7 +10,7 @@ static Literal addition(Interpreter* interpreter, Literal lhs, Literal rhs) {
 	//special case for string concatenation ONLY
 	if (IS_STRING(lhs) && IS_STRING(rhs)) {
 		//check for overflow
-		int totalLength = strlen(AS_STRING(lhs)) + strlen(AS_STRING(rhs));
+		int totalLength = AS_STRING(lhs)->length + AS_STRING(rhs)->length;
 		if (totalLength > MAX_STRING_LENGTH) {
 			interpreter->errorOutput("Can't concatenate these strings (result is too long)\n");
 			return TO_NULL_LITERAL;
@@ -18,8 +18,9 @@ static Literal addition(Interpreter* interpreter, Literal lhs, Literal rhs) {
 
 		//concat the strings
 		char buffer[MAX_STRING_LENGTH];
-		snprintf(buffer, MAX_STRING_LENGTH, "%s%s", AS_STRING(lhs), AS_STRING(rhs));
-		Literal literal = TO_STRING_LITERAL(copyString(buffer, totalLength), totalLength);
+		snprintf(buffer, MAX_STRING_LENGTH, "%s%s", toCString(AS_STRING(lhs)), toCString(AS_STRING(rhs)));
+		Literal literal = TO_STRING_LITERAL(createRefStringLength(buffer, totalLength));
+
 		freeLiteral(lhs);
 		freeLiteral(rhs);
 
@@ -296,35 +297,35 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			return 1;
 		}
 
-		else if (!strcmp( AS_STRING(op), "=")) {
+		else if (equalsRefStringCString(AS_STRING(op), "=")) {
 			setLiteralDictionary(AS_DICTIONARY(compound), first, assign);
 		}
 
-		else if (!strcmp( AS_STRING(op), "+=")) {
+		else if (equalsRefStringCString(AS_STRING(op), "+=")) {
 			Literal lit = addition(interpreter, value, assign);
 			setLiteralDictionary(AS_DICTIONARY(compound), first, lit);
 			freeLiteral(lit);
 		}
 
-		else if (!strcmp( AS_STRING(op), "-=")) {
+		else if (equalsRefStringCString(AS_STRING(op), "-=")) {
 			Literal lit = subtraction(interpreter, value, assign);
 			setLiteralDictionary(AS_DICTIONARY(compound), first, lit);
 			freeLiteral(lit);
 		}
 
-		else if (!strcmp( AS_STRING(op), "*=")) {
+		else if (equalsRefStringCString(AS_STRING(op), "*=")) {
 			Literal lit = multiplication(interpreter, value, assign);
 			setLiteralDictionary(AS_DICTIONARY(compound), first, lit);
 			freeLiteral(lit);
 		}
 
-		else if (!strcmp( AS_STRING(op), "/=")) {
+		else if (equalsRefStringCString(AS_STRING(op), "/=")) {
 			Literal lit = division(interpreter, value, assign);
 			setLiteralDictionary(AS_DICTIONARY(compound), first, lit);
 			freeLiteral(lit);
 		}
 
-		else if (!strcmp( AS_STRING(op), "%=")) {
+		else if (equalsRefStringCString(AS_STRING(op), "%=")) {
 			Literal lit = modulo(interpreter, value, assign);
 			setLiteralDictionary(AS_DICTIONARY(compound), first, lit);
 			freeLiteral(lit);
@@ -440,7 +441,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 		}
 
 		//array slice assignment
-		if (IS_STRING(op) && !strcmp( AS_STRING(op), "=")) {
+		if (IS_STRING(op) && equalsRefStringCString(AS_STRING(op), "=")) {
 			//parse out the booleans & their defaults
 			if (!IS_NULL(first)) {
 				if (IS_BOOLEAN(first)) {
@@ -620,31 +621,31 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 		value = getLiteralArray(AS_ARRAY(compound), first);
 
-		if (IS_STRING(op) && !strcmp( AS_STRING(op), "+=")) {
+		if (IS_STRING(op) && equalsRefStringCString(AS_STRING(op), "+=")) {
 			Literal lit = addition(interpreter, value, assign);
 			setLiteralArray(AS_ARRAY(compound), first, lit);
 			freeLiteral(lit);
 		}
 
-		if (IS_STRING(op) && !strcmp( AS_STRING(op), "-=")) {
+		if (IS_STRING(op) && equalsRefStringCString(AS_STRING(op), "-=")) {
 			Literal lit = subtraction(interpreter, value, assign);
 			setLiteralArray(AS_ARRAY(compound), first, lit);
 			freeLiteral(lit);
 		}
 
-		if (IS_STRING(op) && !strcmp( AS_STRING(op), "*=")) {
+		if (IS_STRING(op) && equalsRefStringCString(AS_STRING(op), "*=")) {
 			Literal lit = multiplication(interpreter, value, assign);
 			setLiteralArray(AS_ARRAY(compound), first, lit);
 			freeLiteral(lit);
 		}
 
-		if (IS_STRING(op) && !strcmp( AS_STRING(op), "/=")) {
+		if (IS_STRING(op) && equalsRefStringCString(AS_STRING(op), "/=")) {
 			Literal lit = division(interpreter, value, assign);
 			setLiteralArray(AS_ARRAY(compound), first, lit);
 			freeLiteral(lit);
 		}
 
-		if (IS_STRING(op) && !strcmp( AS_STRING(op), "%=")) {
+		if (IS_STRING(op) && equalsRefStringCString(AS_STRING(op), "%=")) {
 			Literal lit = modulo(interpreter, value, assign);
 			setLiteralArray(AS_ARRAY(compound), first, lit);
 			freeLiteral(lit);
@@ -669,7 +670,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				}
 			}
 
-			int compoundLength = strlen(AS_STRING(compound));
+			int compoundLength = AS_STRING(compound)->length;
 			if (!IS_NULL(second)) {
 				if (IS_BOOLEAN(second)) {
 					freeLiteral(second);
@@ -709,14 +710,14 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			}
 
 			if (IS_NULL(second)) { //assign only a single character
-				char c = AS_STRING(compound)[AS_INTEGER(first)];
+				char c = toCString(AS_STRING(compound))[AS_INTEGER(first)];
 
 				char buffer[16];
 				snprintf(buffer, 16, "%c", c);
 
 				freeLiteral(value);
 				int totalLength = strlen(buffer);
-				value = TO_STRING_LITERAL(copyString(buffer, totalLength), totalLength);
+				value = TO_STRING_LITERAL(createRefStringLength(buffer, totalLength));
 
 				pushLiteralArray(&interpreter->stack, value);
 
@@ -754,20 +755,20 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			//copy compound into result
 			int resultIndex = 0;
 			for (int i = min; i >= 0 && i >= lower && i <= max; i += AS_INTEGER(third)) {
-				result[ resultIndex++ ] = AS_STRING(compound)[ i ];
+				result[ resultIndex++ ] = toCString(AS_STRING(compound))[ i ];
 			}
 
 			result[ resultIndex ] = '\0';
 
 			//finally, swap out the compound for the result
 			freeLiteral(compound);
-			compound = TO_STRING_LITERAL(copyString(result, resultIndex), resultIndex);
+			compound = TO_STRING_LITERAL(createRefStringLength(result, resultIndex));
 
 			FREE_ARRAY(char, result, MAX_STRING_LENGTH);
 		}
 
 		//string slice assignment
-		else if (IS_STRING(op) && !strcmp( AS_STRING(op), "=")) {
+		else if (IS_STRING(op) && equalsRefStringCString(AS_STRING(op), "=")) {
 			//parse out the booleans & their defaults
 			if (!IS_NULL(first)) {
 				if (IS_BOOLEAN(first)) {
@@ -782,7 +783,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				}
 			}
 
-			int compoundLength = strlen(AS_STRING(compound));
+			int compoundLength = AS_STRING(compound)->length;
 			if (!IS_NULL(second)) {
 				if (IS_BOOLEAN(second)) {
 					freeLiteral(second);
@@ -823,7 +824,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 			if (IS_NULL(second)) { //assign only a single character
 				//set the "first" within the array, then skip out
-				if (strlen( AS_STRING(assign) ) != 1) {
+				if (AS_STRING(assign)->length != 1) {
 					//something is weird - skip out
 					freeLiteral(op);
 					freeLiteral(assign);
@@ -836,9 +837,11 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 					return -1;
 				}
 
-				AS_STRING(compound)[AS_INTEGER(first)] = AS_STRING(assign)[0];
+				Literal copiedCompound = TO_STRING_LITERAL(deepCopyRefString(AS_STRING(compound)));
 
-				pushLiteralArray(&interpreter->stack, compound);
+				AS_STRING(copiedCompound)->data[AS_INTEGER(first)] = toCString(AS_STRING(assign))[0];
+
+				pushLiteralArray(&interpreter->stack, copiedCompound);
 
 				freeLiteral(op);
 				freeLiteral(assign);
@@ -871,18 +874,18 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			int resultIndex = 0;
 			if (AS_INTEGER(third) == 1 || AS_INTEGER(third) == -1) {
 				for (int i = 0; i < AS_INTEGER(first); i++) {
-					result[ resultIndex++ ] = AS_STRING(compound)[ i ];
+					result[ resultIndex++ ] = toCString(AS_STRING(compound))[ i ];
 				}
 
-				int assignLength = strlen(AS_STRING(assign));
+				int assignLength = AS_STRING(assign)->length;
 				int min = AS_INTEGER(third) > 0 ? 0 : assignLength - 1;
 
 				for (int i = min; i >= 0 && i < assignLength; i += AS_INTEGER(third)) {
-					result[ resultIndex++ ] = AS_STRING(assign)[ i ];
+					result[ resultIndex++ ] = toCString(AS_STRING(assign))[ i ];
 				}
 
 				for (int i = AS_INTEGER(second) + 1; i < compoundLength; i++) {
-					result[ resultIndex++ ] = AS_STRING(compound)[ i ];
+					result[ resultIndex++ ] = toCString(AS_STRING(compound))[ i ];
 				}
 
 				result[ resultIndex ] = '\0';
@@ -891,26 +894,26 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			//else override elements of the array instead
 			else {
 				//copy compound to result
-				snprintf(result, MAX_STRING_LENGTH, "%s", AS_STRING(compound));
+				snprintf(result, MAX_STRING_LENGTH, "%s", toCString(AS_STRING(compound)));
 
-				int assignLength = strlen(AS_STRING(assign));
+				int assignLength = AS_STRING(assign)->length;
 				int min = AS_INTEGER(third) > 0 ? AS_INTEGER(first) : AS_INTEGER(second) - 1;
 
 				int assignIndex = 0;
 				for (int i = min; i >= AS_INTEGER(first) && i <= AS_INTEGER(second) && assignIndex < assignLength; i += AS_INTEGER(third)) {
-					result[ i ] = AS_STRING(assign)[ assignIndex++ ];
+					result[ i ] = toCString(AS_STRING(assign))[ assignIndex++ ];
 				}
 				resultIndex = strlen(result);
 			}
 
 			//finally, swap out the compound for the result
 			freeLiteral(compound);
-			compound = TO_STRING_LITERAL(copyString(result, resultIndex), resultIndex);
+			compound = TO_STRING_LITERAL(createRefStringLength(result, resultIndex));
 
 			FREE_ARRAY(char, result, MAX_STRING_LENGTH);
 		}
 
-		else if (IS_STRING(op) && !strcmp( AS_STRING(op), "+=")) {
+		else if (IS_STRING(op) && equalsRefStringCString(AS_STRING(op), "+=")) {
 			Literal tmp = addition(interpreter, compound, assign);
 			freeLiteral(compound);
 			compound = tmp; //don't clear tmp
@@ -1229,7 +1232,7 @@ int _pop(Interpreter* interpreter, LiteralArray* arguments) {
 int _length(Interpreter* interpreter, LiteralArray* arguments) {
 	//if wrong number of arguments, fail
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _get\n");
+		interpreter->errorOutput("Incorrect number of arguments to _length\n");
 		return -1;
 	}
 
@@ -1257,7 +1260,7 @@ int _length(Interpreter* interpreter, LiteralArray* arguments) {
 		}
 
 		case LITERAL_STRING: {
-			Literal lit = TO_INTEGER_LITERAL( strlen(AS_STRING(obj)) );
+			Literal lit = TO_INTEGER_LITERAL( AS_STRING(obj)->length );
 			pushLiteralArray(&interpreter->stack, lit);
 			freeLiteral(lit);
 			break;
