@@ -57,7 +57,7 @@ int hookStandard(Interpreter* interpreter, Literal identifier, Literal alias) {
 
 		//load the dict with functions
 		for (int i = 0; natives[i].name; i++) {
-			Literal name = TO_STRING_LITERAL(createRefStringLength(natives[i].name, strlen(natives[i].name)));
+			Literal name = TO_STRING_LITERAL(createRefString(natives[i].name));
 			Literal func = TO_FUNCTION_LITERAL((void*)natives[i].fn, 0);
 			func.type = LITERAL_FUNCTION_NATIVE;
 
