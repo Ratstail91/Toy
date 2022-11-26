@@ -50,15 +50,15 @@ void repl() {
 		ASTNode* node = scanParser(&parser);
 		while(node != NULL) {
 			//pack up and restart
-			if (node->type == AST_NODEERROR) {
+			if (node->type == AST_NODE_ERROR) {
 				printf(ERROR "error node detected\n" RESET);
 				error = true;
-				freeNode(node);
+				freeASTNode(node);
 				break;
 			}
 
 			writeCompiler(&compiler, node);
-			freeNode(node);
+			freeASTNode(node);
 			node = scanParser(&parser);
 		}
 

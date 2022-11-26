@@ -292,12 +292,12 @@ static int nativeTimerToString(Interpreter* interpreter, LiteralArray* arguments
 	if (timer->tv_sec == 0 && timer->tv_usec < 0) { //special case, for when the negative sign is encoded in the usec
 		char buffer[128];
 		snprintf(buffer, 128, "-%ld.%06ld", timer->tv_sec, -timer->tv_usec);
-		resultLiteral = TO_STRING_LITERAL( copyString(buffer, strlen(buffer)), strlen(buffer));
+		resultLiteral = TO_STRING_LITERAL(createRefStringLength(buffer, strlen(buffer)));
 	}
 	else { //normal case
 		char buffer[128];
 		snprintf(buffer, 128, "%ld.%06ld", timer->tv_sec, timer->tv_usec);
-		resultLiteral = TO_STRING_LITERAL( copyString(buffer, strlen(buffer)), strlen(buffer));
+		resultLiteral = TO_STRING_LITERAL(createRefStringLength(buffer, strlen(buffer)));
 	}
 
 	pushLiteralArray(&interpreter->stack, resultLiteral);
@@ -374,7 +374,7 @@ int hookTimer(Interpreter* interpreter, Literal identifier, Literal alias) {
 
 		//load the dict with functions
 		for (int i = 0; natives[i].name; i++) {
-			Literal name = TO_STRING_LITERAL(copyString(natives[i].name, strlen(natives[i].name)), strlen(natives[i].name));
+			Literal name = TO_STRING_LITERAL(createRefStringLength(natives[i].name, strlen(natives[i].name)));
 			Literal func = TO_FUNCTION_LITERAL((void*)natives[i].fn, 0);
 			func.type = LITERAL_FUNCTION_NATIVE;
 

@@ -72,18 +72,18 @@ int main() {
 			return -1;
 		}
 
-		if (node->type != AST_NODEUNARY || node->unary.opcode != OP_PRINT) {
-			fprintf(stderr, ERROR "ERROR: ASTNode is not a print instruction" RESET);
+		if (node->type != AST_NODE_UNARY || node->unary.opcode != OP_PRINT) {
+			fprintf(stderr, ERROR "ERROR: ASTNode is not a unary print instruction" RESET);
 			return -1;
 		}
 
-		if (node->unary.child->type != AST_NODELITERAL || !IS_NULL(node->unary.child->atomic.literal)) {
-			fprintf(stderr, ERROR "ERROR: ASTNode to be printed is not a null value" RESET);
+		if (node->unary.child->type != AST_NODE_LITERAL || !IS_NULL(node->unary.child->atomic.literal)) {
+			fprintf(stderr, ERROR "ERROR: ASTNode to be printed is not a null literal" RESET);
 			return -1;
 		}
 
 		//cleanup
-		freeNode(node);
+		freeASTNode(node);
 		freeParser(&parser);
 	}
 
@@ -101,12 +101,12 @@ int main() {
 		ASTNode* node = scanParser(&parser);
 
 		while (node != NULL) {
-			if (node->type == AST_NODEERROR) {
+			if (node->type == AST_NODE_ERROR) {
 				fprintf(stderr, ERROR "ERROR: Error node detected" RESET);
 				return -1;
 			}
 
-			freeNode(node);
+			freeASTNode(node);
 			node = scanParser(&parser);
 		}
 
@@ -114,6 +114,7 @@ int main() {
 		freeParser(&parser);
 		free((void*)source);
 	}
+
 	printf(NOTICE "All good\n" RESET);
 	return 0;
 }

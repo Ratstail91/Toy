@@ -75,16 +75,16 @@ unsigned char* compileString(char* source, size_t* size) {
 	ASTNode* node = scanParser(&parser);
 	while(node != NULL) {
 		//pack up and leave
-		if (node->type == AST_NODEERROR) {
+		if (node->type == AST_NODE_ERROR) {
 			printf(ERROR "error node detected\n" RESET);
-			freeNode(node);
+			freeASTNode(node);
 			freeCompiler(&compiler);
 			freeParser(&parser);
 			return NULL;
 		}
 
 		writeCompiler(&compiler, node);
-		freeNode(node);
+		freeASTNode(node);
 		node = scanParser(&parser);
 	}
 
@@ -168,7 +168,7 @@ int main() {
 		runInterpreter(&interpreter, bytecode, size);
 
 		//cleanup
-		freeNode(node);
+		freeASTNode(node);
 		freeParser(&parser);
 		freeCompiler(&compiler);
 		freeInterpreter(&interpreter);

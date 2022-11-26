@@ -4,20 +4,79 @@
 #include "console_colors.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+
+//lazy
+#define ASSERT(test_for_true) if (!(test_for_true)) {\
+	fprintf(stderr, ERROR "assert failed: %s\n" RESET, #test_for_true); \
+	exit(-1); \
+}
 
 int main() {
+	//test literals
 	{
 		//test literals
 		char* str = "foobar";
+		Literal literal = TO_STRING_LITERAL(createRefString(str));
 
-		Literal literal =  TO_STRING_LITERAL(copyString(str, strlen(str)), strlen(str));
-
-		ASTNode* node;
+		//generate the node
+		ASTNode* node = NULL;
 		emitASTNodeLiteral(&node, literal);
+
+		//check node type
+		ASSERT(node->type == AST_NODE_LITERAL);
+
+		//cleanup
 		freeLiteral(literal);
-		freeNode(node);
+		freeASTNode(node);
 	}
 
+	//test unary
+	{
+		//generate the child node
+		char* str = "foobar";
+		Literal literal = TO_STRING_LITERAL(createRefString(str));
+		ASTNode* childNode = NULL;
+		emitASTNodeLiteral(&childNode, literal);
+
+		//generate the unary node
+		ASTNode* unary = NULL;
+		emitASTNodeUnary(&unary, OP_PRINT, childNode);
+
+		//check node type
+		ASSERT(unary->type == AST_NODE_UNARY);
+
+		//cleanup
+		freeLiteral(literal);
+		freeASTNode(unary);
+	}
+
+	//test binary
+	{
+		//generate the child node
+		char* str = "foobar";
+		Literal literal = TO_STRING_LITERAL(createRefString(str));
+		ASTNode* nodeHandle = NULL;
+		emitASTNodeLiteral(&nodeHandle, literal);
+
+		ASTNode* rhsChildNode = NULL;
+		emitASTNodeLiteral(&rhsChildNode, literal);
+
+		//generate the unary node
+		emitASTNodeBinary(&nodeHandle, rhsChildNode, OP_PRINT);
+
+		//check node type
+		ASSERT(nodeHandle->type == AST_NODE_BINARY);
+		ASSERT(nodeHandle->binary.opcode == OP_PRINT);
+
+		//cleanup
+		freeLiteral(literal);
+		freeASTNode(nodeHandle);
+	}
+
+	//TODO: more tests for other AST node types
+
+	//test compounds
 	{
 		//test compound (dictionary)
 		char* idn = "foobar";
@@ -27,8 +86,8 @@ int main() {
 		ASTNode* left;
 		ASTNode* right;
 
-		Literal identifier = TO_IDENTIFIER_LITERAL(copyString(idn, strlen(idn)), strlen(idn));
-		Literal string = TO_STRING_LITERAL(copyString(str, strlen(str)), strlen(str));
+		Literal identifier = TO_IDENTIFIER_LITERAL(createRefString(idn));
+		Literal string = TO_STRING_LITERAL(createRefString(str));
 
 		emitASTNodeCompound(&dictionary, LITERAL_DICTIONARY);
 		emitASTNodeLiteral(&left, identifier);
@@ -46,7 +105,7 @@ int main() {
 		setASTNodePair(&dictionary->compound.nodes[dictionary->compound.count++], left, right);
 
 		//the real test
-		freeNode(dictionary);
+		freeASTNode(dictionary);
 		freeLiteral(identifier);
 		freeLiteral(string);
 	}

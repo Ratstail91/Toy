@@ -3,10 +3,9 @@ CC=gcc
 IDIR +=. ../source ../repl
 CFLAGS +=$(addprefix -I,$(IDIR)) -g -Wall -W -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
 LIBS +=
-
 ODIR = obj
 TARGETS = $(wildcard ../source/*.c) $(wildcard ../repl/lib_*.c)
-TESTS = $(wildcard *.c)
+TESTS = $(wildcard test_*.c)
 OBJ = $(addprefix $(ODIR)/,$(TARGETS:../source/%.c=%.o)) $(addprefix $(ODIR)/,$(TESTS:.c=.o))
 
 .PRECIOUS:  $(TESTS:%.c=../$(TOY_OUTDIR)/%.exe)

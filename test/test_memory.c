@@ -63,7 +63,7 @@ int main() {
 	testMemoryAllocation();
 
 	//test the custom allocator
-	setAllocator(allocator);
+	setMemoryAllocator(allocator);
 	testMemoryAllocation();
 
 	if (callCount != 8) {

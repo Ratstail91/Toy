@@ -9,42 +9,52 @@
 typedef union _node ASTNode;
 
 typedef enum ASTNodeType {
-	AST_NODEERROR,
-	AST_NODELITERAL, //a simple value
-	AST_NODEUNARY, //one child + opcode
-	AST_NODEBINARY, //two children, left and right + opcode
-	AST_NODEGROUPING, //one child
-	AST_NODEBLOCK, //contains a sub-node array
-	AST_NODECOMPOUND, //contains a sub-node array
-	AST_NODEPAIR, //contains a left and right
-	AST_NODEVAR_DECL, //contains identifier literal, typenode, expression definition
-	AST_NODEFN_DECL, //containd identifier literal, arguments node, returns node, block node
-	AST_NODEFN_COLLECTION, //parts of a function
-	AST_NODEFN_CALL,
-	AST_NODEPATH_IF, //for control flow
-	AST_NODEPATH_WHILE, //for control flow
-	AST_NODEPATH_FOR, //for control flow
-	AST_NODEPATH_BREAK, //for control flow
-	AST_NODEPATH_CONTINUE, //for control flow
-	AST_NODEPATH_RETURN,
-	AST_NODEINCREMENT_PREFIX,
-	AST_NODEINCREMENT_POSTFIX,
-	AST_NODEIMPORT,
-	AST_NODEEXPORT,
-	AST_NODEINDEX,
-	AST_NODEDOT,
+	AST_NODE_ERROR,
+	AST_NODE_LITERAL, //a simple value
+	AST_NODE_UNARY, //one child + opcode
+	AST_NODE_BINARY, //two children, left and right + opcode
+	AST_NODE_GROUPING, //one child
+	AST_NODE_BLOCK, //contains a sub-node array
+	AST_NODE_COMPOUND, //contains a sub-node array
+	AST_NODE_PAIR, //contains a left and right
+	AST_NODE_INDEX, //index a variable
+	AST_NODE_VAR_DECL, //contains identifier literal, typenode, expression definition
+	AST_NODE_FN_DECL, //containd identifier literal, arguments node, returns node, block node
+	AST_NODE_FN_COLLECTION, //parts of a function
+	AST_NODE_FN_CALL, //call a function
+	AST_NODE_FN_RETURN, //for control flow
+	AST_NODE_IF, //for control flow
+	AST_NODE_WHILE, //for control flow
+	AST_NODE_FOR, //for control flow
+	AST_NODE_BREAK, //for control flow
+	AST_NODE_CONTINUE, //for control flow
+	AST_NODE_PREFIX_INCREMENT, //increment a variable
+	AST_NODE_POSTFIX_INCREMENT, //increment a variable
+	AST_NODE_PREFIX_DECREMENT, //decrement a variable
+	AST_NODE_POSTFIX_DECREMENT, //decrement a variable
+	AST_NODE_IMPORT, //import a variable
+	AST_NODE_EXPORT, //export a variable
 } ASTNodeType;
+
+//literals
+void emitASTNodeLiteral(ASTNode** nodeHandle, Literal literal);
 
 typedef struct NodeLiteral {
 	ASTNodeType type;
 	Literal literal;
 } NodeLiteral;
 
+//unary operator
+void emitASTNodeUnary(ASTNode** nodeHandle, Opcode opcode, ASTNode* child);
+
 typedef struct NodeUnary {
 	ASTNodeType type;
 	Opcode opcode;
 	ASTNode* child;
 } NodeUnary;
+
+//binary operator
+void emitASTNodeBinary(ASTNode** nodeHandle, ASTNode* rhs, Opcode opcode); //handled node becomes lhs
 
 typedef struct NodeBinary {
 	ASTNodeType type;
@@ -53,10 +63,16 @@ typedef struct NodeBinary {
 	ASTNode* right;
 } NodeBinary;
 
+//grouping of other AST nodes
+void emitASTNodeGrouping(ASTNode** nodeHandle);
+
 typedef struct NodeGrouping {
 	ASTNodeType type;
 	ASTNode* child;
 } NodeGrouping;
+
+//block of statement nodes
+void emitASTNodeBlock(ASTNode** nodeHandle);
 
 typedef struct NodeBlock {
 	ASTNodeType type;
@@ -64,6 +80,9 @@ typedef struct NodeBlock {
 	int capacity;
 	int count;
 } NodeBlock;
+
+//compound literals (array, dictionary)
+void emitASTNodeCompound(ASTNode** nodeHandle, LiteralType literalType);
 
 typedef struct NodeCompound {
 	ASTNodeType type;
@@ -73,11 +92,25 @@ typedef struct NodeCompound {
 	int count;
 } NodeCompound;
 
+void setASTNodePair(ASTNode* node, ASTNode* left, ASTNode* right); //NOTE: this is a set function, not an emit function
+
 typedef struct NodePair {
 	ASTNodeType type;
 	ASTNode* left;
 	ASTNode* right;
 } NodePair;
+
+void emitASTNodeIndex(ASTNode** nodeHandle, ASTNode* first, ASTNode* second, ASTNode* third);
+
+typedef struct NodeIndex {
+	ASTNodeType type;
+	ASTNode* first;
+	ASTNode* second;
+	ASTNode* third;
+} NodeIndex;
+
+//variable declaration
+void emitASTNodeVarDecl(ASTNode** nodeHandle, Literal identifier, Literal type, ASTNode* expression);
 
 typedef struct NodeVarDecl {
 	ASTNodeType type;
@@ -85,6 +118,19 @@ typedef struct NodeVarDecl {
 	Literal typeLiteral;
 	ASTNode* expression;
 } NodeVarDecl;
+
+//NOTE: fnCollection is used by fnDecl, fnCall and fnReturn
+void emitASTNodeFnCollection(ASTNode** nodeHandle);
+
+typedef struct NodeFnCollection {
+	ASTNodeType type;
+	ASTNode* nodes;
+	int capacity;
+	int count;
+} NodeFnCollection;
+
+//function declaration
+void emitASTNodeFnDecl(ASTNode** nodeHandle, Literal identifier, ASTNode* arguments, ASTNode* returns, ASTNode* block);
 
 typedef struct NodeFnDecl {
 	ASTNodeType type;
@@ -94,33 +140,88 @@ typedef struct NodeFnDecl {
 	ASTNode* block;
 } NodeFnDecl;
 
-typedef struct NodeFnCollection {
-	ASTNodeType type;
-	ASTNode* nodes;
-	int capacity;
-	int count;
-} NodeFnCollection;
+//function call
+void emitASTNodeFnCall(ASTNode** nodeHandle, ASTNode* arguments);
 
 typedef struct NodeFnCall {
 	ASTNodeType type;
 	ASTNode* arguments;
-	int argumentCount;
+	int argumentCount; //NOTE: leave this, so it can be hacked by dottify()
 } NodeFnCall;
 
-typedef struct NodePath {
+//function return
+void emitASTNodeFnReturn(ASTNode** nodeHandle, ASTNode* returns);
+
+typedef struct NodeFnReturn {
 	ASTNodeType type;
-	ASTNode* preClause;
-	ASTNode* postClause;
+	ASTNode* returns;
+} NodeFnReturn;
+
+//control flow path - if-else, while, for, break, continue, return
+void emitASTNodeIf(ASTNode** nodeHandle, ASTNode* condition, ASTNode* thenPath, ASTNode* elsePath);
+void emitASTNodeWhile(ASTNode** nodeHandle, ASTNode* condition, ASTNode* thenPath);
+void emitASTNodeFor(ASTNode** nodeHandle, ASTNode* preClause, ASTNode* condition, ASTNode* postClause, ASTNode* thenPath);
+void emitASTNodeBreak(ASTNode** nodeHandle);
+void emitASTNodeContinue(ASTNode** nodeHandle);
+
+typedef struct NodeIf {
+	ASTNodeType type;
 	ASTNode* condition;
 	ASTNode* thenPath;
 	ASTNode* elsePath;
-} NodePath;
+} NodeIf;
 
-typedef struct NodeIncrement {
+typedef struct NodeWhile {
+	ASTNodeType type;
+	ASTNode* condition;
+	ASTNode* thenPath;
+} NodeWhile;
+
+typedef struct NodeFor {
+	ASTNodeType type;
+	ASTNode* preClause;
+	ASTNode* condition;
+	ASTNode* postClause;
+	ASTNode* thenPath;
+} NodeFor;
+
+typedef struct NodeBreak {
+	ASTNodeType type;
+} NodeBreak;
+
+typedef struct NodeContinue {
+	ASTNodeType type;
+} NodeContinue;
+
+//pre-post increment/decrement
+void emitASTNodePrefixIncrement(ASTNode** nodeHandle, Literal identifier);
+void emitASTNodePrefixDecrement(ASTNode** nodeHandle, Literal identifier);
+void emitASTNodePostfixIncrement(ASTNode** nodeHandle, Literal identifier);
+void emitASTNodePostfixDecrement(ASTNode** nodeHandle, Literal identifier);
+
+typedef struct NodePrefixIncrement {
 	ASTNodeType type;
 	Literal identifier;
-	int increment;
-} NodeIncrement;
+} NodePrefixIncrement;
+
+typedef struct NodePrefixDecrement {
+	ASTNodeType type;
+	Literal identifier;
+} NodePrefixDecrement;
+
+typedef struct NodePostfixIncrement {
+	ASTNodeType type;
+	Literal identifier;
+} NodePostfixIncrement;
+
+typedef struct NodePostfixDecrement {
+	ASTNodeType type;
+	Literal identifier;
+} NodePostfixDecrement;
+
+//import/export a variable
+void emitASTNodeImport(ASTNode** nodeHandle, Literal identifier, Literal alias);
+void emitASTNodeExport(ASTNode** nodeHandle, Literal identifier, Literal alias);
 
 typedef struct NodeImport {
 	ASTNodeType type;
@@ -128,12 +229,11 @@ typedef struct NodeImport {
 	Literal alias;
 } NodeImport;
 
-typedef struct NodeIndex {
+typedef struct NodeExport {
 	ASTNodeType type;
-	ASTNode* first;
-	ASTNode* second;
-	ASTNode* third;
-} NodeIndex;
+	Literal identifier;
+	Literal alias;
+} NodeExport;
 
 union _node {
 	ASTNodeType type;
@@ -144,32 +244,23 @@ union _node {
 	NodeBlock block;
 	NodeCompound compound;
 	NodePair pair;
-	NodeVarDecl varDecl;
-	NodeFnDecl fnDecl;
-	NodeFnCollection fnCollection;
-	NodeFnCall fnCall;
-	NodePath path;
-	NodeIncrement increment;
-	NodeImport import;
 	NodeIndex index;
+	NodeVarDecl varDecl;
+	NodeFnCollection fnCollection;
+	NodeFnDecl fnDecl;
+	NodeFnCall fnCall;
+	NodeFnReturn returns;
+	NodeIf pathIf; //TODO: rename these to ifStmt?
+	NodeWhile pathWhile;
+	NodeFor pathFor;
+	NodeBreak pathBreak;
+	NodeContinue pathContinue;
+	NodePrefixIncrement prefixIncrement;
+	NodePrefixDecrement prefixDecrement;
+	NodePostfixIncrement postfixIncrement;
+	NodePostfixDecrement postfixDecrement;
+	NodeImport import;
+	NodeExport export;
 };
 
-TOY_API void freeNode(ASTNode* node);
-
-void emitASTNodeLiteral(ASTNode** nodeHandle, Literal literal);
-void emitASTNodeUnary(ASTNode** nodeHandle, Opcode opcode, ASTNode* child);
-void emitASTNodeBinary(ASTNode** nodeHandle, ASTNode* rhs, Opcode opcode); //handled node becomes lhs
-void emitASTNodeGrouping(ASTNode** nodeHandle);
-void emitASTNodeBlock(ASTNode** nodeHandle);
-void emitASTNodeCompound(ASTNode** nodeHandle, LiteralType literalType);
-void setASTNodePair(ASTNode* node, ASTNode* left, ASTNode* right);
-void emitASTNodeVarDecl(ASTNode** nodeHandle, Literal identifier, Literal type, ASTNode* expression);
-void emitASTNodeFnDecl(ASTNode** nodeHandle, Literal identifier, ASTNode* arguments, ASTNode* returns, ASTNode* block);
-void emitASTFnCall(ASTNode** nodeHandle, ASTNode* arguments, int argumentCount);
-void emitASTNodeFnCollection(ASTNode** nodeHandle);
-void emitASTNodePath(ASTNode** nodeHandle, ASTNodeType type, ASTNode* preClause, ASTNode* postClause, ASTNode* condition, ASTNode* thenPath, ASTNode* elsePath);
-void emitASTNodePrefixIncrement(ASTNode** nodeHandle, Literal identifier, int increment);
-void emitASTNodePostfixIncrement(ASTNode** nodeHandle, Literal identifier, int increment);
-void emitASTNodeImport(ASTNode** nodeHandle, ASTNodeType mode, Literal identifier, Literal alias);
-void emitASTNodeIndex(ASTNode** nodeHandle, ASTNode* first, ASTNode* second, ASTNode* third);
-void emitASTNodeDot(ASTNode** nodeHandle, ASTNode* first);
+TOY_API void freeASTNode(ASTNode* node);

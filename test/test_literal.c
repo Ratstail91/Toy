@@ -29,22 +29,18 @@ int main() {
 
 	{
 		//test string literals
-		char* buffer = ALLOCATE(char, 128);
+		char* buffer = "Hello world";
 
-		snprintf(buffer, 128, "Hello world");
-
-		Literal literal = TO_STRING_LITERAL(buffer, 128);
+		Literal literal = TO_STRING_LITERAL(createRefString(buffer));
 
 		freeLiteral(literal);
 	}
 
 	{
 		//test identifier literals
-		char* buffer = ALLOCATE(char, 128);
+		char buffer[] = "Hello world";
 
-		snprintf(buffer, 128, "foobar");
-
-		Literal literal = TO_IDENTIFIER_LITERAL(buffer, 128);
+		Literal literal = TO_IDENTIFIER_LITERAL(createRefString(buffer));
 
 		freeLiteral(literal);
 	}

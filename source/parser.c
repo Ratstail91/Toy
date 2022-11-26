@@ -119,6 +119,7 @@ static void declaration(Parser* parser, ASTNode** nodeHandle);
 static void parsePrecedence(Parser* parser, ASTNode** nodeHandle, PrecedenceRule rule);
 static Literal readTypeToLiteral(Parser* parser);
 
+//TODO: resolve the messy order of these
 //the expression rules
 static Opcode asType(Parser* parser, ASTNode** nodeHandle) {
 	Literal literal = readTypeToLiteral(parser);
@@ -182,14 +183,14 @@ static Opcode compound(Parser* parser, ASTNode** nodeHandle) {
 			parsePrecedence(parser, &right, PREC_PRIMARY);
 
 			if (!right) { //error
-				freeNode(left);
+				freeASTNode(left);
 				return OP_EOF;
 			}
 
 			//check we ARE defining a dictionary
 			if (array) {
 				error(parser, parser->previous, "Incorrect detection between array and dictionary");
-				freeNode(array);
+				freeASTNode(array);
 				return OP_EOF;
 			}
 
@@ -214,7 +215,7 @@ static Opcode compound(Parser* parser, ASTNode** nodeHandle) {
 			//check we ARE defining an array
 			if (dictionary) {
 				error(parser, parser->current, "Incorrect detection between array and dictionary");
-				freeNode(dictionary);
+				freeASTNode(dictionary);
 				return OP_EOF;
 			}
 
@@ -269,7 +270,7 @@ static Opcode string(Parser* parser, ASTNode** nodeHandle) {
 				error(parser, parser->previous, buffer);
 			}
 
-			Literal literal = TO_STRING_LITERAL(copyString(parser->previous.lexeme, length), length);
+			Literal literal = TO_STRING_LITERAL(createRefStringLength(parser->previous.lexeme, length));
 			emitASTNodeLiteral(nodeHandle, literal);
 			freeLiteral(literal);
 			return OP_EOF;
@@ -418,7 +419,7 @@ static Opcode unary(Parser* parser, ASTNode** nodeHandle) {
 		parsePrecedence(parser, &tmpNode, PREC_TERNARY); //can be a literal
 
 		//check for negative literals (optimisation)
-		if (tmpNode->type == AST_NODELITERAL && (IS_INTEGER(tmpNode->atomic.literal) || IS_FLOAT(tmpNode->atomic.literal))) {
+		if (tmpNode->type == AST_NODE_LITERAL && (IS_INTEGER(tmpNode->atomic.literal) || IS_FLOAT(tmpNode->atomic.literal))) {
 			//negate directly, if int or float
 			Literal lit = tmpNode->atomic.literal;
 
@@ -437,22 +438,22 @@ static Opcode unary(Parser* parser, ASTNode** nodeHandle) {
 		}
 
 		//check for negated boolean errors
-		if (tmpNode->type == AST_NODELITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {
+		if (tmpNode->type == AST_NODE_LITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {
 			error(parser, parser->previous, "Negative booleans are not allowed");
 			return OP_EOF;
 		}
 
-		//actually emit the negation
+		//actually emit the negation node
 		emitASTNodeUnary(nodeHandle, OP_NEGATE, tmpNode);
 	}
 
 	else if (parser->previous.type == TOKEN_NOT) {
 		//temp handle to potentially negate values
-		parsePrecedence(parser, &tmpNode, PREC_CALL); //can be a literal
+		parsePrecedence(parser, &tmpNode, PREC_CALL); //can be a literal, grouping, fn call, etc.
 
 		//check for inverted booleans
-		if (tmpNode->type == AST_NODELITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {
-			//negate directly, if int or float
+		if (tmpNode->type == AST_NODE_LITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {
+			//negate directly, if boolean
 			Literal lit = tmpNode->atomic.literal;
 
 			lit = TO_BOOLEAN_LITERAL(!AS_BOOLEAN(lit));
@@ -460,12 +461,6 @@ static Opcode unary(Parser* parser, ASTNode** nodeHandle) {
 			tmpNode->atomic.literal = lit;
 			*nodeHandle = tmpNode;
 
-			return OP_EOF;
-		}
-
-		//check for inverted number errors
-		if (tmpNode->type == AST_NODELITERAL && (IS_INTEGER(tmpNode->atomic.literal) || IS_FLOAT(tmpNode->atomic.literal))) {
-			error(parser, parser->previous, "Inverted numbers are not allowed");
 			return OP_EOF;
 		}
 
@@ -543,12 +538,9 @@ static Opcode identifier(Parser* parser, ASTNode** nodeHandle) {
 		error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
 	}
 
-	char* cpy = copyString(identifierToken.lexeme, length);
-	Literal identifier = _toIdentifierLiteral(cpy, length); //BUGFIX: use this instead of the macro
-
+	Literal identifier = TO_IDENTIFIER_LITERAL(createRefStringLength(identifierToken.lexeme, length));
 	emitASTNodeLiteral(nodeHandle, identifier);
-
-	freeLiteral(identifier); //don't leave it hanging
+	freeLiteral(identifier);
 
 	return OP_EOF;
 }
@@ -594,6 +586,7 @@ static Opcode castingPrefix(Parser* parser, ASTNode** nodeHandle) {
 static Opcode castingInfix(Parser* parser, ASTNode** nodeHandle) {
 	advance(parser);
 
+	//NOTE: using the precedence rules here
 	switch(parser->previous.type) {
 		case TOKEN_IDENTIFIER:
 			identifier(parser, nodeHandle);
@@ -624,28 +617,29 @@ static Opcode castingInfix(Parser* parser, ASTNode** nodeHandle) {
 	return OP_TYPE_CAST;
 }
 
+//TODO: fix these screwy names
 static Opcode incrementPrefix(Parser* parser, ASTNode** nodeHandle) {
 	advance(parser);
 
-	ASTNode* node = NULL;
-	identifier(parser, &node);
+	ASTNode* tmpNode = NULL;
+	identifier(parser, &tmpNode);
 
-	emitASTNodePrefixIncrement(nodeHandle, node->atomic.literal, 1);
+	emitASTNodePrefixIncrement(nodeHandle, tmpNode->atomic.literal);
 
-	freeNode(node);
+	freeASTNode(tmpNode);
 
 	return OP_EOF;
 }
 
 static Opcode incrementInfix(Parser* parser, ASTNode** nodeHandle) {
-	ASTNode* node = NULL;
-	identifier(parser, &node);
+	ASTNode* tmpNode = NULL;
+	identifier(parser, &tmpNode);
 
 	advance(parser);
 
-	emitASTNodePostfixIncrement(nodeHandle, node->atomic.literal, 1);
+	emitASTNodePostfixIncrement(nodeHandle, tmpNode->atomic.literal);
 
-	freeNode(node);
+	freeASTNode(tmpNode);
 
 	return OP_EOF;
 }
@@ -653,25 +647,25 @@ static Opcode incrementInfix(Parser* parser, ASTNode** nodeHandle) {
 static Opcode decrementPrefix(Parser* parser, ASTNode** nodeHandle) {
 	advance(parser);
 
-	ASTNode* node = NULL;
-	identifier(parser, &node); //weird
+	ASTNode* tmpNode = NULL;
+	identifier(parser, &tmpNode); //weird
 
-	emitASTNodePrefixIncrement(nodeHandle, node->atomic.literal, -1);
+	emitASTNodePrefixDecrement(nodeHandle, tmpNode->atomic.literal);
 
-	freeNode(node);
+	freeASTNode(tmpNode);
 
 	return OP_EOF;
 }
 
 static Opcode decrementInfix(Parser* parser, ASTNode** nodeHandle) {
-	ASTNode* node = NULL;
-	identifier(parser, &node);
+	ASTNode* tmpNode = NULL;
+	identifier(parser, &tmpNode);
 
 	advance(parser);
 
-	emitASTNodePostfixIncrement(nodeHandle, node->atomic.literal, -1);
+	emitASTNodePostfixDecrement(nodeHandle, tmpNode->atomic.literal);
 
-	freeNode(node);
+	freeASTNode(tmpNode);
 
 	return OP_EOF;
 }
@@ -698,17 +692,17 @@ static Opcode fnCall(Parser* parser, ASTNode** nodeHandle) {
 						arguments->fnCollection.nodes = GROW_ARRAY(ASTNode, arguments->fnCollection.nodes, oldCapacity, arguments->fnCollection.capacity);
 					}
 
-					ASTNode* node = NULL;
-					parsePrecedence(parser, &node, PREC_TERNARY);
-					arguments->fnCollection.nodes[arguments->fnCollection.count++] = *node;
-					FREE(ASTNode, node);
+					ASTNode* tmpNode = NULL;
+					parsePrecedence(parser, &tmpNode, PREC_TERNARY);
+					arguments->fnCollection.nodes[arguments->fnCollection.count++] = *tmpNode;
+					FREE(ASTNode, tmpNode); //simply free the tmpNode, so you don't free the children
 				} while(match(parser, TOKEN_COMMA));
 
 				consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of argument list");
 			}
 
 			//emit the call
-			emitASTFnCall(nodeHandle, arguments, arguments->fnCollection.count);
+			emitASTNodeFnCall(nodeHandle, arguments);
 
 			return OP_FN_CALL;
 		}
@@ -722,7 +716,7 @@ static Opcode fnCall(Parser* parser, ASTNode** nodeHandle) {
 	return OP_EOF;
 }
 
-static Opcode indexAccess(Parser* parser, ASTNode** nodeHandle) {
+static Opcode indexAccess(Parser* parser, ASTNode** nodeHandle) { //TODO: fix indexing signalling
 	advance(parser);
 
 	//val[first : second : third]
@@ -740,7 +734,7 @@ static Opcode indexAccess(Parser* parser, ASTNode** nodeHandle) {
 
 	//eat the first
 	if (!match(parser, TOKEN_COLON)) {
-		freeNode(first);
+		freeASTNode(first);
 		parsePrecedence(parser, &first, PREC_TERNARY);
 		match(parser, TOKEN_COLON);
 		readFirst = true;
@@ -749,11 +743,11 @@ static Opcode indexAccess(Parser* parser, ASTNode** nodeHandle) {
 	if (match(parser, TOKEN_BRACKET_RIGHT)) {
 
 		if (readFirst) {
-			freeNode(second);
+			freeASTNode(second);
 			second = NULL;
 		}
 
-		freeNode(third);
+		freeASTNode(third);
 		third = NULL;
 
 		emitASTNodeIndex(nodeHandle, first, second, third);
@@ -762,20 +756,20 @@ static Opcode indexAccess(Parser* parser, ASTNode** nodeHandle) {
 
 	//eat the second
 	if (!match(parser, TOKEN_COLON)) {
-		freeNode(second);
+		freeASTNode(second);
 		parsePrecedence(parser, &second, PREC_TERNARY);
 		match(parser, TOKEN_COLON);
 	}
 
 	if (match(parser, TOKEN_BRACKET_RIGHT)) {
-		freeNode(third);
+		freeASTNode(third);
 		third = NULL;
 		emitASTNodeIndex(nodeHandle, first, second, third);
 		return OP_INDEX;
 	}
 
 	//eat the third
-	freeNode(third);
+	freeASTNode(third);
 	parsePrecedence(parser, &third, PREC_TERNARY);
 	emitASTNodeIndex(nodeHandle, first, second, third);
 
@@ -787,16 +781,15 @@ static Opcode indexAccess(Parser* parser, ASTNode** nodeHandle) {
 static Opcode dot(Parser* parser, ASTNode** nodeHandle) {
 	advance(parser); //for the dot
 
-	ASTNode* node = NULL;
+	ASTNode* tmpNode = NULL;
+	parsePrecedence(parser, &tmpNode, PREC_CALL);
 
-	parsePrecedence(parser, &node, PREC_CALL);
-
-	if (node == NULL || node->binary.right == NULL) {
+	if (tmpNode == NULL || tmpNode->binary.right == NULL) {
 		error(parser, parser->previous, "Expected function call after dot operator");
 		return OP_EOF;
 	}
 
-	(*nodeHandle) = node;
+	(*nodeHandle) = tmpNode;
 	return OP_DOT; //signal that the function name and arguments are in the wrong order
 }
 
@@ -895,7 +888,7 @@ ParseRule* getRule(TokenType type) {
 	return &parseRules[type];
 }
 
-//constant folding
+//constant folding (optimisation)
 static bool calcStaticBinaryArithmetic(Parser* parser, ASTNode** nodeHandle) {
 	switch((*nodeHandle)->binary.opcode) {
 		case OP_ADDITION:
@@ -916,16 +909,16 @@ static bool calcStaticBinaryArithmetic(Parser* parser, ASTNode** nodeHandle) {
 	}
 
 	//recurse to the left and right
-	if ((*nodeHandle)->binary.left->type == AST_NODEBINARY) {
+	if ((*nodeHandle)->binary.left->type == AST_NODE_BINARY) {
 		calcStaticBinaryArithmetic(parser, &(*nodeHandle)->binary.left);
 	}
 
-	if ((*nodeHandle)->binary.right->type == AST_NODEBINARY) {
+	if ((*nodeHandle)->binary.right->type == AST_NODE_BINARY) {
 		calcStaticBinaryArithmetic(parser, &(*nodeHandle)->binary.right);
 	}
 
 	//make sure left and right are both literals
-	if (!((*nodeHandle)->binary.left->type == AST_NODELITERAL && (*nodeHandle)->binary.right->type == AST_NODELITERAL)) {
+	if (!((*nodeHandle)->binary.left->type == AST_NODE_LITERAL && (*nodeHandle)->binary.right->type == AST_NODE_LITERAL)) {
 		return true;
 	}
 
@@ -1068,18 +1061,18 @@ static bool calcStaticBinaryArithmetic(Parser* parser, ASTNode** nodeHandle) {
 	}
 
 	//optimize by converting this node into a literal node
-	freeNode((*nodeHandle)->binary.left);
-	freeNode((*nodeHandle)->binary.right);
+	freeASTNode((*nodeHandle)->binary.left);
+	freeASTNode((*nodeHandle)->binary.right);
 
-	(*nodeHandle)->type = AST_NODELITERAL;
+	(*nodeHandle)->type = AST_NODE_LITERAL;
 	(*nodeHandle)->atomic.literal = result;
 
 	return true;
 }
 
-static void dottify(Parser* parser, ASTNode** nodeHandle) {
-	//only if this is chained from a higher binary "fn_call"
-	if ((*nodeHandle)->type == AST_NODEBINARY) {
+static void dottify(Parser* parser, ASTNode** nodeHandle) { //TODO: remove dot from the compiler entirely
+	//only if this is chained from a higher binary "fn call"
+	if ((*nodeHandle)->type == AST_NODE_BINARY) {
 		if ((*nodeHandle)->binary.opcode == OP_FN_CALL) {
 			(*nodeHandle)->binary.opcode = OP_DOT;
 			(*nodeHandle)->binary.right->fnCall.argumentCount++;
@@ -1117,7 +1110,7 @@ static void parsePrecedence(Parser* parser, ASTNode** nodeHandle, PrecedenceRule
 		const Opcode opcode = infixRule(parser, &rhsNode); //NOTE: infix rule must advance the parser
 
 		if (opcode == OP_EOF) {
-			freeNode(*nodeHandle);
+			freeASTNode(*nodeHandle);
 			*nodeHandle = rhsNode;
 			return; //we're done here
 		}
@@ -1129,6 +1122,7 @@ static void parsePrecedence(Parser* parser, ASTNode** nodeHandle, PrecedenceRule
 
 		emitASTNodeBinary(nodeHandle, rhsNode, opcode);
 
+		//optimise away the constants
 		if (!calcStaticBinaryArithmetic(parser, nodeHandle)) {
 			return;
 		}
@@ -1160,19 +1154,19 @@ static void blockStmt(Parser* parser, ASTNode** nodeHandle) {
 			(*nodeHandle)->block.nodes = GROW_ARRAY(ASTNode, (*nodeHandle)->block.nodes, oldCapacity, (*nodeHandle)->block.capacity);
 		}
 
-		ASTNode* node = NULL;
+		ASTNode* tmpNode = NULL;
 
 		//process the grammar rule for this line
-		declaration(parser, &node);
+		declaration(parser, &tmpNode);
 
 		// Ground floor: perfumery / Stationery and leather goods / Wigs and haberdashery / Kitchenware and food / Going up!
 		if (parser->panic) {
 			return;
 		}
 
-		//BUGFIX: statements no longer require an existing node
-		((*nodeHandle)->block.nodes[(*nodeHandle)->block.count++]) = *node;
-		FREE(ASTNode, node); //simply free the tmp node
+		//BUGFIX: statements no longer require the existing node
+		((*nodeHandle)->block.nodes[(*nodeHandle)->block.count++]) = *tmpNode;
+		FREE(ASTNode, tmpNode); //simply free the tmpNode, so you don't free the children
 	}
 }
 
@@ -1188,7 +1182,7 @@ static void printStmt(Parser* parser, ASTNode** nodeHandle) {
 static void assertStmt(Parser* parser, ASTNode** nodeHandle) {
 	//set the node info
 	(*nodeHandle) = ALLOCATE(ASTNode, 1); //special case, because I'm lazy
-	(*nodeHandle)->type = AST_NODEBINARY;
+	(*nodeHandle)->type = AST_NODE_BINARY;
 	(*nodeHandle)->binary.opcode = OP_ASSERT;
 
 	parsePrecedence(parser, &((*nodeHandle)->binary.left), PREC_TERNARY);
@@ -1216,7 +1210,7 @@ static void ifStmt(Parser* parser, ASTNode** nodeHandle) {
 		declaration(parser, &elsePath);
 	}
 
-	emitASTNodePath(nodeHandle, AST_NODEPATH_IF, NULL, NULL, condition, thenPath, elsePath);
+	emitASTNodeIf(nodeHandle, condition, thenPath, elsePath);
 }
 
 static void whileStmt(Parser* parser, ASTNode** nodeHandle) {
@@ -1231,40 +1225,40 @@ static void whileStmt(Parser* parser, ASTNode** nodeHandle) {
 	consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of while clause");
 	declaration(parser, &thenPath);
 
-	emitASTNodePath(nodeHandle, AST_NODEPATH_WHILE, NULL, NULL, condition, thenPath, NULL);
+	emitASTNodeWhile(nodeHandle, condition, thenPath);
 }
 
 static void forStmt(Parser* parser, ASTNode** nodeHandle) {
 	ASTNode* preClause = NULL;
-	ASTNode* postClause = NULL;
 	ASTNode* condition = NULL;
+	ASTNode* postClause = NULL;
 	ASTNode* thenPath = NULL;
 
 	//read the clauses
 	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' at beginning of for clause");
-	declaration(parser, &preClause);
+
+	declaration(parser, &preClause); //allow defining variables in the pre-clause
 
 	parsePrecedence(parser, &condition, PREC_TERNARY);
-
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' after condition of for clause");
-	parsePrecedence(parser, &postClause, PREC_ASSIGNMENT);
 
+	parsePrecedence(parser, &postClause, PREC_ASSIGNMENT);
 	consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of for clause");
 
 	//read the path
 	declaration(parser, &thenPath);
 
-	emitASTNodePath(nodeHandle, AST_NODEPATH_FOR, preClause, postClause, condition, thenPath, NULL);
+	emitASTNodeFor(nodeHandle, preClause, condition, postClause, thenPath);
 }
 
 static void breakStmt(Parser* parser, ASTNode** nodeHandle) {
-	emitASTNodePath(nodeHandle, AST_NODEPATH_BREAK, NULL, NULL, NULL, NULL, NULL);
+	emitASTNodeBreak(nodeHandle);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of break statement");
 }
 
 static void continueStmt(Parser* parser, ASTNode** nodeHandle) {
-	emitASTNodePath(nodeHandle, AST_NODEPATH_CONTINUE, NULL, NULL, NULL, NULL, NULL);
+	emitASTNodeContinue(nodeHandle);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of continue statement");
 }
@@ -1287,13 +1281,13 @@ static void returnStmt(Parser* parser, ASTNode** nodeHandle) {
 			parsePrecedence(parser, &node, PREC_TERNARY);
 
 			returnValues->fnCollection.nodes[returnValues->fnCollection.count++] = *node;
-			FREE(ASTNode, node);
+			FREE(ASTNode, node); //free manually
 		} while(match(parser, TOKEN_COMMA));
 
 		consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of return statement");
 	}
 
-	emitASTNodePath(nodeHandle, AST_NODEPATH_RETURN, NULL, NULL, NULL, returnValues, NULL);
+	emitASTNodeFnReturn(nodeHandle, returnValues);
 }
 
 static void importStmt(Parser* parser, ASTNode** nodeHandle) {
@@ -1307,18 +1301,19 @@ static void importStmt(Parser* parser, ASTNode** nodeHandle) {
 	}
 
 	Literal idn = copyLiteral(node->atomic.literal);
-	freeNode(node);
+	freeASTNode(node);
 
 	Literal alias = TO_NULL_LITERAL;
 
 	if (match(parser, TOKEN_AS)) {
+		ASTNode* node = NULL;
 		advance(parser);
 		identifier(parser, &node);
 		alias = copyLiteral(node->atomic.literal);
-		freeNode(node);
+		freeASTNode(node);
 	}
 
-	emitASTNodeImport(nodeHandle, AST_NODEIMPORT, idn, alias);
+	emitASTNodeImport(nodeHandle, idn, alias);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of import statement");
 
@@ -1337,18 +1332,19 @@ static void exportStmt(Parser* parser, ASTNode** nodeHandle) {
 	}
 
 	Literal idn = copyLiteral(node->atomic.literal);
-	freeNode(node);
+	freeASTNode(node);
 
 	Literal alias = TO_NULL_LITERAL;
 
 	if (match(parser, TOKEN_AS)) {
+		ASTNode* node;
 		advance(parser);
 		identifier(parser, &node);
 		alias = copyLiteral(node->atomic.literal);
-		freeNode(node);
+		freeASTNode(node);
 	}
 
-	emitASTNodeImport(nodeHandle, AST_NODEEXPORT, idn, alias);
+	emitASTNodeExport(nodeHandle, idn, alias);
 
 	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of export statement");
 
@@ -1516,8 +1512,7 @@ static Literal readTypeToLiteral(Parser* parser) {
 				length = 256;
 				error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
 			}
-			char* cpy = copyString(identifierToken.lexeme, length);
-			literal = _toIdentifierLiteral(cpy, strlen(cpy)); //BUGFIX: use this instead of the macro
+			literal = TO_IDENTIFIER_LITERAL(createRefStringLength(identifierToken.lexeme, length));
 		}
 		break;
 
@@ -1552,8 +1547,7 @@ static void varDecl(Parser* parser, ASTNode** nodeHandle) {
 		error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
 	}
 
-	char* cpy = copyString(identifierToken.lexeme, length);
-	Literal identifier = _toIdentifierLiteral(cpy, strlen(cpy)); //BUGFIX: use this instead of the macro
+	Literal identifier = TO_IDENTIFIER_LITERAL(createRefStringLength(identifierToken.lexeme, length));
 
 	//read the type, if present
 	Literal typeLiteral;
@@ -1596,8 +1590,7 @@ static void fnDecl(Parser* parser, ASTNode** nodeHandle) {
 		error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
 	}
 
-	char* cpy = copyString(identifierToken.lexeme, length);
-	Literal identifier = _toIdentifierLiteral(cpy, strlen(cpy)); //BUGFIX: use this instead of the macro
+	Literal identifier = TO_IDENTIFIER_LITERAL(createRefStringLength(identifierToken.lexeme, length));
 
 	//read the parameters and arity
 	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' after function identifier");
@@ -1623,8 +1616,7 @@ static void fnDecl(Parser* parser, ASTNode** nodeHandle) {
 					error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
 				}
 
-				char* cpy = copyString(argIdentifierToken.lexeme, length);
-				Literal argIdentifier = _toIdentifierLiteral(cpy, strlen(cpy)); //BUGFIX: use this instead of the macro
+				Literal argIdentifier = TO_IDENTIFIER_LITERAL(createRefStringLength(argIdentifierToken.lexeme, length));
 
 				//set the type (array of any types)
 				Literal argTypeLiteral = TO_TYPE_LITERAL(LITERAL_FUNCTION_ARG_REST, false);
@@ -1659,9 +1651,7 @@ static void fnDecl(Parser* parser, ASTNode** nodeHandle) {
 				error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
 			}
 
-			char* cpy = copyString(argIdentifierToken.lexeme, length);
-
-			Literal argIdentifier = _toIdentifierLiteral(cpy, strlen(cpy)); //BUGFIX: use this instead of the macro
+			Literal argIdentifier = TO_IDENTIFIER_LITERAL(createRefStringLength(argIdentifierToken.lexeme, length));
 
 			//read optional type of the identifier
 			Literal argTypeLiteral;
@@ -1773,9 +1763,9 @@ ASTNode* scanParser(Parser* parser) {
 	if (parser->panic) {
 		synchronize(parser);
 		//return an error node for this iteration
-		freeNode(node);
+		freeASTNode(node);
 		node = ALLOCATE(ASTNode, 1);
-		node->type = AST_NODEERROR;
+		node->type = AST_NODE_ERROR;
 	}
 
 	return node;

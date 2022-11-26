@@ -1,4 +1,5 @@
 #include "memory.h"
+#include "refstring.h"
 
 #include "console_colors.h"
 
@@ -6,7 +7,7 @@
 #include <stdlib.h>
 
 //default allocator
-void* defaultAllocator(void* pointer, size_t oldSize, size_t newSize) {
+void* defaultMemoryAllocator(void* pointer, size_t oldSize, size_t newSize) {
 	if (newSize == 0 && oldSize == 0) {
 		//causes issues, so just skip out with a NO-OP
 		return NULL;
@@ -28,10 +29,20 @@ void* defaultAllocator(void* pointer, size_t oldSize, size_t newSize) {
 	return mem;
 }
 
-//exposed API
-static AllocatorFn allocator = defaultAllocator;
+//static variables
+static MemoryAllocatorFn allocator;
 
-void setAllocator(AllocatorFn fn) {
+//preload
+static void __attribute__((constructor)) preloadMemoryAllocator() {
+	setMemoryAllocator(defaultMemoryAllocator);
+}
+
+//exposed API
+void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
+	return allocator(pointer, oldSize, newSize);
+}
+
+void setMemoryAllocator(MemoryAllocatorFn fn) {
 	if (fn == NULL) {
 		fprintf(stderr, ERROR "[internal] Memory allocator error (can't be null)\n" RESET);
 		exit(-1);
@@ -43,8 +54,5 @@ void setAllocator(AllocatorFn fn) {
 	}
 
 	allocator = fn;
-}
-
-void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
-	return allocator(pointer, oldSize, newSize);
+	setRefStringAllocatorFn(fn);
 }
