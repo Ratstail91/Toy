@@ -418,7 +418,7 @@ static Opcode unary(Parser* parser, ASTNode** nodeHandle) {
 		//temp handle to potentially negate values
 		parsePrecedence(parser, &tmpNode, PREC_TERNARY); //can be a literal
 
-		//check for negative literals (optimisation)
+		//optimisation: check for negative literals
 		if (tmpNode->type == AST_NODE_LITERAL && (IS_INTEGER(tmpNode->atomic.literal) || IS_FLOAT(tmpNode->atomic.literal))) {
 			//negate directly, if int or float
 			Literal lit = tmpNode->atomic.literal;
@@ -888,7 +888,7 @@ ParseRule* getRule(TokenType type) {
 	return &parseRules[type];
 }
 
-//constant folding (optimisation)
+//optimisation: constant folding
 static bool calcStaticBinaryArithmetic(Parser* parser, ASTNode** nodeHandle) {
 	switch((*nodeHandle)->binary.opcode) {
 		case OP_ADDITION:

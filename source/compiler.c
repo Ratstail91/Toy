@@ -18,7 +18,7 @@ void initCompiler(Compiler* compiler) {
 }
 
 //separated out, so it can be recursive
-static int writeLiteralTypeToCacheOpt(LiteralArray* literalCache, Literal literal, bool skipDuplicationOptimisation) {
+static int writeLiteralTypeToCache(LiteralArray* literalCache, Literal literal) {
 	bool shouldFree = false;
 
 	//if it's a compound type, recurse and store the results
@@ -32,7 +32,7 @@ static int writeLiteralTypeToCacheOpt(LiteralArray* literalCache, Literal litera
 
 		for (int i = 0; i < AS_TYPE(literal).count; i++) {
 			//write the values to the cache, and the indexes to the store
-			int subIndex = writeLiteralTypeToCacheOpt(literalCache, ((Literal*)(AS_TYPE(literal).subtypes))[i], false);
+			int subIndex = writeLiteralTypeToCache(literalCache, ((Literal*)(AS_TYPE(literal).subtypes))[i]);
 
 			Literal lit = TO_INTEGER_LITERAL(subIndex);
 			pushLiteralArray(store, lit);
@@ -45,29 +45,16 @@ static int writeLiteralTypeToCacheOpt(LiteralArray* literalCache, Literal litera
 		literal.type = LITERAL_TYPE_INTERMEDIATE; //NOTE: tweaking the type usually isn't a good idea
 	}
 
-	if (!skipDuplicationOptimisation) {
-		//BUGFIX: check if exactly this literal array exists
-		int index = findLiteralIndex(literalCache, literal);
-		if (index < 0) {
-			index = pushLiteralArray(literalCache, literal);
-		}
-
-		if (shouldFree) {
-			freeLiteral(literal);
-		}
-		return index;
+	//optimisation: check if exactly this literal array exists
+	int index = findLiteralIndex(literalCache, literal);
+	if (index < 0) {
+		index = pushLiteralArray(literalCache, literal);
 	}
-	else {
-		int index = pushLiteralArray(literalCache, literal);
-		if (shouldFree) {
-			freeLiteral(literal);
-		}
-		return index;
-	}
-}
 
-static int writeLiteralTypeToCache(LiteralArray* literalCache, Literal literal) {
-	return writeLiteralTypeToCacheOpt(literalCache, literal, false);
+	if (shouldFree) {
+		freeLiteral(literal);
+	}
+	return index;
 }
 
 static int writeNodeCompoundToCache(Compiler* compiler, ASTNode* node) {
@@ -200,7 +187,7 @@ static int writeNodeCollectionToCache(Compiler* compiler, ASTNode* node) {
 			case AST_NODE_VAR_DECL: {
 				//write each piece of the declaration to the cache
 				int identifierIndex = pushLiteralArray(&compiler->literalCache, node->fnCollection.nodes[i].varDecl.identifier); //store without duplication optimisation
-				int typeIndex = writeLiteralTypeToCacheOpt(&compiler->literalCache, node->fnCollection.nodes[i].varDecl.typeLiteral, false);
+				int typeIndex = writeLiteralTypeToCache(&compiler->literalCache, node->fnCollection.nodes[i].varDecl.typeLiteral);
 
 				Literal identifierLiteral =  TO_INTEGER_LITERAL(identifierIndex);
 				pushLiteralArray(store, identifierLiteral);
@@ -214,7 +201,7 @@ static int writeNodeCollectionToCache(Compiler* compiler, ASTNode* node) {
 
 			case AST_NODE_LITERAL: {
 				//write each piece of the declaration to the cache
-				int typeIndex = writeLiteralTypeToCacheOpt(&compiler->literalCache, node->fnCollection.nodes[i].atomic.literal, false);
+				int typeIndex = writeLiteralTypeToCache(&compiler->literalCache, node->fnCollection.nodes[i].atomic.literal);
 
 				Literal typeLiteral = TO_INTEGER_LITERAL(typeIndex);
 				pushLiteralArray(store, typeLiteral);
