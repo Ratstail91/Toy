@@ -1,8 +1,7 @@
 #include "lib_standard.h"
 
+#include "toy_common.h"
 #include "memory.h"
-
-#include <sys/time.h>
 
 static int nativeClock(Interpreter* interpreter, LiteralArray* arguments) {
 	//no arguments

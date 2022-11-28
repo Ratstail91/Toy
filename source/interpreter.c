@@ -1592,7 +1592,8 @@ static bool execIndex(Interpreter* interpreter, bool assignIntermediate) {
 	}
 
 	if (!IS_ARRAY(compound) && !IS_DICTIONARY(compound) && !IS_STRING(compound)) {
-		interpreter->errorOutput("Unknown compound found in indexing notation\n");
+		interpreter->errorOutput("Unknown compound found in indexing notation: ");
+		printLiteralCustom(compound, interpreter->errorOutput);
 		freeLiteral(third);
 		freeLiteral(second);
 		freeLiteral(first);

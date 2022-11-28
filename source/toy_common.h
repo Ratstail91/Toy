@@ -9,6 +9,7 @@
 #define TOY_VERSION_PATCH 5
 #define TOY_VERSION_BUILD __DATE__ " " __TIME__
 
+//NOTE: I don't know why the time headers are here, need to try moving them back to the correct spots again
 //platform exports/imports
 #if defined(__linux__)
 #define TOY_API extern

@@ -1,66 +1,49 @@
-var size: int const = 100;
+//number of iterations
+var SIZE: int const = 100;
 
-var prev = [];
-for (var i = 0; i < size; i++) {
-	prev.push(false);
+//lookup table
+var lookup = [
+	"*": [
+		"*": [
+			"*": " ",
+			" ": "*"
+		],
+		" ": [
+			"*": "*",
+			" ": " "
+		]
+], " ": [
+		"*": [
+			"*": "*",
+			" ": "*"
+		],
+		" ": [
+			"*": "*",
+			" ": " "
+		]
+]];
+
+//initial line to build from
+var prev: string = "";
+for (var i = 0; i < SIZE -1; i++) {
+	prev += " ";
 }
+prev += "*"; //initial
+print prev;
 
-prev.set(size - 1, true);
-
-
-fn calc(p, i) {
-	if (p[i-1] && p[i] && p[i+1]) {
-		return false;
-	}
-
-	if (p[i-1] && p[i] && !p[i+1]) {
-		return true;
-	}
-
-	if (p[i-1] && !p[i] && p[i+1]) {
-		return true;
-	}
-
-	if (p[i-1] && !p[i] && !p[i+1]) {
-		return false;
-	}
-
-	if (!p[i-1] && p[i] && p[i+1]) {
-		return true;
-	}
-
-	if (!p[i-1] && p[i] && !p[i+1]) {
-		return true;
-	}
-
-	if (!p[i-1] && !p[i] && p[i+1]) {
-		return true;
-	}
-
-	if (!p[i-1] && !p[i] && !p[i+1]) {
-		return false;
-	}
-}
-
-
-
+//run
 for (var iteration = 0; iteration < 100; iteration++) {
-	var line = [false];
-	for (var i = 1; i < size-1; i++) {
-		line.push(calc(prev, i));
-	}
-	line.push(false);
+	//left
+	var output = (lookup[" "][prev[0]][prev[1]]);
 
-	var output = "";
-	for (var i = 0; i < line.length(); i++) {
-		if (line[i]) {
-			output += "*";
-		}
-		else {
-			output += " ";
-		}
+	//middle
+	for (var i = 1; i < SIZE-1; i++) {
+		output += (lookup[prev[i-1]][prev[i]][prev[i+1]]);
 	}
+
+	//right
+	output += (lookup[prev[SIZE-2]][prev[SIZE-1]][" "]);
 
 	print output;
-	prev = line;
+	prev = output;
 }
