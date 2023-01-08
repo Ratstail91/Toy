@@ -448,7 +448,14 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 
 		case LITERAL_FLOAT: {
 			char buffer[256];
-			snprintf(buffer, 256, "%g", AS_FLOAT(literal));
+
+			if (AS_FLOAT(literal) - (int)AS_FLOAT(literal)) {
+				snprintf(buffer, 256, "%g", AS_FLOAT(literal));
+			}
+			else {
+				snprintf(buffer, 256, "%.1f", AS_FLOAT(literal));
+			}
+
 			printFn(buffer);
 		}
 		break;
