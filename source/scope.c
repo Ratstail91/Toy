@@ -70,8 +70,14 @@ static bool checkType(Literal typeLiteral, Literal original, Literal value, bool
 			return false;
 		}
 
-		//if null, assume it's a new entry
+		//if null, assume it's a new array variable that needs checking
 		if (IS_NULL(original)) {
+			for (int i = 0; i < AS_ARRAY(value)->count; i++) {
+				if (!checkType( ((Literal*)(AS_TYPE(typeLiteral).subtypes))[0], TO_NULL_LITERAL, AS_ARRAY(value)->literals[i], constCheck)) {
+					return false;
+				}
+			}
+
 			return true;
 		}
 
@@ -97,8 +103,19 @@ static bool checkType(Literal typeLiteral, Literal original, Literal value, bool
 			return false;
 		}
 
-		//if null, assume it's a new entry to a parent
+		//if null, assume it's a new dictionary variable that needs checking
 		if (IS_NULL(original)) {
+			for (int i = 0; i < AS_DICTIONARY(value)->capacity; i++) {
+				//check the type of key and value
+				if (!checkType(((Literal*)(AS_TYPE(typeLiteral).subtypes))[0], TO_NULL_LITERAL, AS_DICTIONARY(value)->entries[i].key, constCheck)) {
+					return false;
+				}
+
+				if (!checkType(((Literal*)(AS_TYPE(typeLiteral).subtypes))[1], TO_NULL_LITERAL, AS_DICTIONARY(value)->entries[i].value, constCheck)) {
+					return false;
+				}
+			}
+
 			return true;
 		}
 

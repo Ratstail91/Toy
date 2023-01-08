@@ -1,0 +1,7 @@
+{
+	var t = astype [int];
+	var arr: t = [1, 2, 3.14];
+}
+
+
+print "All good";

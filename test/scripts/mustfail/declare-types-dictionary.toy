@@ -1,10 +1,7 @@
-
-{
-	var t = astype [int];
-	var arr: t = [1, 2, 3.14];
-}
-
 {
 	var t = astype [string:int];
 	var dict: t = ["one": 1, "two": 2, "pi": 3.14];
 }
+
+
+print "All good";
