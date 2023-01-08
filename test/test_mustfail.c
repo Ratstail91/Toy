@@ -133,7 +133,7 @@ int main() {
 		};
 
 		for (int i = 0; filenames[i]; i++) {
-			printf("Running %s\n", filenames[i]);
+			printf("Running (must fail) %s\n", filenames[i]);
 
 			char buffer[128];
 			snprintf(buffer, 128, "scripts/mustfail/%s", filenames[i]);
