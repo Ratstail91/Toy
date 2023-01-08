@@ -1,0 +1,7 @@
+{
+	var t = astype [string:int];
+	var dict: t = ["one": 1, "two": 2, 3:4];
+}
+
+
+print "All good";
