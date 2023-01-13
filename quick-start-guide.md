@@ -121,41 +121,14 @@ print greeting[::-1]; //dlrow olleH
 greeting[0:4] = "Goodnight"; //changes greeting to equal "Goodnight world"
 ```
 
-## Import and Export
-
-The interpreter has a set of variables referred to collectively as the "exports region" - these are intended for interfacing with the host. To access these from the scripts, use `import`, like so:
-
-```
-import variable;
-
-print variable; //prints whatever literal was given "variable" as the identifier
-```
-
-Alternatively, to add something to the exports region, use `export`:
-
-```
-var variable = 1;
-
-export variable;
-```
-
-In the event of naming conflicts, you can rename imported and exported variables using the `as` keyword:
-
-```
-//assume "table" exists in the export region
-import table as newName;
-
-export newName as table2;
-```
-
 ## External Libraries
 
-The host may, at it's own discretion, make external libraries available to the scripts. To access these, you can use the `import` keyword once again:
+The host may, at it's own discretion, make external libraries available to the scripts. To access these, you can use the `import` keyword:
 
 ```
 import standard;
 
-print clock();
+print clock(); //made available by "standard"
 ```
 
 ## Assertion Tests
