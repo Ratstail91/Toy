@@ -100,7 +100,7 @@ int main(int argc, const char* argv[]) {
 		return 0;
 	}
 
-	//TODO: remove this when the interpreter meets the specification
+	//version
 	if (command.verbose) {
 		printf(NOTICE "Toy Programming Language Version %d.%d.%d\n" RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH);
 	}

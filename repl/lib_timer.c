@@ -1,9 +1,10 @@
 #include "lib_timer.h"
 
-#include "toy_common.h"
 #include "memory.h"
 
 #include <stdio.h>
+#include <time.h>
+#include <sys/time.h>
 
 //GOD DAMN IT: https://stackoverflow.com/questions/15846762/timeval-subtract-explanation
 int timeval_subtract(struct timeval *result, struct timeval *x, struct timeval *y) {

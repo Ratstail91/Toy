@@ -9,22 +9,15 @@
 #define TOY_VERSION_PATCH 5
 #define TOY_VERSION_BUILD __DATE__ " " __TIME__
 
-//NOTE: I don't know why the time headers are here, need to try moving them back to the correct spots again
-//platform exports/imports
+//platform-specific specifications
 #if defined(__linux__)
 #define TOY_API extern
-#include <time.h>
-#include <sys/time.h>
 
 #elif defined(_WIN32) || defined(WIN32)
 #define TOY_API
-#include <time.h>
-#include <sys/time.h>
 
 #else
 #define TOY_API
-#include <time.h>
-#include <sys/time.h>
 
 #endif
 

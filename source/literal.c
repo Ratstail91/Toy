@@ -380,7 +380,7 @@ int hashLiteral(Literal lit) {
 
 		case LITERAL_FUNCTION:
 		case LITERAL_FUNCTION_NATIVE:
-			return 0; //TODO: find a way to hash these properly
+			return 0; //can't hash these
 
 		case LITERAL_IDENTIFIER:
 			return HASH_I(lit); //pre-computed
@@ -564,7 +564,6 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 		}
 		break;
 
-		//TODO: functions
 		case LITERAL_FUNCTION:
 		case LITERAL_FUNCTION_NATIVE:
 			printFn("(function)");

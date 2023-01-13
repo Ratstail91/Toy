@@ -77,8 +77,6 @@ bool setLiteralArray(LiteralArray* array, Literal index, Literal value) {
 		return false;
 	}
 
-	//TODO: implicit push when referencing one-past-the-end?
-
 	freeLiteral(array->literals[idx]);
 	array->literals[idx] = copyLiteral(value);
 
