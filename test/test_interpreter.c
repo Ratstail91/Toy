@@ -186,7 +186,6 @@ int main() {
 			"dot-chaining.toy",
 			"dottify-bugfix.toy",
 			"functions.toy",
-			"imports-and-exports.toy",
 			"index-arrays.toy",
 			"index-dictionaries.toy",
 			"index-strings.toy",
@@ -210,38 +209,6 @@ int main() {
 
 			runSourceFile(buffer);
 		}
-	}
-
-	{
-		//read source
-		size_t dummy;
-		size_t exportSize, importSize;
-		char* exportSource = readFile("scripts/separate-exports.toy", &dummy);
-		char* importSource = readFile("scripts/separate-imports.toy", &dummy);
-
-		//compile
-		unsigned char* exportBinary = compileString(exportSource, &exportSize);
-		unsigned char* importBinary = compileString(importSource, &importSize);
-
-		//run the interpreter over both binaries
-		Interpreter interpreter;
-		initInterpreter(&interpreter);
-
-		//NOTE: supress print output for testing
-		setInterpreterPrint(&interpreter, noPrintFn);
-		setInterpreterAssert(&interpreter, noAssertFn);
-
-		runInterpreter(&interpreter, exportBinary, exportSize); //automatically frees the binary data
-
-		resetInterpreter(&interpreter);
-
-		runInterpreter(&interpreter, importBinary, importSize); //automatically frees the binary data
-
-		freeInterpreter(&interpreter);
-
-		//cleanup
-		free((void*)exportSource);
-		free((void*)importSource);
 	}
 
 	//1, to allow for the assertion test

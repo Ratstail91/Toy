@@ -5,8 +5,8 @@
 #include <stdint.h>
 
 #define TOY_VERSION_MAJOR 0
-#define TOY_VERSION_MINOR 6
-#define TOY_VERSION_PATCH 5
+#define TOY_VERSION_MINOR 7
+#define TOY_VERSION_PATCH 0
 #define TOY_VERSION_BUILD __DATE__ " " __TIME__
 
 //platform-specific specifications

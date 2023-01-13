@@ -1321,37 +1321,6 @@ static void importStmt(Parser* parser, ASTNode** nodeHandle) {
 	freeLiteral(alias);
 }
 
-static void exportStmt(Parser* parser, ASTNode** nodeHandle) {
-	//read the identifier
-	ASTNode* node = NULL;
-	advance(parser);
-	identifier(parser, &node);
-
-	if (node == NULL) {
-		return;
-	}
-
-	Literal idn = copyLiteral(node->atomic.literal);
-	freeASTNode(node);
-
-	Literal alias = TO_NULL_LITERAL;
-
-	if (match(parser, TOKEN_AS)) {
-		ASTNode* node;
-		advance(parser);
-		identifier(parser, &node);
-		alias = copyLiteral(node->atomic.literal);
-		freeASTNode(node);
-	}
-
-	emitASTNodeExport(nodeHandle, idn, alias);
-
-	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of export statement");
-
-	freeLiteral(idn);
-	freeLiteral(alias);
-}
-
 //precedence functions
 static void expressionStmt(Parser* parser, ASTNode** nodeHandle) {
 	//BUGFIX: check for empty statements
@@ -1428,12 +1397,6 @@ static void statement(Parser* parser, ASTNode** nodeHandle) {
 	//import
 	if (match(parser, TOKEN_IMPORT)) {
 		importStmt(parser, nodeHandle);
-		return;
-	}
-
-	//export
-	if (match(parser, TOKEN_EXPORT)) {
-		exportStmt(parser, nodeHandle);
 		return;
 	}
 

@@ -46,7 +46,7 @@ typedef enum Opcode {
 	OP_TYPE_OF,			//get the type of a variable
 
 	OP_IMPORT,
-	OP_EXPORT,
+	OP_EXPORT_removed,
 
 	//for indexing
 	OP_INDEX,

@@ -32,8 +32,7 @@ typedef enum ASTNodeType {
 	AST_NODE_POSTFIX_INCREMENT, //increment a variable
 	AST_NODE_PREFIX_DECREMENT, //decrement a variable
 	AST_NODE_POSTFIX_DECREMENT, //decrement a variable
-	AST_NODE_IMPORT, //import a variable
-	AST_NODE_EXPORT, //export a variable
+	AST_NODE_IMPORT, //import a library
 } ASTNodeType;
 
 //literals
@@ -219,21 +218,14 @@ typedef struct NodePostfixDecrement {
 	Literal identifier;
 } NodePostfixDecrement;
 
-//import/export a variable
+//import a library
 void emitASTNodeImport(ASTNode** nodeHandle, Literal identifier, Literal alias);
-void emitASTNodeExport(ASTNode** nodeHandle, Literal identifier, Literal alias);
 
 typedef struct NodeImport {
 	ASTNodeType type;
 	Literal identifier;
 	Literal alias;
 } NodeImport;
-
-typedef struct NodeExport {
-	ASTNodeType type;
-	Literal identifier;
-	Literal alias;
-} NodeExport;
 
 union _node {
 	ASTNodeType type;
@@ -260,7 +252,6 @@ union _node {
 	NodePostfixIncrement postfixIncrement;
 	NodePostfixDecrement postfixDecrement;
 	NodeImport import;
-	NodeExport export;
 };
 
 TOY_API void freeASTNode(ASTNode* node);

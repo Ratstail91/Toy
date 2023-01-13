@@ -846,16 +846,6 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, ASTNode* node, void* br
 		}
 		break;
 
-		case AST_NODE_EXPORT: {
-			//push the identifier, and the alias
-			writeLiteralToCompiler(compiler, node->import.identifier);
-			writeLiteralToCompiler(compiler, node->import.alias);
-
-			//push the import opcode
-			compiler->bytecode[compiler->count++] = (unsigned char)OP_EXPORT; //1 byte
-		}
-		break;
-
 		case AST_NODE_INDEX: {
 			//pass to the child nodes, then embed the opcode
 

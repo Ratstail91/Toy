@@ -1227,8 +1227,6 @@ bool callLiteralFn(Interpreter* interpreter, Literal func, LiteralArray* argumen
 	inner.depth = interpreter->depth + 1;
 	inner.panic = false;
 	initLiteralArray(&inner.stack);
-	inner.exports = interpreter->exports;
-	inner.exportTypes = interpreter->exportTypes;
 	inner.hooks = interpreter->hooks;
 	setInterpreterPrint(&inner, interpreter->printOutput);
 	setInterpreterAssert(&inner, interpreter->assertOutput);
@@ -1473,96 +1471,34 @@ static bool execImport(Interpreter* interpreter) {
 	Literal identifier = popLiteralArray(&interpreter->stack);
 
 	//access the hooks
-	if (existsLiteralDictionary(interpreter->hooks, identifier)) {
-		Literal func = getLiteralDictionary(interpreter->hooks, identifier);
+	if (!existsLiteralDictionary(interpreter->hooks, identifier)) {
+		interpreter->errorOutput("Unknown library name in import statement: ");
+		printLiteralCustom(identifier, interpreter->errorOutput);
+		interpreter->errorOutput("\"\n");
 
-		if (!IS_FUNCTION_NATIVE(func)) {
-			interpreter->errorOutput("Expected native function for a hook: ");
-			printLiteralCustom(identifier, interpreter->errorOutput);
-			interpreter->errorOutput("\"\n");
+		freeLiteral(alias);
+		freeLiteral(identifier);
+		return false;
+	}
 
-			freeLiteral(func);
-			freeLiteral(alias);
-			freeLiteral(identifier);
-			return false;
-		}
+	Literal func = getLiteralDictionary(interpreter->hooks, identifier);
 
-		HookFn fn = (HookFn)AS_FUNCTION(func).bytecode;
-
-		fn(interpreter, identifier, alias);
+	if (!IS_FUNCTION_NATIVE(func)) {
+		interpreter->errorOutput("Expected native function for a hook: ");
+		printLiteralCustom(identifier, interpreter->errorOutput);
+		interpreter->errorOutput("\"\n");
 
 		freeLiteral(func);
 		freeLiteral(alias);
 		freeLiteral(identifier);
-		return true;
+		return false;
 	}
 
-	Literal lit = getLiteralDictionary(interpreter->exports, identifier);
-	Literal type = getLiteralDictionary(interpreter->exportTypes, identifier);
+	HookFn fn = (HookFn)AS_FUNCTION(func).bytecode;
 
-	//use the alias
-	if (!IS_NULL(alias)) {
-		if (!declareScopeVariable(interpreter->scope, alias, type)) {
-			interpreter->errorOutput("Can't redefine the variable \"");
-			printLiteralCustom(alias, interpreter->errorOutput);
-			interpreter->errorOutput("\"\n");
+	fn(interpreter, identifier, alias);
 
-			freeLiteral(lit);
-			freeLiteral(type);
-			freeLiteral(alias);
-			freeLiteral(identifier);
-			return false;
-		}
-
-		setScopeVariable(interpreter->scope, alias, lit, false);
-	}
-
-	//use the original identifier
-	else {
-		if (!declareScopeVariable(interpreter->scope, identifier, type)) {
-			interpreter->errorOutput("Can't redefine the variable \"");
-			printLiteralCustom(identifier, interpreter->errorOutput);
-			interpreter->errorOutput("\"\n");
-
-			freeLiteral(lit);
-			freeLiteral(type);
-			freeLiteral(alias);
-			freeLiteral(identifier);
-			return false;
-		}
-
-		setScopeVariable(interpreter->scope, identifier, lit, false);
-	}
-
-	//cleanup
-	freeLiteral(lit);
-	freeLiteral(type);
-	freeLiteral(alias);
-	freeLiteral(identifier);
-	return true;
-}
-
-static bool execExport(Interpreter* interpreter) {
-	Literal alias = popLiteralArray(&interpreter->stack);
-	Literal identifier = popLiteralArray(&interpreter->stack);
-
-	Literal lit = TO_NULL_LITERAL;
-
-	getScopeVariable(interpreter->scope, identifier, &lit);
-	Literal type = getScopeType(interpreter->scope, identifier);
-
-	if (!IS_NULL(alias)) {
-		setLiteralDictionary(interpreter->exports, alias, lit);
-		setLiteralDictionary(interpreter->exportTypes, alias, type);
-	}
-	else {
-		setLiteralDictionary(interpreter->exports, identifier, lit);
-		setLiteralDictionary(interpreter->exportTypes, identifier, type);
-	}
-
-	//cleanup
-	freeLiteral(lit);
-	freeLiteral(type);
+	freeLiteral(func);
 	freeLiteral(alias);
 	freeLiteral(identifier);
 	return true;
@@ -2087,12 +2023,6 @@ static void execInterpreter(Interpreter* interpreter) {
 				}
 			break;
 
-			case OP_EXPORT:
-				if (!execExport(interpreter)) {
-					return;
-				}
-			break;
-
 			case OP_INDEX:
 				if (!execIndex(interpreter, false)) {
 					return;
@@ -2401,11 +2331,6 @@ static void readInterpreterSections(Interpreter* interpreter) {
 
 //exposed functions
 void initInterpreter(Interpreter* interpreter) {
-	//NOTE: separate initialization for exports
-	interpreter->exports = ALLOCATE(LiteralDictionary, 1);
-	initLiteralDictionary(interpreter->exports);
-	interpreter->exportTypes = ALLOCATE(LiteralDictionary, 1);
-	initLiteralDictionary(interpreter->exportTypes);
 	interpreter->hooks = ALLOCATE(LiteralDictionary, 1);
 	initLiteralDictionary(interpreter->hooks);
 
@@ -2519,26 +2444,6 @@ void freeInterpreter(Interpreter* interpreter) {
 	while(interpreter->scope != NULL) {
 		interpreter->scope = popScope(interpreter->scope);
 	}
-
-	//BUGFIX: handle scopes/types in the exports
-	for (int i = 0; i < interpreter->exports->capacity; i++) {
-		if (IS_FUNCTION(interpreter->exports->entries[i].key)) {
-			popScope(AS_FUNCTION(interpreter->exports->entries[i].key).scope);
-			AS_FUNCTION(interpreter->exports->entries[i].key).scope = NULL;
-		}
-		if (IS_FUNCTION(interpreter->exports->entries[i].value)) {
-			popScope(AS_FUNCTION(interpreter->exports->entries[i].value).scope);
-			AS_FUNCTION(interpreter->exports->entries[i].value).scope = NULL;
-		}
-	}
-
-	freeLiteralDictionary(interpreter->exports);
-	FREE(LiteralDictionary, interpreter->exports);
-	interpreter->exports = NULL;
-
-	freeLiteralDictionary(interpreter->exportTypes);
-	FREE(LiteralDictionary, interpreter->exportTypes);
-	interpreter->exportTypes = NULL;
 
 	freeLiteralDictionary(interpreter->hooks);
 	FREE(LiteralDictionary, interpreter->hooks);

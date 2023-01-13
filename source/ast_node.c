@@ -129,11 +129,6 @@ void freeASTNodeCustom(ASTNode* node, bool freeSelf) {
 			freeLiteral(node->import.identifier);
 			freeLiteral(node->import.alias);
 		break;
-
-		case AST_NODE_EXPORT:
-			freeLiteral(node->export.identifier);
-			freeLiteral(node->export.alias);
-		break;
 	}
 
 	if (freeSelf) {
@@ -368,16 +363,6 @@ void emitASTNodeImport(ASTNode** nodeHandle, Literal identifier, Literal alias) 
 	tmp->type = AST_NODE_IMPORT;
 	tmp->import.identifier = copyLiteral(identifier);
 	tmp->import.alias = copyLiteral(alias);
-
-	*nodeHandle = tmp;
-}
-
-void emitASTNodeExport(ASTNode** nodeHandle, Literal identifier, Literal alias) {
-	ASTNode* tmp = ALLOCATE(ASTNode, 1);
-
-	tmp->type = AST_NODE_EXPORT;
-	tmp->export.identifier = copyLiteral(identifier);
-	tmp->export.alias = copyLiteral(alias);
 
 	*nodeHandle = tmp;
 }
