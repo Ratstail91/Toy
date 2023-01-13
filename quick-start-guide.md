@@ -159,7 +159,7 @@ The following list cannot be used as names, due to their significance (or potent
 * continue
 * do (reserved)
 * else
-* export
+* export (reserved)
 * false
 * float
 * fn
