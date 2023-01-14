@@ -192,7 +192,7 @@ The following mathematical operators are available. A definition is omitted here
 Likewise, the following logical operators are available (`&&` is more tightly bound than `||` due to historical reasons):
 
 ```
-(  )  [  ]  {  }  !  !=  ==  <  >  <=  >=  &&  ||
+(  )  [  ]  {  }  !  !=  ==  <  >  <=  >=  &&  || ?:
 ```
 
 Other operators used throughout the language are: the assignment, colon, semicolon, comma, dot and rest operators:
