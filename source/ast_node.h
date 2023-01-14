@@ -13,6 +13,7 @@ typedef enum ASTNodeType {
 	AST_NODE_LITERAL, //a simple value
 	AST_NODE_UNARY, //one child + opcode
 	AST_NODE_BINARY, //two children, left and right + opcode
+	AST_NODE_TERNARY, //three children, condition, then path & else path
 	AST_NODE_GROUPING, //one child
 	AST_NODE_BLOCK, //contains a sub-node array
 	AST_NODE_COMPOUND, //contains a sub-node array
@@ -61,6 +62,16 @@ typedef struct NodeBinary {
 	ASTNode* left;
 	ASTNode* right;
 } NodeBinary;
+
+//ternary operator
+void emitASTNodeTernary(ASTNode** nodeHandle, ASTNode* condition, ASTNode* thenPath, ASTNode* elsePath);
+
+typedef struct NodeTernary {
+	ASTNodeType type;
+	ASTNode* condition;
+	ASTNode* thenPath;
+	ASTNode* elsePath;
+} NodeTernary;
 
 //grouping of other AST nodes
 void emitASTNodeGrouping(ASTNode** nodeHandle);
@@ -232,6 +243,7 @@ union _node {
 	NodeLiteral atomic;
 	NodeUnary unary;
 	NodeBinary binary;
+	NodeTernary ternary;
 	NodeGrouping grouping;
 	NodeBlock block;
 	NodeCompound compound;

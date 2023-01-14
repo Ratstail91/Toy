@@ -331,6 +331,47 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, ASTNode* node, void* br
 		}
 		break;
 
+		case AST_NODE_TERNARY: {
+			// TODO
+
+			//process the condition
+			Opcode override = writeCompilerWithJumps(compiler, node->ternary.condition, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
+			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
+
+			//cache the point to insert the jump distance at
+			compiler->bytecode[compiler->count++] = OP_IF_FALSE_JUMP; //1 byte
+			int jumpToElse = compiler->count;
+			compiler->count += sizeof(unsigned short); //2 bytes
+
+			//write the then path
+			override = writeCompilerWithJumps(compiler, node->pathIf.thenPath, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
+			if (override != OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
+
+			int jumpToEnd = 0;
+
+			//insert jump to end
+			compiler->bytecode[compiler->count++] = OP_JUMP; //1 byte
+			jumpToEnd = compiler->count;
+			compiler->count += sizeof(unsigned short); //2 bytes
+
+			//update the jumpToElse to point here
+			AS_USHORT(compiler->bytecode[jumpToElse]) = compiler->count + jumpOffsets; //2 bytes
+
+			//write the else path
+			Opcode override2 = writeCompilerWithJumps(compiler, node->pathIf.elsePath, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
+			if (override2 != OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
+
+			//update the jumpToEnd to point here
+			AS_USHORT(compiler->bytecode[jumpToEnd]) = compiler->count + jumpOffsets; //2 bytes
+		}
+		break;
+
 		case AST_NODE_GROUPING: {
 			compiler->bytecode[compiler->count++] = (unsigned char)OP_GROUPING_BEGIN; //1 byte
 			Opcode override = writeCompilerWithJumps(compiler, node->grouping.child, breakAddressesPtr, continueAddressesPtr, jumpOffsets, node->grouping.child);

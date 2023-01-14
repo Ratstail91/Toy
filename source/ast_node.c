@@ -29,6 +29,12 @@ void freeASTNodeCustom(ASTNode* node, bool freeSelf) {
 			freeASTNode(node->binary.right);
 		break;
 
+		case AST_NODE_TERNARY:
+			freeASTNode(node->ternary.condition);
+			freeASTNode(node->ternary.thenPath);
+			freeASTNode(node->ternary.elsePath);
+		break;
+
 		case AST_NODE_GROUPING:
 			freeASTNode(node->grouping.child);
 		break;
@@ -165,6 +171,17 @@ void emitASTNodeBinary(ASTNode** nodeHandle, ASTNode* rhs, Opcode opcode) {
 	tmp->binary.opcode = opcode;
 	tmp->binary.left = *nodeHandle;
 	tmp->binary.right = rhs;
+
+	*nodeHandle = tmp;
+}
+
+void emitASTNodeTernary(ASTNode** nodeHandle, ASTNode* condition, ASTNode* thenPath, ASTNode* elsePath) {
+	ASTNode* tmp = ALLOCATE(ASTNode, 1);
+
+	tmp->type = AST_NODE_TERNARY;
+	tmp->ternary.condition = condition;
+	tmp->ternary.thenPath = thenPath;
+	tmp->ternary.elsePath = elsePath;
 
 	*nodeHandle = tmp;
 }

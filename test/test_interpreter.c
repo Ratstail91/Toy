@@ -196,7 +196,8 @@ int main() {
 			"long-dictionary.toy",
 			"long-literals.toy",
 			"native-functions.toy",
-			"panic-within-functions.toy", 
+			"panic-within-functions.toy",
+			"ternary-expressions.toy",
 			"types.toy",
 			NULL
 		};

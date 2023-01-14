@@ -78,6 +78,7 @@ typedef enum TokenType {
 	TOKEN_OR,
 
 	//other operators
+	TOKEN_QUESTION,
 	TOKEN_COLON,
 	TOKEN_SEMICOLON,
 	TOKEN_COMMA,

@@ -292,6 +292,7 @@ Token scanLexer(Lexer* lexer) {
 
 		case '|':  return makeToken(lexer, match(lexer, '|') ? TOKEN_OR : TOKEN_PIPE);
 
+		case '?': return makeToken(lexer, TOKEN_QUESTION);
 		case ':': return makeToken(lexer, TOKEN_COLON);
 		case ';': return makeToken(lexer, TOKEN_SEMICOLON);
 		case ',': return makeToken(lexer, TOKEN_COMMA);

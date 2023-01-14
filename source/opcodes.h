@@ -76,6 +76,9 @@ typedef enum Opcode {
 	//pop the stack at the end of a complex statement
 	OP_POP_STACK,
 
+	//ternary shorthand
+	OP_TERNARY,
+
 	//meta
 	OP_FN_END, //different from SECTION_END
 	OP_SECTION_END = 255,

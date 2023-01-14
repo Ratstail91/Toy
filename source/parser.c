@@ -778,6 +778,21 @@ static Opcode indexAccess(Parser* parser, ASTNode** nodeHandle) { //TODO: fix in
 	return OP_INDEX;
 }
 
+static Opcode question(Parser* parser, ASTNode** nodeHandle) {
+	advance(parser); //for the question mark
+
+	ASTNode* thenPath = NULL;
+	ASTNode* elsePath = NULL;
+
+	parsePrecedence(parser, &thenPath, PREC_TERNARY);
+	consume(parser, TOKEN_COLON, "Expected ':' in ternary expression");
+	parsePrecedence(parser, &elsePath, PREC_TERNARY);
+
+	emitASTNodeTernary(nodeHandle, NULL, thenPath, elsePath);
+
+	return OP_TERNARY;
+}
+
 static Opcode dot(Parser* parser, ASTNode** nodeHandle) {
 	advance(parser); //for the dot
 
@@ -824,8 +839,8 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_OF,
 	{NULL, NULL, PREC_NONE},// TOKEN_PRINT,
 	{NULL, NULL, PREC_NONE},// TOKEN_RETURN,
-	{atomic, NULL, PREC_NONE},// TOKEN_TYPE,
-	{asType, NULL, PREC_PRIMARY},// TOKEN_ASTYPE,
+	{atomic, NULL, PREC_PRIMARY},// TOKEN_TYPE,
+	{asType, NULL, PREC_CALL},// TOKEN_ASTYPE,
 	{typeOf, NULL, PREC_CALL},// TOKEN_TYPEOF,
 	{NULL, NULL, PREC_NONE},// TOKEN_VAR,
 	{NULL, NULL, PREC_NONE},// TOKEN_WHILE,
@@ -871,6 +886,7 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, binary, PREC_OR},// TOKEN_OR,
 
 	//other operators
+	{NULL, question, PREC_TERNARY}, //TOKEN_QUESTION,
 	{NULL, NULL, PREC_NONE},// TOKEN_COLON,
 	{NULL, NULL, PREC_NONE},// TOKEN_SEMICOLON,
 	{NULL, NULL, PREC_NONE},// TOKEN_COMMA,
@@ -1118,6 +1134,13 @@ static void parsePrecedence(Parser* parser, ASTNode** nodeHandle, PrecedenceRule
 		//BUGFIX: dot-chaining
 		if (opcode == OP_DOT) {
 			dottify(parser, &rhsNode);
+		}
+
+		//BUGFIX: ternary shorthand
+		if (opcode == OP_TERNARY) {
+			rhsNode->ternary.condition = *nodeHandle;
+			*nodeHandle = rhsNode;
+			continue;
 		}
 
 		emitASTNodeBinary(nodeHandle, rhsNode, opcode);
