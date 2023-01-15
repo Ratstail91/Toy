@@ -69,3 +69,8 @@ export tally; //export this variable to the host program
 # License
 
 This source code is covered by the zlib license (see [LICENSE.md](LICENSE.md)).
+
+# Patrons via Patreon
+
+* Seth A. Robinson
+
