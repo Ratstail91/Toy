@@ -726,9 +726,9 @@ static Opcode indexAccess(Parser* parser, ASTNode** nodeHandle) { //TODO: fix in
 	ASTNode* third = NULL;
 
 	//booleans indicate blank slice indexing
-	emitASTNodeLiteral(&first, TO_BOOLEAN_LITERAL(true));
-	emitASTNodeLiteral(&second, TO_BOOLEAN_LITERAL(true));
-	emitASTNodeLiteral(&third, TO_BOOLEAN_LITERAL(true));
+	emitASTNodeLiteral(&first, TO_INDEX_BLANK_LITERAL);
+	emitASTNodeLiteral(&second, TO_INDEX_BLANK_LITERAL);
+	emitASTNodeLiteral(&third, TO_INDEX_BLANK_LITERAL);
 
 	bool readFirst = false; //pattern matching is bullcrap
 

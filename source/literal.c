@@ -206,6 +206,7 @@ Literal copyLiteral(Literal original) {
 
 		case LITERAL_FUNCTION_INTERMEDIATE: //caries a compiler
 		case LITERAL_FUNCTION_NATIVE:
+		case LITERAL_INDEX_BLANK:
 			//no copying possible
 			return original;
 
@@ -331,6 +332,9 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 
 		case LITERAL_FUNCTION_INTERMEDIATE:
 			fprintf(stderr, ERROR "[internal] Can't compare intermediate functions\n" RESET);
+			return false;
+
+		case LITERAL_INDEX_BLANK:
 			return false;
 
 		default:

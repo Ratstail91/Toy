@@ -26,6 +26,7 @@ typedef enum {
 	LITERAL_FUNCTION_INTERMEDIATE, //used to process functions in the compiler only
 	LITERAL_FUNCTION_ARG_REST, //used to process function rest parameters only
 	LITERAL_FUNCTION_NATIVE, //for handling native functions only
+	LITERAL_INDEX_BLANK, //for blank indexing i.e. arr[:]
 } LiteralType;
 
 typedef struct {
@@ -103,6 +104,10 @@ typedef struct {
 #define TO_IDENTIFIER_LITERAL(value)		_toIdentifierLiteral(value)
 #define TO_TYPE_LITERAL(value, c)			((Literal){ LITERAL_TYPE,		{ .type.typeOf = value, .type.constant = c, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
 #define TO_OPAQUE_LITERAL(value, t)			((Literal){ LITERAL_OPAQUE,		{ .opaque.ptr = value, .opaque.tag = t }})
+
+//BUGFIX: For blank indexing
+#define IS_INDEX_BLANK(value)				((value).type == LITERAL_INDEX_BLANK)
+#define TO_INDEX_BLANK_LITERAL				((Literal){LITERAL_INDEX_BLANK,	{ .integer = 0 }})
 
 TOY_API void freeLiteral(Literal literal);
 

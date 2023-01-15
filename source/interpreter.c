@@ -1563,7 +1563,22 @@ static bool execIndex(Interpreter* interpreter, bool assignIntermediate) {
 	}
 
 	//call the _index function
-	_index(interpreter, &arguments);
+	if (_index(interpreter, &arguments) < 0) {
+		interpreter->errorOutput("Something went wrong while indexing: ");
+		printLiteralCustom(idn, interpreter->errorOutput);
+		interpreter->errorOutput("\n");
+
+		//clean up
+		freeLiteral(third);
+		freeLiteral(second);
+		freeLiteral(first);
+		freeLiteral(compound);
+		if (freeIdn) {
+			freeLiteral(idn);
+		}
+		freeLiteralArray(&arguments);
+		return false;
+	}
 
 	//clean up
 	freeLiteral(third);
@@ -1667,7 +1682,7 @@ static bool execIndexAssign(Interpreter* interpreter) {
 	pushLiteralArray(&arguments, op); //it expects an assignment "opcode"
 
 	//call the _index function
-	if (_index(interpreter, &arguments) == -1) {
+	if (_index(interpreter, &arguments) < 0) {
 		//clean up
 		freeLiteral(assign);
 		freeLiteral(third);
@@ -1715,7 +1730,25 @@ static bool execIndexAssign(Interpreter* interpreter) {
 			pushLiteralArray(&arguments, result);
 			pushLiteralArray(&arguments, op);
 
-			_index(interpreter, &arguments);
+			if (_index(interpreter, &arguments) < 0) {
+				interpreter->errorOutput("Something went wrong while indexing: ");
+				printLiteralCustom(idn, interpreter->errorOutput);
+				interpreter->errorOutput("\n");
+
+				//clean up
+				freeLiteral(assign);
+				freeLiteral(third);
+				freeLiteral(second);
+				freeLiteral(first);
+				freeLiteral(compound);
+				if (freeIdn) {
+					freeLiteral(idn);
+				}
+				freeLiteral(op);
+				freeLiteralArray(&arguments);
+				freeLiteral(result);
+				return false;
+			}
 
 			freeLiteral(result);
 			result = popLiteralArray(&interpreter->stack);
@@ -2239,6 +2272,17 @@ static void readInterpreterSections(Interpreter* interpreter) {
 
 				freeLiteral(typeLiteral);
 			}
+			break;
+
+			case LITERAL_INDEX_BLANK:
+				//read the blank
+				pushLiteralArray(&interpreter->literalCache, TO_INDEX_BLANK_LITERAL);
+
+#ifndef TOY_EXPORT
+				if (command.verbose) {
+					printf("(blank)\n");
+				}
+#endif
 			break;
 		}
 	}

@@ -1176,6 +1176,11 @@ static unsigned char* collateCompilerHeaderOpt(Compiler* compiler, int* size, bo
 			}
 			break;
 
+			case LITERAL_INDEX_BLANK:
+				emitByte(&collation, &capacity, &count, LITERAL_INDEX_BLANK);
+				//blank has no following value
+			break;
+
 			default:
 				fprintf(stderr, ERROR "[internal] Unknown literal type encountered within literal cache: %d\n" RESET, compiler->literalCache.literals[i].type);
 				return NULL;

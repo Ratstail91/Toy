@@ -130,6 +130,7 @@ int main() {
 			"declare-types-array.toy",
 			"declare-types-dictionary-key.toy",
 			"declare-types-dictionary-value.toy",
+			"index-arrays-non-integer.toy",
 			NULL
 		};
 

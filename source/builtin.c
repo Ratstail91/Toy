@@ -336,9 +336,9 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 	if (IS_ARRAY(compound)) {
 		//array slice
 		if (IS_NULL(op)) {
-			//parse out the booleans & their defaults
+			//parse out the blanks & their defaults
 			if (!IS_NULL(first)) {
-				if (IS_BOOLEAN(first)) {
+				if (IS_INDEX_BLANK(first)) {
 					freeLiteral(first);
 					first = TO_INTEGER_LITERAL(0);
 				}
@@ -351,7 +351,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			}
 
 			if (!IS_NULL(second)) {
-				if (IS_BOOLEAN(second)) {
+				if (IS_INDEX_BLANK(second)) {
 					freeLiteral(second);
 					second = TO_INTEGER_LITERAL(AS_ARRAY(compound)->count - 1);
 				}
@@ -363,7 +363,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				}
 			}
 
-			if (IS_NULL(third) || IS_BOOLEAN(third)) {
+			if (IS_NULL(third) || IS_INDEX_BLANK(third)) {
 				freeLiteral(third);
 				third = TO_INTEGER_LITERAL(1);
 			}
@@ -442,9 +442,9 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 		//array slice assignment
 		if (IS_STRING(op) && equalsRefStringCString(AS_STRING(op), "=")) {
-			//parse out the booleans & their defaults
+			//parse out the blanks & their defaults
 			if (!IS_NULL(first)) {
-				if (IS_BOOLEAN(first)) {
+				if (IS_INDEX_BLANK(first)) {
 					freeLiteral(first);
 					first = TO_INTEGER_LITERAL(0);
 				}
@@ -457,7 +457,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 			}
 
 			if (!IS_NULL(second)) {
-				if (IS_BOOLEAN(second)) {
+				if (IS_INDEX_BLANK(second)) {
 					freeLiteral(second);
 					second = TO_INTEGER_LITERAL(AS_INTEGER(first));
 				}
@@ -469,7 +469,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				}
 			}
 
-			if (IS_NULL(third) || IS_BOOLEAN(third)) {
+			if (IS_NULL(third) || IS_INDEX_BLANK(third)) {
 				freeLiteral(third);
 				third = TO_INTEGER_LITERAL(1);
 			}
@@ -656,9 +656,9 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 	if (IS_STRING(compound)) {
 		//string slice
 		if (IS_NULL(op)) {
-			//parse out the booleans & their defaults
+			//parse out the blanks & their defaults
 			if (!IS_NULL(first)) {
-				if (IS_BOOLEAN(first)) {
+				if (IS_INDEX_BLANK(first)) {
 					freeLiteral(first);
 					first = TO_INTEGER_LITERAL(0);
 				}
@@ -672,7 +672,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 			int compoundLength = AS_STRING(compound)->length;
 			if (!IS_NULL(second)) {
-				if (IS_BOOLEAN(second)) {
+				if (IS_INDEX_BLANK(second)) {
 					freeLiteral(second);
 					second = TO_INTEGER_LITERAL(compoundLength);
 				}
@@ -684,7 +684,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				}
 			}
 
-			if (IS_NULL(third) || IS_BOOLEAN(third)) {
+			if (IS_NULL(third) || IS_INDEX_BLANK(third)) {
 				freeLiteral(third);
 				third = TO_INTEGER_LITERAL(1);
 			}
@@ -769,9 +769,9 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 		//string slice assignment
 		else if (IS_STRING(op) && equalsRefStringCString(AS_STRING(op), "=")) {
-			//parse out the booleans & their defaults
+			//parse out the blanks & their defaults
 			if (!IS_NULL(first)) {
-				if (IS_BOOLEAN(first)) {
+				if (IS_INDEX_BLANK(first)) {
 					freeLiteral(first);
 					first = TO_INTEGER_LITERAL(0);
 				}
@@ -785,7 +785,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 
 			int compoundLength = AS_STRING(compound)->length;
 			if (!IS_NULL(second)) {
-				if (IS_BOOLEAN(second)) {
+				if (IS_INDEX_BLANK(second)) {
 					freeLiteral(second);
 					second = TO_INTEGER_LITERAL(compoundLength);
 				}
@@ -797,7 +797,7 @@ int _index(Interpreter* interpreter, LiteralArray* arguments) {
 				}
 			}
 
-			if (IS_NULL(third) || IS_BOOLEAN(third)) {
+			if (IS_NULL(third) || IS_INDEX_BLANK(third)) {
 				freeLiteral(third);
 				third = TO_INTEGER_LITERAL(1);
 			}
