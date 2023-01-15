@@ -1540,26 +1540,6 @@ static bool execIndex(Interpreter* interpreter, bool assignIntermediate) {
 		return false;
 	}
 
-	//get the index function
-	Literal func = TO_NULL_LITERAL;
-	char* keyStr = "_index";
-	int keyStrLength = strlen(keyStr);
-	Literal key = TO_IDENTIFIER_LITERAL(createRefStringLength(keyStr, keyStrLength));
-
-	if (!getScopeVariable(interpreter->scope, key, &func) || !IS_FUNCTION_NATIVE(func)) {
-		interpreter->errorOutput("couldn't get the _index function\n");
-		freeLiteral(third);
-		freeLiteral(second);
-		freeLiteral(first);
-		freeLiteral(compound);
-		if (freeIdn) {
-			freeLiteral(idn);
-		}
-		freeLiteral(func);
-		freeLiteral(key);
-		return false;
-	}
-
 	//build the argument list
 	LiteralArray arguments;
 	initLiteralArray(&arguments);
@@ -1582,9 +1562,8 @@ static bool execIndex(Interpreter* interpreter, bool assignIntermediate) {
 		pushLiteralArray(&interpreter->stack, third);
 	}
 
-	//call the function
-	NativeFn fn = (NativeFn)AS_FUNCTION(func).bytecode;
-	fn(interpreter, &arguments);
+	//call the _index function
+	_index(interpreter, &arguments);
 
 	//clean up
 	freeLiteral(third);
@@ -1594,8 +1573,6 @@ static bool execIndex(Interpreter* interpreter, bool assignIntermediate) {
 	if (freeIdn) {
 		freeLiteral(idn);
 	}
-	freeLiteral(func);
-	freeLiteral(key);
 	freeLiteralArray(&arguments);
 
 	return true;
@@ -1639,27 +1616,6 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		return false;
 	}
 
-	//get the index function
-	Literal func = TO_NULL_LITERAL;
-	char* keyStr = "_index";
-	int keyStrLength = strlen(keyStr);
-	Literal key = TO_IDENTIFIER_LITERAL(createRefStringLength(keyStr, keyStrLength));
-
-	if (!getScopeVariable(interpreter->scope, key, &func) || !IS_FUNCTION_NATIVE(func)) {
-		interpreter->errorOutput("couldn't get the _index function\n");
-		freeLiteral(assign);
-		freeLiteral(third);
-		freeLiteral(second);
-		freeLiteral(first);
-		freeLiteral(compound);
-		if (freeIdn) {
-			freeLiteral(idn);
-		}
-		freeLiteral(func);
-		freeLiteral(key);
-		return false;
-	}
-
 	//build the opcode
 	unsigned char opcode = readByte(interpreter->bytecode, &interpreter->count);
 	char* opStr = "";
@@ -1693,8 +1649,6 @@ static bool execIndexAssign(Interpreter* interpreter) {
 			if (freeIdn) {
 				freeLiteral(idn);
 			}
-			freeLiteral(func);
-			freeLiteral(key);
 			return false;
 	}
 
@@ -1705,16 +1659,15 @@ static bool execIndexAssign(Interpreter* interpreter) {
 	LiteralArray arguments;
 	initLiteralArray(&arguments);
 
-	pushLiteralArray(&arguments, compound); //TODO: nested compounds?
+	pushLiteralArray(&arguments, compound);
 	pushLiteralArray(&arguments, first);
 	pushLiteralArray(&arguments, second);
 	pushLiteralArray(&arguments, third);
 	pushLiteralArray(&arguments, assign); //it expects an assignment command
 	pushLiteralArray(&arguments, op); //it expects an assignment "opcode"
 
-	//call the function
-	NativeFn fn = (NativeFn)AS_FUNCTION(func).bytecode;
-	if (fn(interpreter, &arguments) == -1) {
+	//call the _index function
+	if (_index(interpreter, &arguments) == -1) {
 		//clean up
 		freeLiteral(assign);
 		freeLiteral(third);
@@ -1724,8 +1677,6 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		if (freeIdn) {
 			freeLiteral(idn);
 		}
-		freeLiteral(func);
-		freeLiteral(key);
 		freeLiteral(op);
 		freeLiteralArray(&arguments);
 
@@ -1764,7 +1715,7 @@ static bool execIndexAssign(Interpreter* interpreter) {
 			pushLiteralArray(&arguments, result);
 			pushLiteralArray(&arguments, op);
 
-			fn(interpreter, &arguments);
+			_index(interpreter, &arguments);
 
 			freeLiteral(result);
 			result = popLiteralArray(&interpreter->stack);
@@ -1789,8 +1740,6 @@ static bool execIndexAssign(Interpreter* interpreter) {
 		if (freeIdn) {
 			freeLiteral(idn);
 		}
-		freeLiteral(func);
-		freeLiteral(key);
 		freeLiteral(op);
 		freeLiteralArray(&arguments);
 		freeLiteral(result);
@@ -1806,8 +1755,6 @@ static bool execIndexAssign(Interpreter* interpreter) {
 	if (freeIdn) {
 		freeLiteral(idn);
 	}
-	freeLiteral(func);
-	freeLiteral(key);
 	freeLiteral(op);
 	freeLiteralArray(&arguments);
 	freeLiteral(result);
@@ -2430,7 +2377,6 @@ void resetInterpreter(Interpreter* interpreter) {
 	interpreter->scope = pushScope(NULL);
 
 	//globally available functions
-	injectNativeFn(interpreter, "_index", _index);
 	injectNativeFn(interpreter, "_set", _set);
 	injectNativeFn(interpreter, "_get", _get);
 	injectNativeFn(interpreter, "_push", _push);
