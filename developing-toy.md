@@ -26,4 +26,4 @@ There are some strict rules when interpreting these values (mimicking, but not c
 
 All interpreter implementations retain the right to reject any bytecode whose header data does not conform to the above specification.
 
-The latest version information can be found in [common.h](https://github.com/Ratstail91/Toy/blob/0.6.0/source/common.h#L7-L10)
+The latest version information can be found in [toy_common.h](https://github.com/Ratstail91/Toy/blob/main/source/toy_common.h#L7-L10)
