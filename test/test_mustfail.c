@@ -69,7 +69,7 @@ unsigned char* compileString(char* source, size_t* size) {
 	while(node != NULL) {
 		//pack up and leave
 		if (node->type == AST_NODE_ERROR) {
-			printf(ERROR "error node detected\n" RESET);
+			errorsTriggered++;
 			freeASTNode(node);
 			freeCompiler(&compiler);
 			freeParser(&parser);
@@ -131,6 +131,8 @@ int main() {
 			"declare-types-dictionary-key.toy",
 			"declare-types-dictionary-value.toy",
 			"index-arrays-non-integer.toy",
+			"unary-inverted-nothing.toy",
+			"unary-negative-nothing.toy",
 			NULL
 		};
 

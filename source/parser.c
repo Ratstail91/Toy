@@ -419,7 +419,7 @@ static Opcode unary(Parser* parser, ASTNode** nodeHandle) {
 		parsePrecedence(parser, &tmpNode, PREC_TERNARY); //can be a literal
 
 		//optimisation: check for negative literals
-		if (tmpNode->type == AST_NODE_LITERAL && (IS_INTEGER(tmpNode->atomic.literal) || IS_FLOAT(tmpNode->atomic.literal))) {
+		if (tmpNode != NULL && tmpNode->type == AST_NODE_LITERAL && (IS_INTEGER(tmpNode->atomic.literal) || IS_FLOAT(tmpNode->atomic.literal))) {
 			//negate directly, if int or float
 			Literal lit = tmpNode->atomic.literal;
 
@@ -438,7 +438,7 @@ static Opcode unary(Parser* parser, ASTNode** nodeHandle) {
 		}
 
 		//check for negated boolean errors
-		if (tmpNode->type == AST_NODE_LITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {
+		if (tmpNode != NULL && tmpNode->type == AST_NODE_LITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {
 			error(parser, parser->previous, "Negative booleans are not allowed");
 			return OP_EOF;
 		}
@@ -451,8 +451,8 @@ static Opcode unary(Parser* parser, ASTNode** nodeHandle) {
 		//temp handle to potentially negate values
 		parsePrecedence(parser, &tmpNode, PREC_CALL); //can be a literal, grouping, fn call, etc.
 
-		//check for inverted booleans
-		if (tmpNode->type == AST_NODE_LITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {
+		//optimisation: check for inverted booleans
+		if (tmpNode != NULL && tmpNode->type == AST_NODE_LITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {
 			//negate directly, if boolean
 			Literal lit = tmpNode->atomic.literal;
 
@@ -694,6 +694,13 @@ static Opcode fnCall(Parser* parser, ASTNode** nodeHandle) {
 
 					ASTNode* tmpNode = NULL;
 					parsePrecedence(parser, &tmpNode, PREC_TERNARY);
+
+					//BUGFIX
+					if (!tmpNode) {
+						error(parser, parser->previous, "[internal] No token found in fnCall");
+						return OP_EOF;
+					}
+
 					arguments->fnCollection.nodes[arguments->fnCollection.count++] = *tmpNode;
 					FREE(ASTNode, tmpNode); //simply free the tmpNode, so you don't free the children
 				} while(match(parser, TOKEN_COMMA));
@@ -1302,6 +1309,12 @@ static void returnStmt(Parser* parser, ASTNode** nodeHandle) {
 
 			ASTNode* node = NULL;
 			parsePrecedence(parser, &node, PREC_TERNARY);
+
+			//BUGFIX
+			if (!node) {
+				error(parser, parser->previous, "[internal] No token found in return");
+				return;
+			}
 
 			returnValues->fnCollection.nodes[returnValues->fnCollection.count++] = *node;
 			FREE(ASTNode, node); //free manually
