@@ -30,7 +30,11 @@ void repl() {
 
 	for(;;) {
 		printf("> ");
-		fgets(input, size, stdin);
+
+		//handle EOF for exits
+		if (!fgets(input, size, stdin)) {
+			break;
+		}
 
 		//escape the repl (length of 5 to accomodate the newline)
 		if (strlen(input) == 5 && (!strncmp(input, "exit", 4) || !strncmp(input, "quit", 4))) {

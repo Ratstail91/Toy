@@ -180,19 +180,22 @@ static unsigned char readByte(unsigned char* tb, int* count) {
 }
 
 static unsigned short readShort(unsigned char* tb, int* count) {
-	unsigned short ret = *(unsigned short*)(tb + *count);
+	unsigned short ret = 0;
+	memcpy(&ret, tb + *count, 2);
 	*count += 2;
 	return ret;
 }
 
 static int readInt(unsigned char* tb, int* count) {
-	int ret = *(int*)(tb + *count);
+	int ret = 0;
+	memcpy(&ret, tb + *count, 4);
 	*count += 4;
 	return ret;
 }
 
 static float readFloat(unsigned char* tb, int* count) {
-	float ret = *(float*)(tb + *count);
+	float ret = 0;
+	memcpy(&ret, tb + *count, 4);
 	*count += 4;
 	return ret;
 }

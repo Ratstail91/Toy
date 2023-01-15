@@ -1,5 +1,6 @@
 # Optimisation Options
 # export CFLAGS+=-O2 -mtune=native -march=native
+# export CFLAGS+=-fsanitize=address,undefined
 
 export TOY_OUTDIR = out
 
@@ -33,6 +34,12 @@ static-release: $(TOY_OUTDIR)
 
 #utils
 test: clean $(TOY_OUTDIR)
+	$(MAKE) -C test
+
+test-sanitized: export CFLAGS+=-fsanitize=address,undefined
+test-sanitized: export LIBS+=-static-libasan
+test-sanitized: export DISABLE_VALGRIND=true
+test-sanitized: clean $(TOY_OUTDIR)
 	$(MAKE) -C test
 
 $(TOY_OUTDIR):

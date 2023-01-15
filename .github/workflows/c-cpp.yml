@@ -15,5 +15,7 @@ jobs:
     - uses: actions/checkout@v3
     - name: install valgrind
       run: sudo apt install valgrind
-    - name: make test
+    - name: make test (valgrind)
       run: make test
+    - name: make test (sanitized)
+      run: make test-sanitized
