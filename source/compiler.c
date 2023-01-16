@@ -359,7 +359,8 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, ASTNode* node, void* br
 			compiler->count += sizeof(unsigned short); //2 bytes
 
 			//update the jumpToElse to point here
-			AS_USHORT(compiler->bytecode[jumpToElse]) = compiler->count + jumpOffsets; //2 bytes
+			unsigned short tmpVal = compiler->count + jumpOffsets;
+			memcpy(compiler->bytecode + jumpToElse, &tmpVal, sizeof(tmpVal)); //2 bytes
 
 			//write the else path
 			Opcode override2 = writeCompilerWithJumps(compiler, node->pathIf.elsePath, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
@@ -368,7 +369,8 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, ASTNode* node, void* br
 			}
 
 			//update the jumpToEnd to point here
-			AS_USHORT(compiler->bytecode[jumpToEnd]) = compiler->count + jumpOffsets; //2 bytes
+			tmpVal = compiler->count + jumpOffsets;
+			memcpy(compiler->bytecode + jumpToEnd, &tmpVal, sizeof(tmpVal)); //2 bytes
 		}
 		break;
 
@@ -501,9 +503,9 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, ASTNode* node, void* br
 
 		case AST_NODE_FN_COLLECTION: {
 			//embed these in the bytecode...
-			int index = writeNodeCollectionToCache(compiler, node);
+			unsigned short index = (unsigned short)writeNodeCollectionToCache(compiler, node);
 
-			AS_USHORT(compiler->bytecode[compiler->count]) = (unsigned short)index; //2 bytes
+			memcpy(compiler->bytecode + compiler->count, &index, sizeof(index));
 			compiler->count += sizeof(unsigned short);
 		}
 		break;
@@ -596,7 +598,8 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, ASTNode* node, void* br
 			}
 
 			//update the jumpToElse to point here
-			AS_USHORT(compiler->bytecode[jumpToElse]) = compiler->count + jumpOffsets; //2 bytes
+			unsigned short tmpVal = compiler->count + jumpOffsets;
+			memcpy(compiler->bytecode + jumpToElse, &tmpVal, sizeof(tmpVal)); //2 bytes
 
 			if (node->pathIf.elsePath) {
 				//if there's an else path, write it and 
@@ -606,7 +609,8 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, ASTNode* node, void* br
 				}
 
 				//update the jumpToEnd to point here
-				AS_USHORT(compiler->bytecode[jumpToEnd]) = compiler->count + jumpOffsets; //2 bytes
+				tmpVal = compiler->count + jumpOffsets;
+				memcpy(compiler->bytecode + jumpToEnd, &tmpVal, sizeof(tmpVal)); //2 bytes
 			}
 		}
 		break;
@@ -641,21 +645,25 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, ASTNode* node, void* br
 
 			//jump to condition
 			compiler->bytecode[compiler->count++] = OP_JUMP; //1 byte
-			AS_USHORT(compiler->bytecode[compiler->count]) = jumpToStart + jumpOffsets;
+			unsigned short tmpVal = jumpToStart + jumpOffsets;
+			memcpy(compiler->bytecode + compiler->count, &tmpVal, sizeof(tmpVal));
 			compiler->count += sizeof(unsigned short); //2 bytes
 
 			//jump from condition
-			AS_USHORT(compiler->bytecode[jumpToEnd]) = (unsigned short)compiler->count + jumpOffsets;
+			tmpVal = compiler->count + jumpOffsets;
+			memcpy(compiler->bytecode + jumpToEnd, &tmpVal, sizeof(tmpVal));
 
 			//set the breaks and continues
 			for (int i = 0; i < breakAddresses.count; i++) {
 				int point = AS_INTEGER(breakAddresses.literals[i]);
-				AS_USHORT(compiler->bytecode[point]) = (unsigned short)compiler->count + jumpOffsets;
+				tmpVal = compiler->count + jumpOffsets;
+				memcpy(compiler->bytecode + point, &tmpVal, sizeof(tmpVal));
 			}
 
 			for (int i = 0; i < continueAddresses.count; i++) {
 				int point = AS_INTEGER(continueAddresses.literals[i]);
-				AS_USHORT(compiler->bytecode[point]) = jumpToStart + jumpOffsets;
+				tmpVal = jumpToStart + jumpOffsets;
+				memcpy(compiler->bytecode + point, &tmpVal, sizeof(tmpVal));
 			}
 
 			//clear the stack after use
@@ -713,22 +721,26 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, ASTNode* node, void* br
 			}
 
 			compiler->bytecode[compiler->count++] = OP_JUMP; //1 byte
-			AS_USHORT(compiler->bytecode[compiler->count]) = jumpToStart + jumpOffsets;
+			unsigned short tmpVal = jumpToStart + jumpOffsets;
+			memcpy(compiler->bytecode + compiler->count, &tmpVal, sizeof(tmpVal));
 			compiler->count += sizeof(unsigned short); //2 bytes
 
-			AS_USHORT(compiler->bytecode[jumpToEnd]) = compiler->count + jumpOffsets;
+			tmpVal = compiler->count + jumpOffsets;
+			memcpy(compiler->bytecode + jumpToEnd, &tmpVal, sizeof(tmpVal));
 
 			compiler->bytecode[compiler->count++] = OP_SCOPE_END; //1 byte
 
 			//set the breaks and continues
 			for (int i = 0; i < breakAddresses.count; i++) {
 				int point = AS_INTEGER(breakAddresses.literals[i]);
-				AS_USHORT(compiler->bytecode[point]) = compiler->count + jumpOffsets;
+				tmpVal = compiler->count + jumpOffsets;
+				memcpy(compiler->bytecode + point, &tmpVal, sizeof(tmpVal));
 			}
 
 			for (int i = 0; i < continueAddresses.count; i++) {
 				int point = AS_INTEGER(continueAddresses.literals[i]);
-				AS_USHORT(compiler->bytecode[point]) = jumpToIncrement + jumpOffsets;
+				tmpVal = jumpToIncrement + jumpOffsets;
+				memcpy(compiler->bytecode + point, &tmpVal, sizeof(tmpVal));
 			}
 
 			//clear the stack after use
