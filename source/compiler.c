@@ -241,7 +241,7 @@ static int writeLiteralToCompiler(Compiler* compiler, Literal literal) {
 	if (index >= 256) {
 		//push a "long" index
 		compiler->bytecode[compiler->count++] = OP_LITERAL_LONG; //1 byte
-		*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)index; //2 bytes
+		memcpy(compiler->bytecode + compiler->count, &index, sizeof(unsigned short)); //2 bytes
 
 		compiler->count += sizeof(unsigned short);
 	}
@@ -405,7 +405,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, ASTNode* node, void* br
 			if (index >= 256) {
 				//push a "long" index
 				compiler->bytecode[compiler->count++] = OP_LITERAL_LONG; //1 byte
-				*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)index; //2 bytes
+				memcpy(compiler->bytecode + compiler->count, &index, sizeof(unsigned short));
 
 				compiler->count += sizeof(unsigned short);
 			}
