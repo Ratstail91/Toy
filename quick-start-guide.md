@@ -98,7 +98,6 @@ array.printMe();
 There are several underscore functions provided by default:
 
 ```
-_index(self, first, second, third, assign, op) //don't use this
 _set(self, key, value)                         //array, dictionary
 _get(self, key)                                //array, dictionary
 _push(self, value)                             //array
@@ -106,8 +105,6 @@ _pop(self)                                     //array
 _length(self)                                  //array, dictionary, string
 _clear(self)                                   //array, dictionary
 ```
-
-The `_index` function is simply used for slice notation, so it's recommended that you don't use it or overwrite it.
 
 ## Slice Notation
 
