@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  test-valgrind:
 
     runs-on: ubuntu-latest
 
@@ -17,5 +17,12 @@ jobs:
       run: sudo apt install valgrind
     - name: make test (valgrind)
       run: make test
+  
+  test-sanitized:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
     - name: make test (sanitized)
       run: make test-sanitized
