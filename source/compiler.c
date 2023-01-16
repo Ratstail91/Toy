@@ -788,7 +788,7 @@ static Opcode writeCompilerWithJumps(Compiler* compiler, ASTNode* node, void* br
 			//push the return, with the number of literals
 			compiler->bytecode[compiler->count++] = OP_FN_RETURN; //1 byte
 
-			*((unsigned short*)(compiler->bytecode + compiler->count)) = (unsigned short)(node->returns.returns->fnCollection.count); //2 bytes
+			memcpy(compiler->bytecode + compiler->count, &node->returns.returns->fnCollection.count, sizeof(unsigned short));
 			compiler->count += sizeof(unsigned short);
 		}
 		break;
