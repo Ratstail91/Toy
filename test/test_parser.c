@@ -2,43 +2,11 @@
 
 #include "console_colors.h"
 
+#include "../repl/repl_tools.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-//IO functions
-char* readFile(char* path, size_t* fileSize) {
-	FILE* file = fopen(path, "rb");
-
-	if (file == NULL) {
-		fprintf(stderr, ERROR "Could not open file \"%s\"\n" RESET, path);
-		exit(-1);
-	}
-
-	fseek(file, 0L, SEEK_END);
-	*fileSize = ftell(file);
-	rewind(file);
-
-	char* buffer = (char*)malloc(*fileSize + 1);
-
-	if (buffer == NULL) {
-		fprintf(stderr, ERROR "Not enough memory to read \"%s\"\n" RESET, path);
-		exit(-1);
-	}
-
-	size_t bytesRead = fread(buffer, sizeof(char), *fileSize, file);
-
-	buffer[*fileSize] = '\0'; //NOTE: fread doesn't append this
-
-	if (bytesRead < *fileSize) {
-		fprintf(stderr, ERROR "Could not read file \"%s\"\n" RESET, path);
-		exit(-1);
-	}
-
-	fclose(file);
-
-	return buffer;
-}
 
 int main() {
 	{
@@ -90,7 +58,7 @@ int main() {
 	{
 		//get the source file
 		size_t size = 0;
-		char* source = readFile("scripts/sample_code.toy", &size);
+		char* source = readFile("scripts/parser_sample_code.toy", &size);
 
 		//test parsing a chunk of junk (valgrind will find leaks)
 		Lexer lexer;

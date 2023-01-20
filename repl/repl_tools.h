@@ -3,7 +3,7 @@
 #include "toy_common.h"
 
 char* readFile(char* path, size_t* fileSize);
-void writeFile(char* path, unsigned char* bytes, size_t size);
+int writeFile(char* path, unsigned char* bytes, size_t size);
 
 unsigned char* compileString(char* source, size_t* size);
 

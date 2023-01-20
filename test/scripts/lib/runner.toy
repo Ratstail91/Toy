@@ -1,0 +1,16 @@
+import runner;
+
+//test basic loading and freeing of code
+{
+	var s = loadScript("scripts:/runner_sample_code.toy");
+
+	s.freeScript();
+}
+
+//TODO: test running an external script
+//TODO: test resetting an external script
+//TODO: test retrieving a script variable
+//TODO: test calling a script function
+
+
+print "All good";

@@ -1,6 +1,7 @@
 #include "repl_tools.h"
 #include "lib_standard.h"
 #include "lib_timer.h"
+#include "lib_runner.h"
 
 #include "console_colors.h"
 
@@ -18,7 +19,7 @@ char* readFile(char* path, size_t* fileSize) {
 
 	if (file == NULL) {
 		fprintf(stderr, ERROR "Could not open file \"%s\"\n" RESET, path);
-		exit(-1);
+		return NULL;
 	}
 
 	fseek(file, 0L, SEEK_END);
@@ -29,7 +30,7 @@ char* readFile(char* path, size_t* fileSize) {
 
 	if (buffer == NULL) {
 		fprintf(stderr, ERROR "Not enough memory to read \"%s\"\n" RESET, path);
-		exit(-1);
+		return NULL;
 	}
 
 	size_t bytesRead = fread(buffer, sizeof(char), *fileSize, file);
@@ -38,7 +39,7 @@ char* readFile(char* path, size_t* fileSize) {
 
 	if (bytesRead < *fileSize) {
 		fprintf(stderr, ERROR "Could not read file \"%s\"\n" RESET, path);
-		exit(-1);
+		return NULL;
 	}
 
 	fclose(file);
@@ -46,22 +47,24 @@ char* readFile(char* path, size_t* fileSize) {
 	return buffer;
 }
 
-void writeFile(char* path, unsigned char* bytes, size_t size) {
+int writeFile(char* path, unsigned char* bytes, size_t size) {
 	FILE* file = fopen(path, "wb");
 
 	if (file == NULL) {
 		fprintf(stderr, ERROR "Could not open file \"%s\"\n" RESET, path);
-		exit(-1);
+		return -1;
 	}
 
 	int written = fwrite(bytes, size, 1, file);
 
 	if (written != 1) {
 		fprintf(stderr, ERROR "Could not write file \"%s\"\n" RESET, path);
-		exit(-1);
+		return -1;
 	}
 
 	fclose(file);
+
+	return 0;
 }
 
 //repl functions
@@ -79,7 +82,6 @@ unsigned char* compileString(char* source, size_t* size) {
 	while(node != NULL) {
 		//pack up and leave
 		if (node->type == AST_NODE_ERROR) {
-			printf(ERROR "error node detected\n" RESET);
 			freeASTNode(node);
 			freeCompiler(&compiler);
 			freeParser(&parser);
@@ -110,6 +112,7 @@ void runBinary(unsigned char* tb, size_t size) {
 	//inject the libs
 	injectNativeHook(&interpreter, "standard", hookStandard);
 	injectNativeHook(&interpreter, "timer", hookTimer);
+	injectNativeHook(&interpreter, "runner", hookRunner);
 
 	runInterpreter(&interpreter, tb, size);
 	freeInterpreter(&interpreter);

@@ -11,8 +11,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../repl/repl_tools.h"
+
 #include "../repl/lib_standard.h"
 #include "../repl/lib_timer.h"
+#include "../repl/lib_runner.h"
 
 //supress the print output
 static void noPrintFn(const char* output) {
@@ -30,78 +33,6 @@ static void assertWrapper(const char* output) {
 static void errorWrapper(const char* output) {
 	failedAsserts++;
 	fprintf(stderr, ERROR "%s" RESET, output);
-}
-
-//compilation functions
-char* readFile(char* path, size_t* fileSize) {
-	FILE* file = fopen(path, "rb");
-
-	if (file == NULL) {
-		fprintf(stderr, ERROR "Could not open file \"%s\"\n" RESET, path);
-		exit(-1);
-	}
-
-	fseek(file, 0L, SEEK_END);
-	*fileSize = ftell(file);
-	rewind(file);
-
-	char* buffer = (char*)malloc(*fileSize + 1);
-
-	if (buffer == NULL) {
-		fprintf(stderr, ERROR "Not enough memory to read \"%s\"\n" RESET, path);
-		exit(-1);
-	}
-
-	size_t bytesRead = fread(buffer, sizeof(char), *fileSize, file);
-
-	buffer[*fileSize] = '\0'; //NOTE: fread doesn't append this
-
-	if (bytesRead < *fileSize) {
-		fprintf(stderr, ERROR "Could not read file \"%s\"\n" RESET, path);
-		exit(-1);
-	}
-
-	fclose(file);
-
-	return buffer;
-}
-
-unsigned char* compileString(char* source, size_t* size) {
-	Lexer lexer;
-	Parser parser;
-	Compiler compiler;
-
-	initLexer(&lexer, source);
-	initParser(&parser, &lexer);
-	initCompiler(&compiler);
-
-	//run the parser until the end of the source
-	ASTNode* node = scanParser(&parser);
-	while(node != NULL) {
-		//pack up and leave
-		if (node->type == AST_NODE_ERROR) {
-			printf(ERROR "error node detected\n" RESET);
-			freeASTNode(node);
-			freeCompiler(&compiler);
-			freeParser(&parser);
-			return NULL;
-		}
-
-		writeCompiler(&compiler, node);
-		freeASTNode(node);
-		node = scanParser(&parser);
-	}
-
-	//get the bytecode dump
-	unsigned char* tb = collateCompiler(&compiler, (int*)(size));
-
-	//cleanup
-	freeCompiler(&compiler);
-	freeParser(&parser);
-	//no lexer to clean up
-
-	//finally
-	return tb;
 }
 
 void runBinaryWithLibrary(unsigned char* tb, size_t size, char* library, HookFn hook) {
@@ -127,12 +58,24 @@ typedef struct Payload {
 } Payload;
 
 int main() {
+	//setup the runner filesystem (hacky)
+	initDriveDictionary();
+
+	Literal driveLiteral = TO_STRING_LITERAL(createRefString("scripts"));
+	Literal pathLiteral = TO_STRING_LITERAL(createRefString("scripts"));
+
+	setLiteralDictionary(getDriveDictionary(), driveLiteral, pathLiteral);
+
+	freeLiteral(driveLiteral);
+	freeLiteral(pathLiteral);
+
 	{
 		//run each file in test/scripts
 		Payload payloads[] = {
 			{"interactions.toy", "standard", hookStandard}, //interactions needs standard
 			{"standard.toy", "standard", hookStandard},
 			{"timer.toy", "timer", hookTimer},
+			{"runner.toy", "runner", hookRunner},
 			{NULL, NULL, NULL}
 		};
 
@@ -145,16 +88,27 @@ int main() {
 			//compile the source
 			size_t size = 0;
 			char* source = readFile(fname, &size);
+			if (!source) {
+				printf(ERROR "Failed to load file: %s\n" RESET, fname);
+				failedAsserts++;
+				continue;
+			}
+
 			unsigned char* tb = compileString(source, &size);
 			free((void*)source);
 
 			if (!tb) {
-				printf(ERROR "Failed to compile file: %s" RESET, fname);
+				printf(ERROR "Failed to compile file: %s\n" RESET, fname);
+				failedAsserts++;
+				continue;
 			}
 
 			runBinaryWithLibrary(tb, size, payloads[i].libname, payloads[i].hook);
 		}
 	}
+
+	//lib cleanup
+	freeDriveDictionary();
 
 	if (!failedAsserts) {
 		printf(NOTICE "All good\n" RESET);

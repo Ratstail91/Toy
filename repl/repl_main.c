@@ -1,6 +1,7 @@
 #include "repl_tools.h"
 #include "lib_standard.h"
 #include "lib_timer.h"
+#include "lib_runner.h"
 
 #include "console_colors.h"
 
@@ -27,6 +28,7 @@ void repl() {
 	//inject the libs
 	injectNativeHook(&interpreter, "standard", hookStandard);
 	injectNativeHook(&interpreter, "timer", hookTimer);
+	injectNativeHook(&interpreter, "runner", hookRunner);
 
 	for(;;) {
 		printf("> ");
@@ -88,6 +90,17 @@ void repl() {
 int main(int argc, const char* argv[]) {
 	initCommand(argc, argv);
 
+	//lib setup (hacky - only really for this program)
+	initDriveDictionary();
+
+	Literal driveLiteral = TO_STRING_LITERAL(createRefString("scripts"));
+	Literal pathLiteral = TO_STRING_LITERAL(createRefString("scripts"));
+
+	setLiteralDictionary(getDriveDictionary(), driveLiteral, pathLiteral);
+
+	freeLiteral(driveLiteral);
+	freeLiteral(pathLiteral);
+
 	//command specific actions
 	if (command.error) {
 		usageCommand(argc, argv);
@@ -112,12 +125,20 @@ int main(int argc, const char* argv[]) {
 	//run source file
 	if (command.sourcefile) {
 		runSourceFile(command.sourcefile);
+
+		//lib cleanup
+		freeDriveDictionary();
+
 		return 0;
 	}
 
 	//run from stdin
 	if (command.source) {
 		runSource(command.source);
+
+		//lib cleanup
+		freeDriveDictionary();
+
 		return 0;
 	}
 
@@ -136,10 +157,17 @@ int main(int argc, const char* argv[]) {
 	//run binary
 	if (command.binaryfile) {
 		runBinaryFile(command.binaryfile);
+
+		//lib cleanup
+		freeDriveDictionary();
+
 		return 0;
 	}
 
 	repl();
+
+	//lib cleanup
+	freeDriveDictionary();
 
 	return 0;
 }

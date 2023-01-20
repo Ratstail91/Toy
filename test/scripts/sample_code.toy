@@ -1,9 +1,0 @@
-
-
-
-var complex: type = astype [string: [int]];
-var deep: type = astype [[[ int ]]];
-
-
-
-

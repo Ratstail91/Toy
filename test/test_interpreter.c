@@ -7,6 +7,8 @@
 
 #include "memory.h"
 
+#include "../repl/repl_tools.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,79 +30,7 @@ static void noAssertFn(const char* output) {
 	}
 }
 
-//compilation functions
-char* readFile(char* path, size_t* fileSize) {
-	FILE* file = fopen(path, "rb");
-
-	if (file == NULL) {
-		fprintf(stderr, ERROR "Could not open file \"%s\"\n" RESET, path);
-		exit(-1);
-	}
-
-	fseek(file, 0L, SEEK_END);
-	*fileSize = ftell(file);
-	rewind(file);
-
-	char* buffer = (char*)malloc(*fileSize + 1);
-
-	if (buffer == NULL) {
-		fprintf(stderr, ERROR "Not enough memory to read \"%s\"\n" RESET, path);
-		exit(-1);
-	}
-
-	size_t bytesRead = fread(buffer, sizeof(char), *fileSize, file);
-
-	buffer[*fileSize] = '\0'; //NOTE: fread doesn't append this
-
-	if (bytesRead < *fileSize) {
-		fprintf(stderr, ERROR "Could not read file \"%s\"\n" RESET, path);
-		exit(-1);
-	}
-
-	fclose(file);
-
-	return buffer;
-}
-
-unsigned char* compileString(char* source, size_t* size) {
-	Lexer lexer;
-	Parser parser;
-	Compiler compiler;
-
-	initLexer(&lexer, source);
-	initParser(&parser, &lexer);
-	initCompiler(&compiler);
-
-	//run the parser until the end of the source
-	ASTNode* node = scanParser(&parser);
-	while(node != NULL) {
-		//pack up and leave
-		if (node->type == AST_NODE_ERROR) {
-			printf(ERROR "error node detected\n" RESET);
-			freeASTNode(node);
-			freeCompiler(&compiler);
-			freeParser(&parser);
-			return NULL;
-		}
-
-		writeCompiler(&compiler, node);
-		freeASTNode(node);
-		node = scanParser(&parser);
-	}
-
-	//get the bytecode dump
-	unsigned char* tb = collateCompiler(&compiler, (int*)(size));
-
-	//cleanup
-	freeCompiler(&compiler);
-	freeParser(&parser);
-	//no lexer to clean up
-
-	//finally
-	return tb;
-}
-
-void runBinary(unsigned char* tb, size_t size) {
+void runBinaryCustom(unsigned char* tb, size_t size) {
 	Interpreter interpreter;
 	initInterpreter(&interpreter);
 
@@ -112,19 +42,19 @@ void runBinary(unsigned char* tb, size_t size) {
 	freeInterpreter(&interpreter);
 }
 
-void runSource(char* source) {
+void runSourceCustom(char* source) {
 	size_t size = 0;
 	unsigned char* tb = compileString(source, &size);
 	if (!tb) {
 		return;
 	}
-	runBinary(tb, size);
+	runBinaryCustom(tb, size);
 }
 
-void runSourceFile(char* fname) {
+void runSourceFileCustom(char* fname) {
 	size_t size = 0; //not used
 	char* source = readFile(fname, &size);
-	runSource(source);
+	runSourceCustom(source);
 	free((void*)source);
 }
 
@@ -208,7 +138,7 @@ int main() {
 			char buffer[128];
 			snprintf(buffer, 128, "scripts/%s", filenames[i]);
 
-			runSourceFile(buffer);
+			runSourceFileCustom(buffer);
 		}
 	}
 
