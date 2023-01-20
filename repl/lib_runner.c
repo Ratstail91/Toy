@@ -116,7 +116,7 @@ static int nativeRunScript(Interpreter* interpreter, LiteralArray* arguments) {
 
 	//
 
-	return 1;
+	return -1;
 }
 
 static int nativeGetScriptVar(Interpreter* interpreter, LiteralArray* arguments) {
@@ -128,7 +128,7 @@ static int nativeGetScriptVar(Interpreter* interpreter, LiteralArray* arguments)
 
 	//
 
-	return 1;
+	return -1;
 }
 
 static int nativeCallScriptFn(Interpreter* interpreter, LiteralArray* arguments) {
@@ -140,7 +140,7 @@ static int nativeCallScriptFn(Interpreter* interpreter, LiteralArray* arguments)
 
 	//
 
-	return 1;
+	return -1;
 }
 
 static int nativeResetScript(Interpreter* interpreter, LiteralArray* arguments) {
@@ -152,7 +152,7 @@ static int nativeResetScript(Interpreter* interpreter, LiteralArray* arguments) 
 
 	//
 
-	return 0;
+	return -1;
 }
 
 static int nativeFreeScript(Interpreter* interpreter, LiteralArray* arguments) {
@@ -199,10 +199,10 @@ int hookRunner(Interpreter* interpreter, Literal identifier, Literal alias) {
 	//build the natives list
 	Natives natives[] = {
 		{"loadScript", nativeLoadScript},
-		{"_runScript", nativeRunScript},
-		{"_getScriptVar", nativeGetScriptVar},
-		{"_callScriptFn", nativeCallScriptFn},
-		{"_resetScript", nativeResetScript},
+		{"x_runScript", nativeRunScript},
+		{"x_getScriptVar", nativeGetScriptVar},
+		{"x_callScriptFn", nativeCallScriptFn},
+		{"x_resetScript", nativeResetScript},
 		{"_freeScript", nativeFreeScript},
 		{NULL, NULL}
 	};
