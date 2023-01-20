@@ -103,11 +103,12 @@ static int nativeLoadScript(Interpreter* interpreter, LiteralArray* arguments) {
 
 	//build the runner object
 	Runner* runner = ALLOCATE(Runner, 1);
-	initInterpreter(&runner->interpreter);
 	setInterpreterPrint(&runner->interpreter, interpreter->printOutput);
 	setInterpreterAssert(&runner->interpreter, interpreter->assertOutput);
 	setInterpreterError(&runner->interpreter, interpreter->errorOutput);
 	runner->interpreter.hooks = interpreter->hooks;
+	runner->interpreter.scope = NULL;
+	resetInterpreter(&runner->interpreter);
 	runner->bytecode = bytecode;
 	runner->size = fileSize;
 	runner->dirty = false;
