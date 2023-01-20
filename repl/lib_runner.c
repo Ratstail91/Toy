@@ -45,7 +45,7 @@ static int nativeLoadScript(Interpreter* interpreter, LiteralArray* arguments) {
 	RefString* path = createRefStringLength( &toCString(drivePath)[driveLength + 1], lengthRefString(drivePath) - driveLength );
 
 	//get the real drive file path
-	Literal driveLiteral = TO_STRING_LITERAL(drive);
+	Literal driveLiteral = TO_STRING_LITERAL(drive); //NOTE: driveLiteral takes ownership of the refString
 	Literal realDriveLiteral = getLiteralDictionary(getDriveDictionary(), driveLiteral);
 
 	if (!IS_STRING(realDriveLiteral)) {
@@ -54,7 +54,6 @@ static int nativeLoadScript(Interpreter* interpreter, LiteralArray* arguments) {
 		interpreter->errorOutput("\n");
 		freeLiteral(realDriveLiteral);
 		freeLiteral(driveLiteral);
-		deleteRefString(drive);
 		deleteRefString(path);
 		deleteRefString(drivePath);
 		freeLiteral(drivePathLiteral);
@@ -65,15 +64,13 @@ static int nativeLoadScript(Interpreter* interpreter, LiteralArray* arguments) {
 	RefString* realDrive = copyRefString(AS_STRING(realDriveLiteral));
 	int realLength = lengthRefString(realDrive) + lengthRefString(path);
 
-	char* filePath = ALLOCATE(char, realLength) +1 + 1; //+1 for null
+	char* filePath = ALLOCATE(char, realLength + 1); //+1 for null
 	snprintf(filePath, realLength, "%s%s", toCString(realDrive), toCString(path));
 
 	//clean up the drivepath stuff
-	FREE_ARRAY(char, filePath, realLength);
 	deleteRefString(realDrive);
 	freeLiteral(realDriveLiteral);
 	freeLiteral(driveLiteral);
-	deleteRefString(drive);
 	deleteRefString(path);
 	deleteRefString(drivePath);
 	freeLiteral(drivePathLiteral);
@@ -104,6 +101,8 @@ static int nativeLoadScript(Interpreter* interpreter, LiteralArray* arguments) {
 	//build the opaque object, and push it to the stack
 	Literal runnerLiteral = TO_OPAQUE_LITERAL(runner, OPAQUE_TAG_RUNNER);
 	pushLiteralArray(&interpreter->stack, runnerLiteral);
+
+	FREE_ARRAY(char, filePath, realLength);
 
 	return 1;
 }
