@@ -95,6 +95,7 @@ int main() {
 	{
 		//run each file in tests/scripts/
 		char* filenames[] = {
+			"access-parent-directory.toy",
 			"declare-types-array.toy",
 			"declare-types-dictionary-key.toy",
 			"declare-types-dictionary-value.toy",

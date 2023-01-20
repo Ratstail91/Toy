@@ -7,10 +7,66 @@ import runner;
 	s.freeScript();
 }
 
-//TODO: test running an external script
-//TODO: test resetting an external script
-//TODO: test retrieving a script variable
-//TODO: test calling a script function
+//test running an external script
+{
+	var s = loadScript("scripts:/runner_sample_code.toy");
+
+	s.runScript();
+
+	s.freeScript();
+}
+
+//test resetting an external script
+{
+	var s = loadScript("scripts:/runner_sample_code.toy");
+
+	s.runScript();
+	s.resetScript();
+
+	assert !s.checkScriptDirty(), "checkScriptDirty failed";
+
+	s.runScript();
+
+	assert s.checkScriptDirty(), "_checkScriptDirty() failed";
+
+	s.resetScript();
+	s.runScript();
+
+	s.freeScript();
+}
+
+//test running a nested external script
+{
+	var s = loadScript("scripts:/lib/runner/sample_1.toy");
+
+	s.runScript();
+
+	s.freeScript();
+}
+
+//test retrieving a script variable
+{
+	var s = loadScript("scripts:/runner_sample_code.toy");
+
+	s.runScript();
+
+	var fib = s.getScriptVar("fib");
+
+	assert fib(12) == 144, "_getScriptVar() failed";
+
+	s.freeScript();
+}
+
+//test calling a script function
+{
+	var s = loadScript("scripts:/runner_sample_code.toy");
+
+	s.runScript();
+
+	assert s.callScriptFn("fib", 12) == 144, "_callScriptFn() failed";
+
+	s.freeScript();
+}
 
 
 print "All good";

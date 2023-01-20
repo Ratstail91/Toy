@@ -13,7 +13,7 @@ typedef struct Runner {
 	unsigned char* bytecode;
 	size_t size;
 
-	//
+	bool dirty;
 } Runner;
 
 //Toy native functions
@@ -75,6 +75,15 @@ static int nativeLoadScript(Interpreter* interpreter, LiteralArray* arguments) {
 	deleteRefString(drivePath);
 	freeLiteral(drivePathLiteral);
 
+	//check for break-out attempts
+	for (int i = 0; i < realLength - 1; i++) {
+		if (filePath[i] == '.' && filePath[i + 1] == '.') {
+			interpreter->errorOutput("Parent directory access not allowed\n");
+			FREE_ARRAY(char, filePath, realLength);
+			return -1;
+		}
+	}
+
 	//load and compile the bytecode
 	size_t fileSize = 0;
 	char* source = readFile(filePath, &fileSize);
@@ -95,8 +104,13 @@ static int nativeLoadScript(Interpreter* interpreter, LiteralArray* arguments) {
 	//build the runner object
 	Runner* runner = ALLOCATE(Runner, 1);
 	initInterpreter(&runner->interpreter);
+	setInterpreterPrint(&runner->interpreter, interpreter->printOutput);
+	setInterpreterAssert(&runner->interpreter, interpreter->assertOutput);
+	setInterpreterError(&runner->interpreter, interpreter->errorOutput);
+	runner->interpreter.hooks = interpreter->hooks;
 	runner->bytecode = bytecode;
 	runner->size = fileSize;
+	runner->dirty = false;
 
 	//build the opaque object, and push it to the stack
 	Literal runnerLiteral = TO_OPAQUE_LITERAL(runner, OPAQUE_TAG_RUNNER);
@@ -109,50 +123,232 @@ static int nativeLoadScript(Interpreter* interpreter, LiteralArray* arguments) {
 
 static int nativeRunScript(Interpreter* interpreter, LiteralArray* arguments) {
 	//no arguments
-	if (arguments->count != 0) {
+	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments to _runScript\n");
 		return -1;
 	}
 
-	//
+	//get the runner object
+	Literal runnerLiteral = popLiteralArray(arguments);
+	Literal idn = runnerLiteral;
 
-	return -1;
+	if (parseIdentifierToValue(interpreter, &runnerLiteral)) {
+		freeLiteral(idn);
+	}
+
+	if (OPAQUE_TAG(runnerLiteral) != OPAQUE_TAG_RUNNER) {
+		interpreter->errorOutput("Unrecognized opaque literal in _runScript\n");
+		return -1;
+	}
+
+	Runner* runner = AS_OPAQUE(runnerLiteral);
+
+	//run
+	if (runner->dirty) {
+		interpreter->errorOutput("Can't re-run a dirty script (try resetting it first)\n");
+		freeLiteral(runnerLiteral);
+		return -1;
+	}
+
+	unsigned char* bytecodeCopy = ALLOCATE(unsigned char, runner->size);
+	memcpy(bytecodeCopy, runner->bytecode, runner->size); //need a COPY of the bytecode, because the interpreter eats it
+
+	runInterpreter(&runner->interpreter, bytecodeCopy, runner->size);
+	runner->dirty = true;
+
+	//cleanup
+	freeLiteral(runnerLiteral);
+
+	return 0;
 }
 
 static int nativeGetScriptVar(Interpreter* interpreter, LiteralArray* arguments) {
 	//no arguments
-	if (arguments->count != 0) {
+	if (arguments->count != 2) {
 		interpreter->errorOutput("Incorrect number of arguments to _getScriptVar\n");
 		return -1;
 	}
 
-	//
+	//get the runner object
+	Literal varName = popLiteralArray(arguments);
+	Literal runnerLiteral = popLiteralArray(arguments);
 
-	return -1;
+	if (IS_IDENTIFIER(varName)) {
+		Literal idn = varName;
+		parseIdentifierToValue(interpreter, &varName);
+		freeLiteral(idn);
+	}
+
+	if (IS_IDENTIFIER(runnerLiteral)) {
+		Literal idn = runnerLiteral;
+		parseIdentifierToValue(interpreter, &runnerLiteral);
+		freeLiteral(idn);
+	}
+
+	if (OPAQUE_TAG(runnerLiteral) != OPAQUE_TAG_RUNNER) {
+		interpreter->errorOutput("Unrecognized opaque literal in _runScript\n");
+		return -1;
+	}
+
+	Runner* runner = AS_OPAQUE(runnerLiteral);
+
+	//dirty check
+	if (!runner->dirty) {
+		interpreter->errorOutput("Can't access variable from a non-dirty script (try running it first)\n");
+		freeLiteral(runnerLiteral);
+		return -1;
+	}
+
+	//get the desired variable
+	Literal varIdn = TO_IDENTIFIER_LITERAL(copyRefString(AS_STRING(varName)));
+	Literal result = TO_NULL_LITERAL;
+	getScopeVariable(runner->interpreter.scope, varIdn, &result);
+
+	pushLiteralArray(&interpreter->stack, result);
+
+	//cleanup
+	freeLiteral(result);
+	freeLiteral(varIdn);
+	freeLiteral(varName);
+	freeLiteral(runnerLiteral);
+
+	return 1;
 }
 
 static int nativeCallScriptFn(Interpreter* interpreter, LiteralArray* arguments) {
 	//no arguments
-	if (arguments->count != 0) {
+	if (arguments->count < 2) {
 		interpreter->errorOutput("Incorrect number of arguments to _callScriptFn\n");
 		return -1;
 	}
 
-	//
+	//get the rest args
+	LiteralArray tmp;
+	initLiteralArray(&tmp);
 
-	return -1;
+	while (arguments->count > 2) {
+		Literal lit = popLiteralArray(arguments);
+		pushLiteralArray(&tmp, lit);
+		freeLiteral(lit);
+	}
+
+	LiteralArray rest;
+	initLiteralArray(&rest);
+
+	while (tmp.count) { //correct the order of the rest args
+		Literal lit = popLiteralArray(&tmp);
+		pushLiteralArray(&rest, lit);
+		freeLiteral(lit);
+	}
+
+	freeLiteralArray(&tmp);
+
+
+	//get the runner object
+	Literal varName = popLiteralArray(arguments);
+	Literal runnerLiteral = popLiteralArray(arguments);
+
+	if (IS_IDENTIFIER(varName)) {
+		Literal idn = varName;
+		parseIdentifierToValue(interpreter, &varName);
+		freeLiteral(idn);
+	}
+
+	if (IS_IDENTIFIER(runnerLiteral)) {
+		Literal idn = runnerLiteral;
+		parseIdentifierToValue(interpreter, &runnerLiteral);
+		freeLiteral(idn);
+	}
+
+	if (OPAQUE_TAG(runnerLiteral) != OPAQUE_TAG_RUNNER) {
+		interpreter->errorOutput("Unrecognized opaque literal in _runScript\n");
+		return -1;
+	}
+
+	Runner* runner = AS_OPAQUE(runnerLiteral);
+
+	//dirty check
+	if (!runner->dirty) {
+		interpreter->errorOutput("Can't access fn from a non-dirty script (try running it first)\n");
+		freeLiteral(runnerLiteral);
+		freeLiteralArray(&rest);
+		return -1;
+	}
+
+	//get the desired variable
+	Literal varIdn = TO_IDENTIFIER_LITERAL(copyRefString(AS_STRING(varName)));
+	Literal fn = TO_NULL_LITERAL;
+	getScopeVariable(runner->interpreter.scope, varIdn, &fn);
+
+	if (!IS_FUNCTION(fn)) {
+		interpreter->errorOutput("Can't run a non-function literal\n");
+		freeLiteral(fn);
+		freeLiteral(varIdn);
+		freeLiteral(varName);
+		freeLiteral(runnerLiteral);
+		freeLiteralArray(&rest);
+	}
+
+	//call
+	LiteralArray resultArray;
+	initLiteralArray(&resultArray);
+
+	callLiteralFn(interpreter, fn, &rest, &resultArray);
+
+	Literal result = TO_NULL_LITERAL;
+	if (resultArray.count > 0) {
+		result = popLiteralArray(&resultArray);
+	}
+
+	pushLiteralArray(&interpreter->stack, result);
+
+	//cleanup
+	freeLiteralArray(&resultArray);
+	freeLiteral(result);
+	freeLiteral(fn);
+	freeLiteral(varIdn);
+	freeLiteral(varName);
+	freeLiteral(runnerLiteral);
+	freeLiteralArray(&rest);
+
+	return 1;
 }
 
 static int nativeResetScript(Interpreter* interpreter, LiteralArray* arguments) {
 	//no arguments
-	if (arguments->count != 0) {
+	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments to _resetScript\n");
 		return -1;
 	}
 
-	//
+	//get the runner object
+	Literal runnerLiteral = popLiteralArray(arguments);
 
-	return -1;
+	if (IS_IDENTIFIER(runnerLiteral)) {
+		Literal idn = runnerLiteral;
+		parseIdentifierToValue(interpreter, &runnerLiteral);
+		freeLiteral(idn);
+	}
+
+	if (OPAQUE_TAG(runnerLiteral) != OPAQUE_TAG_RUNNER) {
+		interpreter->errorOutput("Unrecognized opaque literal in _runScript\n");
+		return -1;
+	}
+
+	Runner* runner = AS_OPAQUE(runnerLiteral);
+
+	//reset
+	if (!runner->dirty) {
+		interpreter->errorOutput("Can't reset a non-dirty script (try running it first)\n");
+		freeLiteral(runnerLiteral);
+		return -1;
+	}
+
+	resetInterpreter(&runner->interpreter);
+	runner->dirty = false;
+	freeLiteral(runnerLiteral);
+
+	return 0;
 }
 
 static int nativeFreeScript(Interpreter* interpreter, LiteralArray* arguments) {
@@ -179,11 +375,47 @@ static int nativeFreeScript(Interpreter* interpreter, LiteralArray* arguments) {
 	Runner* runner = AS_OPAQUE(runnerLiteral);
 
 	//clear out the runner object
+	runner->interpreter.hooks = NULL;
 	freeInterpreter(&runner->interpreter);
 	FREE_ARRAY(unsigned char, runner->bytecode, runner->size);
 
 	FREE(Runner, runner);
 
+	freeLiteral(runnerLiteral);
+
+	return 0;
+}
+
+static int nativeCheckScriptDirty(Interpreter* interpreter, LiteralArray* arguments) {
+	//no arguments
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to _runScript\n");
+		return -1;
+	}
+
+	//get the runner object
+	Literal runnerLiteral = popLiteralArray(arguments);
+
+	if (IS_IDENTIFIER(runnerLiteral)) {
+		Literal idn = runnerLiteral;
+		parseIdentifierToValue(interpreter, &runnerLiteral);
+		freeLiteral(idn);
+	}
+
+	if (OPAQUE_TAG(runnerLiteral) != OPAQUE_TAG_RUNNER) {
+		interpreter->errorOutput("Unrecognized opaque literal in _runScript\n");
+		return -1;
+	}
+
+	Runner* runner = AS_OPAQUE(runnerLiteral);
+
+	//run
+	Literal result = TO_BOOLEAN_LITERAL(runner->dirty);
+
+	pushLiteralArray(&interpreter->stack, result);
+
+	//cleanup
+	freeLiteral(result);
 	freeLiteral(runnerLiteral);
 
 	return 0;
@@ -199,11 +431,12 @@ int hookRunner(Interpreter* interpreter, Literal identifier, Literal alias) {
 	//build the natives list
 	Natives natives[] = {
 		{"loadScript", nativeLoadScript},
-		{"x_runScript", nativeRunScript},
-		{"x_getScriptVar", nativeGetScriptVar},
-		{"x_callScriptFn", nativeCallScriptFn},
-		{"x_resetScript", nativeResetScript},
+		{"_runScript", nativeRunScript},
+		{"_getScriptVar", nativeGetScriptVar},
+		{"_callScriptFn", nativeCallScriptFn},
+		{"_resetScript", nativeResetScript},
 		{"_freeScript", nativeFreeScript},
+		{"_checkScriptDirty", nativeCheckScriptDirty},
 		{NULL, NULL}
 	};
 

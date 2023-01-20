@@ -1,0 +1,8 @@
+import runner;
+
+var s = loadScript("scripts:/lib/../runner_sample_code.toy");
+
+s.runScript();
+
+s.freeScript();
+

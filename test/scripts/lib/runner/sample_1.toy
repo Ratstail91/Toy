@@ -1,0 +1,9 @@
+import runner;
+
+//delegate to the other sample script
+var s = loadScript("scripts:/lib/runner/sample_2.toy");
+
+s.runScript();
+
+s.freeScript();
+

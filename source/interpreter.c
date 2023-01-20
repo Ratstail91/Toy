@@ -2438,7 +2438,10 @@ void freeInterpreter(Interpreter* interpreter) {
 		interpreter->scope = popScope(interpreter->scope);
 	}
 
-	freeLiteralDictionary(interpreter->hooks);
-	FREE(LiteralDictionary, interpreter->hooks);
+	if (interpreter->hooks) {
+		freeLiteralDictionary(interpreter->hooks);
+		FREE(LiteralDictionary, interpreter->hooks);
+	}
+
 	interpreter->hooks = NULL;
 }
