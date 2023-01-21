@@ -23,6 +23,15 @@ import runner;
 	s.freeScript();
 }
 
+//test running an external binary file
+{
+	var s = loadScriptBytecode("scripts:/lib/runner/sample_bytecode.tb");
+
+	s.runScript();
+
+	s.freeScript();
+}
+
 //test resetting an external script
 {
 	var s = loadScript("scripts:/runner_sample_code.toy");

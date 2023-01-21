@@ -2370,8 +2370,10 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 	const unsigned char minor = readByte(interpreter->bytecode, &interpreter->count);
 	const unsigned char patch = readByte(interpreter->bytecode, &interpreter->count);
 
-	if (major != TOY_VERSION_MAJOR || minor != TOY_VERSION_MINOR || patch != TOY_VERSION_PATCH) {
-		interpreter->errorOutput("Interpreter/bytecode version mismatch\n");
+	if (major != TOY_VERSION_MAJOR || minor > TOY_VERSION_MINOR) {
+		char buffer[MAX_STRING_LENGTH];
+		snprintf(buffer, MAX_STRING_LENGTH, "Interpreter/bytecode version mismatch (expected %d.%d.%d or earlier, given %d.%d.%d)\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, major, minor, patch);
+		interpreter->errorOutput(buffer);
 		return;
 	}
 
