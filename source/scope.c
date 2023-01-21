@@ -239,6 +239,10 @@ bool declareScopeVariable(Scope* scope, Literal key, Literal type) {
 		return false;
 	}
 
+	if (!IS_TYPE(type)) {
+		return false;
+	}
+
 	//store the type, for later checking on assignment
 	setLiteralDictionary(&scope->types, key, type);
 

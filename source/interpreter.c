@@ -527,6 +527,14 @@ static Literal parseTypeToValue(Interpreter* interpreter, Literal type) {
 		}
 	}
 
+	//BUGFIX: make sure it actually is a type
+	if (!IS_TYPE(type)) {
+		interpreter->errorOutput("Bad type encountered: ");
+		printLiteralCustom(type, interpreter->errorOutput);
+		interpreter->errorOutput("\n");
+		//TODO: would be better to return an int here...
+	}
+
 	return type;
 }
 
