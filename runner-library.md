@@ -10,18 +10,18 @@ When using this library, you must first initialize the "drives" that are availab
 //it's a good idea to place this early in the program's execution, where it will only be run once
 int main(int argc, const char* argv[]) {
     //the drive system uses a LiteralDictionary, which must be initialized with this
-	initDriveDictionary();
+    initDriveDictionary();
 
     //create a pair of literals, the first for the drive name, the second for the path
-	Literal driveLiteral = TO_STRING_LITERAL(createRefString("scripts"));
-	Literal pathLiteral = TO_STRING_LITERAL(createRefString("C:/path/to/scripts"));
+    Literal driveLiteral = TO_STRING_LITERAL(createRefString("scripts"));
+    Literal pathLiteral = TO_STRING_LITERAL(createRefString("C:/path/to/scripts"));
 
     //set these within the drive dictionary
-	setLiteralDictionary(getDriveDictionary(), driveLiteral, pathLiteral);
+    setLiteralDictionary(getDriveDictionary(), driveLiteral, pathLiteral);
 
     //these literals are no longer needed
-	freeLiteral(driveLiteral);
-	freeLiteral(pathLiteral);
+    freeLiteral(driveLiteral);
+    freeLiteral(pathLiteral);
 
     //run the rest of your program
     repl();
