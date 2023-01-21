@@ -75,6 +75,13 @@ static int nativeLoadScript(Interpreter* interpreter, LiteralArray* arguments) {
 	deleteRefString(drivePath);
 	freeLiteral(drivePathLiteral);
 
+	//check for file extensions
+	if (!(filePath[realLength - 5] == '.' && filePath[realLength - 4] == 't' && filePath[realLength - 3] == 'o' && filePath[realLength - 2] == 'y')) {
+		interpreter->errorOutput("Bad script file extension (expected .toy)\n");
+		FREE_ARRAY(char, filePath, realLength);
+		return -1;
+	}
+
 	//check for break-out attempts
 	for (int i = 0; i < realLength - 1; i++) {
 		if (filePath[i] == '.' && filePath[i + 1] == '.') {
@@ -98,6 +105,110 @@ static int nativeLoadScript(Interpreter* interpreter, LiteralArray* arguments) {
 
 	if (!bytecode) {
 		interpreter->errorOutput("Failed to compile source file\n");
+		return -1;
+	}
+
+	//build the runner object
+	Runner* runner = ALLOCATE(Runner, 1);
+	setInterpreterPrint(&runner->interpreter, interpreter->printOutput);
+	setInterpreterAssert(&runner->interpreter, interpreter->assertOutput);
+	setInterpreterError(&runner->interpreter, interpreter->errorOutput);
+	runner->interpreter.hooks = interpreter->hooks;
+	runner->interpreter.scope = NULL;
+	resetInterpreter(&runner->interpreter);
+	runner->bytecode = bytecode;
+	runner->size = fileSize;
+	runner->dirty = false;
+
+	//build the opaque object, and push it to the stack
+	Literal runnerLiteral = TO_OPAQUE_LITERAL(runner, OPAQUE_TAG_RUNNER);
+	pushLiteralArray(&interpreter->stack, runnerLiteral);
+
+	FREE_ARRAY(char, filePath, realLength);
+
+	return 1;
+}
+
+static int nativeLoadScriptBytecode(Interpreter* interpreter, LiteralArray* arguments) {
+	//arguments
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to loadScriptBytecode\n");
+		return -1;
+	}
+
+	//get the argument
+	Literal drivePathLiteral = popLiteralArray(arguments);
+	RefString* drivePath = copyRefString(AS_STRING(drivePathLiteral));
+
+	//get the drive and path as a string (can't trust that pesky strtok - custom split) TODO: move this to refstring library
+	int driveLength = 0;
+	while (toCString(drivePath)[driveLength] != ':') {
+		if (driveLength >= lengthRefString(drivePath)) {
+			interpreter->errorOutput("Incorrect drive path format given to loadScriptBytecode\n");
+			deleteRefString(drivePath);
+			freeLiteral(drivePathLiteral);
+			return -1;
+		}
+
+		driveLength++;
+	}
+
+	RefString* drive = createRefStringLength(toCString(drivePath), driveLength);
+	RefString* path = createRefStringLength( &toCString(drivePath)[driveLength + 1], lengthRefString(drivePath) - driveLength );
+
+	//get the real drive file path
+	Literal driveLiteral = TO_STRING_LITERAL(drive); //NOTE: driveLiteral takes ownership of the refString
+	Literal realDriveLiteral = getLiteralDictionary(getDriveDictionary(), driveLiteral);
+
+	if (!IS_STRING(realDriveLiteral)) {
+		interpreter->errorOutput("Incorrect literal type found for drive: ");
+		printLiteralCustom(realDriveLiteral, interpreter->errorOutput);
+		interpreter->errorOutput("\n");
+		freeLiteral(realDriveLiteral);
+		freeLiteral(driveLiteral);
+		deleteRefString(path);
+		deleteRefString(drivePath);
+		freeLiteral(drivePathLiteral);
+		return -1;
+	}
+
+	//get the final real file path (concat) TODO: move this concat to refstring library
+	RefString* realDrive = copyRefString(AS_STRING(realDriveLiteral));
+	int realLength = lengthRefString(realDrive) + lengthRefString(path);
+
+	char* filePath = ALLOCATE(char, realLength + 1); //+1 for null
+	snprintf(filePath, realLength, "%s%s", toCString(realDrive), toCString(path));
+
+	//clean up the drivepath stuff
+	deleteRefString(realDrive);
+	freeLiteral(realDriveLiteral);
+	freeLiteral(driveLiteral);
+	deleteRefString(path);
+	deleteRefString(drivePath);
+	freeLiteral(drivePathLiteral);
+
+	//check for file extensions
+	if (!(filePath[realLength - 4] == '.' && filePath[realLength - 3] == 't' && filePath[realLength - 2] == 'b')) {
+		interpreter->errorOutput("Bad binary file extension (expected .tb)\n");
+		FREE_ARRAY(char, filePath, realLength);
+		return -1;
+	}
+
+	//check for break-out attempts
+	for (int i = 0; i < realLength - 1; i++) {
+		if (filePath[i] == '.' && filePath[i + 1] == '.') {
+			interpreter->errorOutput("Parent directory access not allowed\n");
+			FREE_ARRAY(char, filePath, realLength);
+			return -1;
+		}
+	}
+
+	//load the bytecode
+	size_t fileSize = 0;
+	unsigned char* bytecode = (unsigned char*)readFile(filePath, &fileSize);
+
+	if (!bytecode) {
+		interpreter->errorOutput("Failed to load bytecode file\n");
 		return -1;
 	}
 
@@ -432,6 +543,7 @@ int hookRunner(Interpreter* interpreter, Literal identifier, Literal alias) {
 	//build the natives list
 	Natives natives[] = {
 		{"loadScript", nativeLoadScript},
+		{"loadScriptBytecode", nativeLoadScriptBytecode},
 		{"_runScript", nativeRunScript},
 		{"_getScriptVar", nativeGetScriptVar},
 		{"_callScriptFn", nativeCallScriptFn},

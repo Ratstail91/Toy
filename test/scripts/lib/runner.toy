@@ -1,8 +1,15 @@
 import runner;
 
-//test basic loading and freeing of code
+//test basic loading and freeing of a script file
 {
 	var s = loadScript("scripts:/runner_sample_code.toy");
+
+	s.freeScript();
+}
+
+//test basic loading and freeing of a binary file
+{
+	var s = loadScriptBytecode("scripts:/lib/runner/sample_bytecode.tb");
 
 	s.freeScript();
 }
