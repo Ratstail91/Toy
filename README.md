@@ -45,6 +45,7 @@ print tally(); //3
 * [Types](types)
 * [Standard Library](standard-library)
 * [Timer Library](timer-library)
+* [Runner Library](runner-library)
 * [Game Engine](game-engine)
 
 # Deep Dive
