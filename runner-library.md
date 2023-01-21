@@ -53,7 +53,15 @@ This function does a lot of work:
 
 ## loadScriptBytecode(path: string)
 
-*Not Yet Implemented*
+This is used to load an external bytecode file into an opaque variable.
+
+This function does a lot of work:
+
+* It validates the file path using the drive syntax (see above)
+* It constructs and intializes an Interpreter
+* It packages it all into an opaque variable and returns it
+
+Note: This function resembles `loadScript()`, but skips the compilation step.
 
 ## _runScript(self: opaque)
 
