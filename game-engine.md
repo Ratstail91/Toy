@@ -4,7 +4,7 @@ The Toy programming langauge was designed from the beginning as an embedded scri
 
 The best way to create a game engine is to build a game first, then extract the engine from the finished product. Therefore, a game is being built, currently under the codename "airport", around the Toy langauge.
 
-https://github.com/Ratstail91/airport
+[https://github.com/Ratstail91/airport](https://github.com/Ratstail91/airport)
 
 This game has a simple design (it's an idle clicker), but should support enough features to make the engine worthwhile.
 
