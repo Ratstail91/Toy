@@ -19,7 +19,7 @@ void setRefStringAllocatorFn(RefStringAllocatorFn allocator) {
 
 //API
 RefString* createRefString(char* cstring) {
-	int length = strlen(cstring);
+	int length = strnlen(cstring, 4096);
 
 	return createRefStringLength(cstring, length);
 }
@@ -39,12 +39,10 @@ RefString* createRefStringLength(char* cstring, int length) {
 }
 
 void deleteRefString(RefString* refString) {
-	if (refString->refcount > 0) {
-		//decrement, then check
-		refString->refcount--;
-		if (refString->refcount <= 0) {
-			allocate(refString, sizeof(int) * 2 + sizeof(char) * refString->length + 1, 0);
-		}
+	//decrement, then check
+	refString->refcount--;
+	if (refString->refcount <= 0) {
+		allocate(refString, sizeof(int) * 2 + sizeof(char) * refString->length + 1, 0);
 	}
 }
 
@@ -88,7 +86,7 @@ bool equalsRefString(RefString* lhs, RefString* rhs) {
 
 bool equalsRefStringCString(RefString* lhs, char* cstring) {
 	//get the rhs length
-	int length = strlen(cstring);
+	int length = strnlen(cstring, 4096);
 
 	//different length
 	if (lhs->length != length) {
