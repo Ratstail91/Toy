@@ -242,10 +242,10 @@ static int nativeRunScript(Interpreter* interpreter, LiteralArray* arguments) {
 
 	//get the runner object
 	Literal runnerLiteral = popLiteralArray(arguments);
-	Literal idn = runnerLiteral;
 
-	if (parseIdentifierToValue(interpreter, &runnerLiteral)) {
-		freeLiteral(idn);
+	Literal runnerIdn = runnerLiteral;
+	if (IS_IDENTIFIER(runnerLiteral) && parseIdentifierToValue(interpreter, &runnerLiteral)) {
+		freeLiteral(runnerIdn);
 	}
 
 	if (OPAQUE_TAG(runnerLiteral) != OPAQUE_TAG_RUNNER) {
@@ -285,16 +285,14 @@ static int nativeGetScriptVar(Interpreter* interpreter, LiteralArray* arguments)
 	Literal varName = popLiteralArray(arguments);
 	Literal runnerLiteral = popLiteralArray(arguments);
 
-	if (IS_IDENTIFIER(varName)) {
-		Literal idn = varName;
-		parseIdentifierToValue(interpreter, &varName);
-		freeLiteral(idn);
+	Literal varNameIdn = varName;
+	if (IS_IDENTIFIER(varName) && parseIdentifierToValue(interpreter, &varName)) {
+		freeLiteral(varNameIdn);
 	}
 
-	if (IS_IDENTIFIER(runnerLiteral)) {
-		Literal idn = runnerLiteral;
-		parseIdentifierToValue(interpreter, &runnerLiteral);
-		freeLiteral(idn);
+	Literal runnerIdn = runnerLiteral;
+	if (IS_IDENTIFIER(runnerLiteral) && parseIdentifierToValue(interpreter, &runnerLiteral)) {
+		freeLiteral(runnerIdn);
 	}
 
 	if (OPAQUE_TAG(runnerLiteral) != OPAQUE_TAG_RUNNER) {
@@ -360,16 +358,14 @@ static int nativeCallScriptFn(Interpreter* interpreter, LiteralArray* arguments)
 	Literal varName = popLiteralArray(arguments);
 	Literal runnerLiteral = popLiteralArray(arguments);
 
-	if (IS_IDENTIFIER(varName)) {
-		Literal idn = varName;
-		parseIdentifierToValue(interpreter, &varName);
-		freeLiteral(idn);
+	Literal varNameIdn = varName;
+	if (IS_IDENTIFIER(varName) && parseIdentifierToValue(interpreter, &varName)) {
+		freeLiteral(varNameIdn);
 	}
 
-	if (IS_IDENTIFIER(runnerLiteral)) {
-		Literal idn = runnerLiteral;
-		parseIdentifierToValue(interpreter, &runnerLiteral);
-		freeLiteral(idn);
+	Literal runnerIdn = runnerLiteral;
+	if (IS_IDENTIFIER(runnerLiteral) && parseIdentifierToValue(interpreter, &runnerLiteral)) {
+		freeLiteral(runnerIdn);
 	}
 
 	if (OPAQUE_TAG(runnerLiteral) != OPAQUE_TAG_RUNNER) {
@@ -436,10 +432,9 @@ static int nativeResetScript(Interpreter* interpreter, LiteralArray* arguments) 
 	//get the runner object
 	Literal runnerLiteral = popLiteralArray(arguments);
 
-	if (IS_IDENTIFIER(runnerLiteral)) {
-		Literal idn = runnerLiteral;
-		parseIdentifierToValue(interpreter, &runnerLiteral);
-		freeLiteral(idn);
+	Literal runnerIdn = runnerLiteral;
+	if (IS_IDENTIFIER(runnerLiteral) && parseIdentifierToValue(interpreter, &runnerLiteral)) {
+		freeLiteral(runnerIdn);
 	}
 
 	if (OPAQUE_TAG(runnerLiteral) != OPAQUE_TAG_RUNNER) {
@@ -473,10 +468,9 @@ static int nativeFreeScript(Interpreter* interpreter, LiteralArray* arguments) {
 	//get the runner object
 	Literal runnerLiteral = popLiteralArray(arguments);
 
-	if (IS_IDENTIFIER(runnerLiteral)) {
-		Literal idn = runnerLiteral;
-		parseIdentifierToValue(interpreter, &runnerLiteral);
-		freeLiteral(idn);
+	Literal runnerIdn = runnerLiteral;
+	if (IS_IDENTIFIER(runnerLiteral) && parseIdentifierToValue(interpreter, &runnerLiteral)) {
+		freeLiteral(runnerIdn);
 	}
 
 	if (OPAQUE_TAG(runnerLiteral) != OPAQUE_TAG_RUNNER) {
@@ -508,10 +502,9 @@ static int nativeCheckScriptDirty(Interpreter* interpreter, LiteralArray* argume
 	//get the runner object
 	Literal runnerLiteral = popLiteralArray(arguments);
 
-	if (IS_IDENTIFIER(runnerLiteral)) {
-		Literal idn = runnerLiteral;
-		parseIdentifierToValue(interpreter, &runnerLiteral);
-		freeLiteral(idn);
+	Literal runnerIdn = runnerLiteral;
+	if (IS_IDENTIFIER(runnerLiteral) && parseIdentifierToValue(interpreter, &runnerLiteral)) {
+		freeLiteral(runnerIdn);
 	}
 
 	if (OPAQUE_TAG(runnerLiteral) != OPAQUE_TAG_RUNNER) {
