@@ -58,7 +58,7 @@ static void consume(Toy_Parser* parser, Toy_TokenType tokenType, const char* msg
 
 static void synchronize(Toy_Parser* parser) {
 #ifndef TOY_EXPORT
-	if (command.verbose) {
+	if (Toy_commandLine.verbose) {
 		fprintf(stderr, TOY_CC_ERROR "synchronizing\n" TOY_CC_RESET);
 	}
 #endif

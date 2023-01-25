@@ -1559,7 +1559,7 @@ static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 	Toy_pushLiteralArray(&arguments, first);
 	Toy_pushLiteralArray(&arguments, second);
 	Toy_pushLiteralArray(&arguments, third);
-	Toy_pushLiteralArray(&arguments, TOY_TO_NULL_LITERAL); //it expects an assignment command
+	Toy_pushLiteralArray(&arguments, TOY_TO_NULL_LITERAL); //it expects an assignment Toy_commandLine
 	Toy_pushLiteralArray(&arguments, TOY_TO_NULL_LITERAL); //it expects an assignment "opcode"
 
 	//leave the idn and compound on the stack
@@ -1689,7 +1689,7 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 	Toy_pushLiteralArray(&arguments, first);
 	Toy_pushLiteralArray(&arguments, second);
 	Toy_pushLiteralArray(&arguments, third);
-	Toy_pushLiteralArray(&arguments, assign); //it expects an assignment command
+	Toy_pushLiteralArray(&arguments, assign); //it expects an assignment Toy_commandLine
 	Toy_pushLiteralArray(&arguments, op); //it expects an assignment "opcode"
 
 	//call the _index function
@@ -2052,7 +2052,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 	const unsigned short literalCount = readShort(interpreter->bytecode, &interpreter->count);
 
 #ifndef TOY_EXPORT
-	if (command.verbose) {
+	if (Toy_commandLine.verbose) {
 		printf(TOY_CC_NOTICE "Reading %d literals\n" TOY_CC_RESET, literalCount);
 	}
 #endif
@@ -2066,7 +2066,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 				Toy_pushLiteralArray(&interpreter->literalCache, TOY_TO_NULL_LITERAL);
 
 #ifndef TOY_EXPORT
-				if (command.verbose) {
+				if (Toy_commandLine.verbose) {
 					printf("(null)\n");
 				}
 #endif
@@ -2080,7 +2080,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 				Toy_freeLiteral(literal);
 
 #ifndef TOY_EXPORT
-				if (command.verbose) {
+				if (Toy_commandLine.verbose) {
 					printf("(boolean %s)\n", b ? "true" : "false");
 				}
 #endif
@@ -2094,7 +2094,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 				Toy_freeLiteral(literal);
 
 #ifndef TOY_EXPORT
-				if (command.verbose) {
+				if (Toy_commandLine.verbose) {
 					printf("(integer %d)\n", d);
 				}
 #endif
@@ -2108,7 +2108,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 				Toy_freeLiteral(literal);
 
 #ifndef TOY_EXPORT
-				if (command.verbose) {
+				if (Toy_commandLine.verbose) {
 					printf("(float %f)\n", f);
 				}
 #endif
@@ -2123,7 +2123,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 				Toy_freeLiteral(literal);
 
 #ifndef TOY_EXPORT
-				if (command.verbose) {
+				if (Toy_commandLine.verbose) {
 					printf("(string \"%s\")\n", s);
 				}
 #endif
@@ -2143,7 +2143,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 				}
 
 #ifndef TOY_EXPORT
-				if (command.verbose) {
+				if (Toy_commandLine.verbose) {
 					printf("(array ");
 					Toy_Literal literal = TOY_TO_ARRAY_LITERAL(array);
 					Toy_printLiteral(literal);
@@ -2174,7 +2174,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 				}
 
 #ifndef TOY_EXPORT
-				if (command.verbose) {
+				if (Toy_commandLine.verbose) {
 					printf("(dictionary ");
 					Toy_Literal literal = TOY_TO_DICTIONARY_LITERAL(dictionary);
 					Toy_printLiteral(literal);
@@ -2203,7 +2203,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 				Toy_pushLiteralArray(&interpreter->literalCache, literal);
 
 #ifndef TOY_EXPORT
-				if (command.verbose) {
+				if (Toy_commandLine.verbose) {
 					printf("(function)\n");
 				}
 #endif
@@ -2219,7 +2219,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 				Toy_pushLiteralArray(&interpreter->literalCache, identifier);
 
 #ifndef TOY_EXPORT
-				if (command.verbose) {
+				if (Toy_commandLine.verbose) {
 					printf("(identifier %s (hash: %x))\n", Toy_toCString(TOY_AS_IDENTIFIER(identifier)), identifier.as.identifier.hash);
 				}
 #endif
@@ -2239,7 +2239,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 				Toy_pushLiteralArray(&interpreter->literalCache, typeLiteral);
 
 #ifndef TOY_EXPORT
-				if (command.verbose) {
+				if (Toy_commandLine.verbose) {
 					printf("(type ");
 					Toy_printLiteral(typeLiteral);
 					printf(")\n");
@@ -2274,7 +2274,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 				Toy_pushLiteralArray(&interpreter->literalCache, typeLiteral); //copied
 
 #ifndef TOY_EXPORT
-				if (command.verbose) {
+				if (Toy_commandLine.verbose) {
 					printf("(type ");
 					Toy_printLiteral(typeLiteral);
 					printf(")\n");
@@ -2290,7 +2290,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 				Toy_pushLiteralArray(&interpreter->literalCache, TOY_TO_INDEX_BLANK_LITERAL);
 
 #ifndef TOY_EXPORT
-				if (command.verbose) {
+				if (Toy_commandLine.verbose) {
 					printf("(blank)\n");
 				}
 #endif
@@ -2388,7 +2388,7 @@ void Toy_runInterpreter(Toy_Interpreter* interpreter, unsigned char* bytecode, i
 	const char* build = readString(interpreter->bytecode, &interpreter->count);
 
 #ifndef TOY_EXPORT
-	if (command.verbose) {
+	if (Toy_commandLine.verbose) {
 		if (strncmp(build, TOY_VERSION_BUILD, strlen(TOY_VERSION_BUILD))) {
 			printf(TOY_CC_WARN "Warning: interpreter/bytecode build mismatch\n" TOY_CC_RESET);
 		}
@@ -2402,7 +2402,7 @@ void Toy_runInterpreter(Toy_Interpreter* interpreter, unsigned char* bytecode, i
 
 	//code section
 #ifndef TOY_EXPORT
-	if (command.verbose) {
+	if (Toy_commandLine.verbose) {
 		printf(TOY_CC_NOTICE "executing bytecode\n" TOY_CC_RESET);
 	}
 #endif

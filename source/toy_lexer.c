@@ -110,7 +110,7 @@ static Toy_Token makeErrorToken(Toy_Lexer* lexer, char* msg) {
 	token.line = lexer->line;
 
 #ifndef TOY_EXPORT
-	if (command.verbose) {
+	if (Toy_commandLine.verbose) {
 		printf("err:");
 		Toy_printToken(&token);
 	}
@@ -129,7 +129,7 @@ static Toy_Token makeToken(Toy_Lexer* lexer, Toy_TokenType type) {
 
 #ifndef TOY_EXPORT
 	//BUG #10: this shows TOKEN_EOF twice due to the overarching structure of the program - can't be fixed
-	if (command.verbose) {
+	if (Toy_commandLine.verbose) {
 		printf("tok:");
 		Toy_printToken(&token);
 	}
@@ -157,7 +157,7 @@ static Toy_Token makeIntegerOrFloat(Toy_Lexer* lexer) {
 	token.line = lexer->line;
 
 #ifndef TOY_EXPORT
-	if (command.verbose) {
+	if (Toy_commandLine.verbose) {
 		if (type == TOY_TOKEN_LITERAL_INTEGER) {
 			printf("int:");
 		} else {
@@ -189,7 +189,7 @@ static Toy_Token makeString(Toy_Lexer* lexer, char terminator) {
 	token.line = lexer->line;
 
 #ifndef TOY_EXPORT
-	if (command.verbose) {
+	if (Toy_commandLine.verbose) {
 		printf("str:");
 		Toy_printToken(&token);
 	}
@@ -216,7 +216,7 @@ static Toy_Token makeKeywordOrIdentifier(Toy_Lexer* lexer) {
 			token.line = lexer->line;
 
 #ifndef TOY_EXPORT
-			if (command.verbose) {
+			if (Toy_commandLine.verbose) {
 				printf("kwd:");
 				Toy_printToken(&token);
 			}
@@ -235,7 +235,7 @@ static Toy_Token makeKeywordOrIdentifier(Toy_Lexer* lexer) {
 	token.line = lexer->line;
 
 #ifndef TOY_EXPORT
-	if (command.verbose) {
+	if (Toy_commandLine.verbose) {
 		printf("idf:");
 		Toy_printToken(&token);
 	}

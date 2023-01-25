@@ -22,7 +22,7 @@
 #endif
 
 #ifndef TOY_EXPORT
-//for processing the command line arguments
+//for processing the Toy_commandLine line arguments
 typedef struct {
 	bool error;
 	bool help;
@@ -33,13 +33,13 @@ typedef struct {
 	char* outfile; //defaults to out.tb
 	char* source;
 	bool verbose;
-} Command;
+} Toy_CommandLine;
 
-extern Command command;
+extern Toy_CommandLine Toy_commandLine;
 
-void Toy_initCommand(int argc, const char* argv[]);
+void Toy_initCommandLine(int argc, const char* argv[]);
 
-void Toy_usageCommand(int argc, const char* argv[]);
-void Toy_helpCommand(int argc, const char* argv[]);
-void Toy_copyrightCommand(int argc, const char* argv[]);
+void Toy_usageCommandLine(int argc, const char* argv[]);
+void Toy_helpCommandLine(int argc, const char* argv[]);
+void Toy_copyrightCommandLine(int argc, const char* argv[]);
 #endif

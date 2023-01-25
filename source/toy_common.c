@@ -18,74 +18,74 @@ STATIC_ASSERT(sizeof(unsigned int) == 4);
 #ifndef TOY_EXPORT
 
 //declare the singleton
-Command command;
+Toy_CommandLine Toy_commandLine;
 
-void Toy_initCommand(int argc, const char* argv[]) {
+void Toy_initCommandLine(int argc, const char* argv[]) {
 	//default values
-	command.error = false;
-	command.help = false;
-	command.version = false;
-	command.binaryfile = NULL;
-	command.sourcefile = NULL;
-	command.compilefile = NULL;
-	command.outfile = "out.tb";
-	command.source = NULL;
-	command.verbose = false;
+	Toy_commandLine.error = false;
+	Toy_commandLine.help = false;
+	Toy_commandLine.version = false;
+	Toy_commandLine.binaryfile = NULL;
+	Toy_commandLine.sourcefile = NULL;
+	Toy_commandLine.compilefile = NULL;
+	Toy_commandLine.outfile = "out.tb";
+	Toy_commandLine.source = NULL;
+	Toy_commandLine.verbose = false;
 
 	for (int i = 1; i < argc; i++) { //start at 1 to skip the program name
-		command.error = true; //error state by default, set to false by successful flags
+		Toy_commandLine.error = true; //error state by default, set to false by successful flags
 
 		if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
-			command.help = true;
-			command.error = false;
+			Toy_commandLine.help = true;
+			Toy_commandLine.error = false;
 			continue;
 		}
 
 		if (!strcmp(argv[i], "-v") || !strcmp(argv[i], "--version")) {
-			command.version = true;
-			command.error = false;
+			Toy_commandLine.version = true;
+			Toy_commandLine.error = false;
 			continue;
 		}
 
 		if (!strcmp(argv[i], "-d") || !strcmp(argv[i], "--debug")) {
-			command.verbose = true;
-			command.error = false;
+			Toy_commandLine.verbose = true;
+			Toy_commandLine.error = false;
 			continue;
 		}
 
 		if ((!strcmp(argv[i], "-f") || !strcmp(argv[i], "--sourcefile")) && i + 1 < argc) {
-			command.sourcefile = (char*)argv[i + 1];
+			Toy_commandLine.sourcefile = (char*)argv[i + 1];
 			i++;
-			command.error = false;
+			Toy_commandLine.error = false;
 			continue;
 		}
 
 		if ((!strcmp(argv[i], "-i") || !strcmp(argv[i], "--input")) && i + 1 < argc) {
-			command.source = (char*)argv[i + 1];
+			Toy_commandLine.source = (char*)argv[i + 1];
 			i++;
-			command.error = false;
+			Toy_commandLine.error = false;
 			continue;
 		}
 
 		if ((!strcmp(argv[i], "-c") || !strcmp(argv[i], "--compile")) && i + 1 < argc) {
-			command.compilefile = (char*)argv[i + 1];
+			Toy_commandLine.compilefile = (char*)argv[i + 1];
 			i++;
-			command.error = false;
+			Toy_commandLine.error = false;
 			continue;
 		}
 
 		if ((!strcmp(argv[i], "-o") || !strcmp(argv[i], "--output")) && i + 1 < argc) {
-			command.outfile = (char*)argv[i + 1];
+			Toy_commandLine.outfile = (char*)argv[i + 1];
 			i++;
-			command.error = false;
+			Toy_commandLine.error = false;
 			continue;
 		}
 
 		//option without a flag + ending in .tb = binary input
 		if (i < argc) {
 			if (strncmp(&(argv[i][strlen(argv[i]) - 3]), ".tb", 3) == 0) {
-				command.binaryfile = (char*)argv[i];
-				command.error = false;
+				Toy_commandLine.binaryfile = (char*)argv[i];
+				Toy_commandLine.error = false;
 				continue;
 			}
 		}
@@ -95,12 +95,12 @@ void Toy_initCommand(int argc, const char* argv[]) {
 	}
 }
 
-void Toy_usageCommand(int argc, const char* argv[]) {
+void Toy_usageCommandLine(int argc, const char* argv[]) {
 	printf("Usage: %s [<file.tb> | -h | -v | [-d][-f file | -i source | -c file [-o outfile]]]\n\n", argv[0]);
 }
 
-void Toy_helpCommand(int argc, const char* argv[]) {
-	Toy_usageCommand(argc, argv);
+void Toy_helpCommandLine(int argc, const char* argv[]) {
+	Toy_usageCommandLine(argc, argv);
 
 	printf("<file.tb>\t\t\tBinary input file in tb format, must be version %d.%d.%d.\n\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH);
 	printf("-h\t| --help\t\tShow this help then exit.\n\n");
@@ -112,7 +112,7 @@ void Toy_helpCommand(int argc, const char* argv[]) {
 	printf("-o\t| --output outfile\tName of the output file built with --compile (default: out.tb).\n\n");
 }
 
-void Toy_copyrightCommand(int argc, const char* argv[]) {
+void Toy_copyrightCommandLine(int argc, const char* argv[]) {
 	printf("Toy Programming Language Interpreter Version %d.%d.%d (built on %s)\n\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, TOY_VERSION_BUILD);
 	printf("Copyright (c) 2020-2022 Kayne Ruse, KR Game Studios\n\n");
 	printf("This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.\n\n");

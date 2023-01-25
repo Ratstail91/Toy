@@ -88,7 +88,7 @@ void repl() {
 
 //entry point
 int main(int argc, const char* argv[]) {
-	Toy_initCommand(argc, argv);
+	Toy_initCommandLine(argc, argv);
 
 	//lib setup (hacky - only really for this program)
 	Toy_initDriveDictionary();
@@ -101,30 +101,30 @@ int main(int argc, const char* argv[]) {
 	Toy_freeLiteral(driveLiteral);
 	Toy_freeLiteral(pathLiteral);
 
-	//command specific actions
-	if (command.error) {
-		Toy_usageCommand(argc, argv);
+	//Toy_commandLine specific actions
+	if (Toy_commandLine.error) {
+		Toy_usageCommandLine(argc, argv);
 		return 0;
 	}
 
-	if (command.help) {
-		Toy_helpCommand(argc, argv);
+	if (Toy_commandLine.help) {
+		Toy_helpCommandLine(argc, argv);
 		return 0;
 	}
 
-	if (command.version) {
-		Toy_copyrightCommand(argc, argv);
+	if (Toy_commandLine.version) {
+		Toy_copyrightCommandLine(argc, argv);
 		return 0;
 	}
 
 	//version
-	if (command.verbose) {
+	if (Toy_commandLine.verbose) {
 		printf(TOY_CC_NOTICE "Toy Programming Language Version %d.%d.%d\n" TOY_CC_RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH);
 	}
 
 	//run source file
-	if (command.sourcefile) {
-		Toy_runSourceFile(command.sourcefile);
+	if (Toy_commandLine.sourcefile) {
+		Toy_runSourceFile(Toy_commandLine.sourcefile);
 
 		//lib cleanup
 		Toy_freeDriveDictionary();
@@ -133,8 +133,8 @@ int main(int argc, const char* argv[]) {
 	}
 
 	//run from stdin
-	if (command.source) {
-		Toy_runSource(command.source);
+	if (Toy_commandLine.source) {
+		Toy_runSource(Toy_commandLine.source);
 
 		//lib cleanup
 		Toy_freeDriveDictionary();
@@ -143,20 +143,20 @@ int main(int argc, const char* argv[]) {
 	}
 
 	//compile source file
-	if (command.compilefile && command.outfile) {
+	if (Toy_commandLine.compilefile && Toy_commandLine.outfile) {
 		size_t size = 0;
-		char* source = Toy_readFile(command.compilefile, &size);
+		char* source = Toy_readFile(Toy_commandLine.compilefile, &size);
 		unsigned char* tb = Toy_compileString(source, &size);
 		if (!tb) {
 			return 1;
 		}
-		Toy_writeFile(command.outfile, tb, size);
+		Toy_writeFile(Toy_commandLine.outfile, tb, size);
 		return 0;
 	}
 
 	//run binary
-	if (command.binaryfile) {
-		Toy_runBinaryFile(command.binaryfile);
+	if (Toy_commandLine.binaryfile) {
+		Toy_runBinaryFile(Toy_commandLine.binaryfile);
 
 		//lib cleanup
 		Toy_freeDriveDictionary();
