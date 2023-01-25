@@ -1574,7 +1574,7 @@ static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 	}
 
 	//call the _index function
-	if (_index(interpreter, &arguments) < 0) {
+	if (Toy_private_index(interpreter, &arguments) < 0) {
 		interpreter->errorOutput("Something went wrong while indexing: ");
 		Toy_printLiteralCustom(idn, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
@@ -1693,7 +1693,7 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 	Toy_pushLiteralArray(&arguments, op); //it expects an assignment "opcode"
 
 	//call the _index function
-	if (_index(interpreter, &arguments) < 0) {
+	if (Toy_private_index(interpreter, &arguments) < 0) {
 		//clean up
 		Toy_freeLiteral(assign);
 		Toy_freeLiteral(third);
@@ -1741,7 +1741,7 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 			Toy_pushLiteralArray(&arguments, result);
 			Toy_pushLiteralArray(&arguments, op);
 
-			if (_index(interpreter, &arguments) < 0) {
+			if (Toy_private_index(interpreter, &arguments) < 0) {
 				interpreter->errorOutput("Something went wrong while indexing: ");
 				Toy_printLiteralCustom(idn, interpreter->errorOutput);
 				interpreter->errorOutput("\n");
@@ -2434,12 +2434,12 @@ void Toy_resetInterpreter(Toy_Interpreter* interpreter) {
 	interpreter->scope = Toy_pushScope(NULL);
 
 	//globally available functions
-	Toy_injectNativeFn(interpreter, "_set", _set);
-	Toy_injectNativeFn(interpreter, "_get", _get);
-	Toy_injectNativeFn(interpreter, "_push", _push);
-	Toy_injectNativeFn(interpreter, "_pop", _pop);
-	Toy_injectNativeFn(interpreter, "_length", _length);
-	Toy_injectNativeFn(interpreter, "_clear", _clear);
+	Toy_injectNativeFn(interpreter, "_set", Toy_private_set);
+	Toy_injectNativeFn(interpreter, "_get", Toy_private_get);
+	Toy_injectNativeFn(interpreter, "_push", Toy_private_push);
+	Toy_injectNativeFn(interpreter, "_pop", Toy_private_pop);
+	Toy_injectNativeFn(interpreter, "_length", Toy_private_length);
+	Toy_injectNativeFn(interpreter, "_clear", Toy_private_clear);
 }
 
 void Toy_freeInterpreter(Toy_Interpreter* interpreter) {

@@ -249,7 +249,7 @@ static Toy_Literal modulo(Toy_Interpreter* interpreter, Toy_Literal lhs, Toy_Lit
 	return TOY_TO_NULL_LITERAL;
 }
 
-int _index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//_index(compound, first, second, third, assignValue, op)
 	Toy_Literal op = Toy_popLiteralArray(arguments);
 	Toy_Literal assign = Toy_popLiteralArray(arguments);
@@ -934,7 +934,7 @@ int _index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	return 1;
 }
 
-int _set(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+int Toy_private_set(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//if wrong number of arguments, fail
 	if (arguments->count != 3) {
 		interpreter->errorOutput("Incorrect number of arguments to _set\n");
@@ -1052,7 +1052,7 @@ int _set(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	return 0;
 }
 
-int _get(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+int Toy_private_get(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//if wrong number of arguments, fail
 	if (arguments->count != 2) {
 		interpreter->errorOutput("Incorrect number of arguments to _get");
@@ -1123,7 +1123,7 @@ int _get(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	}
 }
 
-int _push(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+int Toy_private_push(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//if wrong number of arguments, fail
 	if (arguments->count != 2) {
 		interpreter->errorOutput("Incorrect number of arguments to _push\n");
@@ -1186,7 +1186,7 @@ int _push(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	}
 }
 
-int _pop(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+int Toy_private_pop(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//if wrong number of arguments, fail
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments to _pop\n");
@@ -1229,7 +1229,7 @@ int _pop(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	}
 }
 
-int _length(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+int Toy_private_length(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//if wrong number of arguments, fail
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments to _length\n");
@@ -1280,7 +1280,7 @@ int _length(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	return 1;
 }
 
-int _clear(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+int Toy_private_clear(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//if wrong number of arguments, fail
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments to _clear\n");
