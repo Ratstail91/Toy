@@ -3,22 +3,22 @@
 #include "lib_timer.h"
 #include "lib_runner.h"
 
-#include "console_colors.h"
+#include "toy_console_colors.h"
 
-#include "lexer.h"
-#include "parser.h"
-#include "compiler.h"
-#include "interpreter.h"
+#include "toy_lexer.h"
+#include "toy_parser.h"
+#include "toy_compiler.h"
+#include "toy_interpreter.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
 //IO functions
-char* readFile(char* path, size_t* fileSize) {
+char* Toy_readFile(char* path, size_t* fileSize) {
 	FILE* file = fopen(path, "rb");
 
 	if (file == NULL) {
-		fprintf(stderr, ERROR "Could not open file \"%s\"\n" RESET, path);
+		fprintf(stderr, TOY_CC_ERROR "Could not open file \"%s\"\n" TOY_CC_RESET, path);
 		return NULL;
 	}
 
@@ -29,7 +29,7 @@ char* readFile(char* path, size_t* fileSize) {
 	char* buffer = (char*)malloc(*fileSize + 1);
 
 	if (buffer == NULL) {
-		fprintf(stderr, ERROR "Not enough memory to read \"%s\"\n" RESET, path);
+		fprintf(stderr, TOY_CC_ERROR "Not enough memory to read \"%s\"\n" TOY_CC_RESET, path);
 		return NULL;
 	}
 
@@ -38,7 +38,7 @@ char* readFile(char* path, size_t* fileSize) {
 	buffer[*fileSize] = '\0'; //NOTE: fread doesn't append this
 
 	if (bytesRead < *fileSize) {
-		fprintf(stderr, ERROR "Could not read file \"%s\"\n" RESET, path);
+		fprintf(stderr, TOY_CC_ERROR "Could not read file \"%s\"\n" TOY_CC_RESET, path);
 		return NULL;
 	}
 
@@ -47,18 +47,18 @@ char* readFile(char* path, size_t* fileSize) {
 	return buffer;
 }
 
-int writeFile(char* path, unsigned char* bytes, size_t size) {
+int Toy_writeFile(char* path, unsigned char* bytes, size_t size) {
 	FILE* file = fopen(path, "wb");
 
 	if (file == NULL) {
-		fprintf(stderr, ERROR "Could not open file \"%s\"\n" RESET, path);
+		fprintf(stderr, TOY_CC_ERROR "Could not open file \"%s\"\n" TOY_CC_RESET, path);
 		return -1;
 	}
 
 	int written = fwrite(bytes, size, 1, file);
 
 	if (written != 1) {
-		fprintf(stderr, ERROR "Could not write file \"%s\"\n" RESET, path);
+		fprintf(stderr, TOY_CC_ERROR "Could not write file \"%s\"\n" TOY_CC_RESET, path);
 		return -1;
 	}
 
@@ -68,79 +68,79 @@ int writeFile(char* path, unsigned char* bytes, size_t size) {
 }
 
 //repl functions
-unsigned char* compileString(char* source, size_t* size) {
-	Lexer lexer;
-	Parser parser;
-	Compiler compiler;
+unsigned char* Toy_compileString(char* source, size_t* size) {
+	Toy_Lexer lexer;
+	Toy_Parser parser;
+	Toy_Compiler compiler;
 
-	initLexer(&lexer, source);
-	initParser(&parser, &lexer);
-	initCompiler(&compiler);
+	Toy_initLexer(&lexer, source);
+	Toy_initParser(&parser, &lexer);
+	Toy_initCompiler(&compiler);
 
 	//run the parser until the end of the source
-	ASTNode* node = scanParser(&parser);
+	Toy_ASTNode* node = Toy_scanParser(&parser);
 	while(node != NULL) {
 		//pack up and leave
-		if (node->type == AST_NODE_ERROR) {
-			freeASTNode(node);
-			freeCompiler(&compiler);
-			freeParser(&parser);
+		if (node->type == TOY_AST_NODE_ERROR) {
+			Toy_freeASTNode(node);
+			Toy_freeCompiler(&compiler);
+			Toy_freeParser(&parser);
 			return NULL;
 		}
 
-		writeCompiler(&compiler, node);
-		freeASTNode(node);
-		node = scanParser(&parser);
+		Toy_writeCompiler(&compiler, node);
+		Toy_freeASTNode(node);
+		node = Toy_scanParser(&parser);
 	}
 
 	//get the bytecode dump
-	unsigned char* tb = collateCompiler(&compiler, (int*)(size));
+	unsigned char* tb = Toy_collateCompiler(&compiler, (int*)(size));
 
 	//cleanup
-	freeCompiler(&compiler);
-	freeParser(&parser);
+	Toy_freeCompiler(&compiler);
+	Toy_freeParser(&parser);
 	//no lexer to clean up
 
 	//finally
 	return tb;
 }
 
-void runBinary(unsigned char* tb, size_t size) {
-	Interpreter interpreter;
-	initInterpreter(&interpreter);
+void Toy_runBinary(unsigned char* tb, size_t size) {
+	Toy_Interpreter interpreter;
+	Toy_initInterpreter(&interpreter);
 
 	//inject the libs
-	injectNativeHook(&interpreter, "standard", hookStandard);
-	injectNativeHook(&interpreter, "timer", hookTimer);
-	injectNativeHook(&interpreter, "runner", hookRunner);
+	Toy_injectNativeHook(&interpreter, "standard", Toy_hookStandard);
+	Toy_injectNativeHook(&interpreter, "timer", Toy_hookTimer);
+	Toy_injectNativeHook(&interpreter, "runner", Toy_hookRunner);
 
-	runInterpreter(&interpreter, tb, size);
-	freeInterpreter(&interpreter);
+	Toy_runInterpreter(&interpreter, tb, size);
+	Toy_freeInterpreter(&interpreter);
 }
 
-void runBinaryFile(char* fname) {
+void Toy_runBinaryFile(char* fname) {
 	size_t size = 0; //not used
-	unsigned char* tb = (unsigned char*)readFile(fname, &size);
+	unsigned char* tb = (unsigned char*)Toy_readFile(fname, &size);
 	if (!tb) {
 		return;
 	}
-	runBinary(tb, size);
+	Toy_runBinary(tb, size);
 	//interpreter takes ownership of the binary data
 }
 
-void runSource(char* source) {
+void Toy_runSource(char* source) {
 	size_t size = 0;
-	unsigned char* tb = compileString(source, &size);
+	unsigned char* tb = Toy_compileString(source, &size);
 	if (!tb) {
 		return;
 	}
 
-	runBinary(tb, size);
+	Toy_runBinary(tb, size);
 }
 
-void runSourceFile(char* fname) {
+void Toy_runSourceFile(char* fname) {
 	size_t size = 0; //not used
-	char* source = readFile(fname, &size);
-	runSource(source);
+	char* source = Toy_readFile(fname, &size);
+	Toy_runSource(source);
 	free((void*)source);
 }

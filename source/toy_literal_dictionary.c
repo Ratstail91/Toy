@@ -1,22 +1,22 @@
-#include "literal_dictionary.h"
+#include "toy_literal_dictionary.h"
 
-#include "memory.h"
+#include "toy_memory.h"
 
-#include "console_colors.h"
+#include "toy_console_colors.h"
 
 #include <stdio.h>
 
 //util functions
-static void setEntryValues(_entry* entry, Literal key, Literal value) {
+static void setEntryValues(Toy_private_entry* entry, Toy_Literal key, Toy_Literal value) {
 	//much simpler now
-	freeLiteral(entry->key);
-	entry->key = copyLiteral(key);
+	Toy_freeLiteral(entry->key);
+	entry->key = Toy_copyLiteral(key);
 
-	freeLiteral(entry->value);
-	entry->value = copyLiteral(value);
+	Toy_freeLiteral(entry->value);
+	entry->value = Toy_copyLiteral(value);
 }
 
-static _entry* getEntryArray(_entry* array, int capacity, Literal key, unsigned int hash, bool mustExist) {
+static Toy_private_entry* getEntryArray(Toy_private_entry* array, int capacity, Toy_Literal key, unsigned int hash, bool mustExist) {
 	//find "key", starting at index
 	unsigned int index = hash % capacity;
 	unsigned int start = index;
@@ -26,16 +26,16 @@ static _entry* getEntryArray(_entry* array, int capacity, Literal key, unsigned 
 
 	//literal probing and collision checking
 	while (index != start) { //WARNING: this is the only function allowed to retrieve an entry from the array
-		_entry* entry = &array[index];
+		Toy_private_entry* entry = &array[index];
 
-		if (IS_NULL(entry->key)) { //if key is empty, it's either empty or tombstone
-			if (IS_NULL(entry->value) && !mustExist) {
+		if (TOY_IS_NULL(entry->key)) { //if key is empty, it's either empty or tombstone
+			if (TOY_IS_NULL(entry->value) && !mustExist) {
 				//found a truly empty bucket
 				return entry;
 			}
 			//else it's a tombstone - ignore
 		} else {
-			if (literalsAreEqual(key, entry->key)) {
+			if (Toy_literalsAreEqual(key, entry->key)) {
 				return entry;
 			}
 		}
@@ -46,46 +46,46 @@ static _entry* getEntryArray(_entry* array, int capacity, Literal key, unsigned 
 	return NULL;
 }
 
-static void adjustEntryCapacity(_entry** dictionaryHandle, int oldCapacity, int capacity) {
+static void adjustEntryCapacity(Toy_private_entry** dictionaryHandle, int oldCapacity, int capacity) {
 	//new entry space
-	_entry* newEntries = ALLOCATE(_entry, capacity);
+	Toy_private_entry* newEntries = TOY_ALLOCATE(Toy_private_entry, capacity);
 
 	for (int i = 0; i < capacity; i++) {
-		newEntries[i].key = TO_NULL_LITERAL;
-		newEntries[i].value = TO_NULL_LITERAL;
+		newEntries[i].key = TOY_TO_NULL_LITERAL;
+		newEntries[i].value = TOY_TO_NULL_LITERAL;
 	}
 
 	//move the old array into the new one
 	for (int i = 0; i < oldCapacity; i++) {
-		if (IS_NULL((*dictionaryHandle)[i].key)) {
+		if (TOY_IS_NULL((*dictionaryHandle)[i].key)) {
 			continue;
 		}
 
 		//place the key and value in the new array (reusing string memory)
-		_entry* entry = getEntryArray(newEntries, capacity, TO_NULL_LITERAL, hashLiteral((*dictionaryHandle)[i].key), false);
+		Toy_private_entry* entry = getEntryArray(newEntries, capacity, TOY_TO_NULL_LITERAL, Toy_hashLiteral((*dictionaryHandle)[i].key), false);
 
 		entry->key = (*dictionaryHandle)[i].key;
 		entry->value = (*dictionaryHandle)[i].value;
 	}
 
 	//clear the old array
-	FREE_ARRAY(_entry, *dictionaryHandle, oldCapacity);
+	TOY_FREE_ARRAY(Toy_private_entry, *dictionaryHandle, oldCapacity);
 
 	*dictionaryHandle = newEntries;
 }
 
-static bool setEntryArray(_entry** dictionaryHandle, int* capacityPtr, int contains, Literal key, Literal value, int hash) {
+static bool setEntryArray(Toy_private_entry** dictionaryHandle, int* capacityPtr, int contains, Toy_Literal key, Toy_Literal value, int hash) {
 	//expand array if needed
-	if (contains + 1 > *capacityPtr * DICTIONARY_MAX_LOAD) {
+	if (contains + 1 > *capacityPtr * TOY_DICTIONARY_MAX_LOAD) {
 		int oldCapacity = *capacityPtr;
-		*capacityPtr = GROW_CAPACITY(*capacityPtr);
+		*capacityPtr = TOY_GROW_CAPACITY(*capacityPtr);
 		adjustEntryCapacity(dictionaryHandle, oldCapacity, *capacityPtr); //custom rather than automatic reallocation
 	}
 
-	_entry* entry = getEntryArray(*dictionaryHandle, *capacityPtr, key, hash, false);
+	Toy_private_entry* entry = getEntryArray(*dictionaryHandle, *capacityPtr, key, hash, false);
 
 	//true = contains increase
-	if (IS_NULL(entry->key)) {
+	if (TOY_IS_NULL(entry->key)) {
 		setEntryValues(entry, key, value);
 		return true;
 	}
@@ -97,61 +97,61 @@ static bool setEntryArray(_entry** dictionaryHandle, int* capacityPtr, int conta
 	return false;
 }
 
-static void freeEntry(_entry* entry) {
-	freeLiteral(entry->key);
-	freeLiteral(entry->value);
-	entry->key = TO_NULL_LITERAL;
-	entry->value = TO_NULL_LITERAL;
+static void freeEntry(Toy_private_entry* entry) {
+	Toy_freeLiteral(entry->key);
+	Toy_freeLiteral(entry->value);
+	entry->key = TOY_TO_NULL_LITERAL;
+	entry->value = TOY_TO_NULL_LITERAL;
 }
 
-static void freeEntryArray(_entry* array, int capacity) {
+static void freeEntryArray(Toy_private_entry* array, int capacity) {
 	if (array == NULL) {
 		return;
 	}
 
 	for (int i = 0; i < capacity; i++) {
-		if (!IS_NULL(array[i].key)) {
+		if (!TOY_IS_NULL(array[i].key)) {
 			freeEntry(&array[i]);
 		}
 	}
 
-	FREE_ARRAY(_entry, array, capacity);
+	TOY_FREE_ARRAY(Toy_private_entry, array, capacity);
 }
 
 //exposed functions
-void initLiteralDictionary(LiteralDictionary* dictionary) {
+void Toy_initLiteralDictionary(Toy_LiteralDictionary* dictionary) {
 	//HACK: because modulo by 0 is undefined, set the capacity to a non-zero value (and allocate the arrays)
 	dictionary->entries = NULL;
-	dictionary->capacity = GROW_CAPACITY(0);
+	dictionary->capacity = TOY_GROW_CAPACITY(0);
 	dictionary->contains = 0;
 	dictionary->count = 0;
 	adjustEntryCapacity(&dictionary->entries, 0, dictionary->capacity);
 }
 
-void freeLiteralDictionary(LiteralDictionary* dictionary) {
+void Toy_freeLiteralDictionary(Toy_LiteralDictionary* dictionary) {
 	freeEntryArray(dictionary->entries, dictionary->capacity);
 	dictionary->capacity = 0;
 	dictionary->contains = 0;
 }
 
-void setLiteralDictionary(LiteralDictionary* dictionary, Literal key, Literal value) {
-	if (IS_NULL(key)) {
-		fprintf(stderr, ERROR "Dictionaries can't have null keys (set)\n" RESET);
+void Toy_setLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Literal key, Toy_Literal value) {
+	if (TOY_IS_NULL(key)) {
+		fprintf(stderr, TOY_CC_ERROR "Dictionaries can't have null keys (set)\n" TOY_CC_RESET);
 		return;
 	}
 
 	//BUGFIX: Can't hash a function
-	if (IS_FUNCTION(key) || IS_FUNCTION_NATIVE(key)) {
-		fprintf(stderr, ERROR "Dictionaries can't have function keys (set)\n" RESET);
+	if (TOY_IS_FUNCTION(key) || TOY_IS_FUNCTION_NATIVE(key)) {
+		fprintf(stderr, TOY_CC_ERROR "Dictionaries can't have function keys (set)\n" TOY_CC_RESET);
 		return;
 	}
 
-	if (IS_OPAQUE(key)) {
-		fprintf(stderr, ERROR "Dictionaries can't have opaque keys (set)\n" RESET);
+	if (TOY_IS_OPAQUE(key)) {
+		fprintf(stderr, TOY_CC_ERROR "Dictionaries can't have opaque keys (set)\n" TOY_CC_RESET);
 		return;
 	}
 
-	const int increment = setEntryArray(&dictionary->entries, &dictionary->capacity, dictionary->contains, key, value, hashLiteral(key));
+	const int increment = setEntryArray(&dictionary->entries, &dictionary->capacity, dictionary->contains, key, value, Toy_hashLiteral(key));
 
 	if (increment) {
 		dictionary->contains++;
@@ -159,61 +159,61 @@ void setLiteralDictionary(LiteralDictionary* dictionary, Literal key, Literal va
 	}
 }
 
-Literal getLiteralDictionary(LiteralDictionary* dictionary, Literal key) {
-	if (IS_NULL(key)) {
-		fprintf(stderr, ERROR "Dictionaries can't have null keys (get)\n" RESET);
-		return TO_NULL_LITERAL;
+Toy_Literal Toy_getLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Literal key) {
+	if (TOY_IS_NULL(key)) {
+		fprintf(stderr, TOY_CC_ERROR "Dictionaries can't have null keys (get)\n" TOY_CC_RESET);
+		return TOY_TO_NULL_LITERAL;
 	}
 
 	//BUGFIX: Can't hash a function
-	if (IS_FUNCTION(key) || IS_FUNCTION_NATIVE(key)) {
-		fprintf(stderr, ERROR "Dictionaries can't have function keys (get)\n" RESET);
-		return TO_NULL_LITERAL;
+	if (TOY_IS_FUNCTION(key) || TOY_IS_FUNCTION_NATIVE(key)) {
+		fprintf(stderr, TOY_CC_ERROR "Dictionaries can't have function keys (get)\n" TOY_CC_RESET);
+		return TOY_TO_NULL_LITERAL;
 	}
 
-	if (IS_OPAQUE(key)) {
-		fprintf(stderr, ERROR "Dictionaries can't have opaque keys (get)\n" RESET);
-		return TO_NULL_LITERAL;
+	if (TOY_IS_OPAQUE(key)) {
+		fprintf(stderr, TOY_CC_ERROR "Dictionaries can't have opaque keys (get)\n" TOY_CC_RESET);
+		return TOY_TO_NULL_LITERAL;
 	}
 
-	_entry* entry = getEntryArray(dictionary->entries, dictionary->capacity, key, hashLiteral(key), true);
+	Toy_private_entry* entry = getEntryArray(dictionary->entries, dictionary->capacity, key, Toy_hashLiteral(key), true);
 
 	if (entry != NULL) {
-		return copyLiteral(entry->value);
+		return Toy_copyLiteral(entry->value);
 	}
 	else {
-		return TO_NULL_LITERAL;
+		return TOY_TO_NULL_LITERAL;
 	}
 }
 
-void removeLiteralDictionary(LiteralDictionary* dictionary, Literal key) {
-	if (IS_NULL(key)) {
-		fprintf(stderr, ERROR "Dictionaries can't have null keys (remove)\n" RESET);
+void Toy_removeLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Literal key) {
+	if (TOY_IS_NULL(key)) {
+		fprintf(stderr, TOY_CC_ERROR "Dictionaries can't have null keys (remove)\n" TOY_CC_RESET);
 		return;
 	}
 
 	//BUGFIX: Can't hash a function
-	if (IS_FUNCTION(key) || IS_FUNCTION_NATIVE(key)) {
-		fprintf(stderr, ERROR "Dictionaries can't have function keys (remove)\n" RESET);
+	if (TOY_IS_FUNCTION(key) || TOY_IS_FUNCTION_NATIVE(key)) {
+		fprintf(stderr, TOY_CC_ERROR "Dictionaries can't have function keys (remove)\n" TOY_CC_RESET);
 		return;
 	}
 
-	if (IS_OPAQUE(key)) {
-		fprintf(stderr, ERROR "Dictionaries can't have opaque keys (remove)\n" RESET);
+	if (TOY_IS_OPAQUE(key)) {
+		fprintf(stderr, TOY_CC_ERROR "Dictionaries can't have opaque keys (remove)\n" TOY_CC_RESET);
 		return;
 	}
 
-	_entry* entry = getEntryArray(dictionary->entries, dictionary->capacity, key, hashLiteral(key), true);
+	Toy_private_entry* entry = getEntryArray(dictionary->entries, dictionary->capacity, key, Toy_hashLiteral(key), true);
 
 	if (entry != NULL) {
 		freeEntry(entry);
-		entry->value = TO_BOOLEAN_LITERAL(true); //tombstone
+		entry->value = TOY_TO_BOOLEAN_LITERAL(true); //tombstone
 		dictionary->count--;
 	}
 }
 
-bool existsLiteralDictionary(LiteralDictionary* dictionary, Literal key) {
+bool Toy_existsLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Literal key) {
 	//null & not tombstoned
-	_entry* entry = getEntryArray(dictionary->entries, dictionary->capacity, key, hashLiteral(key), false);
-	return !(IS_NULL(entry->key) && IS_NULL(entry->value));
+	Toy_private_entry* entry = getEntryArray(dictionary->entries, dictionary->capacity, key, Toy_hashLiteral(key), false);
+	return !(TOY_IS_NULL(entry->key) && TOY_IS_NULL(entry->value));
 }

@@ -1,11 +1,11 @@
-#include "literal.h"
-#include "memory.h"
+#include "toy_literal.h"
+#include "toy_memory.h"
 
-#include "literal_array.h"
-#include "literal_dictionary.h"
-#include "scope.h"
+#include "toy_literal_array.h"
+#include "toy_literal_dictionary.h"
+#include "toy_scope.h"
 
-#include "console_colors.h"
+#include "toy_console_colors.h"
 
 #include <stdio.h>
 
@@ -29,203 +29,203 @@ static unsigned int hashUInt(unsigned int x) {
 }
 
 //exposed functions
-void freeLiteral(Literal literal) {
+void Toy_freeLiteral(Toy_Literal literal) {
 	//refstrings
-	if (IS_STRING(literal)) {
-		deleteRefString(AS_STRING(literal));
+	if (TOY_IS_STRING(literal)) {
+		Toy_deleteRefString(TOY_AS_STRING(literal));
 		return;
 	}
 
-	if (IS_IDENTIFIER(literal)) {
-		deleteRefString(AS_IDENTIFIER(literal));
+	if (TOY_IS_IDENTIFIER(literal)) {
+		Toy_deleteRefString(TOY_AS_IDENTIFIER(literal));
 		return;
 	}
 
 	//compounds
-	if (IS_ARRAY(literal) || literal.type == LITERAL_DICTIONARY_INTERMEDIATE || literal.type == LITERAL_TYPE_INTERMEDIATE) {
-		freeLiteralArray(AS_ARRAY(literal));
-		FREE(LiteralArray, AS_ARRAY(literal));
+	if (TOY_IS_ARRAY(literal) || literal.type == TOY_LITERAL_DICTIONARY_INTERMEDIATE || literal.type == TOY_LITERAL_TYPE_INTERMEDIATE) {
+		Toy_freeLiteralArray(TOY_AS_ARRAY(literal));
+		TOY_FREE(Toy_LiteralArray, TOY_AS_ARRAY(literal));
 		return;
 	}
 
-	if (IS_DICTIONARY(literal)) {
-		freeLiteralDictionary(AS_DICTIONARY(literal));
-		FREE(LiteralDictionary, AS_DICTIONARY(literal));
+	if (TOY_IS_DICTIONARY(literal)) {
+		Toy_freeLiteralDictionary(TOY_AS_DICTIONARY(literal));
+		TOY_FREE(Toy_LiteralDictionary, TOY_AS_DICTIONARY(literal));
 		return;
 	}
 
 	//complex literals
-	if (IS_FUNCTION(literal)) {
-		popScope(AS_FUNCTION(literal).scope);
-		AS_FUNCTION(literal).scope = NULL;
-		FREE_ARRAY(unsigned char, AS_FUNCTION(literal).bytecode, AS_FUNCTION(literal).length);
+	if (TOY_IS_FUNCTION(literal)) {
+		Toy_popScope(TOY_AS_FUNCTION(literal).scope);
+		TOY_AS_FUNCTION(literal).scope = NULL;
+		TOY_FREE_ARRAY(unsigned char, TOY_AS_FUNCTION(literal).bytecode, TOY_AS_FUNCTION(literal).length);
 	}
 
-	if (IS_TYPE(literal)) {
-		for (int i = 0; i < AS_TYPE(literal).count; i++) {
-			freeLiteral(((Literal*)(AS_TYPE(literal).subtypes))[i]);
+	if (TOY_IS_TYPE(literal)) {
+		for (int i = 0; i < TOY_AS_TYPE(literal).count; i++) {
+			Toy_freeLiteral(((Toy_Literal*)(TOY_AS_TYPE(literal).subtypes))[i]);
 		}
-		FREE_ARRAY(Literal, AS_TYPE(literal).subtypes, AS_TYPE(literal).capacity);
+		TOY_FREE_ARRAY(Toy_Literal, TOY_AS_TYPE(literal).subtypes, TOY_AS_TYPE(literal).capacity);
 		return;
 	}
 }
 
-bool _isTruthy(Literal x) {
-	if (IS_NULL(x)) {
-		fprintf(stderr, ERROR "ERROR: Null is neither true nor false\n" RESET);
+bool Toy_private_isTruthy(Toy_Literal x) {
+	if (TOY_IS_NULL(x)) {
+		fprintf(stderr, TOY_CC_ERROR "TOY_CC_ERROR: Null is neither true nor false\n" TOY_CC_RESET);
 		return false;
 	}
 
-	if (IS_BOOLEAN(x)) {
-		return AS_BOOLEAN(x);
+	if (TOY_IS_BOOLEAN(x)) {
+		return TOY_AS_BOOLEAN(x);
 	}
 
 	return true;
 }
 
-Literal _toStringLiteral(RefString* ptr) {
-	return ((Literal){LITERAL_STRING, { .string.ptr = ptr }});
+Toy_Literal Toy_private_toStringLiteral(Toy_RefString* ptr) {
+	return ((Toy_Literal){TOY_LITERAL_STRING, { .string.ptr = ptr }});
 }
 
-Literal _toIdentifierLiteral(RefString* ptr) {
-	return ((Literal){LITERAL_IDENTIFIER,{ .identifier.ptr = ptr, .identifier.hash = hashString(toCString(ptr), lengthRefString(ptr)) }});
+Toy_Literal Toy_private_toIdentifierLiteral(Toy_RefString* ptr) {
+	return ((Toy_Literal){TOY_LITERAL_IDENTIFIER,{ .identifier.ptr = ptr, .identifier.hash = hashString(Toy_toCString(ptr), Toy_lengthRefString(ptr)) }});
 }
 
-Literal* _typePushSubtype(Literal* lit, Literal subtype) {
+Toy_Literal* Toy_private_typePushSubtype(Toy_Literal* lit, Toy_Literal subtype) {
 	//grow the subtype array
-	if (AS_TYPE(*lit).count + 1 > AS_TYPE(*lit).capacity) {
-		int oldCapacity = AS_TYPE(*lit).capacity;
+	if (TOY_AS_TYPE(*lit).count + 1 > TOY_AS_TYPE(*lit).capacity) {
+		int oldCapacity = TOY_AS_TYPE(*lit).capacity;
 
-		AS_TYPE(*lit).capacity = GROW_CAPACITY(oldCapacity);
-		AS_TYPE(*lit).subtypes = GROW_ARRAY(Literal, AS_TYPE(*lit).subtypes, oldCapacity, AS_TYPE(*lit).capacity);
+		TOY_AS_TYPE(*lit).capacity = TOY_GROW_CAPACITY(oldCapacity);
+		TOY_AS_TYPE(*lit).subtypes = TOY_GROW_ARRAY(Toy_Literal, TOY_AS_TYPE(*lit).subtypes, oldCapacity, TOY_AS_TYPE(*lit).capacity);
 	}
 
 	//actually push
-	((Literal*)(AS_TYPE(*lit).subtypes))[ AS_TYPE(*lit).count++ ] = subtype;
-	return &((Literal*)(AS_TYPE(*lit).subtypes))[ AS_TYPE(*lit).count - 1 ];
+	((Toy_Literal*)(TOY_AS_TYPE(*lit).subtypes))[ TOY_AS_TYPE(*lit).count++ ] = subtype;
+	return &((Toy_Literal*)(TOY_AS_TYPE(*lit).subtypes))[ TOY_AS_TYPE(*lit).count - 1 ];
 }
 
-Literal copyLiteral(Literal original) {
+Toy_Literal Toy_copyLiteral(Toy_Literal original) {
 	switch(original.type) {
-		case LITERAL_NULL:
-		case LITERAL_BOOLEAN:
-		case LITERAL_INTEGER:
-		case LITERAL_FLOAT:
+		case TOY_LITERAL_NULL:
+		case TOY_LITERAL_BOOLEAN:
+		case TOY_LITERAL_INTEGER:
+		case TOY_LITERAL_FLOAT:
 			//no copying needed
 			return original;
 
-		case LITERAL_STRING: {
-			return TO_STRING_LITERAL(copyRefString(AS_STRING(original)));
+		case TOY_LITERAL_STRING: {
+			return TOY_TO_STRING_LITERAL(Toy_copyRefString(TOY_AS_STRING(original)));
 		}
 
-		case LITERAL_ARRAY: {
-			LiteralArray* array = ALLOCATE(LiteralArray, 1);
-			initLiteralArray(array);
+		case TOY_LITERAL_ARRAY: {
+			Toy_LiteralArray* array = TOY_ALLOCATE(Toy_LiteralArray, 1);
+			Toy_initLiteralArray(array);
 
 			//copy each element
-			for (int i = 0; i < AS_ARRAY(original)->count; i++) {
-				pushLiteralArray(array, AS_ARRAY(original)->literals[i]);
+			for (int i = 0; i < TOY_AS_ARRAY(original)->count; i++) {
+				Toy_pushLiteralArray(array, TOY_AS_ARRAY(original)->literals[i]);
 			}
 
-			return TO_ARRAY_LITERAL(array);
+			return TOY_TO_ARRAY_LITERAL(array);
 		}
 
-		case LITERAL_DICTIONARY: {
-			LiteralDictionary* dictionary = ALLOCATE(LiteralDictionary, 1);
-			initLiteralDictionary(dictionary);
+		case TOY_LITERAL_DICTIONARY: {
+			Toy_LiteralDictionary* dictionary = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
+			Toy_initLiteralDictionary(dictionary);
 
 			//copy each entry
-			for (int i = 0; i < AS_DICTIONARY(original)->capacity; i++) {
-				if ( !IS_NULL(AS_DICTIONARY(original)->entries[i].key) ) {
-					setLiteralDictionary(dictionary, AS_DICTIONARY(original)->entries[i].key, AS_DICTIONARY(original)->entries[i].value);
+			for (int i = 0; i < TOY_AS_DICTIONARY(original)->capacity; i++) {
+				if ( !TOY_IS_NULL(TOY_AS_DICTIONARY(original)->entries[i].key) ) {
+					Toy_setLiteralDictionary(dictionary, TOY_AS_DICTIONARY(original)->entries[i].key, TOY_AS_DICTIONARY(original)->entries[i].value);
 				}
 			}
 
-			return TO_DICTIONARY_LITERAL(dictionary);
+			return TOY_TO_DICTIONARY_LITERAL(dictionary);
 		}
 
-		case LITERAL_FUNCTION: {
-			unsigned char* buffer = ALLOCATE(unsigned char, AS_FUNCTION(original).length);
-			memcpy(buffer, AS_FUNCTION(original).bytecode, AS_FUNCTION(original).length);
+		case TOY_LITERAL_FUNCTION: {
+			unsigned char* buffer = TOY_ALLOCATE(unsigned char, TOY_AS_FUNCTION(original).length);
+			memcpy(buffer, TOY_AS_FUNCTION(original).bytecode, TOY_AS_FUNCTION(original).length);
 
-			Literal literal = TO_FUNCTION_LITERAL(buffer, AS_FUNCTION(original).length);
-			AS_FUNCTION(literal).scope = copyScope(AS_FUNCTION(original).scope);
+			Toy_Literal literal = TOY_TO_FUNCTION_LITERAL(buffer, TOY_AS_FUNCTION(original).length);
+			TOY_AS_FUNCTION(literal).scope = Toy_copyScope(TOY_AS_FUNCTION(original).scope);
 
 			return literal;
 		}
 
-		case LITERAL_IDENTIFIER: {
-			 return TO_IDENTIFIER_LITERAL(copyRefString(AS_IDENTIFIER(original)));
+		case TOY_LITERAL_IDENTIFIER: {
+			 return TOY_TO_IDENTIFIER_LITERAL(Toy_copyRefString(TOY_AS_IDENTIFIER(original)));
 		}
 
-		case LITERAL_TYPE: {
-			Literal lit = TO_TYPE_LITERAL(AS_TYPE(original).typeOf, AS_TYPE(original).constant);
+		case TOY_LITERAL_TYPE: {
+			Toy_Literal lit = TOY_TO_TYPE_LITERAL(TOY_AS_TYPE(original).typeOf, TOY_AS_TYPE(original).constant);
 
-			for (int i = 0; i < AS_TYPE(original).count; i++) {
-				TYPE_PUSH_SUBTYPE(&lit, copyLiteral( ((Literal*)(AS_TYPE(original).subtypes))[i] ));
+			for (int i = 0; i < TOY_AS_TYPE(original).count; i++) {
+				TOY_TYPE_PUSH_SUBTYPE(&lit, Toy_copyLiteral( ((Toy_Literal*)(TOY_AS_TYPE(original).subtypes))[i] ));
 			}
 
 			return lit;
 		}
 
-		case LITERAL_OPAQUE: {
+		case TOY_LITERAL_OPAQUE: {
 			return original; //literally a shallow copy
 		}
 
-		case LITERAL_DICTIONARY_INTERMEDIATE: {
-			LiteralArray* array = ALLOCATE(LiteralArray, 1);
-			initLiteralArray(array);
+		case TOY_LITERAL_DICTIONARY_INTERMEDIATE: {
+			Toy_LiteralArray* array = TOY_ALLOCATE(Toy_LiteralArray, 1);
+			Toy_initLiteralArray(array);
 
 			//copy each element
-			for (int i = 0; i < AS_ARRAY(original)->count; i++) {
-				Literal literal = copyLiteral(AS_ARRAY(original)->literals[i]);
-				pushLiteralArray(array, literal);
-				freeLiteral(literal);
+			for (int i = 0; i < TOY_AS_ARRAY(original)->count; i++) {
+				Toy_Literal literal = Toy_copyLiteral(TOY_AS_ARRAY(original)->literals[i]);
+				Toy_pushLiteralArray(array, literal);
+				Toy_freeLiteral(literal);
 			}
 
-			Literal ret = TO_ARRAY_LITERAL(array);
-			ret.type = LITERAL_DICTIONARY_INTERMEDIATE;
+			Toy_Literal ret = TOY_TO_ARRAY_LITERAL(array);
+			ret.type = TOY_LITERAL_DICTIONARY_INTERMEDIATE;
 			return ret;
 		}
 
-		case LITERAL_TYPE_INTERMEDIATE: {
-			LiteralArray* array = ALLOCATE(LiteralArray, 1);
-			initLiteralArray(array);
+		case TOY_LITERAL_TYPE_INTERMEDIATE: {
+			Toy_LiteralArray* array = TOY_ALLOCATE(Toy_LiteralArray, 1);
+			Toy_initLiteralArray(array);
 
 			//copy each element
-			for (int i = 0; i < AS_ARRAY(original)->count; i++) {
-				Literal literal =  copyLiteral(AS_ARRAY(original)->literals[i]);
-				pushLiteralArray(array, literal);
-				freeLiteral(literal);
+			for (int i = 0; i < TOY_AS_ARRAY(original)->count; i++) {
+				Toy_Literal literal =  Toy_copyLiteral(TOY_AS_ARRAY(original)->literals[i]);
+				Toy_pushLiteralArray(array, literal);
+				Toy_freeLiteral(literal);
 			}
 
-			Literal ret = TO_ARRAY_LITERAL(array);
-			ret.type = LITERAL_TYPE_INTERMEDIATE;
+			Toy_Literal ret = TOY_TO_ARRAY_LITERAL(array);
+			ret.type = TOY_LITERAL_TYPE_INTERMEDIATE;
 			return ret;
 		}
 
-		case LITERAL_FUNCTION_INTERMEDIATE: //caries a compiler
-		case LITERAL_FUNCTION_NATIVE:
-		case LITERAL_INDEX_BLANK:
+		case TOY_LITERAL_FUNCTION_INTERMEDIATE: //caries a compiler
+		case TOY_LITERAL_FUNCTION_NATIVE:
+		case TOY_LITERAL_INDEX_BLANK:
 			//no copying possible
 			return original;
 
 		default:
-			fprintf(stderr, ERROR "ERROR: Can't copy that literal type: %d\n" RESET, original.type);
-			return TO_NULL_LITERAL;
+			fprintf(stderr, TOY_CC_ERROR "TOY_CC_ERROR: Can't copy that literal type: %d\n" TOY_CC_RESET, original.type);
+			return TOY_TO_NULL_LITERAL;
 	}
 }
 
-bool literalsAreEqual(Literal lhs, Literal rhs) {
+bool Toy_literalsAreEqual(Toy_Literal lhs, Toy_Literal rhs) {
 	//utility for other things
 	if (lhs.type != rhs.type) {
 		// ints and floats are compatible
-		if ((IS_INTEGER(lhs) || IS_FLOAT(lhs)) && (IS_INTEGER(rhs) || IS_FLOAT(rhs))) {
-			if (IS_INTEGER(lhs)) {
-				return AS_INTEGER(lhs) + AS_FLOAT(rhs);
+		if ((TOY_IS_INTEGER(lhs) || TOY_IS_FLOAT(lhs)) && (TOY_IS_INTEGER(rhs) || TOY_IS_FLOAT(rhs))) {
+			if (TOY_IS_INTEGER(lhs)) {
+				return TOY_AS_INTEGER(lhs) + TOY_AS_FLOAT(rhs);
 			}
 			else {
-				return AS_FLOAT(lhs) + AS_INTEGER(rhs);
+				return TOY_AS_FLOAT(lhs) + TOY_AS_INTEGER(rhs);
 			}
 		}
 
@@ -233,172 +233,172 @@ bool literalsAreEqual(Literal lhs, Literal rhs) {
 	}
 
 	switch(lhs.type) {
-		case LITERAL_NULL:
+		case TOY_LITERAL_NULL:
 			return true; //can only be true because of the check above
 
-		case LITERAL_BOOLEAN:
-			return AS_BOOLEAN(lhs) == AS_BOOLEAN(rhs);
+		case TOY_LITERAL_BOOLEAN:
+			return TOY_AS_BOOLEAN(lhs) == TOY_AS_BOOLEAN(rhs);
 
-		case LITERAL_INTEGER:
-			return AS_INTEGER(lhs) == AS_INTEGER(rhs);
+		case TOY_LITERAL_INTEGER:
+			return TOY_AS_INTEGER(lhs) == TOY_AS_INTEGER(rhs);
 
-		case LITERAL_FLOAT:
-			return AS_FLOAT(lhs) == AS_FLOAT(rhs);
+		case TOY_LITERAL_FLOAT:
+			return TOY_AS_FLOAT(lhs) == TOY_AS_FLOAT(rhs);
 
-		case LITERAL_STRING:
-			return equalsRefString(AS_STRING(lhs), AS_STRING(rhs));
+		case TOY_LITERAL_STRING:
+			return Toy_equalsRefString(TOY_AS_STRING(lhs), TOY_AS_STRING(rhs));
 
-		case LITERAL_ARRAY:
-		case LITERAL_DICTIONARY_INTERMEDIATE: //BUGFIX
-		case LITERAL_TYPE_INTERMEDIATE: //BUGFIX: used for storing types as an array
+		case TOY_LITERAL_ARRAY:
+		case TOY_LITERAL_DICTIONARY_INTERMEDIATE: //BUGFIX
+		case TOY_LITERAL_TYPE_INTERMEDIATE: //BUGFIX: used for storing types as an array
 			//mismatched sizes
-			if (AS_ARRAY(lhs)->count != AS_ARRAY(rhs)->count) {
+			if (TOY_AS_ARRAY(lhs)->count != TOY_AS_ARRAY(rhs)->count) {
 				return false;
 			}
 
 			//mismatched elements (in order)
-			for (int i = 0; i < AS_ARRAY(lhs)->count; i++) {
-				if (!literalsAreEqual( AS_ARRAY(lhs)->literals[i], AS_ARRAY(rhs)->literals[i] )) {
+			for (int i = 0; i < TOY_AS_ARRAY(lhs)->count; i++) {
+				if (!Toy_literalsAreEqual( TOY_AS_ARRAY(lhs)->literals[i], TOY_AS_ARRAY(rhs)->literals[i] )) {
 					return false;
 				}
 			}
 			return true;
 
-		case LITERAL_DICTIONARY:
+		case TOY_LITERAL_DICTIONARY:
 			//relatively slow, especially when nested
-			for (int i = 0; i < AS_DICTIONARY(lhs)->capacity; i++) {
-				if (!IS_NULL(AS_DICTIONARY(lhs)->entries[i].key)) { //only compare non-null keys
+			for (int i = 0; i < TOY_AS_DICTIONARY(lhs)->capacity; i++) {
+				if (!TOY_IS_NULL(TOY_AS_DICTIONARY(lhs)->entries[i].key)) { //only compare non-null keys
 					//check it exists in rhs
-					if (!existsLiteralDictionary(AS_DICTIONARY(rhs), AS_DICTIONARY(lhs)->entries[i].key)) {
+					if (!Toy_existsLiteralDictionary(TOY_AS_DICTIONARY(rhs), TOY_AS_DICTIONARY(lhs)->entries[i].key)) {
 						return false;
 					}
 
 					//compare the values
-					Literal val = getLiteralDictionary(AS_DICTIONARY(rhs), AS_DICTIONARY(lhs)->entries[i].key); //TODO: could be more efficient
-					if (!literalsAreEqual(AS_DICTIONARY(lhs)->entries[i].value, val)) {
-						freeLiteral(val);
+					Toy_Literal val = Toy_getLiteralDictionary(TOY_AS_DICTIONARY(rhs), TOY_AS_DICTIONARY(lhs)->entries[i].key); //TODO: could be more efficient
+					if (!Toy_literalsAreEqual(TOY_AS_DICTIONARY(lhs)->entries[i].value, val)) {
+						Toy_freeLiteral(val);
 						return false;
 					}
-					freeLiteral(val);
+					Toy_freeLiteral(val);
 				}
 			}
 
 			return true;
 
-		case LITERAL_FUNCTION:
-		case LITERAL_FUNCTION_NATIVE:
+		case TOY_LITERAL_FUNCTION:
+		case TOY_LITERAL_FUNCTION_NATIVE:
 			return false; //functions are never equal
 		break;
 
-		case LITERAL_IDENTIFIER:
+		case TOY_LITERAL_IDENTIFIER:
 			//check shortcuts
-			if (HASH_I(lhs) != HASH_I(rhs)) {
+			if (TOY_HASH_I(lhs) != TOY_HASH_I(rhs)) {
 				return false;
 			}
 
-			return equalsRefString(AS_IDENTIFIER(lhs), AS_IDENTIFIER(rhs));
+			return Toy_equalsRefString(TOY_AS_IDENTIFIER(lhs), TOY_AS_IDENTIFIER(rhs));
 
-		case LITERAL_TYPE:
+		case TOY_LITERAL_TYPE:
 			//check types
-			if (AS_TYPE(lhs).typeOf != AS_TYPE(rhs).typeOf) {
+			if (TOY_AS_TYPE(lhs).typeOf != TOY_AS_TYPE(rhs).typeOf) {
 				return false;
 			}
 
 			//const don't match
-			if (AS_TYPE(lhs).constant != AS_TYPE(rhs).constant) {
+			if (TOY_AS_TYPE(lhs).constant != TOY_AS_TYPE(rhs).constant) {
 				return false;
 			}
 
 			//check subtypes
-			if (AS_TYPE(lhs).count != AS_TYPE(rhs).count) {
+			if (TOY_AS_TYPE(lhs).count != TOY_AS_TYPE(rhs).count) {
 				return false;
 			}
 
 			//check array|dictionary signatures are the same (in order)
-			if (AS_TYPE(lhs).typeOf == LITERAL_ARRAY || AS_TYPE(lhs).typeOf == LITERAL_DICTIONARY) {
-				for (int i = 0; i < AS_TYPE(lhs).count; i++) {
-					if (!literalsAreEqual(((Literal*)(AS_TYPE(lhs).subtypes))[i], ((Literal*)(AS_TYPE(rhs).subtypes))[i])) {
+			if (TOY_AS_TYPE(lhs).typeOf == TOY_LITERAL_ARRAY || TOY_AS_TYPE(lhs).typeOf == TOY_LITERAL_DICTIONARY) {
+				for (int i = 0; i < TOY_AS_TYPE(lhs).count; i++) {
+					if (!Toy_literalsAreEqual(((Toy_Literal*)(TOY_AS_TYPE(lhs).subtypes))[i], ((Toy_Literal*)(TOY_AS_TYPE(rhs).subtypes))[i])) {
 						return false;
 					}
 				}
 			}
 			return true;
 
-		case LITERAL_OPAQUE:
+		case TOY_LITERAL_OPAQUE:
 			return false; //IDK what this is!
 
-		case LITERAL_ANY:
+		case TOY_LITERAL_ANY:
 			return true;
 
-		case LITERAL_FUNCTION_INTERMEDIATE:
-			fprintf(stderr, ERROR "[internal] Can't compare intermediate functions\n" RESET);
+		case TOY_LITERAL_FUNCTION_INTERMEDIATE:
+			fprintf(stderr, TOY_CC_ERROR "[internal] Can't compare intermediate functions\n" TOY_CC_RESET);
 			return false;
 
-		case LITERAL_INDEX_BLANK:
+		case TOY_LITERAL_INDEX_BLANK:
 			return false;
 
 		default:
 			//should never be seen
-			fprintf(stderr, ERROR "[internal] Unrecognized literal type in equality: %d\n" RESET, lhs.type);
+			fprintf(stderr, TOY_CC_ERROR "[internal] Unrecognized literal type in equality: %d\n" TOY_CC_RESET, lhs.type);
 			return false;
 	}
 
 	return false;
 }
 
-int hashLiteral(Literal lit) {
+int Toy_hashLiteral(Toy_Literal lit) {
 	switch(lit.type) {
-		case LITERAL_NULL:
+		case TOY_LITERAL_NULL:
 			return 0;
 
-		case LITERAL_BOOLEAN:
-			return AS_BOOLEAN(lit) ? 1 : 0;
+		case TOY_LITERAL_BOOLEAN:
+			return TOY_AS_BOOLEAN(lit) ? 1 : 0;
 
-		case LITERAL_INTEGER:
-			return hashUInt((unsigned int)AS_INTEGER(lit));
+		case TOY_LITERAL_INTEGER:
+			return hashUInt((unsigned int)TOY_AS_INTEGER(lit));
 
-		case LITERAL_FLOAT:
-			return hashUInt(*(unsigned int*)(&AS_FLOAT(lit)));
+		case TOY_LITERAL_FLOAT:
+			return hashUInt(*(unsigned int*)(&TOY_AS_FLOAT(lit)));
 
-		case LITERAL_STRING:
-			return hashString(toCString(AS_STRING(lit)), lengthRefString(AS_STRING(lit)));
+		case TOY_LITERAL_STRING:
+			return hashString(Toy_toCString(TOY_AS_STRING(lit)), Toy_lengthRefString(TOY_AS_STRING(lit)));
 
-		case LITERAL_ARRAY: {
+		case TOY_LITERAL_ARRAY: {
 			unsigned int res = 0;
-			for (int i = 0; i < AS_ARRAY(lit)->count; i++) {
-				res += hashLiteral(AS_ARRAY(lit)->literals[i]);
+			for (int i = 0; i < TOY_AS_ARRAY(lit)->count; i++) {
+				res += Toy_hashLiteral(TOY_AS_ARRAY(lit)->literals[i]);
 			}
 			return hashUInt(res);
 		}
 
-		case LITERAL_DICTIONARY: {
+		case TOY_LITERAL_DICTIONARY: {
 			unsigned int res = 0;
-			for (int i = 0; i < AS_DICTIONARY(lit)->capacity; i++) {
-				if (!IS_NULL(AS_DICTIONARY(lit)->entries[i].key)) { //only hash non-null keys
-					res += hashLiteral(AS_DICTIONARY(lit)->entries[i].key);
-					res += hashLiteral(AS_DICTIONARY(lit)->entries[i].value);
+			for (int i = 0; i < TOY_AS_DICTIONARY(lit)->capacity; i++) {
+				if (!TOY_IS_NULL(TOY_AS_DICTIONARY(lit)->entries[i].key)) { //only hash non-null keys
+					res += Toy_hashLiteral(TOY_AS_DICTIONARY(lit)->entries[i].key);
+					res += Toy_hashLiteral(TOY_AS_DICTIONARY(lit)->entries[i].value);
 				}
 			}
 			return hashUInt(res);
 		}
 
-		case LITERAL_FUNCTION:
-		case LITERAL_FUNCTION_NATIVE:
+		case TOY_LITERAL_FUNCTION:
+		case TOY_LITERAL_FUNCTION_NATIVE:
 			return 0; //can't hash these
 
-		case LITERAL_IDENTIFIER:
-			return HASH_I(lit); //pre-computed
+		case TOY_LITERAL_IDENTIFIER:
+			return TOY_HASH_I(lit); //pre-computed
 
-		case LITERAL_TYPE:
-			return AS_TYPE(lit).typeOf; //nothing else I can do
+		case TOY_LITERAL_TYPE:
+			return TOY_AS_TYPE(lit).typeOf; //nothing else I can do
 
-		case LITERAL_OPAQUE:
-		case LITERAL_ANY:
+		case TOY_LITERAL_OPAQUE:
+		case TOY_LITERAL_ANY:
 			return -1;
 
 		default:
 			//should never bee seen
-			fprintf(stderr, ERROR "[internal] Unrecognized literal type in hash: %d\n" RESET, lit.type);
+			fprintf(stderr, TOY_CC_ERROR "[internal] Unrecognized literal type in hash: %d\n" TOY_CC_RESET, lit.type);
 			return 0;
 	}
 }
@@ -420,8 +420,8 @@ static void printToBuffer(const char* str) {
 	while (strlen(str) + globalPrintCount + 1 > globalPrintCapacity) {
 		int oldCapacity = globalPrintCapacity;
 
-		globalPrintCapacity = GROW_CAPACITY(globalPrintCapacity);
-		globalPrintBuffer = GROW_ARRAY(char, globalPrintBuffer, oldCapacity, globalPrintCapacity);
+		globalPrintCapacity = TOY_GROW_CAPACITY(globalPrintCapacity);
+		globalPrintBuffer = TOY_GROW_ARRAY(char, globalPrintBuffer, oldCapacity, globalPrintCapacity);
 	}
 
 	snprintf(globalPrintBuffer + globalPrintCount, strlen(str) + 1, "%s", str);
@@ -429,55 +429,55 @@ static void printToBuffer(const char* str) {
 }
 
 //exposed functions
-void printLiteral(Literal literal) {
-	printLiteralCustom(literal, stdoutWrapper);
+void Toy_printLiteral(Toy_Literal literal) {
+	Toy_printLiteralCustom(literal, stdoutWrapper);
 }
 
-void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
+void Toy_printLiteralCustom(Toy_Literal literal, void (printFn)(const char*)) {
 	switch(literal.type) {
-		case LITERAL_NULL:
+		case TOY_LITERAL_NULL:
 			printFn("null");
 		break;
 
-		case LITERAL_BOOLEAN:
-			printFn(AS_BOOLEAN(literal) ? "true" : "false");
+		case TOY_LITERAL_BOOLEAN:
+			printFn(TOY_AS_BOOLEAN(literal) ? "true" : "false");
 		break;
 
-		case LITERAL_INTEGER: {
+		case TOY_LITERAL_INTEGER: {
 			char buffer[256];
-			snprintf(buffer, 256, "%d", AS_INTEGER(literal));
+			snprintf(buffer, 256, "%d", TOY_AS_INTEGER(literal));
 			printFn(buffer);
 		}
 		break;
 
-		case LITERAL_FLOAT: {
+		case TOY_LITERAL_FLOAT: {
 			char buffer[256];
 
-			if (AS_FLOAT(literal) - (int)AS_FLOAT(literal)) {
-				snprintf(buffer, 256, "%g", AS_FLOAT(literal));
+			if (TOY_AS_FLOAT(literal) - (int)TOY_AS_FLOAT(literal)) {
+				snprintf(buffer, 256, "%g", TOY_AS_FLOAT(literal));
 			}
 			else {
-				snprintf(buffer, 256, "%.1f", AS_FLOAT(literal));
+				snprintf(buffer, 256, "%.1f", TOY_AS_FLOAT(literal));
 			}
 
 			printFn(buffer);
 		}
 		break;
 
-		case LITERAL_STRING: {
-			char buffer[MAX_STRING_LENGTH];
+		case TOY_LITERAL_STRING: {
+			char buffer[TOY_MAX_STRING_LENGTH];
 			if (!quotes) {
-				snprintf(buffer, MAX_STRING_LENGTH, "%.*s", lengthRefString(AS_STRING(literal)), toCString(AS_STRING(literal)));
+				snprintf(buffer, TOY_MAX_STRING_LENGTH, "%.*s", Toy_lengthRefString(TOY_AS_STRING(literal)), Toy_toCString(TOY_AS_STRING(literal)));
 			}
 			else {
-				snprintf(buffer, MAX_STRING_LENGTH, "%c%.*s%c", quotes, lengthRefString(AS_STRING(literal)), toCString(AS_STRING(literal)), quotes);
+				snprintf(buffer, TOY_MAX_STRING_LENGTH, "%c%.*s%c", quotes, Toy_lengthRefString(TOY_AS_STRING(literal)), Toy_toCString(TOY_AS_STRING(literal)), quotes);
 			}
 			printFn(buffer);
 		}
 		break;
 
-		case LITERAL_ARRAY: {
-			LiteralArray* ptr = AS_ARRAY(literal);
+		case TOY_LITERAL_ARRAY: {
+			Toy_LiteralArray* ptr = TOY_AS_ARRAY(literal);
 
 			//hold potential parent-call buffers on the C stack
 			char* cacheBuffer = globalPrintBuffer;
@@ -491,7 +491,7 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 			printToBuffer("[");
 			for (int i = 0; i < ptr->count; i++) {
 				quotes = '"';
-				printLiteralCustom(ptr->literals[i], printToBuffer);
+				Toy_printLiteralCustom(ptr->literals[i], printToBuffer);
 
 				if (i + 1 < ptr->count) {
 					printToBuffer(",");
@@ -510,13 +510,13 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 
 			//finally, output and cleanup
 			printFn(printBuffer);
-			FREE_ARRAY(char, printBuffer, printCapacity);
+			TOY_FREE_ARRAY(char, printBuffer, printCapacity);
 			quotes = 0;
 		}
 		break;
 
-		case LITERAL_DICTIONARY: {
-			LiteralDictionary* ptr = AS_DICTIONARY(literal);
+		case TOY_LITERAL_DICTIONARY: {
+			Toy_LiteralDictionary* ptr = TOY_AS_DICTIONARY(literal);
 
 			//hold potential parent-call buffers on the C stack
 			char* cacheBuffer = globalPrintBuffer;
@@ -530,7 +530,7 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 			int delimCount = 0;
 			printToBuffer("[");
 			for (int i = 0; i < ptr->capacity; i++) {
-				if (IS_NULL(ptr->entries[i].key)) {
+				if (TOY_IS_NULL(ptr->entries[i].key)) {
 					continue;
 				}
 
@@ -539,10 +539,10 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 				}
 
 				quotes = '"';
-				printLiteralCustom(ptr->entries[i].key, printToBuffer);
+				Toy_printLiteralCustom(ptr->entries[i].key, printToBuffer);
 				printToBuffer(":");
 				quotes = '"';
-				printLiteralCustom(ptr->entries[i].value, printToBuffer);
+				Toy_printLiteralCustom(ptr->entries[i].value, printToBuffer);
 			}
 
 			//empty dicts MUST have a ":" printed
@@ -563,24 +563,24 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 
 			//finally, output and cleanup
 			printFn(printBuffer);
-			FREE_ARRAY(char, printBuffer, printCapacity);
+			TOY_FREE_ARRAY(char, printBuffer, printCapacity);
 			quotes = 0;
 		}
 		break;
 
-		case LITERAL_FUNCTION:
-		case LITERAL_FUNCTION_NATIVE:
+		case TOY_LITERAL_FUNCTION:
+		case TOY_LITERAL_FUNCTION_NATIVE:
 			printFn("(function)");
 		break;
 
-		case LITERAL_IDENTIFIER: {
+		case TOY_LITERAL_IDENTIFIER: {
 			char buffer[256];
-			snprintf(buffer, 256, "%.*s", lengthRefString(AS_IDENTIFIER(literal)), toCString(AS_IDENTIFIER(literal)));
+			snprintf(buffer, 256, "%.*s", Toy_lengthRefString(TOY_AS_IDENTIFIER(literal)), Toy_toCString(TOY_AS_IDENTIFIER(literal)));
 			printFn(buffer);
 		}
 		break;
 
-		case LITERAL_TYPE: {
+		case TOY_LITERAL_TYPE: {
 			//hold potential parent-call buffers on the C stack
 			char* cacheBuffer = globalPrintBuffer;
 			globalPrintBuffer = NULL;
@@ -592,78 +592,78 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 			//print the type correctly
 			printToBuffer("<");
 
-			switch(AS_TYPE(literal).typeOf) {
-				case LITERAL_NULL:
+			switch(TOY_AS_TYPE(literal).typeOf) {
+				case TOY_LITERAL_NULL:
 					printToBuffer("null");
 				break;
 
-				case LITERAL_BOOLEAN:
+				case TOY_LITERAL_BOOLEAN:
 					printToBuffer("bool");
 				break;
 
-				case LITERAL_INTEGER:
+				case TOY_LITERAL_INTEGER:
 					printToBuffer("int");
 				break;
 
-				case LITERAL_FLOAT:
+				case TOY_LITERAL_FLOAT:
 					printToBuffer("float");
 				break;
 
-				case LITERAL_STRING:
+				case TOY_LITERAL_STRING:
 					printToBuffer("string");
 				break;
 
-				case LITERAL_ARRAY:
+				case TOY_LITERAL_ARRAY:
 					//print all in the array
 					printToBuffer("[");
-					for (int i = 0; i < AS_TYPE(literal).count; i++) {
-						printLiteralCustom(((Literal*)(AS_TYPE(literal).subtypes))[i], printToBuffer);
+					for (int i = 0; i < TOY_AS_TYPE(literal).count; i++) {
+						Toy_printLiteralCustom(((Toy_Literal*)(TOY_AS_TYPE(literal).subtypes))[i], printToBuffer);
 					}
 					printToBuffer("]");
 				break;
 
-				case LITERAL_DICTIONARY:
+				case TOY_LITERAL_DICTIONARY:
 					printToBuffer("[");
 
-					for (int i = 0; i < AS_TYPE(literal).count; i += 2) {
-						printLiteralCustom(((Literal*)(AS_TYPE(literal).subtypes))[i], printToBuffer);
+					for (int i = 0; i < TOY_AS_TYPE(literal).count; i += 2) {
+						Toy_printLiteralCustom(((Toy_Literal*)(TOY_AS_TYPE(literal).subtypes))[i], printToBuffer);
 						printToBuffer(":");
-						printLiteralCustom(((Literal*)(AS_TYPE(literal).subtypes))[i + 1], printToBuffer);
+						Toy_printLiteralCustom(((Toy_Literal*)(TOY_AS_TYPE(literal).subtypes))[i + 1], printToBuffer);
 					}
 					printToBuffer("]");
 				break;
 
-				case LITERAL_FUNCTION:
+				case TOY_LITERAL_FUNCTION:
 					printToBuffer("function");
 				break;
 
-				case LITERAL_FUNCTION_NATIVE:
+				case TOY_LITERAL_FUNCTION_NATIVE:
 					printToBuffer("native");
 				break;
 
-				case LITERAL_IDENTIFIER:
+				case TOY_LITERAL_IDENTIFIER:
 					printToBuffer("identifier");
 				break;
 
-				case LITERAL_TYPE:
+				case TOY_LITERAL_TYPE:
 					printToBuffer("type");
 				break;
 
-				case LITERAL_OPAQUE:
+				case TOY_LITERAL_OPAQUE:
 					printToBuffer("opaque");
 				break;
 
-				case LITERAL_ANY:
+				case TOY_LITERAL_ANY:
 					printToBuffer("any");
 				break;
 
 				default:
 					//should never be seen
-					fprintf(stderr, ERROR "[internal] Unrecognized literal type in print type: %d\n" RESET, AS_TYPE(literal).typeOf);
+					fprintf(stderr, TOY_CC_ERROR "[internal] Unrecognized literal type in print type: %d\n" TOY_CC_RESET, TOY_AS_TYPE(literal).typeOf);
 			}
 
 			//const (printed last)
-			if (AS_TYPE(literal).constant) {
+			if (TOY_AS_TYPE(literal).constant) {
 				printToBuffer(" const");
 			}
 
@@ -680,26 +680,26 @@ void printLiteralCustom(Literal literal, void (printFn)(const char*)) {
 
 			//finally, output and cleanup
 			printFn(printBuffer);
-			FREE_ARRAY(char, printBuffer, printCapacity);
+			TOY_FREE_ARRAY(char, printBuffer, printCapacity);
 			quotes = 0;
 		}
 		break;
 
-		case LITERAL_TYPE_INTERMEDIATE:
-		case LITERAL_FUNCTION_INTERMEDIATE:
+		case TOY_LITERAL_TYPE_INTERMEDIATE:
+		case TOY_LITERAL_FUNCTION_INTERMEDIATE:
 			printFn("Unprintable literal found");
 		break;
 
-		case LITERAL_OPAQUE:
+		case TOY_LITERAL_OPAQUE:
 			printFn("(opaque)");
 		break;
 
-		case LITERAL_ANY:
+		case TOY_LITERAL_ANY:
 			printFn("(any)");
 		break;
 
 		default:
 			//should never be seen
-			fprintf(stderr, ERROR "[internal] Unrecognized literal type in print: %d\n" RESET, literal.type);
+			fprintf(stderr, TOY_CC_ERROR "[internal] Unrecognized literal type in print: %d\n" TOY_CC_RESET, literal.type);
 	}
 }

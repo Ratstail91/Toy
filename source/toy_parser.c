@@ -1,22 +1,22 @@
-#include "parser.h"
+#include "toy_parser.h"
 
-#include "memory.h"
-#include "literal.h"
-#include "opcodes.h"
+#include "toy_memory.h"
+#include "toy_literal.h"
+#include "toy_opcodes.h"
 
-#include "console_colors.h"
+#include "toy_console_colors.h"
 
 #include <stdio.h>
 
 //utility functions
-static void error(Parser* parser, Token token, const char* message) {
+static void error(Toy_Parser* parser, Toy_Token token, const char* message) {
 	//keep going while panicing
 	if (parser->panic) return;
 
-	fprintf(stderr, ERROR "[Line %d] Error", token.line);
+	fprintf(stderr, TOY_CC_ERROR "[Line %d] Error", token.line);
 
 	//check type
-	if (token.type == TOKEN_EOF) {
+	if (token.type == TOY_TOKEN_EOF) {
 		fprintf(stderr, " at end");
 	}
 
@@ -25,21 +25,21 @@ static void error(Parser* parser, Token token, const char* message) {
 	}
 
 	//finally
-	fprintf(stderr, ": %s\n" RESET, message);
+	fprintf(stderr, ": %s\n" TOY_CC_RESET, message);
 	parser->error = true;
 	parser->panic = true;
 }
 
-static void advance(Parser* parser) {
+static void advance(Toy_Parser* parser) {
 	parser->previous = parser->current;
-	parser->current = scanLexer(parser->lexer);
+	parser->current = Toy_scanLexer(parser->lexer);
 
-	if (parser->current.type == TOKEN_ERROR) {
-		error(parser, parser->current, "Lexer error");
+	if (parser->current.type == TOY_TOKEN_ERROR) {
+		error(parser, parser->current, "Toy_Lexer error");
 	}
 }
 
-static bool match(Parser* parser, TokenType tokenType) {
+static bool match(Toy_Parser* parser, Toy_TokenType tokenType) {
 	if (parser->current.type == tokenType) {
 		advance(parser);
 		return true;
@@ -47,7 +47,7 @@ static bool match(Parser* parser, TokenType tokenType) {
 	return false;
 }
 
-static void consume(Parser* parser, TokenType tokenType, const char* msg) {
+static void consume(Toy_Parser* parser, Toy_TokenType tokenType, const char* msg) {
 	if (parser->current.type != tokenType) {
 		error(parser, parser->current, msg);
 		return;
@@ -56,30 +56,30 @@ static void consume(Parser* parser, TokenType tokenType, const char* msg) {
 	advance(parser);
 }
 
-static void synchronize(Parser* parser) {
+static void synchronize(Toy_Parser* parser) {
 #ifndef TOY_EXPORT
 	if (command.verbose) {
-		fprintf(stderr, ERROR "synchronizing\n" RESET);
+		fprintf(stderr, TOY_CC_ERROR "synchronizing\n" TOY_CC_RESET);
 	}
 #endif
 
-	while (parser->current.type != TOKEN_EOF) {
+	while (parser->current.type != TOY_TOKEN_EOF) {
 		switch(parser->current.type) {
 			//these tokens can start a line
-			case TOKEN_ASSERT:
-			case TOKEN_BREAK:
-			case TOKEN_CLASS:
-			case TOKEN_CONTINUE:
-			case TOKEN_DO:
-			case TOKEN_EXPORT:
-			case TOKEN_FOR:
-			case TOKEN_FOREACH:
-			case TOKEN_IF:
-			case TOKEN_IMPORT:
-			case TOKEN_PRINT:
-			case TOKEN_RETURN:
-			case TOKEN_VAR:
-			case TOKEN_WHILE:
+			case TOY_TOKEN_ASSERT:
+			case TOY_TOKEN_BREAK:
+			case TOY_TOKEN_CLASS:
+			case TOY_TOKEN_CONTINUE:
+			case TOY_TOKEN_DO:
+			case TOY_TOKEN_EXPORT:
+			case TOY_TOKEN_FOR:
+			case TOY_TOKEN_FOREACH:
+			case TOY_TOKEN_IF:
+			case TOY_TOKEN_IMPORT:
+			case TOY_TOKEN_PRINT:
+			case TOY_TOKEN_RETURN:
+			case TOY_TOKEN_VAR:
+			case TOY_TOKEN_WHILE:
 				parser->panic = false;
 				return;
 
@@ -104,7 +104,7 @@ typedef enum {
 	PREC_PRIMARY,
 } PrecedenceRule;
 
-typedef Opcode (*ParseFn)(Parser* parser, ASTNode** nodeHandle);
+typedef Toy_Opcode (*ParseFn)(Toy_Parser* parser, Toy_ASTNode** nodeHandle);
 
 typedef struct {
 	ParseFn prefix;
@@ -115,126 +115,126 @@ typedef struct {
 ParseRule parseRules[];
 
 //forward declarations
-static void declaration(Parser* parser, ASTNode** nodeHandle);
-static void parsePrecedence(Parser* parser, ASTNode** nodeHandle, PrecedenceRule rule);
-static Literal readTypeToLiteral(Parser* parser);
+static void declaration(Toy_Parser* parser, Toy_ASTNode** nodeHandle);
+static void parsePrecedence(Toy_Parser* parser, Toy_ASTNode** nodeHandle, PrecedenceRule rule);
+static Toy_Literal readTypeToLiteral(Toy_Parser* parser);
 
 //TODO: resolve the messy order of these
 //the expression rules
-static Opcode asType(Parser* parser, ASTNode** nodeHandle) {
-	Literal literal = readTypeToLiteral(parser);
+static Toy_Opcode asType(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
+	Toy_Literal literal = readTypeToLiteral(parser);
 
-	if (!IS_TYPE(literal)) {
+	if (!TOY_IS_TYPE(literal)) {
 		error(parser, parser->previous, "Expected type after 'astype' keyword");
-		freeLiteral(literal);
-		return OP_EOF;
+		Toy_freeLiteral(literal);
+		return TOY_OP_EOF;
 	}
 
-	emitASTNodeLiteral(nodeHandle, literal);
+	Toy_emitASTNodeLiteral(nodeHandle, literal);
 
-	freeLiteral(literal);
+	Toy_freeLiteral(literal);
 
-	return OP_EOF;
+	return TOY_OP_EOF;
 }
 
-static Opcode typeOf(Parser* parser, ASTNode** nodeHandle) {
-	ASTNode* rhs = NULL;
+static Toy_Opcode typeOf(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
+	Toy_ASTNode* rhs = NULL;
 	parsePrecedence(parser, &rhs, PREC_TERNARY);
-	emitASTNodeUnary(nodeHandle, OP_TYPE_OF, rhs);
-	return OP_EOF;
+	Toy_emitASTNodeUnary(nodeHandle, TOY_OP_TYPE_OF, rhs);
+	return TOY_OP_EOF;
 }
 
-static Opcode compound(Parser* parser, ASTNode** nodeHandle) {
+static Toy_Opcode compound(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	//read either an array or a dictionary into a literal node
 
 	int iterations = 0; //count the number of entries iterated over
 
 	//compound nodes to store what is read
-	ASTNode* array = NULL;
-	ASTNode* dictionary = NULL;
+	Toy_ASTNode* array = NULL;
+	Toy_ASTNode* dictionary = NULL;
 
-	while (!match(parser, TOKEN_BRACKET_RIGHT)) {
+	while (!match(parser, TOY_TOKEN_BRACKET_RIGHT)) {
 		//if empty dictionary, there will be a colon between the brackets
-		if (iterations == 0 && match(parser, TOKEN_COLON)) {
-			consume(parser, TOKEN_BRACKET_RIGHT, "Expected ']' at the end of empty dictionary definition");
+		if (iterations == 0 && match(parser, TOY_TOKEN_COLON)) {
+			consume(parser, TOY_TOKEN_BRACKET_RIGHT, "Expected ']' at the end of empty dictionary definition");
 			//emit an empty dictionary and finish
-			emitASTNodeCompound(&dictionary, LITERAL_DICTIONARY);
+			Toy_emitASTNodeCompound(&dictionary, TOY_LITERAL_DICTIONARY);
 			break;
 		}
 
 		if (iterations > 0) {
-			consume(parser, TOKEN_COMMA, "Expected ',' in array or dictionary");
+			consume(parser, TOY_TOKEN_COMMA, "Expected ',' in array or dictionary");
 		}
 
 		iterations++;
 
-		ASTNode* left = NULL;
-		ASTNode* right = NULL;
+		Toy_ASTNode* left = NULL;
+		Toy_ASTNode* right = NULL;
 
 		//store the left
 		parsePrecedence(parser, &left, PREC_PRIMARY);
 
 		if (!left) { //error
-			return OP_EOF;
+			return TOY_OP_EOF;
 		}
 
 		//detect a dictionary
-		if (match(parser, TOKEN_COLON)) {
+		if (match(parser, TOY_TOKEN_COLON)) {
 			parsePrecedence(parser, &right, PREC_PRIMARY);
 
 			if (!right) { //error
-				freeASTNode(left);
-				return OP_EOF;
+				Toy_freeASTNode(left);
+				return TOY_OP_EOF;
 			}
 
 			//check we ARE defining a dictionary
 			if (array) {
 				error(parser, parser->previous, "Incorrect detection between array and dictionary");
-				freeASTNode(array);
-				return OP_EOF;
+				Toy_freeASTNode(array);
+				return TOY_OP_EOF;
 			}
 
 			//init the dictionary
 			if (!dictionary) {
-				emitASTNodeCompound(&dictionary, LITERAL_DICTIONARY);
+				Toy_emitASTNodeCompound(&dictionary, TOY_LITERAL_DICTIONARY);
 			}
 
 			//grow the node if needed
 			if (dictionary->compound.capacity < dictionary->compound.count + 1) {
 				int oldCapacity = dictionary->compound.capacity;
 
-				dictionary->compound.capacity = GROW_CAPACITY(oldCapacity);
-				dictionary->compound.nodes = GROW_ARRAY(ASTNode, dictionary->compound.nodes, oldCapacity, dictionary->compound.capacity);
+				dictionary->compound.capacity = TOY_GROW_CAPACITY(oldCapacity);
+				dictionary->compound.nodes = TOY_GROW_ARRAY(Toy_ASTNode, dictionary->compound.nodes, oldCapacity, dictionary->compound.capacity);
 			}
 
 			//store the left and right in the node
-			setASTNodePair(&dictionary->compound.nodes[dictionary->compound.count++], left, right);
+			Toy_setASTNodePair(&dictionary->compound.nodes[dictionary->compound.count++], left, right);
 		}
 		//detect an array
 		else {
 			//check we ARE defining an array
 			if (dictionary) {
 				error(parser, parser->current, "Incorrect detection between array and dictionary");
-				freeASTNode(dictionary);
-				return OP_EOF;
+				Toy_freeASTNode(dictionary);
+				return TOY_OP_EOF;
 			}
 
 			//init the array
 			if (!array) {
-				emitASTNodeCompound(&array, LITERAL_ARRAY);
+				Toy_emitASTNodeCompound(&array, TOY_LITERAL_ARRAY);
 			}
 
 			//grow the node if needed
 			if (array->compound.capacity < array->compound.count + 1) {
 				int oldCapacity = array->compound.capacity;
 
-				array->compound.capacity = GROW_CAPACITY(oldCapacity);
-				array->compound.nodes = GROW_ARRAY(ASTNode, array->compound.nodes, oldCapacity, array->compound.capacity);
+				array->compound.capacity = TOY_GROW_CAPACITY(oldCapacity);
+				array->compound.nodes = TOY_GROW_ARRAY(Toy_ASTNode, array->compound.nodes, oldCapacity, array->compound.capacity);
 			}
 
 			//copy into the array, and manually free the temp node
 			array->compound.nodes[array->compound.count++] = *left;
-			FREE(ASTNode, left);
+			TOY_FREE(Toy_ASTNode, left);
 		}
 	}
 
@@ -247,287 +247,287 @@ static Opcode compound(Parser* parser, ASTNode** nodeHandle) {
 	}
 	else {
 		//both are null, must be an array (because reasons)
-		emitASTNodeCompound(&array, LITERAL_ARRAY);
+		Toy_emitASTNodeCompound(&array, TOY_LITERAL_ARRAY);
 		(*nodeHandle) = array;
 	}
 
 
 	//ignored
-	return OP_EOF;
+	return TOY_OP_EOF;
 }
 
-static Opcode string(Parser* parser, ASTNode** nodeHandle) {
+static Toy_Opcode string(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	//handle strings
 	switch(parser->previous.type) {
-		case TOKEN_LITERAL_STRING: {
+		case TOY_TOKEN_LITERAL_STRING: {
 			int length = parser->previous.length;
 
 			//for safety
-			if (length > MAX_STRING_LENGTH) {
-				length = MAX_STRING_LENGTH;
+			if (length > TOY_MAX_STRING_LENGTH) {
+				length = TOY_MAX_STRING_LENGTH;
 				char buffer[256];
-				snprintf(buffer, 256, ERROR "Strings can only be a maximum of %d characters long" RESET, MAX_STRING_LENGTH);
+				snprintf(buffer, 256, TOY_CC_ERROR "Strings can only be a maximum of %d characters long" TOY_CC_RESET, TOY_MAX_STRING_LENGTH);
 				error(parser, parser->previous, buffer);
 			}
 
-			Literal literal = TO_STRING_LITERAL(createRefStringLength(parser->previous.lexeme, length));
-			emitASTNodeLiteral(nodeHandle, literal);
-			freeLiteral(literal);
-			return OP_EOF;
+			Toy_Literal literal = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(parser->previous.lexeme, length));
+			Toy_emitASTNodeLiteral(nodeHandle, literal);
+			Toy_freeLiteral(literal);
+			return TOY_OP_EOF;
 		}
 
 		//TODO: interpolated strings
 
 		default:
 			error(parser, parser->previous, "Unexpected token passed to string precedence rule");
-			return OP_EOF;
+			return TOY_OP_EOF;
 	}
 }
 
-static Opcode grouping(Parser* parser, ASTNode** nodeHandle) {
+static Toy_Opcode grouping(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	//handle groupings with ()
 	switch(parser->previous.type) {
-		case TOKEN_PAREN_LEFT: {
+		case TOY_TOKEN_PAREN_LEFT: {
 			parsePrecedence(parser, nodeHandle, PREC_TERNARY);
-			consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of grouping");
+			consume(parser, TOY_TOKEN_PAREN_RIGHT, "Expected ')' at end of grouping");
 
 			//process the result without optimisations
-			emitASTNodeGrouping(nodeHandle);
-			return OP_EOF;
+			Toy_emitASTNodeGrouping(nodeHandle);
+			return TOY_OP_EOF;
 		}
 
 		default:
 			error(parser, parser->previous, "Unexpected token passed to grouping precedence rule");
-			return OP_EOF;
+			return TOY_OP_EOF;
 	}
 }
 
-static Opcode binary(Parser* parser, ASTNode** nodeHandle) {
+static Toy_Opcode binary(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	advance(parser);
 
 	//binary() is an infix rule - so only get the RHS of the operator
 	switch(parser->previous.type) {
 		//arithmetic
-		case TOKEN_PLUS: {
+		case TOY_TOKEN_PLUS: {
 			parsePrecedence(parser, nodeHandle, PREC_TERM);
-			return OP_ADDITION;
+			return TOY_OP_ADDITION;
 		}
 
-		case TOKEN_MINUS: {
+		case TOY_TOKEN_MINUS: {
 			parsePrecedence(parser, nodeHandle, PREC_TERM);
-			return OP_SUBTRACTION;
+			return TOY_OP_SUBTRACTION;
 		}
 
-		case TOKEN_MULTIPLY: {
+		case TOY_TOKEN_MULTIPLY: {
 			parsePrecedence(parser, nodeHandle, PREC_FACTOR);
-			return OP_MULTIPLICATION;
+			return TOY_OP_MULTIPLICATION;
 		}
 
-		case TOKEN_DIVIDE: {
+		case TOY_TOKEN_DIVIDE: {
 			parsePrecedence(parser, nodeHandle, PREC_FACTOR);
-			return OP_DIVISION;
+			return TOY_OP_DIVISION;
 		}
 
-		case TOKEN_MODULO: {
+		case TOY_TOKEN_MODULO: {
 			parsePrecedence(parser, nodeHandle, PREC_FACTOR);
-			return OP_MODULO;
+			return TOY_OP_MODULO;
 		}
 
 		//assignment
-		case TOKEN_ASSIGN: {
+		case TOY_TOKEN_ASSIGN: {
 			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
-			return OP_VAR_ASSIGN;
+			return TOY_OP_VAR_ASSIGN;
 		}
 
-		case TOKEN_PLUS_ASSIGN: {
+		case TOY_TOKEN_PLUS_ASSIGN: {
 			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
-			return OP_VAR_ADDITION_ASSIGN;
+			return TOY_OP_VAR_ADDITION_ASSIGN;
 		}
 
-		case TOKEN_MINUS_ASSIGN: {
+		case TOY_TOKEN_MINUS_ASSIGN: {
 			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
-			return OP_VAR_SUBTRACTION_ASSIGN;
+			return TOY_OP_VAR_SUBTRACTION_ASSIGN;
 		}
 
-		case TOKEN_MULTIPLY_ASSIGN: {
+		case TOY_TOKEN_MULTIPLY_ASSIGN: {
 			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
-			return OP_VAR_MULTIPLICATION_ASSIGN;
+			return TOY_OP_VAR_MULTIPLICATION_ASSIGN;
 		}
 
-		case TOKEN_DIVIDE_ASSIGN: {
+		case TOY_TOKEN_DIVIDE_ASSIGN: {
 			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
-			return OP_VAR_DIVISION_ASSIGN;
+			return TOY_OP_VAR_DIVISION_ASSIGN;
 		}
 
-		case TOKEN_MODULO_ASSIGN: {
+		case TOY_TOKEN_MODULO_ASSIGN: {
 			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
-			return OP_VAR_MODULO_ASSIGN;
+			return TOY_OP_VAR_MODULO_ASSIGN;
 		}
 
 		//comparison
-		case TOKEN_EQUAL: {
+		case TOY_TOKEN_EQUAL: {
 			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
-			return OP_COMPARE_EQUAL;
+			return TOY_OP_COMPARE_EQUAL;
 		}
 
-		case TOKEN_NOT_EQUAL: {
+		case TOY_TOKEN_NOT_EQUAL: {
 			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
-			return OP_COMPARE_NOT_EQUAL;
+			return TOY_OP_COMPARE_NOT_EQUAL;
 		}
 
-		case TOKEN_LESS: {
+		case TOY_TOKEN_LESS: {
 			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
-			return OP_COMPARE_LESS;
+			return TOY_OP_COMPARE_LESS;
 		}
 
-		case TOKEN_LESS_EQUAL: {
+		case TOY_TOKEN_LESS_EQUAL: {
 			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
-			return OP_COMPARE_LESS_EQUAL;
+			return TOY_OP_COMPARE_LESS_EQUAL;
 		}
 
-		case TOKEN_GREATER: {
+		case TOY_TOKEN_GREATER: {
 			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
-			return OP_COMPARE_GREATER;
+			return TOY_OP_COMPARE_GREATER;
 		}
 
-		case TOKEN_GREATER_EQUAL: {
+		case TOY_TOKEN_GREATER_EQUAL: {
 			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
-			return OP_COMPARE_GREATER_EQUAL;
+			return TOY_OP_COMPARE_GREATER_EQUAL;
 		}
 
-		case TOKEN_AND: {
+		case TOY_TOKEN_AND: {
 			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
-			return OP_AND;
+			return TOY_OP_AND;
 		}
 
-		case TOKEN_OR: {
+		case TOY_TOKEN_OR: {
 			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
-			return OP_OR;
+			return TOY_OP_OR;
 		}
 
 		default:
 			error(parser, parser->previous, "Unexpected token passed to binary precedence rule");
-			return OP_EOF;
+			return TOY_OP_EOF;
 	}
 }
 
-static Opcode unary(Parser* parser, ASTNode** nodeHandle) {
-	ASTNode* tmpNode = NULL;
+static Toy_Opcode unary(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
+	Toy_ASTNode* tmpNode = NULL;
 
-	if (parser->previous.type == TOKEN_MINUS) {
+	if (parser->previous.type == TOY_TOKEN_MINUS) {
 		//temp handle to potentially negate values
 		parsePrecedence(parser, &tmpNode, PREC_TERNARY); //can be a literal
 
 		//optimisation: check for negative literals
-		if (tmpNode != NULL && tmpNode->type == AST_NODE_LITERAL && (IS_INTEGER(tmpNode->atomic.literal) || IS_FLOAT(tmpNode->atomic.literal))) {
+		if (tmpNode != NULL && tmpNode->type == TOY_AST_NODE_LITERAL && (TOY_IS_INTEGER(tmpNode->atomic.literal) || TOY_IS_FLOAT(tmpNode->atomic.literal))) {
 			//negate directly, if int or float
-			Literal lit = tmpNode->atomic.literal;
+			Toy_Literal lit = tmpNode->atomic.literal;
 
-			if (IS_INTEGER(lit)) {
-				lit = TO_INTEGER_LITERAL(-AS_INTEGER(lit));
+			if (TOY_IS_INTEGER(lit)) {
+				lit = TOY_TO_INTEGER_LITERAL(-TOY_AS_INTEGER(lit));
 			}
 
-			if (IS_FLOAT(lit)) {
-				lit = TO_FLOAT_LITERAL(-AS_FLOAT(lit));
+			if (TOY_IS_FLOAT(lit)) {
+				lit = TOY_TO_FLOAT_LITERAL(-TOY_AS_FLOAT(lit));
 			}
 
 			tmpNode->atomic.literal = lit;
 			*nodeHandle = tmpNode;
 
-			return OP_EOF;
+			return TOY_OP_EOF;
 		}
 
 		//check for negated boolean errors
-		if (tmpNode != NULL && tmpNode->type == AST_NODE_LITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {
+		if (tmpNode != NULL && tmpNode->type == TOY_AST_NODE_LITERAL && TOY_IS_BOOLEAN(tmpNode->atomic.literal)) {
 			error(parser, parser->previous, "Negative booleans are not allowed");
-			return OP_EOF;
+			return TOY_OP_EOF;
 		}
 
 		//actually emit the negation node
-		emitASTNodeUnary(nodeHandle, OP_NEGATE, tmpNode);
+		Toy_emitASTNodeUnary(nodeHandle, TOY_OP_NEGATE, tmpNode);
 	}
 
-	else if (parser->previous.type == TOKEN_NOT) {
+	else if (parser->previous.type == TOY_TOKEN_NOT) {
 		//temp handle to potentially negate values
 		parsePrecedence(parser, &tmpNode, PREC_CALL); //can be a literal, grouping, fn call, etc.
 
 		//optimisation: check for inverted booleans
-		if (tmpNode != NULL && tmpNode->type == AST_NODE_LITERAL && IS_BOOLEAN(tmpNode->atomic.literal)) {
+		if (tmpNode != NULL && tmpNode->type == TOY_AST_NODE_LITERAL && TOY_IS_BOOLEAN(tmpNode->atomic.literal)) {
 			//negate directly, if boolean
-			Literal lit = tmpNode->atomic.literal;
+			Toy_Literal lit = tmpNode->atomic.literal;
 
-			lit = TO_BOOLEAN_LITERAL(!AS_BOOLEAN(lit));
+			lit = TOY_TO_BOOLEAN_LITERAL(!TOY_AS_BOOLEAN(lit));
 
 			tmpNode->atomic.literal = lit;
 			*nodeHandle = tmpNode;
 
-			return OP_EOF;
+			return TOY_OP_EOF;
 		}
 
 		//actually emit the negation
-		emitASTNodeUnary(nodeHandle, OP_INVERT, tmpNode);
+		Toy_emitASTNodeUnary(nodeHandle, TOY_OP_INVERT, tmpNode);
 	}
 
 	else {
 		error(parser, parser->previous, "Unexpected token passed to unary precedence rule");
-		return OP_EOF;
+		return TOY_OP_EOF;
 	}
 
-	return OP_EOF;
+	return TOY_OP_EOF;
 }
 
-static Opcode atomic(Parser* parser, ASTNode** nodeHandle) {
+static Toy_Opcode atomic(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	switch(parser->previous.type) {
-		case TOKEN_NULL:
-			emitASTNodeLiteral(nodeHandle, TO_NULL_LITERAL);
-			return OP_EOF;
+		case TOY_TOKEN_NULL:
+			Toy_emitASTNodeLiteral(nodeHandle, TOY_TO_NULL_LITERAL);
+			return TOY_OP_EOF;
 
-		case TOKEN_LITERAL_TRUE:
-			emitASTNodeLiteral(nodeHandle, TO_BOOLEAN_LITERAL(true));
-			return OP_EOF;
+		case TOY_TOKEN_LITERAL_TRUE:
+			Toy_emitASTNodeLiteral(nodeHandle, TOY_TO_BOOLEAN_LITERAL(true));
+			return TOY_OP_EOF;
 
-		case TOKEN_LITERAL_FALSE:
-			emitASTNodeLiteral(nodeHandle, TO_BOOLEAN_LITERAL(false));
-			return OP_EOF;
+		case TOY_TOKEN_LITERAL_FALSE:
+			Toy_emitASTNodeLiteral(nodeHandle, TOY_TO_BOOLEAN_LITERAL(false));
+			return TOY_OP_EOF;
 
-		case TOKEN_LITERAL_INTEGER: {
+		case TOY_TOKEN_LITERAL_INTEGER: {
 			int value = 0;
 			sscanf(parser->previous.lexeme, "%d", &value);
-			emitASTNodeLiteral(nodeHandle, TO_INTEGER_LITERAL(value));
-			return OP_EOF;
+			Toy_emitASTNodeLiteral(nodeHandle, TOY_TO_INTEGER_LITERAL(value));
+			return TOY_OP_EOF;
 		}
 
-		case TOKEN_LITERAL_FLOAT: {
+		case TOY_TOKEN_LITERAL_FLOAT: {
 			float value = 0;
 			sscanf(parser->previous.lexeme, "%f", &value);
-			emitASTNodeLiteral(nodeHandle, TO_FLOAT_LITERAL(value));
-			return OP_EOF;
+			Toy_emitASTNodeLiteral(nodeHandle, TOY_TO_FLOAT_LITERAL(value));
+			return TOY_OP_EOF;
 		}
 
-		case TOKEN_TYPE: {
-			if (match(parser, TOKEN_CONST)) {
-				emitASTNodeLiteral(nodeHandle, TO_TYPE_LITERAL(LITERAL_TYPE, true));
+		case TOY_TOKEN_TYPE: {
+			if (match(parser, TOY_TOKEN_CONST)) {
+				Toy_emitASTNodeLiteral(nodeHandle, TOY_TO_TYPE_LITERAL(TOY_LITERAL_TYPE, true));
 			}
 			else {
-				emitASTNodeLiteral(nodeHandle, TO_TYPE_LITERAL(LITERAL_TYPE, false));
+				Toy_emitASTNodeLiteral(nodeHandle, TOY_TO_TYPE_LITERAL(TOY_LITERAL_TYPE, false));
 			}
 
-			return OP_EOF;
+			return TOY_OP_EOF;
 		}
 
 		default:
 			error(parser, parser->previous, "Unexpected token passed to atomic precedence rule");
-			return OP_EOF;
+			return TOY_OP_EOF;
 	}
 }
 
-static Opcode identifier(Parser* parser, ASTNode** nodeHandle) {
+static Toy_Opcode identifier(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	//make a copy of the string
-	Token identifierToken = parser->previous;
+	Toy_Token identifierToken = parser->previous;
 
-	if (identifierToken.type != TOKEN_IDENTIFIER) {
+	if (identifierToken.type != TOY_TOKEN_IDENTIFIER) {
 		error(parser, parser->previous, "Expected identifier");
-		return OP_EOF;
+		return TOY_OP_EOF;
 	}
 
 	int length = identifierToken.length;
@@ -538,281 +538,281 @@ static Opcode identifier(Parser* parser, ASTNode** nodeHandle) {
 		error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
 	}
 
-	Literal identifier = TO_IDENTIFIER_LITERAL(createRefStringLength(identifierToken.lexeme, length));
-	emitASTNodeLiteral(nodeHandle, identifier);
-	freeLiteral(identifier);
+	Toy_Literal identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(identifierToken.lexeme, length));
+	Toy_emitASTNodeLiteral(nodeHandle, identifier);
+	Toy_freeLiteral(identifier);
 
-	return OP_EOF;
+	return TOY_OP_EOF;
 }
 
-static Opcode castingPrefix(Parser* parser, ASTNode** nodeHandle) {
+static Toy_Opcode castingPrefix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	switch(parser->previous.type) {
-		case TOKEN_BOOLEAN: {
-			Literal literal = TO_TYPE_LITERAL(LITERAL_BOOLEAN, false);
-			emitASTNodeLiteral(nodeHandle, literal);
-			freeLiteral(literal);
+		case TOY_TOKEN_BOOLEAN: {
+			Toy_Literal literal = TOY_TO_TYPE_LITERAL(TOY_LITERAL_BOOLEAN, false);
+			Toy_emitASTNodeLiteral(nodeHandle, literal);
+			Toy_freeLiteral(literal);
 		}
 		break;
 
-		case TOKEN_INTEGER: {
-			Literal literal = TO_TYPE_LITERAL(LITERAL_INTEGER, false);
-			emitASTNodeLiteral(nodeHandle, literal);
-			freeLiteral(literal);
+		case TOY_TOKEN_INTEGER: {
+			Toy_Literal literal = TOY_TO_TYPE_LITERAL(TOY_LITERAL_INTEGER, false);
+			Toy_emitASTNodeLiteral(nodeHandle, literal);
+			Toy_freeLiteral(literal);
 		}
 		break;
 
-		case TOKEN_FLOAT: {
-			Literal literal = TO_TYPE_LITERAL(LITERAL_FLOAT, false);
-			emitASTNodeLiteral(nodeHandle, literal);
-			freeLiteral(literal);
+		case TOY_TOKEN_FLOAT: {
+			Toy_Literal literal = TOY_TO_TYPE_LITERAL(TOY_LITERAL_FLOAT, false);
+			Toy_emitASTNodeLiteral(nodeHandle, literal);
+			Toy_freeLiteral(literal);
 		}
 		break;
 
-		case TOKEN_STRING: {
-			Literal literal = TO_TYPE_LITERAL(LITERAL_STRING, false);
-			emitASTNodeLiteral(nodeHandle, literal);
-			freeLiteral(literal);
+		case TOY_TOKEN_STRING: {
+			Toy_Literal literal = TOY_TO_TYPE_LITERAL(TOY_LITERAL_STRING, false);
+			Toy_emitASTNodeLiteral(nodeHandle, literal);
+			Toy_freeLiteral(literal);
 		}
 		break;
 
 		default:
 			error(parser, parser->previous, "Unexpected token passed to casting precedence rule");
-			return OP_EOF;
+			return TOY_OP_EOF;
 	}
 
-	return OP_EOF;
+	return TOY_OP_EOF;
 }
 
-static Opcode castingInfix(Parser* parser, ASTNode** nodeHandle) {
+static Toy_Opcode castingInfix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	advance(parser);
 
 	//NOTE: using the precedence rules here
 	switch(parser->previous.type) {
-		case TOKEN_IDENTIFIER:
+		case TOY_TOKEN_IDENTIFIER:
 			identifier(parser, nodeHandle);
 		break;
 
-		case TOKEN_LITERAL_TRUE:
-		case TOKEN_LITERAL_FALSE:
+		case TOY_TOKEN_LITERAL_TRUE:
+		case TOY_TOKEN_LITERAL_FALSE:
 			atomic(parser, nodeHandle);
 		break;
 
-		case TOKEN_LITERAL_INTEGER:
+		case TOY_TOKEN_LITERAL_INTEGER:
 			atomic(parser, nodeHandle);
 		break;
 
-		case TOKEN_LITERAL_FLOAT:
+		case TOY_TOKEN_LITERAL_FLOAT:
 			atomic(parser, nodeHandle);
 		break;
 
-		case TOKEN_LITERAL_STRING:
+		case TOY_TOKEN_LITERAL_STRING:
 			atomic(parser, nodeHandle);
 		break;
 
 		default:
 			error(parser, parser->previous, "Unexpected token passed to casting infix precedence rule");
-			return OP_EOF;
+			return TOY_OP_EOF;
 	}
 
-	return OP_TYPE_CAST;
+	return TOY_OP_TYPE_CAST;
 }
 
 //TODO: fix these screwy names
-static Opcode incrementPrefix(Parser* parser, ASTNode** nodeHandle) {
+static Toy_Opcode incrementPrefix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	advance(parser);
 
-	ASTNode* tmpNode = NULL;
+	Toy_ASTNode* tmpNode = NULL;
 	identifier(parser, &tmpNode);
 
-	emitASTNodePrefixIncrement(nodeHandle, tmpNode->atomic.literal);
+	Toy_emitASTNodePrefixIncrement(nodeHandle, tmpNode->atomic.literal);
 
-	freeASTNode(tmpNode);
+	Toy_freeASTNode(tmpNode);
 
-	return OP_EOF;
+	return TOY_OP_EOF;
 }
 
-static Opcode incrementInfix(Parser* parser, ASTNode** nodeHandle) {
-	ASTNode* tmpNode = NULL;
+static Toy_Opcode incrementInfix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
+	Toy_ASTNode* tmpNode = NULL;
 	identifier(parser, &tmpNode);
 
 	advance(parser);
 
-	emitASTNodePostfixIncrement(nodeHandle, tmpNode->atomic.literal);
+	Toy_emitASTNodePostfixIncrement(nodeHandle, tmpNode->atomic.literal);
 
-	freeASTNode(tmpNode);
+	Toy_freeASTNode(tmpNode);
 
-	return OP_EOF;
+	return TOY_OP_EOF;
 }
 
-static Opcode decrementPrefix(Parser* parser, ASTNode** nodeHandle) {
+static Toy_Opcode decrementPrefix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	advance(parser);
 
-	ASTNode* tmpNode = NULL;
+	Toy_ASTNode* tmpNode = NULL;
 	identifier(parser, &tmpNode); //weird
 
-	emitASTNodePrefixDecrement(nodeHandle, tmpNode->atomic.literal);
+	Toy_emitASTNodePrefixDecrement(nodeHandle, tmpNode->atomic.literal);
 
-	freeASTNode(tmpNode);
+	Toy_freeASTNode(tmpNode);
 
-	return OP_EOF;
+	return TOY_OP_EOF;
 }
 
-static Opcode decrementInfix(Parser* parser, ASTNode** nodeHandle) {
-	ASTNode* tmpNode = NULL;
+static Toy_Opcode decrementInfix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
+	Toy_ASTNode* tmpNode = NULL;
 	identifier(parser, &tmpNode);
 
 	advance(parser);
 
-	emitASTNodePostfixDecrement(nodeHandle, tmpNode->atomic.literal);
+	Toy_emitASTNodePostfixDecrement(nodeHandle, tmpNode->atomic.literal);
 
-	freeASTNode(tmpNode);
+	Toy_freeASTNode(tmpNode);
 
-	return OP_EOF;
+	return TOY_OP_EOF;
 }
 
-static Opcode fnCall(Parser* parser, ASTNode** nodeHandle) {
+static Toy_Opcode fnCall(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	advance(parser); //skip the left paren
 
 	//binary() is an infix rule - so only get the RHS of the operator
 	switch(parser->previous.type) {
 		//arithmetic
-		case TOKEN_PAREN_LEFT: {
-			ASTNode* arguments = NULL;
-			emitASTNodeFnCollection(&arguments);
+		case TOY_TOKEN_PAREN_LEFT: {
+			Toy_ASTNode* arguments = NULL;
+			Toy_emitASTNodeFnCollection(&arguments);
 
 			//if there's arguments
-			if (!match(parser, TOKEN_PAREN_RIGHT)) {
+			if (!match(parser, TOY_TOKEN_PAREN_RIGHT)) {
 				//read each argument
 				do {
 					//emit the node to the argument list (grow the node if needed)
 					if (arguments->fnCollection.capacity < arguments->fnCollection.count + 1) {
 						int oldCapacity = arguments->fnCollection.capacity;
 
-						arguments->fnCollection.capacity = GROW_CAPACITY(oldCapacity);
-						arguments->fnCollection.nodes = GROW_ARRAY(ASTNode, arguments->fnCollection.nodes, oldCapacity, arguments->fnCollection.capacity);
+						arguments->fnCollection.capacity = TOY_GROW_CAPACITY(oldCapacity);
+						arguments->fnCollection.nodes = TOY_GROW_ARRAY(Toy_ASTNode, arguments->fnCollection.nodes, oldCapacity, arguments->fnCollection.capacity);
 					}
 
-					ASTNode* tmpNode = NULL;
+					Toy_ASTNode* tmpNode = NULL;
 					parsePrecedence(parser, &tmpNode, PREC_TERNARY);
 
 					//BUGFIX
 					if (!tmpNode) {
 						error(parser, parser->previous, "[internal] No token found in fnCall");
-						return OP_EOF;
+						return TOY_OP_EOF;
 					}
 
 					arguments->fnCollection.nodes[arguments->fnCollection.count++] = *tmpNode;
-					FREE(ASTNode, tmpNode); //simply free the tmpNode, so you don't free the children
-				} while(match(parser, TOKEN_COMMA));
+					TOY_FREE(Toy_ASTNode, tmpNode); //simply free the tmpNode, so you don't free the children
+				} while(match(parser, TOY_TOKEN_COMMA));
 
-				consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of argument list");
+				consume(parser, TOY_TOKEN_PAREN_RIGHT, "Expected ')' at end of argument list");
 			}
 
 			//emit the call
-			emitASTNodeFnCall(nodeHandle, arguments);
+			Toy_emitASTNodeFnCall(nodeHandle, arguments);
 
-			return OP_FN_CALL;
+			return TOY_OP_FN_CALL;
 		}
 		break;
 
 		default:
 			error(parser, parser->previous, "Unexpected token passed to function call precedence rule");
-			return OP_EOF;
+			return TOY_OP_EOF;
 	}
 
-	return OP_EOF;
+	return TOY_OP_EOF;
 }
 
-static Opcode indexAccess(Parser* parser, ASTNode** nodeHandle) { //TODO: fix indexing signalling
+static Toy_Opcode indexAccess(Toy_Parser* parser, Toy_ASTNode** nodeHandle) { //TODO: fix indexing signalling
 	advance(parser);
 
 	//val[first : second : third]
 
-	ASTNode* first = NULL;
-	ASTNode* second = NULL;
-	ASTNode* third = NULL;
+	Toy_ASTNode* first = NULL;
+	Toy_ASTNode* second = NULL;
+	Toy_ASTNode* third = NULL;
 
 	//booleans indicate blank slice indexing
-	emitASTNodeLiteral(&first, TO_INDEX_BLANK_LITERAL);
-	emitASTNodeLiteral(&second, TO_INDEX_BLANK_LITERAL);
-	emitASTNodeLiteral(&third, TO_INDEX_BLANK_LITERAL);
+	Toy_emitASTNodeLiteral(&first, TOY_TO_INDEX_BLANK_LITERAL);
+	Toy_emitASTNodeLiteral(&second, TOY_TO_INDEX_BLANK_LITERAL);
+	Toy_emitASTNodeLiteral(&third, TOY_TO_INDEX_BLANK_LITERAL);
 
 	bool readFirst = false; //pattern matching is bullcrap
 
 	//eat the first
-	if (!match(parser, TOKEN_COLON)) {
-		freeASTNode(first);
+	if (!match(parser, TOY_TOKEN_COLON)) {
+		Toy_freeASTNode(first);
 		parsePrecedence(parser, &first, PREC_TERNARY);
-		match(parser, TOKEN_COLON);
+		match(parser, TOY_TOKEN_COLON);
 		readFirst = true;
 	}
 
-	if (match(parser, TOKEN_BRACKET_RIGHT)) {
+	if (match(parser, TOY_TOKEN_BRACKET_RIGHT)) {
 
 		if (readFirst) {
-			freeASTNode(second);
+			Toy_freeASTNode(second);
 			second = NULL;
 		}
 
-		freeASTNode(third);
+		Toy_freeASTNode(third);
 		third = NULL;
 
-		emitASTNodeIndex(nodeHandle, first, second, third);
-		return OP_INDEX;
+		Toy_emitASTNodeIndex(nodeHandle, first, second, third);
+		return TOY_OP_INDEX;
 	}
 
 	//eat the second
-	if (!match(parser, TOKEN_COLON)) {
-		freeASTNode(second);
+	if (!match(parser, TOY_TOKEN_COLON)) {
+		Toy_freeASTNode(second);
 		parsePrecedence(parser, &second, PREC_TERNARY);
-		match(parser, TOKEN_COLON);
+		match(parser, TOY_TOKEN_COLON);
 	}
 
-	if (match(parser, TOKEN_BRACKET_RIGHT)) {
-		freeASTNode(third);
+	if (match(parser, TOY_TOKEN_BRACKET_RIGHT)) {
+		Toy_freeASTNode(third);
 		third = NULL;
-		emitASTNodeIndex(nodeHandle, first, second, third);
-		return OP_INDEX;
+		Toy_emitASTNodeIndex(nodeHandle, first, second, third);
+		return TOY_OP_INDEX;
 	}
 
 	//eat the third
-	freeASTNode(third);
+	Toy_freeASTNode(third);
 	parsePrecedence(parser, &third, PREC_TERNARY);
-	emitASTNodeIndex(nodeHandle, first, second, third);
+	Toy_emitASTNodeIndex(nodeHandle, first, second, third);
 
-	consume(parser, TOKEN_BRACKET_RIGHT, "Expected ']' in index notation");
+	consume(parser, TOY_TOKEN_BRACKET_RIGHT, "Expected ']' in index notation");
 
-	return OP_INDEX;
+	return TOY_OP_INDEX;
 }
 
-static Opcode question(Parser* parser, ASTNode** nodeHandle) {
+static Toy_Opcode question(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	advance(parser); //for the question mark
 
-	ASTNode* thenPath = NULL;
-	ASTNode* elsePath = NULL;
+	Toy_ASTNode* thenPath = NULL;
+	Toy_ASTNode* elsePath = NULL;
 
 	parsePrecedence(parser, &thenPath, PREC_TERNARY);
-	consume(parser, TOKEN_COLON, "Expected ':' in ternary expression");
+	consume(parser, TOY_TOKEN_COLON, "Expected ':' in ternary expression");
 	parsePrecedence(parser, &elsePath, PREC_TERNARY);
 
-	emitASTNodeTernary(nodeHandle, NULL, thenPath, elsePath);
+	Toy_emitASTNodeTernary(nodeHandle, NULL, thenPath, elsePath);
 
-	return OP_TERNARY;
+	return TOY_OP_TERNARY;
 }
 
-static Opcode dot(Parser* parser, ASTNode** nodeHandle) {
+static Toy_Opcode dot(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	advance(parser); //for the dot
 
-	ASTNode* tmpNode = NULL;
+	Toy_ASTNode* tmpNode = NULL;
 	parsePrecedence(parser, &tmpNode, PREC_CALL);
 
 	if (tmpNode == NULL || tmpNode->binary.right == NULL) {
 		error(parser, parser->previous, "Expected function call after dot operator");
-		return OP_EOF;
+		return TOY_OP_EOF;
 	}
 
 	(*nodeHandle) = tmpNode;
-	return OP_DOT; //signal that the function name and arguments are in the wrong order
+	return TOY_OP_DOT; //signal that the function name and arguments are in the wrong order
 }
 
 ParseRule parseRules[] = { //must match the token types
@@ -907,24 +907,24 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_EOF,
 };
 
-ParseRule* getRule(TokenType type) {
+ParseRule* getRule(Toy_TokenType type) {
 	return &parseRules[type];
 }
 
 //optimisation: constant folding
-static bool calcStaticBinaryArithmetic(Parser* parser, ASTNode** nodeHandle) {
+static bool calcStaticBinaryArithmetic(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	switch((*nodeHandle)->binary.opcode) {
-		case OP_ADDITION:
-		case OP_SUBTRACTION:
-		case OP_MULTIPLICATION:
-		case OP_DIVISION:
-		case OP_MODULO:
-		case OP_COMPARE_EQUAL:
-		case OP_COMPARE_NOT_EQUAL:
-		case OP_COMPARE_LESS:
-		case OP_COMPARE_LESS_EQUAL:
-		case OP_COMPARE_GREATER:
-		case OP_COMPARE_GREATER_EQUAL:
+		case TOY_OP_ADDITION:
+		case TOY_OP_SUBTRACTION:
+		case TOY_OP_MULTIPLICATION:
+		case TOY_OP_DIVISION:
+		case TOY_OP_MODULO:
+		case TOY_OP_COMPARE_EQUAL:
+		case TOY_OP_COMPARE_NOT_EQUAL:
+		case TOY_OP_COMPARE_LESS:
+		case TOY_OP_COMPARE_LESS_EQUAL:
+		case TOY_OP_COMPARE_GREATER:
+		case TOY_OP_COMPARE_GREATER_EQUAL:
 			break;
 
 		default:
@@ -932,86 +932,86 @@ static bool calcStaticBinaryArithmetic(Parser* parser, ASTNode** nodeHandle) {
 	}
 
 	//recurse to the left and right
-	if ((*nodeHandle)->binary.left->type == AST_NODE_BINARY) {
+	if ((*nodeHandle)->binary.left->type == TOY_AST_NODE_BINARY) {
 		calcStaticBinaryArithmetic(parser, &(*nodeHandle)->binary.left);
 	}
 
-	if ((*nodeHandle)->binary.right->type == AST_NODE_BINARY) {
+	if ((*nodeHandle)->binary.right->type == TOY_AST_NODE_BINARY) {
 		calcStaticBinaryArithmetic(parser, &(*nodeHandle)->binary.right);
 	}
 
 	//make sure left and right are both literals
-	if (!((*nodeHandle)->binary.left->type == AST_NODE_LITERAL && (*nodeHandle)->binary.right->type == AST_NODE_LITERAL)) {
+	if (!((*nodeHandle)->binary.left->type == TOY_AST_NODE_LITERAL && (*nodeHandle)->binary.right->type == TOY_AST_NODE_LITERAL)) {
 		return true;
 	}
 
 	//evaluate
-	Literal lhs = (*nodeHandle)->binary.left->atomic.literal;
-	Literal rhs = (*nodeHandle)->binary.right->atomic.literal;
-	Literal result = TO_NULL_LITERAL;
+	Toy_Literal lhs = (*nodeHandle)->binary.left->atomic.literal;
+	Toy_Literal rhs = (*nodeHandle)->binary.right->atomic.literal;
+	Toy_Literal result = TOY_TO_NULL_LITERAL;
 
 	//type coersion
-	if (IS_FLOAT(lhs) && IS_INTEGER(rhs)) {
-		rhs = TO_FLOAT_LITERAL(AS_INTEGER(rhs));
+	if (TOY_IS_FLOAT(lhs) && TOY_IS_INTEGER(rhs)) {
+		rhs = TOY_TO_FLOAT_LITERAL(TOY_AS_INTEGER(rhs));
 	}
 
-	if (IS_INTEGER(lhs) && IS_FLOAT(rhs)) {
-		lhs = TO_FLOAT_LITERAL(AS_INTEGER(lhs));
+	if (TOY_IS_INTEGER(lhs) && TOY_IS_FLOAT(rhs)) {
+		lhs = TOY_TO_FLOAT_LITERAL(TOY_AS_INTEGER(lhs));
 	}
 
 	//maths based on types
-	if(IS_INTEGER(lhs) && IS_INTEGER(rhs)) {
+	if(TOY_IS_INTEGER(lhs) && TOY_IS_INTEGER(rhs)) {
 		switch((*nodeHandle)->binary.opcode) {
-			case OP_ADDITION:
-				result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) + AS_INTEGER(rhs) );
+			case TOY_OP_ADDITION:
+				result = TOY_TO_INTEGER_LITERAL( TOY_AS_INTEGER(lhs) + TOY_AS_INTEGER(rhs) );
 			break;
 
-			case OP_SUBTRACTION:
-				result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) - AS_INTEGER(rhs) );
+			case TOY_OP_SUBTRACTION:
+				result = TOY_TO_INTEGER_LITERAL( TOY_AS_INTEGER(lhs) - TOY_AS_INTEGER(rhs) );
 			break;
 
-			case OP_MULTIPLICATION:
-				result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) * AS_INTEGER(rhs) );
+			case TOY_OP_MULTIPLICATION:
+				result = TOY_TO_INTEGER_LITERAL( TOY_AS_INTEGER(lhs) * TOY_AS_INTEGER(rhs) );
 			break;
 
-			case OP_DIVISION:
-				if (AS_INTEGER(rhs) == 0) {
+			case TOY_OP_DIVISION:
+				if (TOY_AS_INTEGER(rhs) == 0) {
 					error(parser, parser->previous, "Can't divide by zero (error found in constant folding)");
 					return false;
 				}
-				result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) / AS_INTEGER(rhs) );
+				result = TOY_TO_INTEGER_LITERAL( TOY_AS_INTEGER(lhs) / TOY_AS_INTEGER(rhs) );
 			break;
 
-			case OP_MODULO:
-				if (AS_INTEGER(rhs) == 0) {
+			case TOY_OP_MODULO:
+				if (TOY_AS_INTEGER(rhs) == 0) {
 					error(parser, parser->previous, "Can't modulo by zero (error found in constant folding)");
 					return false;
 				}
-				result = TO_INTEGER_LITERAL( AS_INTEGER(lhs) % AS_INTEGER(rhs) );
+				result = TOY_TO_INTEGER_LITERAL( TOY_AS_INTEGER(lhs) % TOY_AS_INTEGER(rhs) );
 			break;
 
-			case OP_COMPARE_EQUAL:
-				result = TO_BOOLEAN_LITERAL( AS_INTEGER(lhs) == AS_INTEGER(rhs) );
+			case TOY_OP_COMPARE_EQUAL:
+				result = TOY_TO_BOOLEAN_LITERAL( TOY_AS_INTEGER(lhs) == TOY_AS_INTEGER(rhs) );
 			break;
 
-			case OP_COMPARE_NOT_EQUAL:
-				result = TO_BOOLEAN_LITERAL( AS_INTEGER(lhs) != AS_INTEGER(rhs) );
+			case TOY_OP_COMPARE_NOT_EQUAL:
+				result = TOY_TO_BOOLEAN_LITERAL( TOY_AS_INTEGER(lhs) != TOY_AS_INTEGER(rhs) );
 			break;
 
-			case OP_COMPARE_LESS:
-				result = TO_BOOLEAN_LITERAL( AS_INTEGER(lhs) < AS_INTEGER(rhs) );
+			case TOY_OP_COMPARE_LESS:
+				result = TOY_TO_BOOLEAN_LITERAL( TOY_AS_INTEGER(lhs) < TOY_AS_INTEGER(rhs) );
 			break;
 
-			case OP_COMPARE_LESS_EQUAL:
-				result = TO_BOOLEAN_LITERAL( AS_INTEGER(lhs) <= AS_INTEGER(rhs) );
+			case TOY_OP_COMPARE_LESS_EQUAL:
+				result = TOY_TO_BOOLEAN_LITERAL( TOY_AS_INTEGER(lhs) <= TOY_AS_INTEGER(rhs) );
 			break;
 
-			case OP_COMPARE_GREATER:
-				result = TO_BOOLEAN_LITERAL( AS_INTEGER(lhs) > AS_INTEGER(rhs) );
+			case TOY_OP_COMPARE_GREATER:
+				result = TOY_TO_BOOLEAN_LITERAL( TOY_AS_INTEGER(lhs) > TOY_AS_INTEGER(rhs) );
 			break;
 
-			case OP_COMPARE_GREATER_EQUAL:
-				result = TO_BOOLEAN_LITERAL( AS_INTEGER(lhs) >= AS_INTEGER(rhs) );
+			case TOY_OP_COMPARE_GREATER_EQUAL:
+				result = TOY_TO_BOOLEAN_LITERAL( TOY_AS_INTEGER(lhs) >= TOY_AS_INTEGER(rhs) );
 			break;
 
 			default:
@@ -1021,55 +1021,55 @@ static bool calcStaticBinaryArithmetic(Parser* parser, ASTNode** nodeHandle) {
 	}
 
 	//catch bad modulo
-	if ((IS_FLOAT(lhs) || IS_FLOAT(rhs)) && (*nodeHandle)->binary.opcode == OP_MODULO) {
+	if ((TOY_IS_FLOAT(lhs) || TOY_IS_FLOAT(rhs)) && (*nodeHandle)->binary.opcode == TOY_OP_MODULO) {
 		error(parser, parser->previous, "Bad arithmetic argument (modulo on floats not allowed)");
 		return false;
 	}
 
-	if(IS_FLOAT(lhs) && IS_FLOAT(rhs)) {
+	if(TOY_IS_FLOAT(lhs) && TOY_IS_FLOAT(rhs)) {
 		switch((*nodeHandle)->binary.opcode) {
-			case OP_ADDITION:
-				result = TO_FLOAT_LITERAL( AS_FLOAT(lhs) + AS_FLOAT(rhs) );
+			case TOY_OP_ADDITION:
+				result = TOY_TO_FLOAT_LITERAL( TOY_AS_FLOAT(lhs) + TOY_AS_FLOAT(rhs) );
 			break;
 
-			case OP_SUBTRACTION:
-				result = TO_FLOAT_LITERAL( AS_FLOAT(lhs) - AS_FLOAT(rhs) );
+			case TOY_OP_SUBTRACTION:
+				result = TOY_TO_FLOAT_LITERAL( TOY_AS_FLOAT(lhs) - TOY_AS_FLOAT(rhs) );
 			break;
 
-			case OP_MULTIPLICATION:
-				result = TO_FLOAT_LITERAL( AS_FLOAT(lhs) * AS_FLOAT(rhs) );
+			case TOY_OP_MULTIPLICATION:
+				result = TOY_TO_FLOAT_LITERAL( TOY_AS_FLOAT(lhs) * TOY_AS_FLOAT(rhs) );
 			break;
 
-			case OP_DIVISION:
-				if (AS_FLOAT(rhs) == 0) {
+			case TOY_OP_DIVISION:
+				if (TOY_AS_FLOAT(rhs) == 0) {
 					error(parser, parser->previous, "Can't divide by zero (error found in constant folding)");
 					return false;
 				}
-				result = TO_FLOAT_LITERAL( AS_FLOAT(lhs) / AS_FLOAT(rhs) );
+				result = TOY_TO_FLOAT_LITERAL( TOY_AS_FLOAT(lhs) / TOY_AS_FLOAT(rhs) );
 			break;
 
-			case OP_COMPARE_EQUAL:
-				result = TO_BOOLEAN_LITERAL( AS_FLOAT(lhs) == AS_FLOAT(rhs) );
+			case TOY_OP_COMPARE_EQUAL:
+				result = TOY_TO_BOOLEAN_LITERAL( TOY_AS_FLOAT(lhs) == TOY_AS_FLOAT(rhs) );
 			break;
 
-			case OP_COMPARE_NOT_EQUAL:
-				result = TO_BOOLEAN_LITERAL( AS_FLOAT(lhs) != AS_FLOAT(rhs) );
+			case TOY_OP_COMPARE_NOT_EQUAL:
+				result = TOY_TO_BOOLEAN_LITERAL( TOY_AS_FLOAT(lhs) != TOY_AS_FLOAT(rhs) );
 			break;
 
-			case OP_COMPARE_LESS:
-				result = TO_BOOLEAN_LITERAL( AS_FLOAT(lhs) < AS_FLOAT(rhs) );
+			case TOY_OP_COMPARE_LESS:
+				result = TOY_TO_BOOLEAN_LITERAL( TOY_AS_FLOAT(lhs) < TOY_AS_FLOAT(rhs) );
 			break;
 
-			case OP_COMPARE_LESS_EQUAL:
-				result = TO_BOOLEAN_LITERAL( AS_FLOAT(lhs) <= AS_FLOAT(rhs) );
+			case TOY_OP_COMPARE_LESS_EQUAL:
+				result = TOY_TO_BOOLEAN_LITERAL( TOY_AS_FLOAT(lhs) <= TOY_AS_FLOAT(rhs) );
 			break;
 
-			case OP_COMPARE_GREATER:
-				result = TO_BOOLEAN_LITERAL( AS_FLOAT(lhs) > AS_FLOAT(rhs) );
+			case TOY_OP_COMPARE_GREATER:
+				result = TOY_TO_BOOLEAN_LITERAL( TOY_AS_FLOAT(lhs) > TOY_AS_FLOAT(rhs) );
 			break;
 
-			case OP_COMPARE_GREATER_EQUAL:
-				result = TO_BOOLEAN_LITERAL( AS_FLOAT(lhs) >= AS_FLOAT(rhs) );
+			case TOY_OP_COMPARE_GREATER_EQUAL:
+				result = TOY_TO_BOOLEAN_LITERAL( TOY_AS_FLOAT(lhs) >= TOY_AS_FLOAT(rhs) );
 			break;
 
 			default:
@@ -1079,25 +1079,25 @@ static bool calcStaticBinaryArithmetic(Parser* parser, ASTNode** nodeHandle) {
 	}
 
 	//nothing can be done to optimize
-	if (IS_NULL(result)) {
+	if (TOY_IS_NULL(result)) {
 		return true;
 	}
 
 	//optimize by converting this node into a literal node
-	freeASTNode((*nodeHandle)->binary.left);
-	freeASTNode((*nodeHandle)->binary.right);
+	Toy_freeASTNode((*nodeHandle)->binary.left);
+	Toy_freeASTNode((*nodeHandle)->binary.right);
 
-	(*nodeHandle)->type = AST_NODE_LITERAL;
+	(*nodeHandle)->type = TOY_AST_NODE_LITERAL;
 	(*nodeHandle)->atomic.literal = result;
 
 	return true;
 }
 
-static void dottify(Parser* parser, ASTNode** nodeHandle) { //TODO: remove dot from the compiler entirely
+static void dottify(Toy_Parser* parser, Toy_ASTNode** nodeHandle) { //TODO: remove dot from the compiler entirely
 	//only if this is chained from a higher binary "fn call"
-	if ((*nodeHandle)->type == AST_NODE_BINARY) {
-		if ((*nodeHandle)->binary.opcode == OP_FN_CALL) {
-			(*nodeHandle)->binary.opcode = OP_DOT;
+	if ((*nodeHandle)->type == TOY_AST_NODE_BINARY) {
+		if ((*nodeHandle)->binary.opcode == TOY_OP_FN_CALL) {
+			(*nodeHandle)->binary.opcode = TOY_OP_DOT;
 			(*nodeHandle)->binary.right->fnCall.argumentCount++;
 		}
 		dottify(parser, &(*nodeHandle)->binary.left);
@@ -1105,7 +1105,7 @@ static void dottify(Parser* parser, ASTNode** nodeHandle) { //TODO: remove dot f
 	}
 }
 
-static void parsePrecedence(Parser* parser, ASTNode** nodeHandle, PrecedenceRule rule) {
+static void parsePrecedence(Toy_Parser* parser, Toy_ASTNode** nodeHandle, PrecedenceRule rule) {
 	//every valid expression has a prefix rule
 	advance(parser);
 	ParseFn prefixRule = getRule(parser->previous.type)->prefix;
@@ -1129,28 +1129,28 @@ static void parsePrecedence(Parser* parser, ASTNode** nodeHandle, PrecedenceRule
 			return;
 		}
 
-		ASTNode* rhsNode = NULL;
-		const Opcode opcode = infixRule(parser, &rhsNode); //NOTE: infix rule must advance the parser
+		Toy_ASTNode* rhsNode = NULL;
+		const Toy_Opcode opcode = infixRule(parser, &rhsNode); //NOTE: infix rule must advance the parser
 
-		if (opcode == OP_EOF) {
-			freeASTNode(*nodeHandle);
+		if (opcode == TOY_OP_EOF) {
+			Toy_freeASTNode(*nodeHandle);
 			*nodeHandle = rhsNode;
 			return; //we're done here
 		}
 
 		//BUGFIX: dot-chaining
-		if (opcode == OP_DOT) {
+		if (opcode == TOY_OP_DOT) {
 			dottify(parser, &rhsNode);
 		}
 
 		//BUGFIX: ternary shorthand
-		if (opcode == OP_TERNARY) {
+		if (opcode == TOY_OP_TERNARY) {
 			rhsNode->ternary.condition = *nodeHandle;
 			*nodeHandle = rhsNode;
 			continue;
 		}
 
-		emitASTNodeBinary(nodeHandle, rhsNode, opcode);
+		Toy_emitASTNodeBinary(nodeHandle, rhsNode, opcode);
 
 		//optimise away the constants
 		if (!calcStaticBinaryArithmetic(parser, nodeHandle)) {
@@ -1159,32 +1159,32 @@ static void parsePrecedence(Parser* parser, ASTNode** nodeHandle, PrecedenceRule
 	}
 
 	//if your precedence is below "assignment"
-	if (canBeAssigned && match(parser, TOKEN_ASSIGN)) {
+	if (canBeAssigned && match(parser, TOY_TOKEN_ASSIGN)) {
 		error(parser, parser->current, "Invalid assignment target");
 	}
 }
 
 //expressions
-static void expression(Parser* parser, ASTNode** nodeHandle) {
+static void expression(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	//delegate to the pratt table for expression precedence
 	parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
 }
 
 //statements
-static void blockStmt(Parser* parser, ASTNode** nodeHandle) {
+static void blockStmt(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	//init
-	emitASTNodeBlock(nodeHandle);
+	Toy_emitASTNodeBlock(nodeHandle);
 
 	//sub-scope, compile it and push it up in a node
-	while (!match(parser, TOKEN_BRACE_RIGHT)) {
+	while (!match(parser, TOY_TOKEN_BRACE_RIGHT)) {
 		if ((*nodeHandle)->block.capacity < (*nodeHandle)->block.count + 1) {
 			int oldCapacity = (*nodeHandle)->block.capacity;
 
-			(*nodeHandle)->block.capacity = GROW_CAPACITY(oldCapacity);
-			(*nodeHandle)->block.nodes = GROW_ARRAY(ASTNode, (*nodeHandle)->block.nodes, oldCapacity, (*nodeHandle)->block.capacity);
+			(*nodeHandle)->block.capacity = TOY_GROW_CAPACITY(oldCapacity);
+			(*nodeHandle)->block.nodes = TOY_GROW_ARRAY(Toy_ASTNode, (*nodeHandle)->block.nodes, oldCapacity, (*nodeHandle)->block.capacity);
 		}
 
-		ASTNode* tmpNode = NULL;
+		Toy_ASTNode* tmpNode = NULL;
 
 		//process the grammar rule for this line
 		declaration(parser, &tmpNode);
@@ -1196,118 +1196,118 @@ static void blockStmt(Parser* parser, ASTNode** nodeHandle) {
 
 		//BUGFIX: statements no longer require the existing node
 		((*nodeHandle)->block.nodes[(*nodeHandle)->block.count++]) = *tmpNode;
-		FREE(ASTNode, tmpNode); //simply free the tmpNode, so you don't free the children
+		TOY_FREE(Toy_ASTNode, tmpNode); //simply free the tmpNode, so you don't free the children
 	}
 }
 
-static void printStmt(Parser* parser, ASTNode** nodeHandle) {
+static void printStmt(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	//set the node info
-	ASTNode* node = NULL;
+	Toy_ASTNode* node = NULL;
 	expression(parser, &node);
-	emitASTNodeUnary(nodeHandle, OP_PRINT, node);
+	Toy_emitASTNodeUnary(nodeHandle, TOY_OP_PRINT, node);
 
-	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of print statement");
+	consume(parser, TOY_TOKEN_SEMICOLON, "Expected ';' at end of print statement");
 }
 
-static void assertStmt(Parser* parser, ASTNode** nodeHandle) {
+static void assertStmt(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	//set the node info
-	(*nodeHandle) = ALLOCATE(ASTNode, 1); //special case, because I'm lazy
-	(*nodeHandle)->type = AST_NODE_BINARY;
-	(*nodeHandle)->binary.opcode = OP_ASSERT;
+	(*nodeHandle) = TOY_ALLOCATE(Toy_ASTNode, 1); //special case, because I'm lazy
+	(*nodeHandle)->type = TOY_AST_NODE_BINARY;
+	(*nodeHandle)->binary.opcode = TOY_OP_ASSERT;
 
 	parsePrecedence(parser, &((*nodeHandle)->binary.left), PREC_TERNARY);
-	consume(parser, TOKEN_COMMA, "Expected ',' in assert statement");
+	consume(parser, TOY_TOKEN_COMMA, "Expected ',' in assert statement");
 	parsePrecedence(parser, &((*nodeHandle)->binary.right), PREC_TERNARY);
 
-	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of assert statement");
+	consume(parser, TOY_TOKEN_SEMICOLON, "Expected ';' at end of assert statement");
 }
 
-static void ifStmt(Parser* parser, ASTNode** nodeHandle) {
-	ASTNode* condition = NULL;
-	ASTNode* thenPath = NULL;
-	ASTNode* elsePath = NULL;
+static void ifStmt(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
+	Toy_ASTNode* condition = NULL;
+	Toy_ASTNode* thenPath = NULL;
+	Toy_ASTNode* elsePath = NULL;
 
 	//read the condition
-	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' at beginning of if clause");
+	consume(parser, TOY_TOKEN_PAREN_LEFT, "Expected '(' at beginning of if clause");
 	parsePrecedence(parser, &condition, PREC_TERNARY);
 
 	//read the then path
-	consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of if clause");
+	consume(parser, TOY_TOKEN_PAREN_RIGHT, "Expected ')' at end of if clause");
 	declaration(parser, &thenPath);
 
 	//read the optional else path
-	if (match(parser, TOKEN_ELSE)) {
+	if (match(parser, TOY_TOKEN_ELSE)) {
 		declaration(parser, &elsePath);
 	}
 
-	emitASTNodeIf(nodeHandle, condition, thenPath, elsePath);
+	Toy_emitASTNodeIf(nodeHandle, condition, thenPath, elsePath);
 }
 
-static void whileStmt(Parser* parser, ASTNode** nodeHandle) {
-	ASTNode* condition = NULL;
-	ASTNode* thenPath = NULL;
+static void whileStmt(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
+	Toy_ASTNode* condition = NULL;
+	Toy_ASTNode* thenPath = NULL;
 
 	//read the condition
-	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' at beginning of while clause");
+	consume(parser, TOY_TOKEN_PAREN_LEFT, "Expected '(' at beginning of while clause");
 	parsePrecedence(parser, &condition, PREC_TERNARY);
 
 	//read the then path
-	consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of while clause");
+	consume(parser, TOY_TOKEN_PAREN_RIGHT, "Expected ')' at end of while clause");
 	declaration(parser, &thenPath);
 
-	emitASTNodeWhile(nodeHandle, condition, thenPath);
+	Toy_emitASTNodeWhile(nodeHandle, condition, thenPath);
 }
 
-static void forStmt(Parser* parser, ASTNode** nodeHandle) {
-	ASTNode* preClause = NULL;
-	ASTNode* condition = NULL;
-	ASTNode* postClause = NULL;
-	ASTNode* thenPath = NULL;
+static void forStmt(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
+	Toy_ASTNode* preClause = NULL;
+	Toy_ASTNode* condition = NULL;
+	Toy_ASTNode* postClause = NULL;
+	Toy_ASTNode* thenPath = NULL;
 
 	//read the clauses
-	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' at beginning of for clause");
+	consume(parser, TOY_TOKEN_PAREN_LEFT, "Expected '(' at beginning of for clause");
 
 	declaration(parser, &preClause); //allow defining variables in the pre-clause
 
 	parsePrecedence(parser, &condition, PREC_TERNARY);
-	consume(parser, TOKEN_SEMICOLON, "Expected ';' after condition of for clause");
+	consume(parser, TOY_TOKEN_SEMICOLON, "Expected ';' after condition of for clause");
 
 	parsePrecedence(parser, &postClause, PREC_ASSIGNMENT);
-	consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' at end of for clause");
+	consume(parser, TOY_TOKEN_PAREN_RIGHT, "Expected ')' at end of for clause");
 
 	//read the path
 	declaration(parser, &thenPath);
 
-	emitASTNodeFor(nodeHandle, preClause, condition, postClause, thenPath);
+	Toy_emitASTNodeFor(nodeHandle, preClause, condition, postClause, thenPath);
 }
 
-static void breakStmt(Parser* parser, ASTNode** nodeHandle) {
-	emitASTNodeBreak(nodeHandle);
+static void breakStmt(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
+	Toy_emitASTNodeBreak(nodeHandle);
 
-	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of break statement");
+	consume(parser, TOY_TOKEN_SEMICOLON, "Expected ';' at end of break statement");
 }
 
-static void continueStmt(Parser* parser, ASTNode** nodeHandle) {
-	emitASTNodeContinue(nodeHandle);
+static void continueStmt(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
+	Toy_emitASTNodeContinue(nodeHandle);
 
-	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of continue statement");
+	consume(parser, TOY_TOKEN_SEMICOLON, "Expected ';' at end of continue statement");
 }
 
-static void returnStmt(Parser* parser, ASTNode** nodeHandle) {
-	ASTNode* returnValues = NULL;
-	emitASTNodeFnCollection(&returnValues);
+static void returnStmt(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
+	Toy_ASTNode* returnValues = NULL;
+	Toy_emitASTNodeFnCollection(&returnValues);
 
-	if (!match(parser, TOKEN_SEMICOLON)) {
+	if (!match(parser, TOY_TOKEN_SEMICOLON)) {
 		do { //loop for multiple returns (disabled later in the pipeline)
 			//append the node to the return list (grow the node if needed)
 			if (returnValues->fnCollection.capacity < returnValues->fnCollection.count + 1) {
 				int oldCapacity = returnValues->fnCollection.capacity;
 
-				returnValues->fnCollection.capacity = GROW_CAPACITY(oldCapacity);
-				returnValues->fnCollection.nodes = GROW_ARRAY(ASTNode, returnValues->fnCollection.nodes, oldCapacity, returnValues->fnCollection.capacity);
+				returnValues->fnCollection.capacity = TOY_GROW_CAPACITY(oldCapacity);
+				returnValues->fnCollection.nodes = TOY_GROW_ARRAY(Toy_ASTNode, returnValues->fnCollection.nodes, oldCapacity, returnValues->fnCollection.capacity);
 			}
 
-			ASTNode* node = NULL;
+			Toy_ASTNode* node = NULL;
 			parsePrecedence(parser, &node, PREC_TERNARY);
 
 			//BUGFIX
@@ -1317,18 +1317,18 @@ static void returnStmt(Parser* parser, ASTNode** nodeHandle) {
 			}
 
 			returnValues->fnCollection.nodes[returnValues->fnCollection.count++] = *node;
-			FREE(ASTNode, node); //free manually
-		} while(match(parser, TOKEN_COMMA));
+			TOY_FREE(Toy_ASTNode, node); //free manually
+		} while(match(parser, TOY_TOKEN_COMMA));
 
-		consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of return statement");
+		consume(parser, TOY_TOKEN_SEMICOLON, "Expected ';' at end of return statement");
 	}
 
-	emitASTNodeFnReturn(nodeHandle, returnValues);
+	Toy_emitASTNodeFnReturn(nodeHandle, returnValues);
 }
 
-static void importStmt(Parser* parser, ASTNode** nodeHandle) {
+static void importStmt(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	//read the identifier
-	ASTNode* node = NULL;
+	Toy_ASTNode* node = NULL;
 	advance(parser);
 	identifier(parser, &node);
 
@@ -1336,102 +1336,102 @@ static void importStmt(Parser* parser, ASTNode** nodeHandle) {
 		return;
 	}
 
-	Literal idn = copyLiteral(node->atomic.literal);
-	freeASTNode(node);
+	Toy_Literal idn = Toy_copyLiteral(node->atomic.literal);
+	Toy_freeASTNode(node);
 
-	Literal alias = TO_NULL_LITERAL;
+	Toy_Literal alias = TOY_TO_NULL_LITERAL;
 
-	if (match(parser, TOKEN_AS)) {
-		ASTNode* node = NULL;
+	if (match(parser, TOY_TOKEN_AS)) {
+		Toy_ASTNode* node = NULL;
 		advance(parser);
 		identifier(parser, &node);
-		alias = copyLiteral(node->atomic.literal);
-		freeASTNode(node);
+		alias = Toy_copyLiteral(node->atomic.literal);
+		Toy_freeASTNode(node);
 	}
 
-	emitASTNodeImport(nodeHandle, idn, alias);
+	Toy_emitASTNodeImport(nodeHandle, idn, alias);
 
-	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of import statement");
+	consume(parser, TOY_TOKEN_SEMICOLON, "Expected ';' at end of import statement");
 
-	freeLiteral(idn);
-	freeLiteral(alias);
+	Toy_freeLiteral(idn);
+	Toy_freeLiteral(alias);
 }
 
 //precedence functions
-static void expressionStmt(Parser* parser, ASTNode** nodeHandle) {
+static void expressionStmt(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	//BUGFIX: check for empty statements
-	if (match(parser, TOKEN_SEMICOLON)) {
-		emitASTNodeLiteral(nodeHandle, TO_NULL_LITERAL);
+	if (match(parser, TOY_TOKEN_SEMICOLON)) {
+		Toy_emitASTNodeLiteral(nodeHandle, TOY_TO_NULL_LITERAL);
 		return;
 	}
 
-	ASTNode* ptr = NULL;
+	Toy_ASTNode* ptr = NULL;
 	expression(parser, &ptr);
 
 	if (ptr != NULL) {
 		*nodeHandle = ptr;
 	}
 
-	consume(parser, TOKEN_SEMICOLON, "Expected ';' at the end of expression statement");
+	consume(parser, TOY_TOKEN_SEMICOLON, "Expected ';' at the end of expression statement");
 }
 
-static void statement(Parser* parser, ASTNode** nodeHandle) {
+static void statement(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	//block
-	if (match(parser, TOKEN_BRACE_LEFT)) {
+	if (match(parser, TOY_TOKEN_BRACE_LEFT)) {
 		blockStmt(parser, nodeHandle);
 		return;
 	}
 
 	//print
-	if (match(parser, TOKEN_PRINT)) {
+	if (match(parser, TOY_TOKEN_PRINT)) {
 		printStmt(parser, nodeHandle);
 		return;
 	}
 
 	//assert
-	if (match(parser, TOKEN_ASSERT)) {
+	if (match(parser, TOY_TOKEN_ASSERT)) {
 		assertStmt(parser, nodeHandle);
 		return;
 	}
 
 	//if-then-else
-	if (match(parser, TOKEN_IF)) {
+	if (match(parser, TOY_TOKEN_IF)) {
 		ifStmt(parser, nodeHandle);
 		return;
 	}
 
 	//while-then
-	if (match(parser, TOKEN_WHILE)) {
+	if (match(parser, TOY_TOKEN_WHILE)) {
 		whileStmt(parser, nodeHandle);
 		return;
 	}
 
 	//for-pre-clause-post-then
-	if (match(parser, TOKEN_FOR)) {
+	if (match(parser, TOY_TOKEN_FOR)) {
 		forStmt(parser, nodeHandle);
 		return;
 	}
 
 	//break
-	if (match(parser, TOKEN_BREAK)) {
+	if (match(parser, TOY_TOKEN_BREAK)) {
 		breakStmt(parser, nodeHandle);
 		return;
 	}
 
 	//continue
-	if (match(parser, TOKEN_CONTINUE)) {
+	if (match(parser, TOY_TOKEN_CONTINUE)) {
 		continueStmt(parser, nodeHandle);
 		return;
 	}
 
 	//return
-	if (match(parser, TOKEN_RETURN)) {
+	if (match(parser, TOY_TOKEN_RETURN)) {
 		returnStmt(parser, nodeHandle);
 		return;
 	}
 
 	//import
-	if (match(parser, TOKEN_IMPORT)) {
+	if (match(parser, TOY_TOKEN_IMPORT)) {
 		importStmt(parser, nodeHandle);
 		return;
 	}
@@ -1441,102 +1441,102 @@ static void statement(Parser* parser, ASTNode** nodeHandle) {
 }
 
 //declarations and definitions
-static Literal readTypeToLiteral(Parser* parser) {
+static Toy_Literal readTypeToLiteral(Toy_Parser* parser) {
 	advance(parser);
 
-	Literal literal = TO_TYPE_LITERAL(LITERAL_NULL, false);
+	Toy_Literal literal = TOY_TO_TYPE_LITERAL(TOY_LITERAL_NULL, false);
 
 	switch(parser->previous.type) {
-		case TOKEN_NULL:
+		case TOY_TOKEN_NULL:
 			//NO-OP
 		break;
 
-		case TOKEN_BOOLEAN:
-			AS_TYPE(literal).typeOf = LITERAL_BOOLEAN;
+		case TOY_TOKEN_BOOLEAN:
+			TOY_AS_TYPE(literal).typeOf = TOY_LITERAL_BOOLEAN;
 		break;
 
-		case TOKEN_INTEGER:
-			AS_TYPE(literal).typeOf = LITERAL_INTEGER;
+		case TOY_TOKEN_INTEGER:
+			TOY_AS_TYPE(literal).typeOf = TOY_LITERAL_INTEGER;
 		break;
 
-		case TOKEN_FLOAT:
-			AS_TYPE(literal).typeOf = LITERAL_FLOAT;
+		case TOY_TOKEN_FLOAT:
+			TOY_AS_TYPE(literal).typeOf = TOY_LITERAL_FLOAT;
 		break;
 
-		case TOKEN_STRING:
-			AS_TYPE(literal).typeOf = LITERAL_STRING;
+		case TOY_TOKEN_STRING:
+			TOY_AS_TYPE(literal).typeOf = TOY_LITERAL_STRING;
 		break;
 
 		//array, dictionary - read the sub-types
-		case TOKEN_BRACKET_LEFT: {
-			Literal l = readTypeToLiteral(parser);
+		case TOY_TOKEN_BRACKET_LEFT: {
+			Toy_Literal l = readTypeToLiteral(parser);
 
-			if (match(parser, TOKEN_COLON)) {
-				Literal r = readTypeToLiteral(parser);
+			if (match(parser, TOY_TOKEN_COLON)) {
+				Toy_Literal r = readTypeToLiteral(parser);
 
-				TYPE_PUSH_SUBTYPE(&literal, l);
-				TYPE_PUSH_SUBTYPE(&literal, r);
+				TOY_TYPE_PUSH_SUBTYPE(&literal, l);
+				TOY_TYPE_PUSH_SUBTYPE(&literal, r);
 
-				AS_TYPE(literal).typeOf = LITERAL_DICTIONARY;
+				TOY_AS_TYPE(literal).typeOf = TOY_LITERAL_DICTIONARY;
 			}
 			else {
-				TYPE_PUSH_SUBTYPE(&literal, l);
+				TOY_TYPE_PUSH_SUBTYPE(&literal, l);
 
-				AS_TYPE(literal).typeOf = LITERAL_ARRAY;
+				TOY_AS_TYPE(literal).typeOf = TOY_LITERAL_ARRAY;
 			}
 
-			consume(parser, TOKEN_BRACKET_RIGHT, "Expected ']' at end of type definition");
+			consume(parser, TOY_TOKEN_BRACKET_RIGHT, "Expected ']' at end of type definition");
 		}
 		break;
 
-		case TOKEN_FUNCTION:
-			AS_TYPE(literal).typeOf = LITERAL_FUNCTION;
+		case TOY_TOKEN_FUNCTION:
+			TOY_AS_TYPE(literal).typeOf = TOY_LITERAL_FUNCTION;
 		break;
 
-		case TOKEN_OPAQUE:
-			AS_TYPE(literal).typeOf = LITERAL_OPAQUE;
+		case TOY_TOKEN_OPAQUE:
+			TOY_AS_TYPE(literal).typeOf = TOY_LITERAL_OPAQUE;
 		break;
 
-		case TOKEN_ANY:
-			AS_TYPE(literal).typeOf = LITERAL_ANY;
+		case TOY_TOKEN_ANY:
+			TOY_AS_TYPE(literal).typeOf = TOY_LITERAL_ANY;
 		break;
 
 		//wtf
-		case TOKEN_IDENTIFIER: {
+		case TOY_TOKEN_IDENTIFIER: {
 			//duplicated from identifier()
-			Token identifierToken = parser->previous;
+			Toy_Token identifierToken = parser->previous;
 			int length = identifierToken.length;
 			//for safety
 			if (length > 256) {
 				length = 256;
 				error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
 			}
-			literal = TO_IDENTIFIER_LITERAL(createRefStringLength(identifierToken.lexeme, length));
+			literal = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(identifierToken.lexeme, length));
 		}
 		break;
 
 		//WTF
-		case TOKEN_TYPE:
-			AS_TYPE(literal).typeOf = LITERAL_TYPE;
+		case TOY_TOKEN_TYPE:
+			TOY_AS_TYPE(literal).typeOf = TOY_LITERAL_TYPE;
 		break;
 
 		default:
 			error(parser, parser->previous, "Bad type signature");
-			return TO_NULL_LITERAL;
+			return TOY_TO_NULL_LITERAL;
 	}
 
 	//const follows the type
-	if (match(parser, TOKEN_CONST)) {
-		AS_TYPE(literal).constant = true;
+	if (match(parser, TOY_TOKEN_CONST)) {
+		TOY_AS_TYPE(literal).constant = true;
 	}
 
 	return literal;
 }
 
-static void varDecl(Parser* parser, ASTNode** nodeHandle) {
+static void varDecl(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	//read the identifier
-	consume(parser, TOKEN_IDENTIFIER, "Expected identifier after var keyword");
-	Token identifierToken = parser->previous;
+	consume(parser, TOY_TOKEN_IDENTIFIER, "Expected identifier after var keyword");
+	Toy_Token identifierToken = parser->previous;
 
 	int length = identifierToken.length;
 
@@ -1546,40 +1546,40 @@ static void varDecl(Parser* parser, ASTNode** nodeHandle) {
 		error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
 	}
 
-	Literal identifier = TO_IDENTIFIER_LITERAL(createRefStringLength(identifierToken.lexeme, length));
+	Toy_Literal identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(identifierToken.lexeme, length));
 
 	//read the type, if present
-	Literal typeLiteral;
-	if (match(parser, TOKEN_COLON)) {
+	Toy_Literal typeLiteral;
+	if (match(parser, TOY_TOKEN_COLON)) {
 		typeLiteral = readTypeToLiteral(parser);
 	}
 	else {
 		//default to non-const any
-		typeLiteral = TO_TYPE_LITERAL(LITERAL_ANY, false);
+		typeLiteral = TOY_TO_TYPE_LITERAL(TOY_LITERAL_ANY, false);
 	}
 
 	//variable definition is an expression
-	ASTNode* expressionNode = NULL;
-	if (match(parser, TOKEN_ASSIGN)) {
+	Toy_ASTNode* expressionNode = NULL;
+	if (match(parser, TOY_TOKEN_ASSIGN)) {
 		expression(parser, &expressionNode);
 	}
 	else {
 		//values are null by default
-		emitASTNodeLiteral(&expressionNode, TO_NULL_LITERAL);
+		Toy_emitASTNodeLiteral(&expressionNode, TOY_TO_NULL_LITERAL);
 	}
 
 	//TODO: static type checking?
 
 	//declare it
-	emitASTNodeVarDecl(nodeHandle, identifier, typeLiteral, expressionNode);
+	Toy_emitASTNodeVarDecl(nodeHandle, identifier, typeLiteral, expressionNode);
 
-	consume(parser, TOKEN_SEMICOLON, "Expected ';' at end of var declaration");
+	consume(parser, TOY_TOKEN_SEMICOLON, "Expected ';' at end of var declaration");
 }
 
-static void fnDecl(Parser* parser, ASTNode** nodeHandle) {
+static void fnDecl(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	//read the identifier
-	consume(parser, TOKEN_IDENTIFIER, "Expected identifier after fn keyword");
-	Token identifierToken = parser->previous;
+	consume(parser, TOY_TOKEN_IDENTIFIER, "Expected identifier after fn keyword");
+	Toy_Token identifierToken = parser->previous;
 
 	int length = identifierToken.length;
 
@@ -1589,23 +1589,23 @@ static void fnDecl(Parser* parser, ASTNode** nodeHandle) {
 		error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
 	}
 
-	Literal identifier = TO_IDENTIFIER_LITERAL(createRefStringLength(identifierToken.lexeme, length));
+	Toy_Literal identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(identifierToken.lexeme, length));
 
 	//read the parameters and arity
-	consume(parser, TOKEN_PAREN_LEFT, "Expected '(' after function identifier");
+	consume(parser, TOY_TOKEN_PAREN_LEFT, "Expected '(' after function identifier");
 
 	//for holding the array of arguments
-	ASTNode* argumentNode = NULL;
-	emitASTNodeFnCollection(&argumentNode);
+	Toy_ASTNode* argumentNode = NULL;
+	Toy_emitASTNodeFnCollection(&argumentNode);
 
 	//read args
-	if (!match(parser, TOKEN_PAREN_RIGHT)) {
+	if (!match(parser, TOY_TOKEN_PAREN_RIGHT)) {
 		do {
 			//check for rest parameter
-			if (match(parser, TOKEN_REST)) {
+			if (match(parser, TOY_TOKEN_REST)) {
 				//read the argument identifier
-				consume(parser, TOKEN_IDENTIFIER, "Expected identifier as function argument");
-				Token argIdentifierToken = parser->previous;
+				consume(parser, TOY_TOKEN_IDENTIFIER, "Expected identifier as function argument");
+				Toy_Token argIdentifierToken = parser->previous;
 
 				int length = argIdentifierToken.length;
 
@@ -1615,32 +1615,32 @@ static void fnDecl(Parser* parser, ASTNode** nodeHandle) {
 					error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
 				}
 
-				Literal argIdentifier = TO_IDENTIFIER_LITERAL(createRefStringLength(argIdentifierToken.lexeme, length));
+				Toy_Literal argIdentifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(argIdentifierToken.lexeme, length));
 
 				//set the type (array of any types)
-				Literal argTypeLiteral = TO_TYPE_LITERAL(LITERAL_FUNCTION_ARG_REST, false);
+				Toy_Literal argTypeLiteral = TOY_TO_TYPE_LITERAL(TOY_LITERAL_FUNCTION_ARG_REST, false);
 
 				//emit the node to the argument list (grow the node if needed)
 				if (argumentNode->fnCollection.capacity < argumentNode->fnCollection.count + 1) {
 					int oldCapacity = argumentNode->fnCollection.capacity;
 
-					argumentNode->fnCollection.capacity = GROW_CAPACITY(oldCapacity);
-					argumentNode->fnCollection.nodes = GROW_ARRAY(ASTNode, argumentNode->fnCollection.nodes, oldCapacity, argumentNode->fnCollection.capacity);
+					argumentNode->fnCollection.capacity = TOY_GROW_CAPACITY(oldCapacity);
+					argumentNode->fnCollection.nodes = TOY_GROW_ARRAY(Toy_ASTNode, argumentNode->fnCollection.nodes, oldCapacity, argumentNode->fnCollection.capacity);
 				}
 
 				//store the arg in the array
-				ASTNode* literalNode = NULL;
-				emitASTNodeVarDecl(&literalNode, argIdentifier, argTypeLiteral, NULL);
+				Toy_ASTNode* literalNode = NULL;
+				Toy_emitASTNodeVarDecl(&literalNode, argIdentifier, argTypeLiteral, NULL);
 
 				argumentNode->fnCollection.nodes[argumentNode->fnCollection.count++] = *literalNode;
-				FREE(ASTNode, literalNode);
+				TOY_FREE(Toy_ASTNode, literalNode);
 
 				break;
 			}
 
 			//read the argument identifier
-			consume(parser, TOKEN_IDENTIFIER, "Expected identifier as function argument");
-			Token argIdentifierToken = parser->previous;
+			consume(parser, TOY_TOKEN_IDENTIFIER, "Expected identifier as function argument");
+			Toy_Token argIdentifierToken = parser->previous;
 
 			int length = argIdentifierToken.length;
 
@@ -1650,76 +1650,76 @@ static void fnDecl(Parser* parser, ASTNode** nodeHandle) {
 				error(parser, parser->previous, "Identifiers can only be a maximum of 256 characters long");
 			}
 
-			Literal argIdentifier = TO_IDENTIFIER_LITERAL(createRefStringLength(argIdentifierToken.lexeme, length));
+			Toy_Literal argIdentifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(argIdentifierToken.lexeme, length));
 
 			//read optional type of the identifier
-			Literal argTypeLiteral;
-			if (match(parser, TOKEN_COLON)) {
+			Toy_Literal argTypeLiteral;
+			if (match(parser, TOY_TOKEN_COLON)) {
 				argTypeLiteral = readTypeToLiteral(parser);
 			}
 			else {
 				//default to non-const any
-				argTypeLiteral = TO_TYPE_LITERAL(LITERAL_ANY, false);
+				argTypeLiteral = TOY_TO_TYPE_LITERAL(TOY_LITERAL_ANY, false);
 			}
 
 			//emit the node to the argument list (grow the node if needed)
 			if (argumentNode->fnCollection.capacity < argumentNode->fnCollection.count + 1) {
 				int oldCapacity = argumentNode->fnCollection.capacity;
 
-				argumentNode->fnCollection.capacity = GROW_CAPACITY(oldCapacity);
-				argumentNode->fnCollection.nodes = GROW_ARRAY(ASTNode, argumentNode->fnCollection.nodes, oldCapacity, argumentNode->fnCollection.capacity);
+				argumentNode->fnCollection.capacity = TOY_GROW_CAPACITY(oldCapacity);
+				argumentNode->fnCollection.nodes = TOY_GROW_ARRAY(Toy_ASTNode, argumentNode->fnCollection.nodes, oldCapacity, argumentNode->fnCollection.capacity);
 			}
 
 			//store the arg in the array
-			ASTNode* literalNode = NULL;
-			emitASTNodeVarDecl(&literalNode, argIdentifier, argTypeLiteral, NULL);
+			Toy_ASTNode* literalNode = NULL;
+			Toy_emitASTNodeVarDecl(&literalNode, argIdentifier, argTypeLiteral, NULL);
 
 			argumentNode->fnCollection.nodes[argumentNode->fnCollection.count++] = *literalNode;
-			FREE(ASTNode, literalNode);
+			TOY_FREE(Toy_ASTNode, literalNode);
 
-		} while (match(parser, TOKEN_COMMA)); //if comma is read, continue
+		} while (match(parser, TOY_TOKEN_COMMA)); //if comma is read, continue
 
-		consume(parser, TOKEN_PAREN_RIGHT, "Expected ')' after function argument list");
+		consume(parser, TOY_TOKEN_PAREN_RIGHT, "Expected ')' after function argument list");
 	}
 
 	//read the return types, if present
-	ASTNode* returnNode = NULL;
-	emitASTNodeFnCollection(&returnNode);
+	Toy_ASTNode* returnNode = NULL;
+	Toy_emitASTNodeFnCollection(&returnNode);
 
-	if (match(parser, TOKEN_COLON)) {
+	if (match(parser, TOY_TOKEN_COLON)) {
 		do {
 			//append the node to the return list (grow the node if needed)
 			if (returnNode->fnCollection.capacity < returnNode->fnCollection.count + 1) {
 				int oldCapacity = returnNode->fnCollection.capacity;
 
-				returnNode->fnCollection.capacity = GROW_CAPACITY(oldCapacity);
-				returnNode->fnCollection.nodes = GROW_ARRAY(ASTNode, returnNode->fnCollection.nodes, oldCapacity, returnNode->fnCollection.capacity);
+				returnNode->fnCollection.capacity = TOY_GROW_CAPACITY(oldCapacity);
+				returnNode->fnCollection.nodes = TOY_GROW_ARRAY(Toy_ASTNode, returnNode->fnCollection.nodes, oldCapacity, returnNode->fnCollection.capacity);
 			}
 
-			ASTNode* literalNode = NULL;
-			emitASTNodeLiteral(&literalNode, readTypeToLiteral(parser));
+			Toy_ASTNode* literalNode = NULL;
+			Toy_emitASTNodeLiteral(&literalNode, readTypeToLiteral(parser));
 
 			returnNode->fnCollection.nodes[returnNode->fnCollection.count++] = *literalNode;
-			FREE(ASTNode, literalNode);
-		} while(match(parser, TOKEN_COMMA));
+			TOY_FREE(Toy_ASTNode, literalNode);
+		} while(match(parser, TOY_TOKEN_COMMA));
 	}
 
 	//read the function body
-	consume(parser, TOKEN_BRACE_LEFT, "Expected '{' after return list");
+	consume(parser, TOY_TOKEN_BRACE_LEFT, "Expected '{' after return list");
 
-	ASTNode* blockNode = NULL;
+	Toy_ASTNode* blockNode = NULL;
 	blockStmt(parser, &blockNode);
 
 	//declare it
-	emitASTNodeFnDecl(nodeHandle, identifier, argumentNode, returnNode, blockNode);
+	Toy_emitASTNodeFnDecl(nodeHandle, identifier, argumentNode, returnNode, blockNode);
 }
 
-static void declaration(Parser* parser, ASTNode** nodeHandle) { //assume nodeHandle holds a blank node
+static void declaration(Toy_Parser* parser, Toy_ASTNode** nodeHandle) { //assume nodeHandle holds a blank node
 	//variable declarations
-	if (match(parser, TOKEN_VAR)) {
+	if (match(parser, TOY_TOKEN_VAR)) {
 		varDecl(parser, nodeHandle);
 	}
-	else if (match(parser, TOKEN_FUNCTION)) {
+	else if (match(parser, TOY_TOKEN_FUNCTION)) {
 		fnDecl(parser, nodeHandle);
 	}
 	else {
@@ -1728,33 +1728,33 @@ static void declaration(Parser* parser, ASTNode** nodeHandle) { //assume nodeHan
 }
 
 //exposed functions
-void initParser(Parser* parser, Lexer* lexer) {
+void Toy_initParser(Toy_Parser* parser, Toy_Lexer* lexer) {
 	parser->lexer = lexer;
 	parser->error = false;
 	parser->panic = false;
 
-	parser->previous.type = TOKEN_NULL;
-	parser->current.type = TOKEN_NULL;
+	parser->previous.type = TOY_TOKEN_NULL;
+	parser->current.type = TOY_TOKEN_NULL;
 	advance(parser);
 }
 
-void freeParser(Parser* parser) {
+void Toy_freeParser(Toy_Parser* parser) {
 	parser->lexer = NULL;
 	parser->error = false;
 	parser->panic = false;
 
-	parser->previous.type = TOKEN_NULL;
-	parser->current.type = TOKEN_NULL;
+	parser->previous.type = TOY_TOKEN_NULL;
+	parser->current.type = TOY_TOKEN_NULL;
 }
 
-ASTNode* scanParser(Parser* parser) {
+Toy_ASTNode* Toy_scanParser(Toy_Parser* parser) {
 	//check for EOF
-	if (match(parser, TOKEN_EOF)) {
+	if (match(parser, TOY_TOKEN_EOF)) {
 		return NULL;
 	}
 
 	//returns nodes on the heap
-	ASTNode* node = NULL;
+	Toy_ASTNode* node = NULL;
 
 	//process the grammar rule for this line
 	declaration(parser, &node);
@@ -1762,9 +1762,9 @@ ASTNode* scanParser(Parser* parser) {
 	if (parser->panic) {
 		synchronize(parser);
 		//return an error node for this iteration
-		freeASTNode(node);
-		node = ALLOCATE(ASTNode, 1);
-		node->type = AST_NODE_ERROR;
+		Toy_freeASTNode(node);
+		node = TOY_ALLOCATE(Toy_ASTNode, 1);
+		node->type = TOY_AST_NODE_ERROR;
 	}
 
 	return node;

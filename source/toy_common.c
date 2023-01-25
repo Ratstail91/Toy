@@ -20,7 +20,7 @@ STATIC_ASSERT(sizeof(unsigned int) == 4);
 //declare the singleton
 Command command;
 
-void initCommand(int argc, const char* argv[]) {
+void Toy_initCommand(int argc, const char* argv[]) {
 	//default values
 	command.error = false;
 	command.help = false;
@@ -95,12 +95,12 @@ void initCommand(int argc, const char* argv[]) {
 	}
 }
 
-void usageCommand(int argc, const char* argv[]) {
+void Toy_usageCommand(int argc, const char* argv[]) {
 	printf("Usage: %s [<file.tb> | -h | -v | [-d][-f file | -i source | -c file [-o outfile]]]\n\n", argv[0]);
 }
 
-void helpCommand(int argc, const char* argv[]) {
-	usageCommand(argc, argv);
+void Toy_helpCommand(int argc, const char* argv[]) {
+	Toy_usageCommand(argc, argv);
 
 	printf("<file.tb>\t\t\tBinary input file in tb format, must be version %d.%d.%d.\n\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH);
 	printf("-h\t| --help\t\tShow this help then exit.\n\n");
@@ -112,7 +112,7 @@ void helpCommand(int argc, const char* argv[]) {
 	printf("-o\t| --output outfile\tName of the output file built with --compile (default: out.tb).\n\n");
 }
 
-void copyrightCommand(int argc, const char* argv[]) {
+void Toy_copyrightCommand(int argc, const char* argv[]) {
 	printf("Toy Programming Language Interpreter Version %d.%d.%d (built on %s)\n\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, TOY_VERSION_BUILD);
 	printf("Copyright (c) 2020-2022 Kayne Ruse, KR Game Studios\n\n");
 	printf("This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.\n\n");

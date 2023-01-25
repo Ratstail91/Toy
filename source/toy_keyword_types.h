@@ -1,14 +1,14 @@
 #pragma once
 
-#include "token_types.h"
+#include "toy_token_types.h"
 
 typedef struct {
-	TokenType type;
+	Toy_TokenType type;
 	char* keyword;
-} KeywordType;
+} Toy_KeywordType;
 
-extern KeywordType keywordTypes[];
+extern Toy_KeywordType Toy_keywordTypes[];
 
-char* findKeywordByType(TokenType type);
+char* Toy_findKeywordByType(Toy_TokenType type);
 
-TokenType findTypeByKeyword(const char* keyword);
+Toy_TokenType Toy_findTypeByKeyword(const char* keyword);

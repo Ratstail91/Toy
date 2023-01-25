@@ -1,11 +1,11 @@
-#include "lexer.h"
-#include "parser.h"
-#include "compiler.h"
-#include "interpreter.h"
+#include "toy_lexer.h"
+#include "toy_parser.h"
+#include "toy_compiler.h"
+#include "toy_interpreter.h"
 
-#include "console_colors.h"
+#include "toy_console_colors.h"
 
-#include "memory.h"
+#include "toy_memory.h"
 
 #include "../repl/repl_tools.h"
 
@@ -27,28 +27,28 @@ void error(char* msg) {
 int main() {
 	{
 		size_t size = 0;
-		char* source = readFile("scripts/call-from-host.toy", &size);
-		unsigned char* tb = compileString(source, &size);
+		char* source = Toy_readFile("scripts/call-from-host.toy", &size);
+		unsigned char* tb = Toy_compileString(source, &size);
 		free((void*)source);
 
 		if (!tb) {
 			return -1;
 		}
 
-		Interpreter interpreter;
-		initInterpreter(&interpreter);
-		runInterpreter(&interpreter, tb, size);
+		Toy_Interpreter interpreter;
+		Toy_initInterpreter(&interpreter);
+		Toy_runInterpreter(&interpreter, tb, size);
 
 		//test answer
 		{
 			interpreter.printOutput("Testing answer");
 
-			LiteralArray arguments;
-			initLiteralArray(&arguments);
-			LiteralArray returns;
-			initLiteralArray(&returns);
+			Toy_LiteralArray arguments;
+			Toy_initLiteralArray(&arguments);
+			Toy_LiteralArray returns;
+			Toy_initLiteralArray(&returns);
 
-			callFn(&interpreter, "answer", &arguments, &returns);
+			Toy_callFn(&interpreter, "answer", &arguments, &returns);
 
 			//check the results
 			if (arguments.count != 0) {
@@ -59,29 +59,29 @@ int main() {
 				error("Returns has the wrong number of members\n");
 			}
 
-			if (!IS_INTEGER(returns.literals[0]) || AS_INTEGER(returns.literals[0]) != 42) {
+			if (!TOY_IS_INTEGER(returns.literals[0]) || TOY_AS_INTEGER(returns.literals[0]) != 42) {
 				error("Returned value is incorrect\n");
 			}
 
-			freeLiteralArray(&arguments);
-			freeLiteralArray(&returns);
+			Toy_freeLiteralArray(&arguments);
+			Toy_freeLiteralArray(&returns);
 		}
 
 		//test identity
 		{
 			interpreter.printOutput("Testing identity");
 
-			LiteralArray arguments;
-			initLiteralArray(&arguments);
-			LiteralArray returns;
-			initLiteralArray(&returns);
+			Toy_LiteralArray arguments;
+			Toy_initLiteralArray(&arguments);
+			Toy_LiteralArray returns;
+			Toy_initLiteralArray(&returns);
 
 			//push an argument
 			float pi = 3.14;
-			Literal arg = TO_FLOAT_LITERAL(pi);
-			pushLiteralArray(&arguments, arg);
+			Toy_Literal arg = TOY_TO_FLOAT_LITERAL(pi);
+			Toy_pushLiteralArray(&arguments, arg);
 
-			callFn(&interpreter, "identity", &arguments, &returns);
+			Toy_callFn(&interpreter, "identity", &arguments, &returns);
 
 			//check the results
 			if (arguments.count != 0) {
@@ -94,24 +94,24 @@ int main() {
 
 			float epsilon = 0.1; //because floats are evil
 
-			if (!IS_FLOAT(returns.literals[0]) || fabs(AS_FLOAT(returns.literals[0]) - pi) > epsilon) {
+			if (!TOY_IS_FLOAT(returns.literals[0]) || fabs(TOY_AS_FLOAT(returns.literals[0]) - pi) > epsilon) {
 				error("Returned value is incorrect\n");
 			}
 
-			freeLiteralArray(&arguments);
-			freeLiteralArray(&returns);
+			Toy_freeLiteralArray(&arguments);
+			Toy_freeLiteralArray(&returns);
 		}
 
 		//test makeCounter (closures)
 		{
 			interpreter.printOutput("Testing makeCounter (closures)");
 
-			LiteralArray arguments;
-			initLiteralArray(&arguments);
-			LiteralArray returns;
-			initLiteralArray(&returns);
+			Toy_LiteralArray arguments;
+			Toy_initLiteralArray(&arguments);
+			Toy_LiteralArray returns;
+			Toy_initLiteralArray(&returns);
 
-			callFn(&interpreter, "makeCounter", &arguments, &returns);
+			Toy_callFn(&interpreter, "makeCounter", &arguments, &returns);
 
 			//check the results
 			if (arguments.count != 0) {
@@ -123,19 +123,19 @@ int main() {
 			}
 
 			//grab the resulting literal
-			Literal counter = popLiteralArray(&returns);
+			Toy_Literal counter = Toy_popLiteralArray(&returns);
 
-			freeLiteralArray(&arguments);
-			freeLiteralArray(&returns);
+			Toy_freeLiteralArray(&arguments);
+			Toy_freeLiteralArray(&returns);
 
 			//call counter repeatedly
 			{
-				LiteralArray arguments;
-				initLiteralArray(&arguments);
-				LiteralArray returns;
-				initLiteralArray(&returns);
+				Toy_LiteralArray arguments;
+				Toy_initLiteralArray(&arguments);
+				Toy_LiteralArray returns;
+				Toy_initLiteralArray(&returns);
 
-				callLiteralFn(&interpreter, counter, &arguments, &returns);
+				Toy_callLiteralFn(&interpreter, counter, &arguments, &returns);
 
 				//check the results
 				if (arguments.count != 0) {
@@ -146,21 +146,21 @@ int main() {
 					error("Returns (1) has the wrong number of members\n");
 				}
 
-				if (!IS_INTEGER(returns.literals[0]) || AS_INTEGER(returns.literals[0]) != 1) {
+				if (!TOY_IS_INTEGER(returns.literals[0]) || TOY_AS_INTEGER(returns.literals[0]) != 1) {
 					error("Returned value (1) is incorrect\n");
 				}
 
-				freeLiteralArray(&arguments);
-				freeLiteralArray(&returns);
+				Toy_freeLiteralArray(&arguments);
+				Toy_freeLiteralArray(&returns);
 			}
 
 			{
-				LiteralArray arguments;
-				initLiteralArray(&arguments);
-				LiteralArray returns;
-				initLiteralArray(&returns);
+				Toy_LiteralArray arguments;
+				Toy_initLiteralArray(&arguments);
+				Toy_LiteralArray returns;
+				Toy_initLiteralArray(&returns);
 
-				callLiteralFn(&interpreter, counter, &arguments, &returns);
+				Toy_callLiteralFn(&interpreter, counter, &arguments, &returns);
 
 				//check the results
 				if (arguments.count != 0) {
@@ -171,21 +171,21 @@ int main() {
 					error("Returns (2) has the wrong number of members\n");
 				}
 
-				if (!IS_INTEGER(returns.literals[0]) || AS_INTEGER(returns.literals[0]) != 2) {
+				if (!TOY_IS_INTEGER(returns.literals[0]) || TOY_AS_INTEGER(returns.literals[0]) != 2) {
 					error("Returned value (2) is incorrect\n");
 				}
 
-				freeLiteralArray(&arguments);
-				freeLiteralArray(&returns);
+				Toy_freeLiteralArray(&arguments);
+				Toy_freeLiteralArray(&returns);
 			}
 
 			{
-				LiteralArray arguments;
-				initLiteralArray(&arguments);
-				LiteralArray returns;
-				initLiteralArray(&returns);
+				Toy_LiteralArray arguments;
+				Toy_initLiteralArray(&arguments);
+				Toy_LiteralArray returns;
+				Toy_initLiteralArray(&returns);
 
-				callLiteralFn(&interpreter, counter, &arguments, &returns);
+				Toy_callLiteralFn(&interpreter, counter, &arguments, &returns);
 
 				//check the results
 				if (arguments.count != 0) {
@@ -196,36 +196,36 @@ int main() {
 					error("Returns (3) has the wrong number of members\n");
 				}
 
-				if (!IS_INTEGER(returns.literals[0]) || AS_INTEGER(returns.literals[0]) != 3) {
+				if (!TOY_IS_INTEGER(returns.literals[0]) || TOY_AS_INTEGER(returns.literals[0]) != 3) {
 					error("Returned value (3) is incorrect\n");
 				}
 
-				freeLiteralArray(&arguments);
-				freeLiteralArray(&returns);
+				Toy_freeLiteralArray(&arguments);
+				Toy_freeLiteralArray(&returns);
 			}
 
-			freeLiteral(counter);
+			Toy_freeLiteral(counter);
 		}
 
 		//test assertion failure
 		{
 			interpreter.printOutput("Testing assertion failure");
 
-			setInterpreterAssert(&interpreter, noPrintFn);
+			Toy_setInterpreterAssert(&interpreter, noPrintFn);
 
-			LiteralArray arguments;
-			initLiteralArray(&arguments);
-			LiteralArray returns;
-			initLiteralArray(&returns);
+			Toy_LiteralArray arguments;
+			Toy_initLiteralArray(&arguments);
+			Toy_LiteralArray returns;
+			Toy_initLiteralArray(&returns);
 
-			bool ret = callFn(&interpreter, "fail", &arguments, &returns);
+			bool ret = Toy_callFn(&interpreter, "fail", &arguments, &returns);
 
 			//check the results
 			if (arguments.count != 0) {
 				error("Arguments has the wrong number of members\n");
 			}
 
-			if (returns.count != 1 || !IS_NULL(returns.literals[0])) {
+			if (returns.count != 1 || !TOY_IS_NULL(returns.literals[0])) {
 				error("Returns has the wrong number of members\n");
 			}
 
@@ -233,15 +233,15 @@ int main() {
 				error("Assertion gives the wrong return value\n");
 			}
 
-			freeLiteralArray(&arguments);
-			freeLiteralArray(&returns);
+			Toy_freeLiteralArray(&arguments);
+			Toy_freeLiteralArray(&returns);
 		}
 
 		//clean up
-		freeInterpreter(&interpreter);
+		Toy_freeInterpreter(&interpreter);
 	}
 
-	printf(NOTICE "All good\n" RESET);
+	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 	return 0;
 }
 

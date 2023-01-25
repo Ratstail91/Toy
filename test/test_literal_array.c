@@ -1,72 +1,72 @@
-#include "literal_array.h"
+#include "toy_literal_array.h"
 
-#include "memory.h"
-#include "console_colors.h"
+#include "toy_memory.h"
+#include "toy_console_colors.h"
 
 #include <stdio.h>
 
 int main() {
 	{
 		//test init & cleanup
-		LiteralArray array;
-		initLiteralArray(&array);
-		freeLiteralArray(&array);
+		Toy_LiteralArray array;
+		Toy_initLiteralArray(&array);
+		Toy_freeLiteralArray(&array);
 	}
 
 	{
 		//test pushing and pulling
-		LiteralArray array;
-		initLiteralArray(&array);
+		Toy_LiteralArray array;
+		Toy_initLiteralArray(&array);
 
 		for (int i = 0; i < 100; i++) {
-			pushLiteralArray(&array, TO_INTEGER_LITERAL(i));
+			Toy_pushLiteralArray(&array, TOY_TO_INTEGER_LITERAL(i));
 		}
 
 		for (int i = 0; i < 90; i++) {
-			Literal lit = popLiteralArray(&array);
+			Toy_Literal lit = Toy_popLiteralArray(&array);
 
-			freeLiteral(lit);
+			Toy_freeLiteral(lit);
 		}
 
 		if (array.count != 10) {
-			fprintf(stderr, ERROR "ERROR: Array didn't clear the correct number of literal integers\n" RESET);
-			freeLiteralArray(&array);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Array didn't clear the correct number of literal integers\n" TOY_CC_RESET);
+			Toy_freeLiteralArray(&array);
 			return -1;
 		}
 
-		freeLiteralArray(&array);
+		Toy_freeLiteralArray(&array);
 	}
 
 	{
 		//check string, identifier and compound type behaviours
-		LiteralArray array;
-		initLiteralArray(&array);
+		Toy_LiteralArray array;
+		Toy_initLiteralArray(&array);
 
 		//raw
 		char* str_raw = "hello world";
 		char* idn_raw = "foobar";
 
-		Literal string = TO_STRING_LITERAL(createRefString(str_raw));
-		Literal identifier = TO_IDENTIFIER_LITERAL(createRefString(idn_raw));
+		Toy_Literal string = TOY_TO_STRING_LITERAL(Toy_createRefString(str_raw));
+		Toy_Literal identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString(idn_raw));
 
 		//[string : string]
-		Literal type = TO_TYPE_LITERAL(LITERAL_DICTIONARY, false);
-		TYPE_PUSH_SUBTYPE(&type, TO_TYPE_LITERAL(LITERAL_STRING, false));
-		TYPE_PUSH_SUBTYPE(&type, TO_TYPE_LITERAL(LITERAL_STRING, false));
+		Toy_Literal type = TOY_TO_TYPE_LITERAL(TOY_LITERAL_DICTIONARY, false);
+		TOY_TYPE_PUSH_SUBTYPE(&type, TOY_TO_TYPE_LITERAL(TOY_LITERAL_STRING, false));
+		TOY_TYPE_PUSH_SUBTYPE(&type, TOY_TO_TYPE_LITERAL(TOY_LITERAL_STRING, false));
 
 		//push
-		pushLiteralArray(&array, string);
-		pushLiteralArray(&array, identifier);
-		pushLiteralArray(&array, type);
+		Toy_pushLiteralArray(&array, string);
+		Toy_pushLiteralArray(&array, identifier);
+		Toy_pushLiteralArray(&array, type);
 
 		//free the local literals
-		freeLiteral(string);
-		freeLiteral(identifier);
-		freeLiteral(type);
+		Toy_freeLiteral(string);
+		Toy_freeLiteral(identifier);
+		Toy_freeLiteral(type);
 
-		freeLiteralArray(&array);
+		Toy_freeLiteralArray(&array);
 	}
 
-	printf(NOTICE "All good\n" RESET);
+	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 	return 0;
 }

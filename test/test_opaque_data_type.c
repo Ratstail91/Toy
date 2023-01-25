@@ -1,11 +1,11 @@
-#include "lexer.h"
-#include "parser.h"
-#include "compiler.h"
-#include "interpreter.h"
+#include "toy_lexer.h"
+#include "toy_parser.h"
+#include "toy_compiler.h"
+#include "toy_interpreter.h"
 
-#include "console_colors.h"
+#include "toy_console_colors.h"
 
-#include "memory.h"
+#include "toy_memory.h"
 
 #include "../repl/repl_tools.h"
 
@@ -27,39 +27,39 @@ typedef struct ArbitraryData {
 	int value;
 } ArbitraryData;
 
-static int produce(Interpreter* interpreter, LiteralArray* arguments) {
-	ArbitraryData* data = ALLOCATE(ArbitraryData, 1);
+static int produce(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	ArbitraryData* data = TOY_ALLOCATE(ArbitraryData, 1);
 	data->value = 42;
 
-	Literal o = TO_OPAQUE_LITERAL(data, 0);
+	Toy_Literal o = TOY_TO_OPAQUE_LITERAL(data, 0);
 
-	pushLiteralArray(&interpreter->stack, o);
+	Toy_pushLiteralArray(&interpreter->stack, o);
 
-	freeLiteral(o);
+	Toy_freeLiteral(o);
 
 	return 1;
 }
 
-static int consume(Interpreter* interpreter, LiteralArray* arguments) {
-	Literal o = popLiteralArray(arguments);
+static int consume(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	Toy_Literal o = Toy_popLiteralArray(arguments);
 
-	Literal idn = o;
+	Toy_Literal idn = o;
 
-	if (parseIdentifierToValue(interpreter, &o)) {
-		freeLiteral(idn);
+	if (Toy_parseIdentifierToValue(interpreter, &o)) {
+		Toy_freeLiteral(idn);
 	}
 
-	if (IS_OPAQUE(o) && ((ArbitraryData*)(AS_OPAQUE(o)))->value == 42) {
-		ArbitraryData* data = (ArbitraryData*)AS_OPAQUE(o);
+	if (TOY_IS_OPAQUE(o) && ((ArbitraryData*)(TOY_AS_OPAQUE(o)))->value == 42) {
+		ArbitraryData* data = (ArbitraryData*)TOY_AS_OPAQUE(o);
 
-		FREE(ArbitraryData, data);
+		TOY_FREE(ArbitraryData, data);
 
 		//all went well
-		freeLiteral(o);
+		Toy_freeLiteral(o);
 		return 0;
 	}
 
-	printf(ERROR "opaque failed: %d\n" RESET, IS_OPAQUE(o));
+	printf(TOY_CC_ERROR "opaque failed: %d\n" TOY_CC_RESET, TOY_IS_OPAQUE(o));
 
 	exit(-1);
 	return -1;
@@ -68,28 +68,28 @@ static int consume(Interpreter* interpreter, LiteralArray* arguments) {
 int main() {
 	{
 		size_t size = 0;
-		char* source = readFile("scripts/opaque-data-type.toy", &size);
-		unsigned char* tb = compileString(source, &size);
+		char* source = Toy_readFile("scripts/opaque-data-type.toy", &size);
+		unsigned char* tb = Toy_compileString(source, &size);
 		free((void*)source);
 
 		if (!tb) {
 			return -1;
 		}
 
-		Interpreter interpreter;
-		initInterpreter(&interpreter);
+		Toy_Interpreter interpreter;
+		Toy_initInterpreter(&interpreter);
 
-		injectNativeFn(&interpreter, "produce", produce);
-		injectNativeFn(&interpreter, "consume", consume);
+		Toy_injectNativeFn(&interpreter, "produce", produce);
+		Toy_injectNativeFn(&interpreter, "consume", consume);
 
 		//run teh script
-		runInterpreter(&interpreter, tb, size);
+		Toy_runInterpreter(&interpreter, tb, size);
 
 		//clean up
-		freeInterpreter(&interpreter);
+		Toy_freeInterpreter(&interpreter);
 	}
 
-	printf(NOTICE "All good\n" RESET);
+	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 	return 0;
 }
 

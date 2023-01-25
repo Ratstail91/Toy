@@ -2,19 +2,19 @@
 
 #include "toy_common.h"
 
-#include "literal.h"
+#include "toy_literal.h"
 
-typedef struct LiteralArray {
-	Literal* literals;
+typedef struct Toy_LiteralArray {
+	Toy_Literal* literals;
 	int capacity;
 	int count;
-} LiteralArray;
+} Toy_LiteralArray;
 
-TOY_API void initLiteralArray(LiteralArray* array);
-TOY_API void freeLiteralArray(LiteralArray* array);
-TOY_API int pushLiteralArray(LiteralArray* array, Literal literal);
-TOY_API Literal popLiteralArray(LiteralArray* array);
-TOY_API bool setLiteralArray(LiteralArray* array, Literal index, Literal value);
-TOY_API Literal getLiteralArray(LiteralArray* array, Literal index);
+TOY_API void Toy_initLiteralArray(Toy_LiteralArray* array);
+TOY_API void Toy_freeLiteralArray(Toy_LiteralArray* array);
+TOY_API int Toy_pushLiteralArray(Toy_LiteralArray* array, Toy_Literal literal);
+TOY_API Toy_Literal Toy_popLiteralArray(Toy_LiteralArray* array);
+TOY_API bool Toy_setLiteralArray(Toy_LiteralArray* array, Toy_Literal index, Toy_Literal value);
+TOY_API Toy_Literal Toy_getLiteralArray(Toy_LiteralArray* array, Toy_Literal index);
 
-int findLiteralIndex(LiteralArray* array, Literal literal);
+int Toy_findLiteralIndex(Toy_LiteralArray* array, Toy_Literal literal);

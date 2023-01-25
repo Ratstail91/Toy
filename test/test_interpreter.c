@@ -1,11 +1,11 @@
-#include "lexer.h"
-#include "parser.h"
-#include "compiler.h"
-#include "interpreter.h"
+#include "toy_lexer.h"
+#include "toy_parser.h"
+#include "toy_compiler.h"
+#include "toy_interpreter.h"
 
-#include "console_colors.h"
+#include "toy_console_colors.h"
 
-#include "memory.h"
+#include "toy_memory.h"
 
 #include "../repl/repl_tools.h"
 
@@ -24,27 +24,27 @@ static void noAssertFn(const char* output) {
 		ignoredAssertions++;
 	}
 	else {
-		fprintf(stderr, ERROR "Assertion failure: ");
+		fprintf(stderr, TOY_CC_ERROR "Assertion failure: ");
 		fprintf(stderr, "%s", output);
-		fprintf(stderr, "\n" RESET); //default new line
+		fprintf(stderr, "\n" TOY_CC_RESET); //default new line
 	}
 }
 
 void runBinaryCustom(unsigned char* tb, size_t size) {
-	Interpreter interpreter;
-	initInterpreter(&interpreter);
+	Toy_Interpreter interpreter;
+	Toy_initInterpreter(&interpreter);
 
 	//NOTE: suppress print output for testing
-	setInterpreterPrint(&interpreter, noPrintFn);
-	setInterpreterAssert(&interpreter, noAssertFn);
+	Toy_setInterpreterPrint(&interpreter, noPrintFn);
+	Toy_setInterpreterAssert(&interpreter, noAssertFn);
 
-	runInterpreter(&interpreter, tb, size);
-	freeInterpreter(&interpreter);
+	Toy_runInterpreter(&interpreter, tb, size);
+	Toy_freeInterpreter(&interpreter);
 }
 
 void runSourceCustom(char* source) {
 	size_t size = 0;
-	unsigned char* tb = compileString(source, &size);
+	unsigned char* tb = Toy_compileString(source, &size);
 	if (!tb) {
 		return;
 	}
@@ -53,7 +53,7 @@ void runSourceCustom(char* source) {
 
 void runSourceFileCustom(char* fname) {
 	size_t size = 0; //not used
-	char* source = readFile(fname, &size);
+	char* source = Toy_readFile(fname, &size);
 	runSourceCustom(source);
 	free((void*)source);
 }
@@ -61,9 +61,9 @@ void runSourceFileCustom(char* fname) {
 int main() {
 	{
 		//test init & free
-		Interpreter interpreter;
-		initInterpreter(&interpreter);
-		freeInterpreter(&interpreter);
+		Toy_Interpreter interpreter;
+		Toy_initInterpreter(&interpreter);
+		Toy_freeInterpreter(&interpreter);
 	}
 
 	{
@@ -71,37 +71,37 @@ int main() {
 		char* source = "print null;";
 
 		//test basic compilation & collation
-		Lexer lexer;
-		Parser parser;
-		Compiler compiler;
-		Interpreter interpreter;
+		Toy_Lexer lexer;
+		Toy_Parser parser;
+		Toy_Compiler compiler;
+		Toy_Interpreter interpreter;
 
-		initLexer(&lexer, source);
-		initParser(&parser, &lexer);
-		initCompiler(&compiler);
-		initInterpreter(&interpreter);
+		Toy_initLexer(&lexer, source);
+		Toy_initParser(&parser, &lexer);
+		Toy_initCompiler(&compiler);
+		Toy_initInterpreter(&interpreter);
 
-		ASTNode* node = scanParser(&parser);
+		Toy_ASTNode* node = Toy_scanParser(&parser);
 
 		//write
-		writeCompiler(&compiler, node);
+		Toy_writeCompiler(&compiler, node);
 
 		//collate
 		int size = 0;
-		unsigned char* bytecode = collateCompiler(&compiler, &size);
+		unsigned char* bytecode = Toy_collateCompiler(&compiler, &size);
 
 		//NOTE: suppress print output for testing
-		setInterpreterPrint(&interpreter, noPrintFn);
-		setInterpreterAssert(&interpreter, noAssertFn);
+		Toy_setInterpreterPrint(&interpreter, noPrintFn);
+		Toy_setInterpreterAssert(&interpreter, noAssertFn);
 
 		//run
-		runInterpreter(&interpreter, bytecode, size);
+		Toy_runInterpreter(&interpreter, bytecode, size);
 
 		//cleanup
-		freeASTNode(node);
-		freeParser(&parser);
-		freeCompiler(&compiler);
-		freeInterpreter(&interpreter);
+		Toy_freeASTNode(node);
+		Toy_freeParser(&parser);
+		Toy_freeCompiler(&compiler);
+		Toy_freeInterpreter(&interpreter);
 	}
 
 	{
@@ -144,11 +144,11 @@ int main() {
 
 	//1, to allow for the assertion test
 	if (ignoredAssertions > 1) {
-		fprintf(stderr, ERROR "Assertions hidden: %d\n", ignoredAssertions);
+		fprintf(stderr, TOY_CC_ERROR "Assertions hidden: %d\n", ignoredAssertions);
 		return -1;
 	}
 
-	printf(NOTICE "All good\n" RESET);
+	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 	return 0;
 }
 

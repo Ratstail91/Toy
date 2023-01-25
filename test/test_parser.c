@@ -1,6 +1,6 @@
-#include "parser.h"
+#include "toy_parser.h"
 
-#include "console_colors.h"
+#include "toy_console_colors.h"
 
 #include "../repl/repl_tools.h"
 
@@ -14,12 +14,12 @@ int main() {
 		char* source = "print null;";
 
 		//test init & quit
-		Lexer lexer;
-		Parser parser;
-		initLexer(&lexer, source);
-		initParser(&parser, &lexer);
+		Toy_Lexer lexer;
+		Toy_Parser parser;
+		Toy_initLexer(&lexer, source);
+		Toy_initParser(&parser, &lexer);
 
-		freeParser(&parser);
+		Toy_freeParser(&parser);
 	}
 
 	{
@@ -27,63 +27,63 @@ int main() {
 		char* source = "print null;";
 
 		//test parsing
-		Lexer lexer;
-		Parser parser;
-		initLexer(&lexer, source);
-		initParser(&parser, &lexer);
+		Toy_Lexer lexer;
+		Toy_Parser parser;
+		Toy_initLexer(&lexer, source);
+		Toy_initParser(&parser, &lexer);
 
-		ASTNode* node = scanParser(&parser);
+		Toy_ASTNode* node = Toy_scanParser(&parser);
 
 		//inspect the node
 		if (node == NULL) {
-			fprintf(stderr, ERROR "ERROR: ASTNode is null" RESET);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode is null" TOY_CC_RESET);
 			return -1;
 		}
 
-		if (node->type != AST_NODE_UNARY || node->unary.opcode != OP_PRINT) {
-			fprintf(stderr, ERROR "ERROR: ASTNode is not a unary print instruction" RESET);
+		if (node->type != TOY_AST_NODE_UNARY || node->unary.opcode != TOY_OP_PRINT) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode is not a unary print instruction" TOY_CC_RESET);
 			return -1;
 		}
 
-		if (node->unary.child->type != AST_NODE_LITERAL || !IS_NULL(node->unary.child->atomic.literal)) {
-			fprintf(stderr, ERROR "ERROR: ASTNode to be printed is not a null literal" RESET);
+		if (node->unary.child->type != TOY_AST_NODE_LITERAL || !TOY_IS_NULL(node->unary.child->atomic.literal)) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode to be printed is not a null literal" TOY_CC_RESET);
 			return -1;
 		}
 
 		//cleanup
-		freeASTNode(node);
-		freeParser(&parser);
+		Toy_freeASTNode(node);
+		Toy_freeParser(&parser);
 	}
 
 	{
 		//get the source file
 		size_t size = 0;
-		char* source = readFile("scripts/parser_sample_code.toy", &size);
+		char* source = Toy_readFile("scripts/parser_sample_code.toy", &size);
 
 		//test parsing a chunk of junk (valgrind will find leaks)
-		Lexer lexer;
-		Parser parser;
-		initLexer(&lexer, source);
-		initParser(&parser, &lexer);
+		Toy_Lexer lexer;
+		Toy_Parser parser;
+		Toy_initLexer(&lexer, source);
+		Toy_initParser(&parser, &lexer);
 
-		ASTNode* node = scanParser(&parser);
+		Toy_ASTNode* node = Toy_scanParser(&parser);
 
 		while (node != NULL) {
-			if (node->type == AST_NODE_ERROR) {
-				fprintf(stderr, ERROR "ERROR: Error node detected" RESET);
+			if (node->type == TOY_AST_NODE_ERROR) {
+				fprintf(stderr, TOY_CC_ERROR "ERROR: Error node detected" TOY_CC_RESET);
 				return -1;
 			}
 
-			freeASTNode(node);
-			node = scanParser(&parser);
+			Toy_freeASTNode(node);
+			node = Toy_scanParser(&parser);
 		}
 
 		//cleanup
-		freeParser(&parser);
+		Toy_freeParser(&parser);
 		free((void*)source);
 	}
 
-	printf(NOTICE "All good\n" RESET);
+	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 	return 0;
 }
 

@@ -1,11 +1,11 @@
-#include "lexer.h"
-#include "parser.h"
-#include "compiler.h"
-#include "interpreter.h"
+#include "toy_lexer.h"
+#include "toy_parser.h"
+#include "toy_compiler.h"
+#include "toy_interpreter.h"
 
-#include "console_colors.h"
+#include "toy_console_colors.h"
 
-#include "memory.h"
+#include "toy_memory.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,57 +25,57 @@ static void noPrintFn(const char* output) {
 static int failedAsserts = 0;
 static void assertWrapper(const char* output) {
 	failedAsserts++;
-	fprintf(stderr, ERROR "Assertion failure: ");
+	fprintf(stderr, TOY_CC_ERROR "Assertion failure: ");
 	fprintf(stderr, "%s", output);
-	fprintf(stderr, "\n" RESET); //default new line
+	fprintf(stderr, "\n" TOY_CC_RESET); //default new line
 }
 
 static void errorWrapper(const char* output) {
 	failedAsserts++;
-	fprintf(stderr, ERROR "%s" RESET, output);
+	fprintf(stderr, TOY_CC_ERROR "%s" TOY_CC_RESET, output);
 }
 
-void runBinaryWithLibrary(unsigned char* tb, size_t size, char* library, HookFn hook) {
-	Interpreter interpreter;
-	initInterpreter(&interpreter);
+void runBinaryWithLibrary(unsigned char* tb, size_t size, char* library, Toy_HookFn hook) {
+	Toy_Interpreter interpreter;
+	Toy_initInterpreter(&interpreter);
 
 	//NOTE: supress print output for testing
-	setInterpreterPrint(&interpreter, noPrintFn);
-	setInterpreterAssert(&interpreter, assertWrapper);
-	setInterpreterError(&interpreter, errorWrapper);
+	Toy_setInterpreterPrint(&interpreter, noPrintFn);
+	Toy_setInterpreterAssert(&interpreter, assertWrapper);
+	Toy_setInterpreterError(&interpreter, errorWrapper);
 
 	//inject the standard libraries into this interpreter
-	injectNativeHook(&interpreter, library, hook);
+	Toy_injectNativeHook(&interpreter, library, hook);
 
-	runInterpreter(&interpreter, tb, size);
-	freeInterpreter(&interpreter);
+	Toy_runInterpreter(&interpreter, tb, size);
+	Toy_freeInterpreter(&interpreter);
 }
 
 typedef struct Payload {
 	char* fname;
 	char* libname;
-	HookFn hook;
+	Toy_HookFn hook;
 } Payload;
 
 int main() {
 	//setup the runner filesystem (hacky)
-	initDriveDictionary();
+	Toy_initDriveDictionary();
 
-	Literal driveLiteral = TO_STRING_LITERAL(createRefString("scripts"));
-	Literal pathLiteral = TO_STRING_LITERAL(createRefString("scripts"));
+	Toy_Literal driveLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("scripts"));
+	Toy_Literal pathLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("scripts"));
 
-	setLiteralDictionary(getDriveDictionary(), driveLiteral, pathLiteral);
+	Toy_setLiteralDictionary(Toy_getDriveDictionary(), driveLiteral, pathLiteral);
 
-	freeLiteral(driveLiteral);
-	freeLiteral(pathLiteral);
+	Toy_freeLiteral(driveLiteral);
+	Toy_freeLiteral(pathLiteral);
 
 	{
 		//run each file in test/scripts
 		Payload payloads[] = {
-			{"interactions.toy", "standard", hookStandard}, //interactions needs standard
-			{"standard.toy", "standard", hookStandard},
-			{"timer.toy", "timer", hookTimer},
-			{"runner.toy", "runner", hookRunner},
+			{"interactions.toy", "standard", Toy_hookStandard}, //interactions needs standard
+			{"standard.toy", "standard", Toy_hookStandard},
+			{"timer.toy", "timer", Toy_hookTimer},
+			{"runner.toy", "runner", Toy_hookRunner},
 			{NULL, NULL, NULL}
 		};
 
@@ -87,18 +87,18 @@ int main() {
 
 			//compile the source
 			size_t size = 0;
-			char* source = readFile(fname, &size);
+			char* source = Toy_readFile(fname, &size);
 			if (!source) {
-				printf(ERROR "Failed to load file: %s\n" RESET, fname);
+				printf(TOY_CC_ERROR "Failed to load file: %s\n" TOY_CC_RESET, fname);
 				failedAsserts++;
 				continue;
 			}
 
-			unsigned char* tb = compileString(source, &size);
+			unsigned char* tb = Toy_compileString(source, &size);
 			free((void*)source);
 
 			if (!tb) {
-				printf(ERROR "Failed to compile file: %s\n" RESET, fname);
+				printf(TOY_CC_ERROR "Failed to compile file: %s\n" TOY_CC_RESET, fname);
 				failedAsserts++;
 				continue;
 			}
@@ -108,13 +108,13 @@ int main() {
 	}
 
 	//lib cleanup
-	freeDriveDictionary();
+	Toy_freeDriveDictionary();
 
 	if (!failedAsserts) {
-		printf(NOTICE "All good\n" RESET);
+		printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 	}
 	else {
-		printf(WARN "Problems detected in libraries\n" RESET);
+		printf(TOY_CC_WARN "Problems detected in libraries\n" TOY_CC_RESET);
 	}
 
 	return failedAsserts;

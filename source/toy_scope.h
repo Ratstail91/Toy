@@ -1,25 +1,25 @@
 #pragma once
 
-#include "literal_array.h"
-#include "literal_dictionary.h"
+#include "toy_literal_array.h"
+#include "toy_literal_dictionary.h"
 
-typedef struct Scope {
-	LiteralDictionary variables; //only allow identifiers as the keys
-	LiteralDictionary types; //the types, indexed by identifiers
-	struct Scope* ancestor;
+typedef struct Toy_Scope {
+	Toy_LiteralDictionary variables; //only allow identifiers as the keys
+	Toy_LiteralDictionary types; //the types, indexed by identifiers
+	struct Toy_Scope* ancestor;
 	int references; //how many scopes point here
-} Scope;
+} Toy_Scope;
 
-Scope* pushScope(Scope* scope);
-Scope* popScope(Scope* scope);
-Scope* copyScope(Scope* original);
+Toy_Scope* Toy_pushScope(Toy_Scope* scope);
+Toy_Scope* Toy_popScope(Toy_Scope* scope);
+Toy_Scope* Toy_copyScope(Toy_Scope* original);
 
 //returns false if error
-bool declareScopeVariable(Scope* scope, Literal key, Literal type);
-bool isDelcaredScopeVariable(Scope* scope, Literal key);
+bool Toy_declareScopeVariable(Toy_Scope* scope, Toy_Literal key, Toy_Literal type);
+bool Toy_isDelcaredScopeVariable(Toy_Scope* scope, Toy_Literal key);
 
 //return false if undefined
-bool setScopeVariable(Scope* scope, Literal key, Literal value, bool constCheck);
-bool getScopeVariable(Scope* scope, Literal key, Literal* value);
+bool Toy_setScopeVariable(Toy_Scope* scope, Toy_Literal key, Toy_Literal value, bool constCheck);
+bool Toy_getScopeVariable(Toy_Scope* scope, Toy_Literal key, Toy_Literal* value);
 
-Literal getScopeType(Scope* scope, Literal key);
+Toy_Literal Toy_getScopeType(Toy_Scope* scope, Toy_Literal key);

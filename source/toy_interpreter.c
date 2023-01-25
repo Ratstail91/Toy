@@ -1,12 +1,12 @@
-#include "interpreter.h"
-#include "console_colors.h"
+#include "toy_interpreter.h"
+#include "toy_console_colors.h"
 
 #include "toy_common.h"
-#include "memory.h"
-#include "keyword_types.h"
-#include "opcodes.h"
+#include "toy_memory.h"
+#include "toy_keyword_types.h"
+#include "toy_opcodes.h"
 
-#include "builtin.h"
+#include "toy_builtin.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -17,158 +17,158 @@ static void printWrapper(const char* output) {
 }
 
 static void assertWrapper(const char* output) {
-	fprintf(stderr, ERROR "Assertion failure: ");
+	fprintf(stderr, TOY_CC_ERROR "Assertion failure: ");
 	fprintf(stderr, "%s", output);
-	fprintf(stderr, "\n" RESET); //default new line
+	fprintf(stderr, "\n" TOY_CC_RESET); //default new line
 }
 
 static void errorWrapper(const char* output) {
-	fprintf(stderr, ERROR "%s" RESET, output); //no newline
+	fprintf(stderr, TOY_CC_ERROR "%s" TOY_CC_RESET, output); //no newline
 }
 
-bool injectNativeFn(Interpreter* interpreter, char* name, NativeFn func) {
+bool Toy_injectNativeFn(Toy_Interpreter* interpreter, char* name, Toy_NativeFn func) {
 	//reject reserved words
-	if (findTypeByKeyword(name) != TOKEN_EOF) {
+	if (Toy_findTypeByKeyword(name) != TOY_TOKEN_EOF) {
 		interpreter->errorOutput("Can't override an existing keyword\n");
 		return false;
 	}
 
 	int identifierLength = strlen(name);
-	Literal identifier = TO_IDENTIFIER_LITERAL(createRefStringLength(name, identifierLength));
+	Toy_Literal identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(name, identifierLength));
 
 	//make sure the name isn't taken
-	if (existsLiteralDictionary(&interpreter->scope->variables, identifier)) {
+	if (Toy_existsLiteralDictionary(&interpreter->scope->variables, identifier)) {
 		interpreter->errorOutput("Can't override an existing variable\n");
 		return false;
 	}
 
-	Literal fn = TO_FUNCTION_LITERAL((void*)func, 0);
-	fn.type = LITERAL_FUNCTION_NATIVE;
+	Toy_Literal fn = TOY_TO_FUNCTION_LITERAL((void*)func, 0);
+	fn.type = TOY_LITERAL_FUNCTION_NATIVE;
 
-	Literal type = TO_TYPE_LITERAL(fn.type, true);
+	Toy_Literal type = TOY_TO_TYPE_LITERAL(fn.type, true);
 
-	setLiteralDictionary(&interpreter->scope->variables, identifier, fn);
-	setLiteralDictionary(&interpreter->scope->types, identifier, type);
+	Toy_setLiteralDictionary(&interpreter->scope->variables, identifier, fn);
+	Toy_setLiteralDictionary(&interpreter->scope->types, identifier, type);
 
-	freeLiteral(identifier);
-	freeLiteral(type);
+	Toy_freeLiteral(identifier);
+	Toy_freeLiteral(type);
 
 	return true;
 }
 
-bool injectNativeHook(Interpreter* interpreter, char* name, HookFn hook) {
+bool Toy_injectNativeHook(Toy_Interpreter* interpreter, char* name, Toy_HookFn hook) {
 	//reject reserved words
-	if (findTypeByKeyword(name) != TOKEN_EOF) {
+	if (Toy_findTypeByKeyword(name) != TOY_TOKEN_EOF) {
 		interpreter->errorOutput("Can't inject a hook on an existing keyword\n");
 		return false;
 	}
 
 	int identifierLength = strlen(name);
-	Literal identifier = TO_IDENTIFIER_LITERAL(createRefStringLength(name, identifierLength));
+	Toy_Literal identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(name, identifierLength));
 
 	//make sure the name isn't taken
-	if (existsLiteralDictionary(interpreter->hooks, identifier)) {
+	if (Toy_existsLiteralDictionary(interpreter->hooks, identifier)) {
 		interpreter->errorOutput("Can't override an existing hook\n");
 		return false;
 	}
 
-	Literal fn = TO_FUNCTION_LITERAL((void*)hook, 0);
-	fn.type = LITERAL_FUNCTION_NATIVE;
+	Toy_Literal fn = TOY_TO_FUNCTION_LITERAL((void*)hook, 0);
+	fn.type = TOY_LITERAL_FUNCTION_NATIVE;
 
-	setLiteralDictionary(interpreter->hooks, identifier, fn);
+	Toy_setLiteralDictionary(interpreter->hooks, identifier, fn);
 
-	freeLiteral(identifier);
+	Toy_freeLiteral(identifier);
 
 	return true;
 }
 
-void parseCompoundToPureValues(Interpreter* interpreter, Literal* literalPtr) {
-	if (IS_IDENTIFIER(*literalPtr)) {
-		parseIdentifierToValue(interpreter, literalPtr);
+void Toy_parseCompoundToPureValues(Toy_Interpreter* interpreter, Toy_Literal* literalPtr) {
+	if (TOY_IS_IDENTIFIER(*literalPtr)) {
+		Toy_parseIdentifierToValue(interpreter, literalPtr);
 	}
 
 	//parse out an array
-	if (IS_ARRAY(*literalPtr)) {
-		for (int i = 0; i < AS_ARRAY(*literalPtr)->count; i++) {
-			Literal index = TO_INTEGER_LITERAL(i);
-			Literal entry = getLiteralArray(AS_ARRAY(*literalPtr), index);
+	if (TOY_IS_ARRAY(*literalPtr)) {
+		for (int i = 0; i < TOY_AS_ARRAY(*literalPtr)->count; i++) {
+			Toy_Literal index = TOY_TO_INTEGER_LITERAL(i);
+			Toy_Literal entry = Toy_getLiteralArray(TOY_AS_ARRAY(*literalPtr), index);
 
-			if (IS_IDENTIFIER( entry )) {
-				Literal idn = entry;
-				parseCompoundToPureValues(interpreter, &entry);
+			if (TOY_IS_IDENTIFIER( entry )) {
+				Toy_Literal idn = entry;
+				Toy_parseCompoundToPureValues(interpreter, &entry);
 
-				setLiteralArray(AS_ARRAY(*literalPtr), index, entry);
+				Toy_setLiteralArray(TOY_AS_ARRAY(*literalPtr), index, entry);
 
-				freeLiteral(idn);
+				Toy_freeLiteral(idn);
 			}
 
-			freeLiteral(index);
-			freeLiteral(entry);
+			Toy_freeLiteral(index);
+			Toy_freeLiteral(entry);
 		}
 	}
 
 	//parse out a dictionary
-	if (IS_DICTIONARY(*literalPtr)) {
-		LiteralDictionary* ret = ALLOCATE(LiteralDictionary, 1);
-		initLiteralDictionary(ret);
+	if (TOY_IS_DICTIONARY(*literalPtr)) {
+		Toy_LiteralDictionary* ret = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
+		Toy_initLiteralDictionary(ret);
 
-		for (int i = 0; i < AS_DICTIONARY(*literalPtr)->capacity; i++) {
-			if ( IS_NULL(AS_DICTIONARY(*literalPtr)->entries[i].key) ) {
+		for (int i = 0; i < TOY_AS_DICTIONARY(*literalPtr)->capacity; i++) {
+			if ( TOY_IS_NULL(TOY_AS_DICTIONARY(*literalPtr)->entries[i].key) ) {
 				continue;
 			}
 
-			Literal key = TO_NULL_LITERAL;
-			Literal value = TO_NULL_LITERAL;
+			Toy_Literal key = TOY_TO_NULL_LITERAL;
+			Toy_Literal value = TOY_TO_NULL_LITERAL;
 
-			key = copyLiteral(AS_DICTIONARY(*literalPtr)->entries[i].key);
-			value = copyLiteral(AS_DICTIONARY(*literalPtr)->entries[i].value);
+			key = Toy_copyLiteral(TOY_AS_DICTIONARY(*literalPtr)->entries[i].key);
+			value = Toy_copyLiteral(TOY_AS_DICTIONARY(*literalPtr)->entries[i].value);
 
 			//
-			if (IS_IDENTIFIER( key ) || IS_IDENTIFIER(value)) {
-				parseCompoundToPureValues(interpreter, &key);
-				parseCompoundToPureValues(interpreter, &value);
+			if (TOY_IS_IDENTIFIER( key ) || TOY_IS_IDENTIFIER(value)) {
+				Toy_parseCompoundToPureValues(interpreter, &key);
+				Toy_parseCompoundToPureValues(interpreter, &value);
 			}
 
-			setLiteralDictionary(ret, key, value);
+			Toy_setLiteralDictionary(ret, key, value);
 
 			//
-			freeLiteral(key);
-			freeLiteral(value);
+			Toy_freeLiteral(key);
+			Toy_freeLiteral(value);
 		}
 
-		freeLiteral(*literalPtr);
-		*literalPtr = TO_DICTIONARY_LITERAL(ret);
+		Toy_freeLiteral(*literalPtr);
+		*literalPtr = TOY_TO_DICTIONARY_LITERAL(ret);
 	}
 }
 
-bool parseIdentifierToValue(Interpreter* interpreter, Literal* literalPtr) {
+bool Toy_parseIdentifierToValue(Toy_Interpreter* interpreter, Toy_Literal* literalPtr) {
 	//this converts identifiers to values
-	if (IS_IDENTIFIER(*literalPtr)) {
-		if (!getScopeVariable(interpreter->scope, *literalPtr, literalPtr)) {
+	if (TOY_IS_IDENTIFIER(*literalPtr)) {
+		if (!Toy_getScopeVariable(interpreter->scope, *literalPtr, literalPtr)) {
 			interpreter->errorOutput("Undeclared variable ");
-			printLiteralCustom(*literalPtr, interpreter->errorOutput);
+			Toy_printLiteralCustom(*literalPtr, interpreter->errorOutput);
 			interpreter->errorOutput("\n");
 			return false;
 		}
 	}
 
-	if (IS_ARRAY(*literalPtr) || IS_DICTIONARY(*literalPtr)) {
-		parseCompoundToPureValues(interpreter, literalPtr);
+	if (TOY_IS_ARRAY(*literalPtr) || TOY_IS_DICTIONARY(*literalPtr)) {
+		Toy_parseCompoundToPureValues(interpreter, literalPtr);
 	}
 
 	return true;
 }
 
 //utilities for the host program
-void setInterpreterPrint(Interpreter* interpreter, PrintFn printOutput) {
+void Toy_setInterpreterPrint(Toy_Interpreter* interpreter, Toy_PrintFn printOutput) {
 	interpreter->printOutput = printOutput;
 }
 
-void setInterpreterAssert(Interpreter* interpreter, PrintFn assertOutput) {
+void Toy_setInterpreterAssert(Toy_Interpreter* interpreter, Toy_PrintFn assertOutput) {
 	interpreter->assertOutput = assertOutput;
 }
 
-void setInterpreterError(Interpreter* interpreter, PrintFn errorOutput) {
+void Toy_setInterpreterError(Toy_Interpreter* interpreter, Toy_PrintFn errorOutput) {
 	interpreter->errorOutput = errorOutput;
 }
 
@@ -206,7 +206,7 @@ static char* readString(unsigned char* tb, int* count) {
 	return (char*)ret;
 }
 
-static void consumeByte(Interpreter* interpreter, unsigned char byte, unsigned char* tb, int* count) {
+static void consumeByte(Toy_Interpreter* interpreter, unsigned char byte, unsigned char* tb, int* count) {
 	if (byte != tb[*count]) {
 		char buffer[512];
 		snprintf(buffer, 512, "[internal] Failed to consume the correct byte (expected %u, found %u)\n", byte, tb[*count]);
@@ -215,7 +215,7 @@ static void consumeByte(Interpreter* interpreter, unsigned char byte, unsigned c
 	*count += 1;
 }
 
-static void consumeShort(Interpreter* interpreter, unsigned short bytes, unsigned char* tb, int* count) {
+static void consumeShort(Toy_Interpreter* interpreter, unsigned short bytes, unsigned char* tb, int* count) {
 	if (bytes != *(unsigned short*)(tb + *count)) {
 		char buffer[512];
 		snprintf(buffer, 512, "[internal] Failed to consume the correct bytes (expected %u, found %u)\n", bytes, *(unsigned short*)(tb + *count));
@@ -225,51 +225,51 @@ static void consumeShort(Interpreter* interpreter, unsigned short bytes, unsigne
 }
 
 //each available statement
-static bool execAssert(Interpreter* interpreter) {
-	Literal rhs = popLiteralArray(&interpreter->stack);
-	Literal lhs = popLiteralArray(&interpreter->stack);
-	parseIdentifierToValue(interpreter, &lhs);
+static bool execAssert(Toy_Interpreter* interpreter) {
+	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
+	Toy_parseIdentifierToValue(interpreter, &lhs);
 
-	if (!IS_STRING(rhs)) {
+	if (!TOY_IS_STRING(rhs)) {
 		interpreter->errorOutput("The assert keyword needs a string as the second argument, received: ");
-		printLiteralCustom(rhs, interpreter->errorOutput);
+		Toy_printLiteralCustom(rhs, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
 		return false;
 	}
 
-	if (IS_NULL(lhs) || !IS_TRUTHY(lhs)) {
-		(*interpreter->assertOutput)(toCString(AS_STRING(rhs)));
-		freeLiteral(rhs);
+	if (TOY_IS_NULL(lhs) || !TOY_IS_TRUTHY(lhs)) {
+		(*interpreter->assertOutput)(Toy_toCString(TOY_AS_STRING(rhs)));
+		Toy_freeLiteral(rhs);
 		interpreter->panic = true;
 		return false;
 	}
 
-	freeLiteral(lhs);
-	freeLiteral(rhs);
+	Toy_freeLiteral(lhs);
+	Toy_freeLiteral(rhs);
 
 	return true;
 }
 
-static bool execPrint(Interpreter* interpreter) {
+static bool execPrint(Toy_Interpreter* interpreter) {
 	//print what is on top of the stack, then pop it
-	Literal lit = popLiteralArray(&interpreter->stack);
+	Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
 
-	if (IS_IDENTIFIER(lit)) {
-		Literal idn = lit;
-		if (!parseIdentifierToValue(interpreter, &lit)) {
+	if (TOY_IS_IDENTIFIER(lit)) {
+		Toy_Literal idn = lit;
+		if (!Toy_parseIdentifierToValue(interpreter, &lit)) {
 			return false;
 		}
-		freeLiteral(idn);
+		Toy_freeLiteral(idn);
 	}
 
-	printLiteralCustom(lit, interpreter->printOutput);
+	Toy_printLiteralCustom(lit, interpreter->printOutput);
 
-	freeLiteral(lit);
+	Toy_freeLiteral(lit);
 
 	return true;
 }
 
-static bool execPushLiteral(Interpreter* interpreter, bool lng) {
+static bool execPushLiteral(Toy_Interpreter* interpreter, bool lng) {
 	//read the index in the cache
 	int index = 0;
 
@@ -281,178 +281,178 @@ static bool execPushLiteral(Interpreter* interpreter, bool lng) {
 	}
 
 	//push from cache to stack (DO NOT account for identifiers - will do that later)
-	pushLiteralArray(&interpreter->stack, interpreter->literalCache.literals[index]);
+	Toy_pushLiteralArray(&interpreter->stack, interpreter->literalCache.literals[index]);
 
 	return true;
 }
 
-static bool rawLiteral(Interpreter* interpreter) {
-	Literal lit = popLiteralArray(&interpreter->stack);
+static bool rawLiteral(Toy_Interpreter* interpreter) {
+	Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
 
-	if (IS_IDENTIFIER(lit)) {
-		Literal idn = lit;
-		if (!parseIdentifierToValue(interpreter, &lit)) {
+	if (TOY_IS_IDENTIFIER(lit)) {
+		Toy_Literal idn = lit;
+		if (!Toy_parseIdentifierToValue(interpreter, &lit)) {
 			return false;
 		}
-		freeLiteral(idn);
+		Toy_freeLiteral(idn);
 	}
 
-	pushLiteralArray(&interpreter->stack, lit);
+	Toy_pushLiteralArray(&interpreter->stack, lit);
 
-	freeLiteral(lit);
+	Toy_freeLiteral(lit);
 
 	return true;
 }
 
-static bool execNegate(Interpreter* interpreter) {
+static bool execNegate(Toy_Interpreter* interpreter) {
 	//negate the top literal on the stack (numbers only)
-	Literal lit = popLiteralArray(&interpreter->stack);
+	Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
 
-	if (IS_IDENTIFIER(lit)) {
-		Literal idn = lit;
-		if (!parseIdentifierToValue(interpreter, &lit)) {
+	if (TOY_IS_IDENTIFIER(lit)) {
+		Toy_Literal idn = lit;
+		if (!Toy_parseIdentifierToValue(interpreter, &lit)) {
 			return false;
 		}
-		freeLiteral(idn);
+		Toy_freeLiteral(idn);
 	}
 
-	if (IS_INTEGER(lit)) {
-		lit = TO_INTEGER_LITERAL(-AS_INTEGER(lit));
+	if (TOY_IS_INTEGER(lit)) {
+		lit = TOY_TO_INTEGER_LITERAL(-TOY_AS_INTEGER(lit));
 	}
-	else if (IS_FLOAT(lit)) {
-		lit = TO_FLOAT_LITERAL(-AS_FLOAT(lit));
+	else if (TOY_IS_FLOAT(lit)) {
+		lit = TOY_TO_FLOAT_LITERAL(-TOY_AS_FLOAT(lit));
 	}
 	else {
 		interpreter->errorOutput("Can't negate that literal: ");
-		printLiteralCustom(lit, interpreter->errorOutput);
+		Toy_printLiteralCustom(lit, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
 
-		freeLiteral(lit);
+		Toy_freeLiteral(lit);
 
 		return false;
 	}
 
-	pushLiteralArray(&interpreter->stack, lit);
+	Toy_pushLiteralArray(&interpreter->stack, lit);
 
-	freeLiteral(lit);
+	Toy_freeLiteral(lit);
 
 	return true;
 }
 
-static bool execInvert(Interpreter* interpreter) {
+static bool execInvert(Toy_Interpreter* interpreter) {
 	//negate the top literal on the stack (booleans only)
-	Literal lit = popLiteralArray(&interpreter->stack);
+	Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
 
-	if (IS_IDENTIFIER(lit)) {
-		Literal idn = lit;
-		if (!parseIdentifierToValue(interpreter, &lit)) {
+	if (TOY_IS_IDENTIFIER(lit)) {
+		Toy_Literal idn = lit;
+		if (!Toy_parseIdentifierToValue(interpreter, &lit)) {
 			return false;
 		}
-		freeLiteral(idn);
+		Toy_freeLiteral(idn);
 	}
 
-	if (IS_BOOLEAN(lit)) {
-		lit = TO_BOOLEAN_LITERAL(!AS_BOOLEAN(lit));
+	if (TOY_IS_BOOLEAN(lit)) {
+		lit = TOY_TO_BOOLEAN_LITERAL(!TOY_AS_BOOLEAN(lit));
 	}
 	else {
 		interpreter->errorOutput("Can't invert that literal: ");
-		printLiteralCustom(lit, interpreter->errorOutput);
+		Toy_printLiteralCustom(lit, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
 
-		freeLiteral(lit);
+		Toy_freeLiteral(lit);
 
 		return false;
 	}
 
-	pushLiteralArray(&interpreter->stack, lit);
+	Toy_pushLiteralArray(&interpreter->stack, lit);
 
-	freeLiteral(lit);
+	Toy_freeLiteral(lit);
 
 	return true;
 }
 
-static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
-	Literal rhs = popLiteralArray(&interpreter->stack);
-	Literal lhs = popLiteralArray(&interpreter->stack);
+static bool execArithmetic(Toy_Interpreter* interpreter, Toy_Opcode opcode) {
+	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
 
-	if (IS_IDENTIFIER(rhs)) {
-		Literal idn = rhs;
-		parseIdentifierToValue(interpreter, &rhs);
-		freeLiteral(idn);
+	if (TOY_IS_IDENTIFIER(rhs)) {
+		Toy_Literal idn = rhs;
+		Toy_parseIdentifierToValue(interpreter, &rhs);
+		Toy_freeLiteral(idn);
 	}
 
-	if (IS_IDENTIFIER(lhs)) {
-		Literal idn = lhs;
-		parseIdentifierToValue(interpreter, &lhs);
-		freeLiteral(idn);
+	if (TOY_IS_IDENTIFIER(lhs)) {
+		Toy_Literal idn = lhs;
+		Toy_parseIdentifierToValue(interpreter, &lhs);
+		Toy_freeLiteral(idn);
 	}
 
 	//special case for string concatenation ONLY
-	if (IS_STRING(lhs) && IS_STRING(rhs)) {
+	if (TOY_IS_STRING(lhs) && TOY_IS_STRING(rhs)) {
 		//check for overflow
-		int totalLength = AS_STRING(lhs)->length + AS_STRING(rhs)->length;
-		if (totalLength > MAX_STRING_LENGTH) {
+		int totalLength = TOY_AS_STRING(lhs)->length + TOY_AS_STRING(rhs)->length;
+		if (totalLength > TOY_MAX_STRING_LENGTH) {
 			interpreter->errorOutput("Can't concatenate these strings (result is too long)\n");
 			return false;
 		}
 
 		//concat the strings
-		char buffer[MAX_STRING_LENGTH];
-		snprintf(buffer, MAX_STRING_LENGTH, "%s%s", toCString(AS_STRING(lhs)), toCString(AS_STRING(rhs)));
-		Literal literal = TO_STRING_LITERAL(createRefStringLength(buffer, totalLength));
-		pushLiteralArray(&interpreter->stack, literal);
+		char buffer[TOY_MAX_STRING_LENGTH];
+		snprintf(buffer, TOY_MAX_STRING_LENGTH, "%s%s", Toy_toCString(TOY_AS_STRING(lhs)), Toy_toCString(TOY_AS_STRING(rhs)));
+		Toy_Literal literal = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(buffer, totalLength));
+		Toy_pushLiteralArray(&interpreter->stack, literal);
 
 		//cleanup
-		freeLiteral(literal);
-		freeLiteral(lhs);
-		freeLiteral(rhs);
+		Toy_freeLiteral(literal);
+		Toy_freeLiteral(lhs);
+		Toy_freeLiteral(rhs);
 
 		return true;
 	}
 
 	//type coersion
-	if (IS_FLOAT(lhs) && IS_INTEGER(rhs)) {
-		rhs = TO_FLOAT_LITERAL(AS_INTEGER(rhs));
+	if (TOY_IS_FLOAT(lhs) && TOY_IS_INTEGER(rhs)) {
+		rhs = TOY_TO_FLOAT_LITERAL(TOY_AS_INTEGER(rhs));
 	}
 
-	if (IS_INTEGER(lhs) && IS_FLOAT(rhs)) {
-		lhs = TO_FLOAT_LITERAL(AS_INTEGER(lhs));
+	if (TOY_IS_INTEGER(lhs) && TOY_IS_FLOAT(rhs)) {
+		lhs = TOY_TO_FLOAT_LITERAL(TOY_AS_INTEGER(lhs));
 	}
 
 	//maths based on types
-	if(IS_INTEGER(lhs) && IS_INTEGER(rhs)) {
+	if(TOY_IS_INTEGER(lhs) && TOY_IS_INTEGER(rhs)) {
 		switch(opcode) {
-			case OP_ADDITION:
-			case OP_VAR_ADDITION_ASSIGN:
-				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) + AS_INTEGER(rhs) ));
+			case TOY_OP_ADDITION:
+			case TOY_OP_VAR_ADDITION_ASSIGN:
+				Toy_pushLiteralArray(&interpreter->stack, TOY_TO_INTEGER_LITERAL( TOY_AS_INTEGER(lhs) + TOY_AS_INTEGER(rhs) ));
 				return true;
 
-			case OP_SUBTRACTION:
-			case OP_VAR_SUBTRACTION_ASSIGN:
-				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) - AS_INTEGER(rhs) ));
+			case TOY_OP_SUBTRACTION:
+			case TOY_OP_VAR_SUBTRACTION_ASSIGN:
+				Toy_pushLiteralArray(&interpreter->stack, TOY_TO_INTEGER_LITERAL( TOY_AS_INTEGER(lhs) - TOY_AS_INTEGER(rhs) ));
 				return true;
 
-			case OP_MULTIPLICATION:
-			case OP_VAR_MULTIPLICATION_ASSIGN:
-				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) * AS_INTEGER(rhs) ));
+			case TOY_OP_MULTIPLICATION:
+			case TOY_OP_VAR_MULTIPLICATION_ASSIGN:
+				Toy_pushLiteralArray(&interpreter->stack, TOY_TO_INTEGER_LITERAL( TOY_AS_INTEGER(lhs) * TOY_AS_INTEGER(rhs) ));
 				return true;
 
-			case OP_DIVISION:
-			case OP_VAR_DIVISION_ASSIGN:
-				if (AS_INTEGER(rhs) == 0) {
+			case TOY_OP_DIVISION:
+			case TOY_OP_VAR_DIVISION_ASSIGN:
+				if (TOY_AS_INTEGER(rhs) == 0) {
 					interpreter->errorOutput("Can't divide by zero (error found in interpreter)");
 					return false;
 				}
-				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) / AS_INTEGER(rhs) ));
+				Toy_pushLiteralArray(&interpreter->stack, TOY_TO_INTEGER_LITERAL( TOY_AS_INTEGER(lhs) / TOY_AS_INTEGER(rhs) ));
 				return true;
 
-			case OP_MODULO:
-			case OP_VAR_MODULO_ASSIGN:
-				if (AS_INTEGER(rhs) == 0) {
+			case TOY_OP_MODULO:
+			case TOY_OP_VAR_MODULO_ASSIGN:
+				if (TOY_AS_INTEGER(rhs) == 0) {
 					interpreter->errorOutput("Can't modulo by zero (error found in interpreter)");
 					return false;
 				}
-				pushLiteralArray(&interpreter->stack, TO_INTEGER_LITERAL( AS_INTEGER(lhs) % AS_INTEGER(rhs) ));
+				Toy_pushLiteralArray(&interpreter->stack, TOY_TO_INTEGER_LITERAL( TOY_AS_INTEGER(lhs) % TOY_AS_INTEGER(rhs) ));
 				return true;
 
 			default:
@@ -462,35 +462,35 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 	}
 
 	//catch bad modulo
-	if (opcode == OP_MODULO || opcode == OP_VAR_MODULO_ASSIGN) {
+	if (opcode == TOY_OP_MODULO || opcode == TOY_OP_VAR_MODULO_ASSIGN) {
 		interpreter->errorOutput("Bad arithmetic argument (modulo on floats not allowed)\n");
 		return false;
 	}
 
-	if(IS_FLOAT(lhs) && IS_FLOAT(rhs)) {
+	if(TOY_IS_FLOAT(lhs) && TOY_IS_FLOAT(rhs)) {
 		switch(opcode) {
-			case OP_ADDITION:
-			case OP_VAR_ADDITION_ASSIGN:
-				pushLiteralArray(&interpreter->stack, TO_FLOAT_LITERAL( AS_FLOAT(lhs) + AS_FLOAT(rhs) ));
+			case TOY_OP_ADDITION:
+			case TOY_OP_VAR_ADDITION_ASSIGN:
+				Toy_pushLiteralArray(&interpreter->stack, TOY_TO_FLOAT_LITERAL( TOY_AS_FLOAT(lhs) + TOY_AS_FLOAT(rhs) ));
 				return true;
 
-			case OP_SUBTRACTION:
-			case OP_VAR_SUBTRACTION_ASSIGN:
-				pushLiteralArray(&interpreter->stack, TO_FLOAT_LITERAL( AS_FLOAT(lhs) - AS_FLOAT(rhs) ));
+			case TOY_OP_SUBTRACTION:
+			case TOY_OP_VAR_SUBTRACTION_ASSIGN:
+				Toy_pushLiteralArray(&interpreter->stack, TOY_TO_FLOAT_LITERAL( TOY_AS_FLOAT(lhs) - TOY_AS_FLOAT(rhs) ));
 				return true;
 
-			case OP_MULTIPLICATION:
-			case OP_VAR_MULTIPLICATION_ASSIGN:
-				pushLiteralArray(&interpreter->stack, TO_FLOAT_LITERAL( AS_FLOAT(lhs) * AS_FLOAT(rhs) ));
+			case TOY_OP_MULTIPLICATION:
+			case TOY_OP_VAR_MULTIPLICATION_ASSIGN:
+				Toy_pushLiteralArray(&interpreter->stack, TOY_TO_FLOAT_LITERAL( TOY_AS_FLOAT(lhs) * TOY_AS_FLOAT(rhs) ));
 				return true;
 
-			case OP_DIVISION:
-			case OP_VAR_DIVISION_ASSIGN:
-				if (AS_FLOAT(rhs) == 0) {
+			case TOY_OP_DIVISION:
+			case TOY_OP_VAR_DIVISION_ASSIGN:
+				if (TOY_AS_FLOAT(rhs) == 0) {
 					interpreter->errorOutput("Can't divide by zero (error found in interpreter)");
 					return false;
 				}
-				pushLiteralArray(&interpreter->stack, TO_FLOAT_LITERAL( AS_FLOAT(lhs) / AS_FLOAT(rhs) ));
+				Toy_pushLiteralArray(&interpreter->stack, TOY_TO_FLOAT_LITERAL( TOY_AS_FLOAT(lhs) / TOY_AS_FLOAT(rhs) ));
 				return true;
 
 			default:
@@ -501,36 +501,36 @@ static bool execArithmetic(Interpreter* interpreter, Opcode opcode) {
 
 	//wrong types
 	interpreter->errorOutput("Bad arithmetic argument ");
-	printLiteralCustom(lhs, interpreter->errorOutput);
+	Toy_printLiteralCustom(lhs, interpreter->errorOutput);
 	interpreter->errorOutput(" and ");
-	printLiteralCustom(rhs, interpreter->errorOutput);
+	Toy_printLiteralCustom(rhs, interpreter->errorOutput);
 	interpreter->errorOutput("\n");
 
-	freeLiteral(lhs);
-	freeLiteral(rhs);
+	Toy_freeLiteral(lhs);
+	Toy_freeLiteral(rhs);
 
 	return false;
 }
 
-static Literal parseTypeToValue(Interpreter* interpreter, Literal type) {
+static Toy_Literal parseTypeToValue(Toy_Interpreter* interpreter, Toy_Literal type) {
 	//if an identifier is embedded in the type, figure out what it iss
-	if (IS_IDENTIFIER(type)) {
-		Literal idn = type;
-		parseIdentifierToValue(interpreter, &type);
-		freeLiteral(idn);
+	if (TOY_IS_IDENTIFIER(type)) {
+		Toy_Literal idn = type;
+		Toy_parseIdentifierToValue(interpreter, &type);
+		Toy_freeLiteral(idn);
 	}
 
 	//if this is an array or dictionary, continue to the subtypes
-	if (IS_TYPE(type) && (AS_TYPE(type).typeOf == LITERAL_ARRAY || AS_TYPE(type).typeOf == LITERAL_DICTIONARY)) {
-		for (int i = 0; i < AS_TYPE(type).count; i++) {
-			((Literal*)(AS_TYPE(type).subtypes))[i] = parseTypeToValue(interpreter, ((Literal*)(AS_TYPE(type).subtypes))[i]);
+	if (TOY_IS_TYPE(type) && (TOY_AS_TYPE(type).typeOf == TOY_LITERAL_ARRAY || TOY_AS_TYPE(type).typeOf == TOY_LITERAL_DICTIONARY)) {
+		for (int i = 0; i < TOY_AS_TYPE(type).count; i++) {
+			((Toy_Literal*)(TOY_AS_TYPE(type).subtypes))[i] = parseTypeToValue(interpreter, ((Toy_Literal*)(TOY_AS_TYPE(type).subtypes))[i]);
 		}
 	}
 
 	//BUGFIX: make sure it actually is a type
-	if (!IS_TYPE(type)) {
+	if (!TOY_IS_TYPE(type)) {
 		interpreter->errorOutput("Bad type encountered: ");
-		printLiteralCustom(type, interpreter->errorOutput);
+		Toy_printLiteralCustom(type, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
 		//TODO: would be better to return an int here...
 	}
@@ -538,7 +538,7 @@ static Literal parseTypeToValue(Interpreter* interpreter, Literal type) {
 	return type;
 }
 
-static bool execVarDecl(Interpreter* interpreter, bool lng) {
+static bool execVarDecl(Toy_Interpreter* interpreter, bool lng) {
 	//read the index in the cache
 	int identifierIndex = 0;
 	int typeIndex = 0;
@@ -552,62 +552,62 @@ static bool execVarDecl(Interpreter* interpreter, bool lng) {
 		typeIndex = (int)readByte(interpreter->bytecode, &interpreter->count);
 	}
 
-	Literal identifier = interpreter->literalCache.literals[identifierIndex];
-	Literal type = copyLiteral(interpreter->literalCache.literals[typeIndex]);
+	Toy_Literal identifier = interpreter->literalCache.literals[identifierIndex];
+	Toy_Literal type = Toy_copyLiteral(interpreter->literalCache.literals[typeIndex]);
 
-	if (IS_IDENTIFIER(type)) {
-		Literal orig = type;
-		parseIdentifierToValue(interpreter, &type);
-		freeLiteral(orig);
+	if (TOY_IS_IDENTIFIER(type)) {
+		Toy_Literal orig = type;
+		Toy_parseIdentifierToValue(interpreter, &type);
+		Toy_freeLiteral(orig);
 	}
 
 	//BUGFIX: because identifiers are getting embedded in type definitions
 	type = parseTypeToValue(interpreter, type);
 
-	if (!declareScopeVariable(interpreter->scope, identifier, type)) {
+	if (!Toy_declareScopeVariable(interpreter->scope, identifier, type)) {
 		interpreter->errorOutput("Can't redefine the variable \"");
-		printLiteralCustom(identifier, interpreter->errorOutput);
+		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 		return false;
 	}
 
-	Literal val = popLiteralArray(&interpreter->stack);
+	Toy_Literal val = Toy_popLiteralArray(&interpreter->stack);
 
-	if (IS_IDENTIFIER(val)) {
-		Literal idn = val;
-		parseIdentifierToValue(interpreter, &val);
-		freeLiteral(idn);
+	if (TOY_IS_IDENTIFIER(val)) {
+		Toy_Literal idn = val;
+		Toy_parseIdentifierToValue(interpreter, &val);
+		Toy_freeLiteral(idn);
 	}
 
-	if (IS_ARRAY(val) || IS_DICTIONARY(val)) {
-		parseCompoundToPureValues(interpreter, &val);
+	if (TOY_IS_ARRAY(val) || TOY_IS_DICTIONARY(val)) {
+		Toy_parseCompoundToPureValues(interpreter, &val);
 	}
 
 	//TODO: could restrict opaque data to only opaque variables
 
 	//BUGFIX: allow easy coercion on decl
-	if (AS_TYPE(type).typeOf == LITERAL_FLOAT && IS_INTEGER(val)) {
-		val = TO_FLOAT_LITERAL(AS_INTEGER(val));
+	if (TOY_AS_TYPE(type).typeOf == TOY_LITERAL_FLOAT && TOY_IS_INTEGER(val)) {
+		val = TOY_TO_FLOAT_LITERAL(TOY_AS_INTEGER(val));
 	}
 
-	if (!IS_NULL(val) && !setScopeVariable(interpreter->scope, identifier, val, false)) {
+	if (!TOY_IS_NULL(val) && !Toy_setScopeVariable(interpreter->scope, identifier, val, false)) {
 		interpreter->errorOutput("Incorrect type assigned to variable \"");
-		printLiteralCustom(identifier, interpreter->errorOutput);
+		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 
-		freeLiteral(type);
-		freeLiteral(val);
+		Toy_freeLiteral(type);
+		Toy_freeLiteral(val);
 
 		return false;
 	}
 
-	freeLiteral(val);
-	freeLiteral(type);
+	Toy_freeLiteral(val);
+	Toy_freeLiteral(type);
 
 	return true;
 }
 
-static bool execFnDecl(Interpreter* interpreter, bool lng) {
+static bool execFnDecl(Toy_Interpreter* interpreter, bool lng) {
 	//read the index in the cache
 	int identifierIndex = 0;
 	int functionIndex = 0;
@@ -621,451 +621,451 @@ static bool execFnDecl(Interpreter* interpreter, bool lng) {
 		functionIndex = (int)readByte(interpreter->bytecode, &interpreter->count);
 	}
 
-	Literal identifier = interpreter->literalCache.literals[identifierIndex];
-	Literal function = interpreter->literalCache.literals[functionIndex];
+	Toy_Literal identifier = interpreter->literalCache.literals[identifierIndex];
+	Toy_Literal function = interpreter->literalCache.literals[functionIndex];
 
-	AS_FUNCTION(function).scope = pushScope(interpreter->scope); //hacked in (needed for closure persistance)
+	TOY_AS_FUNCTION(function).scope = Toy_pushScope(interpreter->scope); //hacked in (needed for closure persistance)
 
-	Literal type = TO_TYPE_LITERAL(LITERAL_FUNCTION, true);
+	Toy_Literal type = TOY_TO_TYPE_LITERAL(TOY_LITERAL_FUNCTION, true);
 
-	if (!declareScopeVariable(interpreter->scope, identifier, type)) {
+	if (!Toy_declareScopeVariable(interpreter->scope, identifier, type)) {
 		interpreter->errorOutput("Can't redefine the function \"");
-		printLiteralCustom(identifier, interpreter->errorOutput);
+		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 		return false;
 	}
 
-	if (!setScopeVariable(interpreter->scope, identifier, function, false)) { //scope gets copied here
+	if (!Toy_setScopeVariable(interpreter->scope, identifier, function, false)) { //scope gets copied here
 		interpreter->errorOutput("Incorrect type assigned to variable \"");
-		printLiteralCustom(identifier, interpreter->errorOutput);
+		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 		return false;
 	}
 
-	popScope(AS_FUNCTION(function).scope); //hacked out
-	AS_FUNCTION(function).scope = NULL;
+	Toy_popScope(TOY_AS_FUNCTION(function).scope); //hacked out
+	TOY_AS_FUNCTION(function).scope = NULL;
 
-	freeLiteral(type);
+	Toy_freeLiteral(type);
 
 	return true;
 }
 
-static bool execVarAssign(Interpreter* interpreter) {
-	Literal rhs = popLiteralArray(&interpreter->stack);
-	Literal lhs = popLiteralArray(&interpreter->stack);
+static bool execVarAssign(Toy_Interpreter* interpreter) {
+	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
 
-	if (IS_IDENTIFIER(rhs)) {
-		Literal idn = rhs;
-		parseIdentifierToValue(interpreter, &rhs);
-		freeLiteral(idn);
+	if (TOY_IS_IDENTIFIER(rhs)) {
+		Toy_Literal idn = rhs;
+		Toy_parseIdentifierToValue(interpreter, &rhs);
+		Toy_freeLiteral(idn);
 	}
 
-	if (IS_ARRAY(rhs) || IS_DICTIONARY(rhs)) {
-		parseCompoundToPureValues(interpreter, &rhs);
+	if (TOY_IS_ARRAY(rhs) || TOY_IS_DICTIONARY(rhs)) {
+		Toy_parseCompoundToPureValues(interpreter, &rhs);
 	}
 
-	if (!IS_IDENTIFIER(lhs)) {
+	if (!TOY_IS_IDENTIFIER(lhs)) {
 		interpreter->errorOutput("Can't assign to a non-variable \"");
-		printLiteralCustom(lhs, interpreter->errorOutput);
+		Toy_printLiteralCustom(lhs, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 		return false;
 	}
 
-	if (!isDelcaredScopeVariable(interpreter->scope, lhs)) {
+	if (!Toy_isDelcaredScopeVariable(interpreter->scope, lhs)) {
 		interpreter->errorOutput("Undeclared variable \"");
-		printLiteralCustom(lhs, interpreter->errorOutput);
+		Toy_printLiteralCustom(lhs, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 
-		freeLiteral(lhs);
-		freeLiteral(rhs);
+		Toy_freeLiteral(lhs);
+		Toy_freeLiteral(rhs);
 		return false;
 	}
 
 	//BUGFIX: allow easy coercion on assign
-	Literal type = getScopeType(interpreter->scope, lhs);
-	if (AS_TYPE(type).typeOf == LITERAL_FLOAT && IS_INTEGER(rhs)) {
-		rhs = TO_FLOAT_LITERAL(AS_INTEGER(rhs));
+	Toy_Literal type = Toy_getScopeType(interpreter->scope, lhs);
+	if (TOY_AS_TYPE(type).typeOf == TOY_LITERAL_FLOAT && TOY_IS_INTEGER(rhs)) {
+		rhs = TOY_TO_FLOAT_LITERAL(TOY_AS_INTEGER(rhs));
 	}
 
-	if (!setScopeVariable(interpreter->scope, lhs, rhs, true)) {
+	if (!Toy_setScopeVariable(interpreter->scope, lhs, rhs, true)) {
 		interpreter->errorOutput("Incorrect type assigned to variable \"");
-		printLiteralCustom(lhs, interpreter->errorOutput);
+		Toy_printLiteralCustom(lhs, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 
-		freeLiteral(lhs);
-		freeLiteral(rhs);
-		freeLiteral(type);
+		Toy_freeLiteral(lhs);
+		Toy_freeLiteral(rhs);
+		Toy_freeLiteral(type);
 		return false;
 	}
 
-	freeLiteral(lhs);
-	freeLiteral(rhs);
-	freeLiteral(type);
+	Toy_freeLiteral(lhs);
+	Toy_freeLiteral(rhs);
+	Toy_freeLiteral(type);
 
 	return true;
 }
 
-static bool execVarArithmeticAssign(Interpreter* interpreter) {
-	Literal rhs = popLiteralArray(&interpreter->stack);
-	Literal lhs = popLiteralArray(&interpreter->stack);
+static bool execVarArithmeticAssign(Toy_Interpreter* interpreter) {
+	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
 
 	//duplicate the name
-	pushLiteralArray(&interpreter->stack, lhs);
-	pushLiteralArray(&interpreter->stack, lhs);
-	pushLiteralArray(&interpreter->stack, rhs);
+	Toy_pushLiteralArray(&interpreter->stack, lhs);
+	Toy_pushLiteralArray(&interpreter->stack, lhs);
+	Toy_pushLiteralArray(&interpreter->stack, rhs);
 
-	freeLiteral(lhs);
-	freeLiteral(rhs);
+	Toy_freeLiteral(lhs);
+	Toy_freeLiteral(rhs);
 
 	return true;
 }
 
-static bool execValCast(Interpreter* interpreter) {
-	Literal value = popLiteralArray(&interpreter->stack);
-	Literal type = popLiteralArray(&interpreter->stack);
+static bool execValCast(Toy_Interpreter* interpreter) {
+	Toy_Literal value = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal type = Toy_popLiteralArray(&interpreter->stack);
 
-	if (IS_IDENTIFIER(value)) {
-		Literal idn = value;
-		if (!parseIdentifierToValue(interpreter, &value)) {
+	if (TOY_IS_IDENTIFIER(value)) {
+		Toy_Literal idn = value;
+		if (!Toy_parseIdentifierToValue(interpreter, &value)) {
 			return false;
 		}
-		freeLiteral(idn);
+		Toy_freeLiteral(idn);
 	}
 
-	Literal result = TO_NULL_LITERAL;
+	Toy_Literal result = TOY_TO_NULL_LITERAL;
 
-	if (IS_NULL(value)) {
+	if (TOY_IS_NULL(value)) {
 		interpreter->errorOutput("Can't cast a null value\n");
 
-		freeLiteral(value);
-		freeLiteral(type);
+		Toy_freeLiteral(value);
+		Toy_freeLiteral(type);
 
 		return false;
 	}
 
 	//cast the rhs to the type represented by lhs
-	switch(AS_TYPE(type).typeOf) {
-		case LITERAL_BOOLEAN:
-			result = TO_BOOLEAN_LITERAL(IS_TRUTHY(value));
+	switch(TOY_AS_TYPE(type).typeOf) {
+		case TOY_LITERAL_BOOLEAN:
+			result = TOY_TO_BOOLEAN_LITERAL(TOY_IS_TRUTHY(value));
 		break;
 
-		case LITERAL_INTEGER:
-			if (IS_BOOLEAN(value)) {
-				result = TO_INTEGER_LITERAL(AS_BOOLEAN(value) ? 1 : 0);
+		case TOY_LITERAL_INTEGER:
+			if (TOY_IS_BOOLEAN(value)) {
+				result = TOY_TO_INTEGER_LITERAL(TOY_AS_BOOLEAN(value) ? 1 : 0);
 			}
 
-			if (IS_INTEGER(value)) {
-				result = copyLiteral(value);
+			if (TOY_IS_INTEGER(value)) {
+				result = Toy_copyLiteral(value);
 			}
 
-			if (IS_FLOAT(value)) {
-				result = TO_INTEGER_LITERAL(AS_FLOAT(value));
+			if (TOY_IS_FLOAT(value)) {
+				result = TOY_TO_INTEGER_LITERAL(TOY_AS_FLOAT(value));
 			}
 
-			if (IS_STRING(value)) {
+			if (TOY_IS_STRING(value)) {
 				int val = 0;
-				sscanf(toCString(AS_STRING(value)), "%d", &val);
-				result = TO_INTEGER_LITERAL(val);
+				sscanf(Toy_toCString(TOY_AS_STRING(value)), "%d", &val);
+				result = TOY_TO_INTEGER_LITERAL(val);
 			}
 		break;
 
-		case LITERAL_FLOAT:
-			if (IS_BOOLEAN(value)) {
-				result = TO_FLOAT_LITERAL(AS_BOOLEAN(value) ? 1 : 0);
+		case TOY_LITERAL_FLOAT:
+			if (TOY_IS_BOOLEAN(value)) {
+				result = TOY_TO_FLOAT_LITERAL(TOY_AS_BOOLEAN(value) ? 1 : 0);
 			}
 
-			if (IS_INTEGER(value)) {
-				result = TO_FLOAT_LITERAL(AS_INTEGER(value));
+			if (TOY_IS_INTEGER(value)) {
+				result = TOY_TO_FLOAT_LITERAL(TOY_AS_INTEGER(value));
 			}
 
-			if (IS_FLOAT(value)) {
-				result = copyLiteral(value);
+			if (TOY_IS_FLOAT(value)) {
+				result = Toy_copyLiteral(value);
 			}
 
-			if (IS_STRING(value)) {
+			if (TOY_IS_STRING(value)) {
 				float val = 0;
-				sscanf(toCString(AS_STRING(value)), "%f", &val);
-				result = TO_FLOAT_LITERAL(val);
+				sscanf(Toy_toCString(TOY_AS_STRING(value)), "%f", &val);
+				result = TOY_TO_FLOAT_LITERAL(val);
 			}
 		break;
 
-		case LITERAL_STRING:
-			if (IS_BOOLEAN(value)) {
-				char* str = AS_BOOLEAN(value) ? "true" : "false";
+		case TOY_LITERAL_STRING:
+			if (TOY_IS_BOOLEAN(value)) {
+				char* str = TOY_AS_BOOLEAN(value) ? "true" : "false";
 
 				int length = strlen(str);
-				result = TO_STRING_LITERAL(createRefStringLength(str, length)); //TODO: static reference optimisation?
+				result = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(str, length)); //TODO: static reference optimisation?
 			}
 
-			if (IS_INTEGER(value)) {
+			if (TOY_IS_INTEGER(value)) {
 				char buffer[128];
-				snprintf(buffer, 128, "%d", AS_INTEGER(value));
+				snprintf(buffer, 128, "%d", TOY_AS_INTEGER(value));
 				int length = strlen(buffer);
-				result = TO_STRING_LITERAL(createRefStringLength(buffer, length));
+				result = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(buffer, length));
 			}
 
-			if (IS_FLOAT(value)) {
+			if (TOY_IS_FLOAT(value)) {
 				char buffer[128];
-				snprintf(buffer, 128, "%g", AS_FLOAT(value));
+				snprintf(buffer, 128, "%g", TOY_AS_FLOAT(value));
 				int length = strlen(buffer);
-				result = TO_STRING_LITERAL(createRefStringLength(buffer, length));
+				result = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(buffer, length));
 			}
 
-			if (IS_STRING(value)) {
-				result = copyLiteral(value);
+			if (TOY_IS_STRING(value)) {
+				result = Toy_copyLiteral(value);
 			}
 		break;
 
 		default:
 			interpreter->errorOutput("Unknown cast type found: ");
-			printLiteralCustom(type, interpreter->errorOutput);
+			Toy_printLiteralCustom(type, interpreter->errorOutput);
 			interpreter->errorOutput("\n");
 			return false;
 	}
 
 	//leave the new value on the stack
-	pushLiteralArray(&interpreter->stack, result);
+	Toy_pushLiteralArray(&interpreter->stack, result);
 
-	freeLiteral(result);
-	freeLiteral(value);
-	freeLiteral(type);
+	Toy_freeLiteral(result);
+	Toy_freeLiteral(value);
+	Toy_freeLiteral(type);
 
 	return true;
 }
 
-static bool execTypeOf(Interpreter* interpreter) {
-	Literal rhs = popLiteralArray(&interpreter->stack);
-	Literal type = TO_NULL_LITERAL;
+static bool execTypeOf(Toy_Interpreter* interpreter) {
+	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal type = TOY_TO_NULL_LITERAL;
 
-	if (IS_IDENTIFIER(rhs)) {
-		type = getScopeType(interpreter->scope, rhs);
+	if (TOY_IS_IDENTIFIER(rhs)) {
+		type = Toy_getScopeType(interpreter->scope, rhs);
 	}
 	else {
-		type = TO_TYPE_LITERAL(rhs.type, false);
+		type = TOY_TO_TYPE_LITERAL(rhs.type, false);
 	}
 
-	pushLiteralArray(&interpreter->stack, type);
+	Toy_pushLiteralArray(&interpreter->stack, type);
 
-	freeLiteral(rhs);
-	freeLiteral(type);
+	Toy_freeLiteral(rhs);
+	Toy_freeLiteral(type);
 
 	return true;
 }
 
-static bool execCompareEqual(Interpreter* interpreter, bool invert) {
-	Literal rhs = popLiteralArray(&interpreter->stack);
-	Literal lhs = popLiteralArray(&interpreter->stack);
+static bool execCompareEqual(Toy_Interpreter* interpreter, bool invert) {
+	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
 
-	if (IS_IDENTIFIER(rhs)) {
-		Literal idn = rhs;
-		parseIdentifierToValue(interpreter, &rhs);
-		freeLiteral(idn);
+	if (TOY_IS_IDENTIFIER(rhs)) {
+		Toy_Literal idn = rhs;
+		Toy_parseIdentifierToValue(interpreter, &rhs);
+		Toy_freeLiteral(idn);
 	}
 
-	if (IS_IDENTIFIER(lhs)) {
-		Literal idn = lhs;
-		parseIdentifierToValue(interpreter, &lhs);
-		freeLiteral(idn);
+	if (TOY_IS_IDENTIFIER(lhs)) {
+		Toy_Literal idn = lhs;
+		Toy_parseIdentifierToValue(interpreter, &lhs);
+		Toy_freeLiteral(idn);
 	}
 
-	bool result = literalsAreEqual(lhs, rhs);
+	bool result = Toy_literalsAreEqual(lhs, rhs);
 
 	if (invert) {
 		result = !result;
 	}
 
-	pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(result));
+	Toy_pushLiteralArray(&interpreter->stack, TOY_TO_BOOLEAN_LITERAL(result));
 
-	freeLiteral(lhs);
-	freeLiteral(rhs);
+	Toy_freeLiteral(lhs);
+	Toy_freeLiteral(rhs);
 
 	return true;
 }
 
-static bool execCompareLess(Interpreter* interpreter, bool invert) {
-	Literal rhs = popLiteralArray(&interpreter->stack);
-	Literal lhs = popLiteralArray(&interpreter->stack);
+static bool execCompareLess(Toy_Interpreter* interpreter, bool invert) {
+	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
 
-	if (IS_IDENTIFIER(rhs)) {
-		Literal idn = rhs;
-		parseIdentifierToValue(interpreter, &rhs);
-		freeLiteral(idn);
+	if (TOY_IS_IDENTIFIER(rhs)) {
+		Toy_Literal idn = rhs;
+		Toy_parseIdentifierToValue(interpreter, &rhs);
+		Toy_freeLiteral(idn);
 	}
 
-	if (IS_IDENTIFIER(lhs)) {
-		Literal idn = lhs;
-		parseIdentifierToValue(interpreter, &lhs);
-		freeLiteral(idn);
+	if (TOY_IS_IDENTIFIER(lhs)) {
+		Toy_Literal idn = lhs;
+		Toy_parseIdentifierToValue(interpreter, &lhs);
+		Toy_freeLiteral(idn);
 	}
 
 	//not a number, return falure
-	if (!(IS_INTEGER(lhs) || IS_FLOAT(lhs))) {
+	if (!(TOY_IS_INTEGER(lhs) || TOY_IS_FLOAT(lhs))) {
 		interpreter->errorOutput("Incorrect type in comparison, value \"");
-		printLiteralCustom(lhs, interpreter->errorOutput);
+		Toy_printLiteralCustom(lhs, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 
-		freeLiteral(lhs);
-		freeLiteral(rhs);
+		Toy_freeLiteral(lhs);
+		Toy_freeLiteral(rhs);
 		return false;
 	}
 
-	if (!(IS_INTEGER(rhs) || IS_FLOAT(rhs))) {
+	if (!(TOY_IS_INTEGER(rhs) || TOY_IS_FLOAT(rhs))) {
 		interpreter->errorOutput("Incorrect type in comparison, value \"");
-		printLiteralCustom(rhs, interpreter->errorOutput);
+		Toy_printLiteralCustom(rhs, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
-		freeLiteral(lhs);
-		freeLiteral(rhs);
+		Toy_freeLiteral(lhs);
+		Toy_freeLiteral(rhs);
 		return false;
 	}
 
 	//convert to floats - easier
-	if (IS_INTEGER(lhs)) {
-		lhs = TO_FLOAT_LITERAL(AS_INTEGER(lhs));
+	if (TOY_IS_INTEGER(lhs)) {
+		lhs = TOY_TO_FLOAT_LITERAL(TOY_AS_INTEGER(lhs));
 	}
 
-	if (IS_INTEGER(rhs)) {
-		rhs = TO_FLOAT_LITERAL(AS_INTEGER(rhs));
+	if (TOY_IS_INTEGER(rhs)) {
+		rhs = TOY_TO_FLOAT_LITERAL(TOY_AS_INTEGER(rhs));
 	}
 
 	bool result;
 
 	if (!invert) {
-		result = (AS_FLOAT(lhs) < AS_FLOAT(rhs));
+		result = (TOY_AS_FLOAT(lhs) < TOY_AS_FLOAT(rhs));
 	}
 	else {
-		result = (AS_FLOAT(lhs) > AS_FLOAT(rhs));
+		result = (TOY_AS_FLOAT(lhs) > TOY_AS_FLOAT(rhs));
 	}
 
-	pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(result));
+	Toy_pushLiteralArray(&interpreter->stack, TOY_TO_BOOLEAN_LITERAL(result));
 
-	freeLiteral(lhs);
-	freeLiteral(rhs);
+	Toy_freeLiteral(lhs);
+	Toy_freeLiteral(rhs);
 
 	return true;
 }
 
-static bool execCompareLessEqual(Interpreter* interpreter, bool invert) {
-	Literal rhs = popLiteralArray(&interpreter->stack);
-	Literal lhs = popLiteralArray(&interpreter->stack);
+static bool execCompareLessEqual(Toy_Interpreter* interpreter, bool invert) {
+	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
 
-	if (IS_IDENTIFIER(rhs)) {
-		Literal idn = rhs;
-		parseIdentifierToValue(interpreter, &rhs);
-		freeLiteral(idn);
+	if (TOY_IS_IDENTIFIER(rhs)) {
+		Toy_Literal idn = rhs;
+		Toy_parseIdentifierToValue(interpreter, &rhs);
+		Toy_freeLiteral(idn);
 	}
 
-	if (IS_IDENTIFIER(lhs)) {
-		Literal idn = lhs;
-		parseIdentifierToValue(interpreter, &lhs);
-		freeLiteral(idn);
+	if (TOY_IS_IDENTIFIER(lhs)) {
+		Toy_Literal idn = lhs;
+		Toy_parseIdentifierToValue(interpreter, &lhs);
+		Toy_freeLiteral(idn);
 	}
 
 	//not a number, return falure
-	if (!(IS_INTEGER(lhs) || IS_FLOAT(lhs))) {
+	if (!(TOY_IS_INTEGER(lhs) || TOY_IS_FLOAT(lhs))) {
 		interpreter->errorOutput("Incorrect type in comparison, value \"");
-		printLiteralCustom(lhs, interpreter->errorOutput);
+		Toy_printLiteralCustom(lhs, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 
-		freeLiteral(lhs);
-		freeLiteral(rhs);
+		Toy_freeLiteral(lhs);
+		Toy_freeLiteral(rhs);
 		return false;
 	}
 
-	if (!(IS_INTEGER(rhs) || IS_FLOAT(rhs))) {
+	if (!(TOY_IS_INTEGER(rhs) || TOY_IS_FLOAT(rhs))) {
 		interpreter->errorOutput("Incorrect type in comparison, value \"");
-		printLiteralCustom(rhs, interpreter->errorOutput);
+		Toy_printLiteralCustom(rhs, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 
-		freeLiteral(lhs);
-		freeLiteral(rhs);
+		Toy_freeLiteral(lhs);
+		Toy_freeLiteral(rhs);
 		return false;
 	}
 
 	//convert to floats - easier
-	if (IS_INTEGER(lhs)) {
-		lhs = TO_FLOAT_LITERAL(AS_INTEGER(lhs));
+	if (TOY_IS_INTEGER(lhs)) {
+		lhs = TOY_TO_FLOAT_LITERAL(TOY_AS_INTEGER(lhs));
 	}
 
-	if (IS_INTEGER(rhs)) {
-		rhs = TO_FLOAT_LITERAL(AS_INTEGER(rhs));
+	if (TOY_IS_INTEGER(rhs)) {
+		rhs = TOY_TO_FLOAT_LITERAL(TOY_AS_INTEGER(rhs));
 	}
 
 	bool result;
 
 	if (!invert) {
-		result = (AS_FLOAT(lhs) < AS_FLOAT(rhs)) || literalsAreEqual(lhs, rhs);
+		result = (TOY_AS_FLOAT(lhs) < TOY_AS_FLOAT(rhs)) || Toy_literalsAreEqual(lhs, rhs);
 	}
 	else {
-		result = (AS_FLOAT(lhs) > AS_FLOAT(rhs)) || literalsAreEqual(lhs, rhs);
+		result = (TOY_AS_FLOAT(lhs) > TOY_AS_FLOAT(rhs)) || Toy_literalsAreEqual(lhs, rhs);
 	}
 
-	pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(result));
+	Toy_pushLiteralArray(&interpreter->stack, TOY_TO_BOOLEAN_LITERAL(result));
 
-	freeLiteral(lhs);
-	freeLiteral(rhs);
+	Toy_freeLiteral(lhs);
+	Toy_freeLiteral(rhs);
 
 	return true;
 }
 
-static bool execAnd(Interpreter* interpreter) {
-	Literal rhs = popLiteralArray(&interpreter->stack);
-	Literal lhs = popLiteralArray(&interpreter->stack);
+static bool execAnd(Toy_Interpreter* interpreter) {
+	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
 
-	if (IS_IDENTIFIER(rhs)) {
-		Literal idn = rhs;
-		parseIdentifierToValue(interpreter, &rhs);
-		freeLiteral(idn);
+	if (TOY_IS_IDENTIFIER(rhs)) {
+		Toy_Literal idn = rhs;
+		Toy_parseIdentifierToValue(interpreter, &rhs);
+		Toy_freeLiteral(idn);
 	}
 
-	if (IS_IDENTIFIER(lhs)) {
-		Literal idn = lhs;
-		parseIdentifierToValue(interpreter, &lhs);
-		freeLiteral(idn);
+	if (TOY_IS_IDENTIFIER(lhs)) {
+		Toy_Literal idn = lhs;
+		Toy_parseIdentifierToValue(interpreter, &lhs);
+		Toy_freeLiteral(idn);
 	}
 
-	if (IS_TRUTHY(lhs) && IS_TRUTHY(rhs)) {
-		pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(true));
+	if (TOY_IS_TRUTHY(lhs) && TOY_IS_TRUTHY(rhs)) {
+		Toy_pushLiteralArray(&interpreter->stack, TOY_TO_BOOLEAN_LITERAL(true));
 	}
 	else {
-		pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(false));
+		Toy_pushLiteralArray(&interpreter->stack, TOY_TO_BOOLEAN_LITERAL(false));
 	}
 
-	freeLiteral(lhs);
-	freeLiteral(rhs);
+	Toy_freeLiteral(lhs);
+	Toy_freeLiteral(rhs);
 
 	return true;
 }
 
-static bool execOr(Interpreter* interpreter) {
-	Literal rhs = popLiteralArray(&interpreter->stack);
-	Literal lhs = popLiteralArray(&interpreter->stack);
+static bool execOr(Toy_Interpreter* interpreter) {
+	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
 
-	if (IS_IDENTIFIER(rhs)) {
-		Literal idn = rhs;
-		parseIdentifierToValue(interpreter, &rhs);
-		freeLiteral(idn);
+	if (TOY_IS_IDENTIFIER(rhs)) {
+		Toy_Literal idn = rhs;
+		Toy_parseIdentifierToValue(interpreter, &rhs);
+		Toy_freeLiteral(idn);
 	}
 
-	if (IS_IDENTIFIER(lhs)) {
-		Literal idn = lhs;
-		parseIdentifierToValue(interpreter, &lhs);
-		freeLiteral(idn);
+	if (TOY_IS_IDENTIFIER(lhs)) {
+		Toy_Literal idn = lhs;
+		Toy_parseIdentifierToValue(interpreter, &lhs);
+		Toy_freeLiteral(idn);
 	}
 
-	if (IS_TRUTHY(lhs) || IS_TRUTHY(rhs)) {
-		pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(true));
+	if (TOY_IS_TRUTHY(lhs) || TOY_IS_TRUTHY(rhs)) {
+		Toy_pushLiteralArray(&interpreter->stack, TOY_TO_BOOLEAN_LITERAL(true));
 	}
 	else {
-		pushLiteralArray(&interpreter->stack, TO_BOOLEAN_LITERAL(false));
+		Toy_pushLiteralArray(&interpreter->stack, TOY_TO_BOOLEAN_LITERAL(false));
 	}
 
-	freeLiteral(lhs);
-	freeLiteral(rhs);
+	Toy_freeLiteral(lhs);
+	Toy_freeLiteral(rhs);
 
 	return true;
 }
 
-static bool execJump(Interpreter* interpreter) {
+static bool execJump(Toy_Interpreter* interpreter) {
 	int target = (int)readShort(interpreter->bytecode, &interpreter->count);
 
 	if (target + interpreter->codeStart > interpreter->length) {
@@ -1079,7 +1079,7 @@ static bool execJump(Interpreter* interpreter) {
 	return true;
 }
 
-static bool execFalseJump(Interpreter* interpreter) {
+static bool execFalseJump(Toy_Interpreter* interpreter) {
 	int target = (int)readShort(interpreter->bytecode, &interpreter->count);
 
 	if (target + interpreter->codeStart > interpreter->length) {
@@ -1088,37 +1088,37 @@ static bool execFalseJump(Interpreter* interpreter) {
 	}
 
 	//actually jump
-	Literal lit = popLiteralArray(&interpreter->stack);
+	Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
 
 	bool freeLit = false;
-	if (IS_IDENTIFIER(lit)) {
-		Literal idn = lit;
-		parseIdentifierToValue(interpreter, &lit);
-		freeLiteral(idn);
+	if (TOY_IS_IDENTIFIER(lit)) {
+		Toy_Literal idn = lit;
+		Toy_parseIdentifierToValue(interpreter, &lit);
+		Toy_freeLiteral(idn);
 		freeLit = true;
 	}
 
-	if (IS_NULL(lit)) {
+	if (TOY_IS_NULL(lit)) {
 		interpreter->errorOutput("Null detected in comparison\n");
 		return false;
 	}
 
-	if (!IS_TRUTHY(lit)) {
+	if (!TOY_IS_TRUTHY(lit)) {
 		interpreter->count = target + interpreter->codeStart;
 	}
 
 	if (freeLit) {
-		freeLiteral(lit);
+		Toy_freeLiteral(lit);
 	}
 
 	return true;
 }
 
 //forward declare
-static void execInterpreter(Interpreter*);
-static void readInterpreterSections(Interpreter* interpreter);
+static void execInterpreter(Toy_Interpreter*);
+static void readInterpreterSections(Toy_Interpreter* interpreter);
 
-static bool execFnCall(Interpreter* interpreter, bool looseFirstArgument) {
+static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 	//BUGFIX: depth check - don't drown!
 	if (interpreter->depth >= 200) {
 		interpreter->errorOutput("Infinite recursion detected - panicking\n");
@@ -1126,234 +1126,234 @@ static bool execFnCall(Interpreter* interpreter, bool looseFirstArgument) {
 		return false;
 	}
 
-	LiteralArray arguments;
-	initLiteralArray(&arguments);
+	Toy_LiteralArray arguments;
+	Toy_initLiteralArray(&arguments);
 
-	Literal stackSize = popLiteralArray(&interpreter->stack);
+	Toy_Literal stackSize = Toy_popLiteralArray(&interpreter->stack);
 
 	//unpack the stack of arguments
-	for (int i = 0; i < AS_INTEGER(stackSize) - 1; i++) {
-		Literal lit = popLiteralArray(&interpreter->stack);
-		pushLiteralArray(&arguments, lit); //NOTE: also reverses the order
-		freeLiteral(lit);
+	for (int i = 0; i < TOY_AS_INTEGER(stackSize) - 1; i++) {
+		Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
+		Toy_pushLiteralArray(&arguments, lit); //NOTE: also reverses the order
+		Toy_freeLiteral(lit);
 	}
 
 	//collect one more argument
-	if (!looseFirstArgument && AS_INTEGER(stackSize) > 0) {
-		Literal lit = popLiteralArray(&interpreter->stack);
-		pushLiteralArray(&arguments, lit); //NOTE: also reverses the order
-		freeLiteral(lit);
+	if (!looseFirstArgument && TOY_AS_INTEGER(stackSize) > 0) {
+		Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
+		Toy_pushLiteralArray(&arguments, lit); //NOTE: also reverses the order
+		Toy_freeLiteral(lit);
 	}
 
-	Literal identifier = popLiteralArray(&interpreter->stack);
+	Toy_Literal identifier = Toy_popLiteralArray(&interpreter->stack);
 
 	//collect one more argument
 	if (looseFirstArgument) {
-		Literal lit = popLiteralArray(&interpreter->stack);
-		pushLiteralArray(&arguments, lit); //NOTE: also reverses the order
-		freeLiteral(lit);
+		Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
+		Toy_pushLiteralArray(&arguments, lit); //NOTE: also reverses the order
+		Toy_freeLiteral(lit);
 	}
 
 	//let's screw with the fn name, too
 	if (looseFirstArgument) {
-		int length = AS_IDENTIFIER(identifier)->length + 1;
-		char buffer[MAX_STRING_LENGTH];
-		snprintf(buffer, MAX_STRING_LENGTH, "_%s", toCString(AS_IDENTIFIER(identifier))); //prepend an underscore
+		int length = TOY_AS_IDENTIFIER(identifier)->length + 1;
+		char buffer[TOY_MAX_STRING_LENGTH];
+		snprintf(buffer, TOY_MAX_STRING_LENGTH, "_%s", Toy_toCString(TOY_AS_IDENTIFIER(identifier))); //prepend an underscore
 
-		freeLiteral(identifier);
-		identifier = TO_IDENTIFIER_LITERAL(createRefStringLength(buffer, length));
+		Toy_freeLiteral(identifier);
+		identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(buffer, length));
 	}
 
-	Literal func = identifier;
+	Toy_Literal func = identifier;
 
-	if (!parseIdentifierToValue(interpreter, &func)) {
-		freeLiteralArray(&arguments);
-		freeLiteral(identifier);
+	if (!Toy_parseIdentifierToValue(interpreter, &func)) {
+		Toy_freeLiteralArray(&arguments);
+		Toy_freeLiteral(identifier);
 		return false;
 	}
 
 	//check for side-loaded native functions
-	if (IS_FUNCTION_NATIVE(func)) {
+	if (TOY_IS_FUNCTION_NATIVE(func)) {
 		//reverse the order to the correct order
-		LiteralArray correct;
-		initLiteralArray(&correct);
+		Toy_LiteralArray correct;
+		Toy_initLiteralArray(&correct);
 
 		while(arguments.count) {
-			Literal lit =  popLiteralArray(&arguments);
-			pushLiteralArray(&correct, lit);
-			freeLiteral(lit);
+			Toy_Literal lit =  Toy_popLiteralArray(&arguments);
+			Toy_pushLiteralArray(&correct, lit);
+			Toy_freeLiteral(lit);
 		}
 
-		freeLiteralArray(&arguments);
+		Toy_freeLiteralArray(&arguments);
 
 		//call the native function
-		((NativeFn) AS_FUNCTION(func).bytecode )(interpreter, &correct);
+		((Toy_NativeFn) TOY_AS_FUNCTION(func).bytecode )(interpreter, &correct);
 
-		freeLiteralArray(&correct);
-		freeLiteral(identifier);
+		Toy_freeLiteralArray(&correct);
+		Toy_freeLiteral(identifier);
 		return true;
 	}
 
-	if (!IS_FUNCTION(func)) {
+	if (!TOY_IS_FUNCTION(func)) {
 		interpreter->errorOutput("Function not found: ");
-		printLiteralCustom(identifier, interpreter->errorOutput);
+		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
 
-		freeLiteral(identifier);
-		freeLiteralArray(&arguments);
+		Toy_freeLiteral(identifier);
+		Toy_freeLiteralArray(&arguments);
 		return false;
 	}
 
-	bool ret = callLiteralFn(interpreter, func, &arguments, &interpreter->stack);
+	bool ret = Toy_callLiteralFn(interpreter, func, &arguments, &interpreter->stack);
 
 	if (!ret) {
 		interpreter->errorOutput("Error encountered in function \"");
-		printLiteralCustom(identifier, interpreter->errorOutput);
+		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 	}
 
-	freeLiteralArray(&arguments);
-	freeLiteral(func);
-	freeLiteral(identifier);
+	Toy_freeLiteralArray(&arguments);
+	Toy_freeLiteral(func);
+	Toy_freeLiteral(identifier);
 
 	return ret;
 }
 
-bool callLiteralFn(Interpreter* interpreter, Literal func, LiteralArray* arguments, LiteralArray* returns) {
-	if (!IS_FUNCTION(func)) {
-		interpreter->errorOutput("Function required in callLiteralFn()\n");
+bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_LiteralArray* arguments, Toy_LiteralArray* returns) {
+	if (!TOY_IS_FUNCTION(func)) {
+		interpreter->errorOutput("Function required in Toy_callLiteralFn()\n");
 		return false;
 	}
 
 	//set up a new interpreter
-	Interpreter inner;
+	Toy_Interpreter inner;
 
 	//init the inner interpreter manually
-	initLiteralArray(&inner.literalCache);
-	inner.scope = pushScope(func.as.function.scope);
-	inner.bytecode = AS_FUNCTION(func).bytecode;
-	inner.length = AS_FUNCTION(func).length;
+	Toy_initLiteralArray(&inner.literalCache);
+	inner.scope = Toy_pushScope(func.as.function.scope);
+	inner.bytecode = TOY_AS_FUNCTION(func).bytecode;
+	inner.length = TOY_AS_FUNCTION(func).length;
 	inner.count = 0;
 	inner.codeStart = -1;
 	inner.depth = interpreter->depth + 1;
 	inner.panic = false;
-	initLiteralArray(&inner.stack);
+	Toy_initLiteralArray(&inner.stack);
 	inner.hooks = interpreter->hooks;
-	setInterpreterPrint(&inner, interpreter->printOutput);
-	setInterpreterAssert(&inner, interpreter->assertOutput);
-	setInterpreterError(&inner, interpreter->errorOutput);
+	Toy_setInterpreterPrint(&inner, interpreter->printOutput);
+	Toy_setInterpreterAssert(&inner, interpreter->assertOutput);
+	Toy_setInterpreterError(&inner, interpreter->errorOutput);
 
 	//prep the sections
 	readInterpreterSections(&inner);
 
 	//prep the arguments
-	LiteralArray* paramArray = AS_ARRAY(inner.literalCache.literals[ readShort(inner.bytecode, &inner.count) ]);
-	LiteralArray* returnArray = AS_ARRAY(inner.literalCache.literals[ readShort(inner.bytecode, &inner.count) ]);
+	Toy_LiteralArray* paramArray = TOY_AS_ARRAY(inner.literalCache.literals[ readShort(inner.bytecode, &inner.count) ]);
+	Toy_LiteralArray* returnArray = TOY_AS_ARRAY(inner.literalCache.literals[ readShort(inner.bytecode, &inner.count) ]);
 
 	//get the rest param, if it exists
-	Literal restParam = TO_NULL_LITERAL;
-	if (paramArray->count >= 2 && AS_TYPE(paramArray->literals[ paramArray->count -1 ]).typeOf == LITERAL_FUNCTION_ARG_REST) {
+	Toy_Literal restParam = TOY_TO_NULL_LITERAL;
+	if (paramArray->count >= 2 && TOY_AS_TYPE(paramArray->literals[ paramArray->count -1 ]).typeOf == TOY_LITERAL_FUNCTION_ARG_REST) {
 		restParam = paramArray->literals[ paramArray->count -2 ];
 	}
 
 	//check the param total is correct
-	if ((IS_NULL(restParam) && paramArray->count != arguments->count * 2) || (!IS_NULL(restParam) && paramArray->count -2 > arguments->count * 2)) {
+	if ((TOY_IS_NULL(restParam) && paramArray->count != arguments->count * 2) || (!TOY_IS_NULL(restParam) && paramArray->count -2 > arguments->count * 2)) {
 		interpreter->errorOutput("Incorrect number of arguments passed to a function\n");
 
 		//free, and skip out
-		popScope(inner.scope);
+		Toy_popScope(inner.scope);
 
-		freeLiteralArray(&inner.stack);
-		freeLiteralArray(&inner.literalCache);
+		Toy_freeLiteralArray(&inner.stack);
+		Toy_freeLiteralArray(&inner.literalCache);
 
 		return false;
 	}
 
 	//contents is the indexes of identifier & type
-	for (int i = 0; i < paramArray->count - (IS_NULL(restParam) ? 0 : 2); i += 2) { //don't count the rest parameter, if present
+	for (int i = 0; i < paramArray->count - (TOY_IS_NULL(restParam) ? 0 : 2); i += 2) { //don't count the rest parameter, if present
 		//declare and define each entry in the scope
-		if (!declareScopeVariable(inner.scope, paramArray->literals[i], paramArray->literals[i + 1])) {
+		if (!Toy_declareScopeVariable(inner.scope, paramArray->literals[i], paramArray->literals[i + 1])) {
 			interpreter->errorOutput("[internal] Could not re-declare parameter\n");
 
 			//free, and skip out
-			popScope(inner.scope);
+			Toy_popScope(inner.scope);
 
-			freeLiteralArray(&inner.stack);
-			freeLiteralArray(&inner.literalCache);
+			Toy_freeLiteralArray(&inner.stack);
+			Toy_freeLiteralArray(&inner.literalCache);
 
 			return false;
 		}
 
-		Literal arg = popLiteralArray(arguments);
+		Toy_Literal arg = Toy_popLiteralArray(arguments);
 
-		if (IS_IDENTIFIER(arg)) {
-			Literal idn = arg;
-			parseIdentifierToValue(interpreter, &arg);
-			freeLiteral(idn);
+		if (TOY_IS_IDENTIFIER(arg)) {
+			Toy_Literal idn = arg;
+			Toy_parseIdentifierToValue(interpreter, &arg);
+			Toy_freeLiteral(idn);
 		}
 
-		if (!setScopeVariable(inner.scope, paramArray->literals[i], arg, false)) {
+		if (!Toy_setScopeVariable(inner.scope, paramArray->literals[i], arg, false)) {
 			interpreter->errorOutput("[internal] Could not define parameter (bad type?)\n");
 
 			//free, and skip out
-			freeLiteral(arg);
-			popScope(inner.scope);
+			Toy_freeLiteral(arg);
+			Toy_popScope(inner.scope);
 
-			freeLiteralArray(&inner.stack);
-			freeLiteralArray(&inner.literalCache);
+			Toy_freeLiteralArray(&inner.stack);
+			Toy_freeLiteralArray(&inner.literalCache);
 
 			return false;
 		}
-		freeLiteral(arg);
+		Toy_freeLiteral(arg);
 	}
 
 	//if using rest, pack the optional extra arguments into the rest parameter (array)
-	if (!IS_NULL(restParam)) {
-		LiteralArray rest;
-		initLiteralArray(&rest);
+	if (!TOY_IS_NULL(restParam)) {
+		Toy_LiteralArray rest;
+		Toy_initLiteralArray(&rest);
 
 		while (arguments->count > 0) {
-			Literal lit = popLiteralArray(arguments);
-			pushLiteralArray(&rest, lit);
-			freeLiteral(lit);
+			Toy_Literal lit = Toy_popLiteralArray(arguments);
+			Toy_pushLiteralArray(&rest, lit);
+			Toy_freeLiteral(lit);
 		}
 
-		Literal restType = TO_TYPE_LITERAL(LITERAL_ARRAY, true);
-		Literal any = TO_TYPE_LITERAL(LITERAL_ANY, false);
-		TYPE_PUSH_SUBTYPE(&restType, any);
+		Toy_Literal restType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_ARRAY, true);
+		Toy_Literal any = TOY_TO_TYPE_LITERAL(TOY_LITERAL_ANY, false);
+		TOY_TYPE_PUSH_SUBTYPE(&restType, any);
 
 		//declare & define the rest parameter
-		if (!declareScopeVariable(inner.scope, restParam, restType)) {
+		if (!Toy_declareScopeVariable(inner.scope, restParam, restType)) {
 			interpreter->errorOutput("[internal] Could not declare rest parameter\n");
 
 			//free, and skip out
-			freeLiteral(restType);
-			freeLiteralArray(&rest);
-			popScope(inner.scope);
+			Toy_freeLiteral(restType);
+			Toy_freeLiteralArray(&rest);
+			Toy_popScope(inner.scope);
 
-			freeLiteralArray(&inner.stack);
-			freeLiteralArray(&inner.literalCache);
+			Toy_freeLiteralArray(&inner.stack);
+			Toy_freeLiteralArray(&inner.literalCache);
 
 			return false;
 		}
 
-		Literal lit = TO_ARRAY_LITERAL(&rest);
-		if (!setScopeVariable(inner.scope, restParam, lit, false)) {
+		Toy_Literal lit = TOY_TO_ARRAY_LITERAL(&rest);
+		if (!Toy_setScopeVariable(inner.scope, restParam, lit, false)) {
 			interpreter->errorOutput("[internal] Could not define rest parameter\n");
 
 			//free, and skip out
-			freeLiteral(restType);
-			freeLiteral(lit);
-			popScope(inner.scope);
+			Toy_freeLiteral(restType);
+			Toy_freeLiteral(lit);
+			Toy_popScope(inner.scope);
 
-			freeLiteralArray(&inner.stack);
-			freeLiteralArray(&inner.literalCache);
+			Toy_freeLiteralArray(&inner.stack);
+			Toy_freeLiteralArray(&inner.literalCache);
 
 			return false;
 		}
 
-		freeLiteral(restType);
-		freeLiteralArray(&rest);
+		Toy_freeLiteral(restType);
+		Toy_freeLiteralArray(&rest);
 	}
 
 	//execute the interpreter
@@ -1363,14 +1363,14 @@ bool callLiteralFn(Interpreter* interpreter, Literal func, LiteralArray* argumen
 	interpreter->panic = inner.panic;
 
 	//accept the stack as the results
-	LiteralArray returnsFromInner;
-	initLiteralArray(&returnsFromInner);
+	Toy_LiteralArray returnsFromInner;
+	Toy_initLiteralArray(&returnsFromInner);
 
 	//unpack the results
 	for (int i = 0; i < (returnArray->count || 1); i++) {
-		Literal lit = popLiteralArray(&inner.stack);
-		pushLiteralArray(&returnsFromInner, lit); //NOTE: also reverses the order
-		freeLiteral(lit);
+		Toy_Literal lit = Toy_popLiteralArray(&inner.stack);
+		Toy_pushLiteralArray(&returnsFromInner, lit); //NOTE: also reverses the order
+		Toy_freeLiteral(lit);
 	}
 
 	bool returnValue = true;
@@ -1383,10 +1383,10 @@ bool callLiteralFn(Interpreter* interpreter, Literal func, LiteralArray* argumen
 	}
 
 	for (int i = 0; i < returnsFromInner.count && returnValue; i++) {
-		Literal ret = popLiteralArray(&returnsFromInner);
+		Toy_Literal ret = Toy_popLiteralArray(&returnsFromInner);
 
 		//check the return types
-		if (returnArray->count > 0 && AS_TYPE(returnArray->literals[i]).typeOf != ret.type) {
+		if (returnArray->count > 0 && TOY_AS_TYPE(returnArray->literals[i]).typeOf != ret.type) {
 			interpreter->errorOutput("Bad type found in return value\n");
 
 			//free, and skip out
@@ -1394,250 +1394,250 @@ bool callLiteralFn(Interpreter* interpreter, Literal func, LiteralArray* argumen
 			break;
 		}
 
-		pushLiteralArray(returns, ret); //NOTE: reverses again
-		freeLiteral(ret);
+		Toy_pushLiteralArray(returns, ret); //NOTE: reverses again
+		Toy_freeLiteral(ret);
 	}
 
 	//manual free
 	//BUGFIX: handle scopes of functions, which refer to the parent scope (leaking memory)
-	while(inner.scope != AS_FUNCTION(func).scope) {
+	while(inner.scope != TOY_AS_FUNCTION(func).scope) {
 		for (int i = 0; i < inner.scope->variables.capacity; i++) {
 			//handle keys, just in case
-			if (IS_FUNCTION(inner.scope->variables.entries[i].key)) {
-				popScope(AS_FUNCTION(inner.scope->variables.entries[i].key).scope);
-				AS_FUNCTION(inner.scope->variables.entries[i].key).scope = NULL;
+			if (TOY_IS_FUNCTION(inner.scope->variables.entries[i].key)) {
+				Toy_popScope(TOY_AS_FUNCTION(inner.scope->variables.entries[i].key).scope);
+				TOY_AS_FUNCTION(inner.scope->variables.entries[i].key).scope = NULL;
 			}
 
-			if (IS_FUNCTION(inner.scope->variables.entries[i].value)) {
-				popScope(AS_FUNCTION(inner.scope->variables.entries[i].value).scope);
-				AS_FUNCTION(inner.scope->variables.entries[i].value).scope = NULL;
+			if (TOY_IS_FUNCTION(inner.scope->variables.entries[i].value)) {
+				Toy_popScope(TOY_AS_FUNCTION(inner.scope->variables.entries[i].value).scope);
+				TOY_AS_FUNCTION(inner.scope->variables.entries[i].value).scope = NULL;
 			}
 		}
 
-		inner.scope = popScope(inner.scope);
+		inner.scope = Toy_popScope(inner.scope);
 	}
-	freeLiteralArray(&returnsFromInner);
-	freeLiteralArray(&inner.stack);
-	freeLiteralArray(&inner.literalCache);
+	Toy_freeLiteralArray(&returnsFromInner);
+	Toy_freeLiteralArray(&inner.stack);
+	Toy_freeLiteralArray(&inner.literalCache);
 
 	//actual bytecode persists until next call
 	return true;
 }
 
-bool callFn(Interpreter* interpreter, char* name, LiteralArray* arguments, LiteralArray* returns) {
-	Literal key = TO_IDENTIFIER_LITERAL(createRefStringLength(name, strlen(name)));
-	Literal val = TO_NULL_LITERAL;
+bool Toy_callFn(Toy_Interpreter* interpreter, char* name, Toy_LiteralArray* arguments, Toy_LiteralArray* returns) {
+	Toy_Literal key = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(name, strlen(name)));
+	Toy_Literal val = TOY_TO_NULL_LITERAL;
 	
-	if (!isDelcaredScopeVariable(interpreter->scope, key)) {
+	if (!Toy_isDelcaredScopeVariable(interpreter->scope, key)) {
 		interpreter->errorOutput("No function with that name\n");
 		return false;
 	}
 
-	getScopeVariable(interpreter->scope, key, &val);
+	Toy_getScopeVariable(interpreter->scope, key, &val);
 
-	bool ret = callLiteralFn(interpreter, val, arguments, returns);
+	bool ret = Toy_callLiteralFn(interpreter, val, arguments, returns);
 
-	freeLiteral(key);
-	freeLiteral(val);
+	Toy_freeLiteral(key);
+	Toy_freeLiteral(val);
 
 	return ret;
 }
 
-static bool execFnReturn(Interpreter* interpreter) {
-	LiteralArray returns;
-	initLiteralArray(&returns);
+static bool execFnReturn(Toy_Interpreter* interpreter) {
+	Toy_LiteralArray returns;
+	Toy_initLiteralArray(&returns);
 
 	//get the values of everything on the stack
 	while (interpreter->stack.count > 0) {
-		Literal lit = popLiteralArray(&interpreter->stack);
-		if (IS_IDENTIFIER(lit)) {
-			Literal idn = lit;
-			parseIdentifierToValue(interpreter, &lit);
-			freeLiteral(idn);
+		Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
+		if (TOY_IS_IDENTIFIER(lit)) {
+			Toy_Literal idn = lit;
+			Toy_parseIdentifierToValue(interpreter, &lit);
+			Toy_freeLiteral(idn);
 		}
 
-		if (IS_ARRAY(lit) || IS_DICTIONARY(lit)) {
-			parseCompoundToPureValues(interpreter, &lit);
+		if (TOY_IS_ARRAY(lit) || TOY_IS_DICTIONARY(lit)) {
+			Toy_parseCompoundToPureValues(interpreter, &lit);
 		}
 
-		pushLiteralArray(&returns, lit); //reverses the order
-		freeLiteral(lit);
+		Toy_pushLiteralArray(&returns, lit); //reverses the order
+		Toy_freeLiteral(lit);
 	}
 
 	//and back again
 	while (returns.count > 0) {
-		Literal lit =  popLiteralArray(&returns);
-		pushLiteralArray(&interpreter->stack, lit);
-		freeLiteral(lit);
+		Toy_Literal lit =  Toy_popLiteralArray(&returns);
+		Toy_pushLiteralArray(&interpreter->stack, lit);
+		Toy_freeLiteral(lit);
 	}
 
-	freeLiteralArray(&returns);
+	Toy_freeLiteralArray(&returns);
 
 	//finally
 	return false;
 }
 
-static bool execImport(Interpreter* interpreter) {
-	Literal alias = popLiteralArray(&interpreter->stack);
-	Literal identifier = popLiteralArray(&interpreter->stack);
+static bool execImport(Toy_Interpreter* interpreter) {
+	Toy_Literal alias = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal identifier = Toy_popLiteralArray(&interpreter->stack);
 
 	//access the hooks
-	if (!existsLiteralDictionary(interpreter->hooks, identifier)) {
+	if (!Toy_existsLiteralDictionary(interpreter->hooks, identifier)) {
 		interpreter->errorOutput("Unknown library name in import statement: ");
-		printLiteralCustom(identifier, interpreter->errorOutput);
+		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 
-		freeLiteral(alias);
-		freeLiteral(identifier);
+		Toy_freeLiteral(alias);
+		Toy_freeLiteral(identifier);
 		return false;
 	}
 
-	Literal func = getLiteralDictionary(interpreter->hooks, identifier);
+	Toy_Literal func = Toy_getLiteralDictionary(interpreter->hooks, identifier);
 
-	if (!IS_FUNCTION_NATIVE(func)) {
+	if (!TOY_IS_FUNCTION_NATIVE(func)) {
 		interpreter->errorOutput("Expected native function for a hook: ");
-		printLiteralCustom(identifier, interpreter->errorOutput);
+		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 
-		freeLiteral(func);
-		freeLiteral(alias);
-		freeLiteral(identifier);
+		Toy_freeLiteral(func);
+		Toy_freeLiteral(alias);
+		Toy_freeLiteral(identifier);
 		return false;
 	}
 
-	HookFn fn = (HookFn)AS_FUNCTION(func).bytecode;
+	Toy_HookFn fn = (Toy_HookFn)TOY_AS_FUNCTION(func).bytecode;
 
 	fn(interpreter, identifier, alias);
 
-	freeLiteral(func);
-	freeLiteral(alias);
-	freeLiteral(identifier);
+	Toy_freeLiteral(func);
+	Toy_freeLiteral(alias);
+	Toy_freeLiteral(identifier);
 	return true;
 }
 
-static bool execIndex(Interpreter* interpreter, bool assignIntermediate) {
+static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 	//assume -> compound, first, second, third are all on the stack
 
-	Literal third = popLiteralArray(&interpreter->stack);
-	Literal second = popLiteralArray(&interpreter->stack);
-	Literal first = popLiteralArray(&interpreter->stack);
-	Literal compound = popLiteralArray(&interpreter->stack);
+	Toy_Literal third = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal second = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal first = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal compound = Toy_popLiteralArray(&interpreter->stack);
 
-	Literal idn = compound;
+	Toy_Literal idn = compound;
 	bool freeIdn = false;
 
-	if (IS_IDENTIFIER(compound)) {
+	if (TOY_IS_IDENTIFIER(compound)) {
 		freeIdn = true;
-		if (!parseIdentifierToValue(interpreter, &compound)) {
-			freeLiteral(third);
-			freeLiteral(second);
-			freeLiteral(first);
-			freeLiteral(compound);
+		if (!Toy_parseIdentifierToValue(interpreter, &compound)) {
+			Toy_freeLiteral(third);
+			Toy_freeLiteral(second);
+			Toy_freeLiteral(first);
+			Toy_freeLiteral(compound);
 			//freeLiteral(idn); //since compound is freed, idn is still pointing there
 			return false;
 		}
 	}
 
-	if (!IS_ARRAY(compound) && !IS_DICTIONARY(compound) && !IS_STRING(compound)) {
+	if (!TOY_IS_ARRAY(compound) && !TOY_IS_DICTIONARY(compound) && !TOY_IS_STRING(compound)) {
 		interpreter->errorOutput("Unknown compound found in indexing notation: ");
-		printLiteralCustom(compound, interpreter->errorOutput);
-		freeLiteral(third);
-		freeLiteral(second);
-		freeLiteral(first);
-		freeLiteral(compound);
+		Toy_printLiteralCustom(compound, interpreter->errorOutput);
+		Toy_freeLiteral(third);
+		Toy_freeLiteral(second);
+		Toy_freeLiteral(first);
+		Toy_freeLiteral(compound);
 		if (freeIdn) {
-			freeLiteral(idn);
+			Toy_freeLiteral(idn);
 		}
 		return false;
 	}
 
 	//build the argument list
-	LiteralArray arguments;
-	initLiteralArray(&arguments);
+	Toy_LiteralArray arguments;
+	Toy_initLiteralArray(&arguments);
 
-	pushLiteralArray(&arguments, compound);
-	pushLiteralArray(&arguments, first);
-	pushLiteralArray(&arguments, second);
-	pushLiteralArray(&arguments, third);
-	pushLiteralArray(&arguments, TO_NULL_LITERAL); //it expects an assignment command
-	pushLiteralArray(&arguments, TO_NULL_LITERAL); //it expects an assignment "opcode"
+	Toy_pushLiteralArray(&arguments, compound);
+	Toy_pushLiteralArray(&arguments, first);
+	Toy_pushLiteralArray(&arguments, second);
+	Toy_pushLiteralArray(&arguments, third);
+	Toy_pushLiteralArray(&arguments, TOY_TO_NULL_LITERAL); //it expects an assignment command
+	Toy_pushLiteralArray(&arguments, TOY_TO_NULL_LITERAL); //it expects an assignment "opcode"
 
 	//leave the idn and compound on the stack
 	if (assignIntermediate) {
-		if (IS_IDENTIFIER(idn)) {
-			pushLiteralArray(&interpreter->stack, idn);
+		if (TOY_IS_IDENTIFIER(idn)) {
+			Toy_pushLiteralArray(&interpreter->stack, idn);
 		}
-		pushLiteralArray(&interpreter->stack, compound);
-		pushLiteralArray(&interpreter->stack, first);
-		pushLiteralArray(&interpreter->stack, second);
-		pushLiteralArray(&interpreter->stack, third);
+		Toy_pushLiteralArray(&interpreter->stack, compound);
+		Toy_pushLiteralArray(&interpreter->stack, first);
+		Toy_pushLiteralArray(&interpreter->stack, second);
+		Toy_pushLiteralArray(&interpreter->stack, third);
 	}
 
 	//call the _index function
 	if (_index(interpreter, &arguments) < 0) {
 		interpreter->errorOutput("Something went wrong while indexing: ");
-		printLiteralCustom(idn, interpreter->errorOutput);
+		Toy_printLiteralCustom(idn, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
 
 		//clean up
-		freeLiteral(third);
-		freeLiteral(second);
-		freeLiteral(first);
-		freeLiteral(compound);
+		Toy_freeLiteral(third);
+		Toy_freeLiteral(second);
+		Toy_freeLiteral(first);
+		Toy_freeLiteral(compound);
 		if (freeIdn) {
-			freeLiteral(idn);
+			Toy_freeLiteral(idn);
 		}
-		freeLiteralArray(&arguments);
+		Toy_freeLiteralArray(&arguments);
 		return false;
 	}
 
 	//clean up
-	freeLiteral(third);
-	freeLiteral(second);
-	freeLiteral(first);
-	freeLiteral(compound);
+	Toy_freeLiteral(third);
+	Toy_freeLiteral(second);
+	Toy_freeLiteral(first);
+	Toy_freeLiteral(compound);
 	if (freeIdn) {
-		freeLiteral(idn);
+		Toy_freeLiteral(idn);
 	}
-	freeLiteralArray(&arguments);
+	Toy_freeLiteralArray(&arguments);
 
 	return true;
 }
 
-static bool execIndexAssign(Interpreter* interpreter) {
+static bool execIndexAssign(Toy_Interpreter* interpreter) {
 	//assume -> compound, first, second, third, assign are all on the stack
 
-	Literal assign = popLiteralArray(&interpreter->stack);
-	Literal third = popLiteralArray(&interpreter->stack);
-	Literal second = popLiteralArray(&interpreter->stack);
-	Literal first = popLiteralArray(&interpreter->stack);
-	Literal compound = popLiteralArray(&interpreter->stack);
+	Toy_Literal assign = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal third = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal second = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal first = Toy_popLiteralArray(&interpreter->stack);
+	Toy_Literal compound = Toy_popLiteralArray(&interpreter->stack);
 
-	Literal idn = compound;
+	Toy_Literal idn = compound;
 	bool freeIdn = false;
 
-	if (IS_IDENTIFIER(compound)) {
+	if (TOY_IS_IDENTIFIER(compound)) {
 		freeIdn = true;
-		if (!parseIdentifierToValue(interpreter, &compound)) {
-			freeLiteral(assign);
-			freeLiteral(third);
-			freeLiteral(second);
-			freeLiteral(first);
-			freeLiteral(compound);
-			freeLiteral(idn);
+		if (!Toy_parseIdentifierToValue(interpreter, &compound)) {
+			Toy_freeLiteral(assign);
+			Toy_freeLiteral(third);
+			Toy_freeLiteral(second);
+			Toy_freeLiteral(first);
+			Toy_freeLiteral(compound);
+			Toy_freeLiteral(idn);
 			return false;
 		}
 	}
 
-	if (!IS_ARRAY(compound) && !IS_DICTIONARY(compound) && !IS_STRING(compound)) {
+	if (!TOY_IS_ARRAY(compound) && !TOY_IS_DICTIONARY(compound) && !TOY_IS_STRING(compound)) {
 		interpreter->errorOutput("Unknown compound found in index assigning notation\n");
-		freeLiteral(assign);
-		freeLiteral(third);
-		freeLiteral(second);
-		freeLiteral(first);
-		freeLiteral(compound);
+		Toy_freeLiteral(assign);
+		Toy_freeLiteral(third);
+		Toy_freeLiteral(second);
+		Toy_freeLiteral(first);
+		Toy_freeLiteral(compound);
 		if (freeIdn) {
-			freeLiteral(idn);
+			Toy_freeLiteral(idn);
 		}
 		return false;
 	}
@@ -1646,168 +1646,168 @@ static bool execIndexAssign(Interpreter* interpreter) {
 	unsigned char opcode = readByte(interpreter->bytecode, &interpreter->count);
 	char* opStr = "";
 	switch(opcode) {
-		case OP_VAR_ASSIGN:
+		case TOY_OP_VAR_ASSIGN:
 			opStr = "=";
 		break;
-		case OP_VAR_ADDITION_ASSIGN:
+		case TOY_OP_VAR_ADDITION_ASSIGN:
 			opStr = "+=";
 		break;
-		case OP_VAR_SUBTRACTION_ASSIGN:
+		case TOY_OP_VAR_SUBTRACTION_ASSIGN:
 			opStr = "-=";
 		break;
-		case OP_VAR_MULTIPLICATION_ASSIGN:
+		case TOY_OP_VAR_MULTIPLICATION_ASSIGN:
 			opStr = "*=";
 		break;
-		case OP_VAR_DIVISION_ASSIGN:
+		case TOY_OP_VAR_DIVISION_ASSIGN:
 			opStr = "/=";
 		break;
-		case OP_VAR_MODULO_ASSIGN:
+		case TOY_OP_VAR_MODULO_ASSIGN:
 			opStr = "%=";
 		break;
 
 		default:
 			interpreter->errorOutput("bad opcode in index assigning notation\n");
-			freeLiteral(assign);
-			freeLiteral(third);
-			freeLiteral(second);
-			freeLiteral(first);
-			freeLiteral(compound);
+			Toy_freeLiteral(assign);
+			Toy_freeLiteral(third);
+			Toy_freeLiteral(second);
+			Toy_freeLiteral(first);
+			Toy_freeLiteral(compound);
 			if (freeIdn) {
-				freeLiteral(idn);
+				Toy_freeLiteral(idn);
 			}
 			return false;
 	}
 
 	int opLength = strlen(opStr);
-	Literal op = TO_STRING_LITERAL(createRefStringLength(opStr, opLength)); //TODO: static reference optimisation?
+	Toy_Literal op = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(opStr, opLength)); //TODO: static reference optimisation?
 
 	//build the argument list
-	LiteralArray arguments;
-	initLiteralArray(&arguments);
+	Toy_LiteralArray arguments;
+	Toy_initLiteralArray(&arguments);
 
-	pushLiteralArray(&arguments, compound);
-	pushLiteralArray(&arguments, first);
-	pushLiteralArray(&arguments, second);
-	pushLiteralArray(&arguments, third);
-	pushLiteralArray(&arguments, assign); //it expects an assignment command
-	pushLiteralArray(&arguments, op); //it expects an assignment "opcode"
+	Toy_pushLiteralArray(&arguments, compound);
+	Toy_pushLiteralArray(&arguments, first);
+	Toy_pushLiteralArray(&arguments, second);
+	Toy_pushLiteralArray(&arguments, third);
+	Toy_pushLiteralArray(&arguments, assign); //it expects an assignment command
+	Toy_pushLiteralArray(&arguments, op); //it expects an assignment "opcode"
 
 	//call the _index function
 	if (_index(interpreter, &arguments) < 0) {
 		//clean up
-		freeLiteral(assign);
-		freeLiteral(third);
-		freeLiteral(second);
-		freeLiteral(first);
-		freeLiteral(compound);
+		Toy_freeLiteral(assign);
+		Toy_freeLiteral(third);
+		Toy_freeLiteral(second);
+		Toy_freeLiteral(first);
+		Toy_freeLiteral(compound);
 		if (freeIdn) {
-			freeLiteral(idn);
+			Toy_freeLiteral(idn);
 		}
-		freeLiteral(op);
-		freeLiteralArray(&arguments);
+		Toy_freeLiteral(op);
+		Toy_freeLiteralArray(&arguments);
 
 		return false;
 	}
 
 	//save the result (assume top of the interpreter stack is the new compound value)
-	Literal result = popLiteralArray(&interpreter->stack);
+	Toy_Literal result = Toy_popLiteralArray(&interpreter->stack);
 
 	//if idn is NOT an identifier, assign backwards while there are things on the stack (inner-compound assignment, BIG assumptions here)
-	if (!IS_IDENTIFIER(idn)) {
+	if (!TOY_IS_IDENTIFIER(idn)) {
 		while (interpreter->stack.count > 1) {
 			//read the new values
-			freeLiteral(idn);
-			freeLiteral(third);
-			freeLiteral(second);
-			freeLiteral(first);
-			freeLiteralArray(&arguments);
-			initLiteralArray(&arguments);
-			freeLiteral(op);
+			Toy_freeLiteral(idn);
+			Toy_freeLiteral(third);
+			Toy_freeLiteral(second);
+			Toy_freeLiteral(first);
+			Toy_freeLiteralArray(&arguments);
+			Toy_initLiteralArray(&arguments);
+			Toy_freeLiteral(op);
 
-			third = popLiteralArray(&interpreter->stack);
-			second = popLiteralArray(&interpreter->stack);
-			first = popLiteralArray(&interpreter->stack);
-			idn = popLiteralArray(&interpreter->stack);
+			third = Toy_popLiteralArray(&interpreter->stack);
+			second = Toy_popLiteralArray(&interpreter->stack);
+			first = Toy_popLiteralArray(&interpreter->stack);
+			idn = Toy_popLiteralArray(&interpreter->stack);
 
 			char* opStr = "="; //shadow, but force assignment
 			int opLength = strlen(opStr);
-			op = TO_STRING_LITERAL(createRefStringLength(opStr, opLength)); //TODO: static reference optimisation?
+			op = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(opStr, opLength)); //TODO: static reference optimisation?
 
 			//assign to the idn / compound - with _index
-			pushLiteralArray(&arguments, idn);
-			pushLiteralArray(&arguments, first);
-			pushLiteralArray(&arguments, second);
-			pushLiteralArray(&arguments, third);
-			pushLiteralArray(&arguments, result);
-			pushLiteralArray(&arguments, op);
+			Toy_pushLiteralArray(&arguments, idn);
+			Toy_pushLiteralArray(&arguments, first);
+			Toy_pushLiteralArray(&arguments, second);
+			Toy_pushLiteralArray(&arguments, third);
+			Toy_pushLiteralArray(&arguments, result);
+			Toy_pushLiteralArray(&arguments, op);
 
 			if (_index(interpreter, &arguments) < 0) {
 				interpreter->errorOutput("Something went wrong while indexing: ");
-				printLiteralCustom(idn, interpreter->errorOutput);
+				Toy_printLiteralCustom(idn, interpreter->errorOutput);
 				interpreter->errorOutput("\n");
 
 				//clean up
-				freeLiteral(assign);
-				freeLiteral(third);
-				freeLiteral(second);
-				freeLiteral(first);
-				freeLiteral(compound);
+				Toy_freeLiteral(assign);
+				Toy_freeLiteral(third);
+				Toy_freeLiteral(second);
+				Toy_freeLiteral(first);
+				Toy_freeLiteral(compound);
 				if (freeIdn) {
-					freeLiteral(idn);
+					Toy_freeLiteral(idn);
 				}
-				freeLiteral(op);
-				freeLiteralArray(&arguments);
-				freeLiteral(result);
+				Toy_freeLiteral(op);
+				Toy_freeLiteralArray(&arguments);
+				Toy_freeLiteral(result);
 				return false;
 			}
 
-			freeLiteral(result);
-			result = popLiteralArray(&interpreter->stack);
+			Toy_freeLiteral(result);
+			result = Toy_popLiteralArray(&interpreter->stack);
 		}
 
-		freeLiteral(idn);
-		idn = popLiteralArray(&interpreter->stack);
+		Toy_freeLiteral(idn);
+		idn = Toy_popLiteralArray(&interpreter->stack);
 		compound = idn;
 	}
 
-	if (IS_IDENTIFIER(idn) && !setScopeVariable(interpreter->scope, idn, result, true)) {
+	if (TOY_IS_IDENTIFIER(idn) && !Toy_setScopeVariable(interpreter->scope, idn, result, true)) {
 		interpreter->errorOutput("Incorrect type assigned to compound member ");
-		printLiteralCustom(idn, interpreter->errorOutput);
+		Toy_printLiteralCustom(idn, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
 
 		//clean up
-		freeLiteral(assign);
-		freeLiteral(third);
-		freeLiteral(second);
-		freeLiteral(first);
-		freeLiteral(compound);
+		Toy_freeLiteral(assign);
+		Toy_freeLiteral(third);
+		Toy_freeLiteral(second);
+		Toy_freeLiteral(first);
+		Toy_freeLiteral(compound);
 		if (freeIdn) {
-			freeLiteral(idn);
+			Toy_freeLiteral(idn);
 		}
-		freeLiteral(op);
-		freeLiteralArray(&arguments);
-		freeLiteral(result);
+		Toy_freeLiteral(op);
+		Toy_freeLiteralArray(&arguments);
+		Toy_freeLiteral(result);
 		return false;
 	}
 
 	//clean up
-	freeLiteral(assign);
-	freeLiteral(third);
-	freeLiteral(second);
-	freeLiteral(first);
-	freeLiteral(compound);
+	Toy_freeLiteral(assign);
+	Toy_freeLiteral(third);
+	Toy_freeLiteral(second);
+	Toy_freeLiteral(first);
+	Toy_freeLiteral(compound);
 	if (freeIdn) {
-		freeLiteral(idn);
+		Toy_freeLiteral(idn);
 	}
-	freeLiteral(op);
-	freeLiteralArray(&arguments);
-	freeLiteral(result);
+	Toy_freeLiteral(op);
+	Toy_freeLiteralArray(&arguments);
+	Toy_freeLiteral(result);
 
 	return true;
 }
 
 //the heart of toy
-static void execInterpreter(Interpreter* interpreter) {
+static void execInterpreter(Toy_Interpreter* interpreter) {
 	//set the starting point for the interpreter
 	if (interpreter->codeStart == -1) {
 		interpreter->codeStart = interpreter->count;
@@ -1815,57 +1815,57 @@ static void execInterpreter(Interpreter* interpreter) {
 
 	unsigned char opcode = readByte(interpreter->bytecode, &interpreter->count);
 
-	while(opcode != OP_EOF && opcode != OP_SECTION_END && !interpreter->panic) {
+	while(opcode != TOY_OP_EOF && opcode != TOY_OP_SECTION_END && !interpreter->panic) {
 		switch(opcode) {
-			case OP_ASSERT:
+			case TOY_OP_ASSERT:
 				if (!execAssert(interpreter)) {
 					return;
 				}
 			break;
 
-			case OP_PRINT:
+			case TOY_OP_PRINT:
 				if (!execPrint(interpreter)) {
 					return;
 				}
 			break;
 
-			case OP_LITERAL:
-			case OP_LITERAL_LONG:
-				if (!execPushLiteral(interpreter, opcode == OP_LITERAL_LONG)) {
+			case TOY_OP_LITERAL:
+			case TOY_OP_LITERAL_LONG:
+				if (!execPushLiteral(interpreter, opcode == TOY_OP_LITERAL_LONG)) {
 					return;
 				}
 			break;
 
-			case OP_LITERAL_RAW:
+			case TOY_OP_LITERAL_RAW:
 				if (!rawLiteral(interpreter)) {
 					return;
 				}
 			break;
 
-			case OP_NEGATE:
+			case TOY_OP_NEGATE:
 				if (!execNegate(interpreter)) {
 					return;
 				}
 			break;
 
-			case OP_ADDITION:
-			case OP_SUBTRACTION:
-			case OP_MULTIPLICATION:
-			case OP_DIVISION:
-			case OP_MODULO:
+			case TOY_OP_ADDITION:
+			case TOY_OP_SUBTRACTION:
+			case TOY_OP_MULTIPLICATION:
+			case TOY_OP_DIVISION:
+			case TOY_OP_MODULO:
 				if (!execArithmetic(interpreter, opcode)) {
 					return;
 				}
 			break;
 
-			case OP_VAR_ADDITION_ASSIGN:
-			case OP_VAR_SUBTRACTION_ASSIGN:
-			case OP_VAR_MULTIPLICATION_ASSIGN:
-			case OP_VAR_DIVISION_ASSIGN:
-			case OP_VAR_MODULO_ASSIGN:
+			case TOY_OP_VAR_ADDITION_ASSIGN:
+			case TOY_OP_VAR_SUBTRACTION_ASSIGN:
+			case TOY_OP_VAR_MULTIPLICATION_ASSIGN:
+			case TOY_OP_VAR_DIVISION_ASSIGN:
+			case TOY_OP_VAR_MODULO_ASSIGN:
 				execVarArithmeticAssign(interpreter);
 				if (!execArithmetic(interpreter, opcode)) {
-					freeLiteral(popLiteralArray(&interpreter->stack));
+					Toy_freeLiteral(Toy_popLiteralArray(&interpreter->stack));
 					return;
 				}
 				if (!execVarAssign(interpreter)) {
@@ -1873,168 +1873,168 @@ static void execInterpreter(Interpreter* interpreter) {
 				}
 			break;
 
-			case OP_GROUPING_BEGIN:
+			case TOY_OP_GROUPING_BEGIN:
 				execInterpreter(interpreter);
 			break;
 
-			case OP_GROUPING_END:
+			case TOY_OP_GROUPING_END:
 				return;
 
 			//scope
-			case OP_SCOPE_BEGIN:
-				interpreter->scope = pushScope(interpreter->scope);
+			case TOY_OP_SCOPE_BEGIN:
+				interpreter->scope = Toy_pushScope(interpreter->scope);
 			break;
 
-			case OP_SCOPE_END:
-				interpreter->scope = popScope(interpreter->scope);
+			case TOY_OP_SCOPE_END:
+				interpreter->scope = Toy_popScope(interpreter->scope);
 			break;
 
 			//TODO: custom type declarations?
 
-			case OP_VAR_DECL:
-			case OP_VAR_DECL_LONG:
-				if (!execVarDecl(interpreter, opcode == OP_VAR_DECL_LONG)) {
+			case TOY_OP_VAR_DECL:
+			case TOY_OP_VAR_DECL_LONG:
+				if (!execVarDecl(interpreter, opcode == TOY_OP_VAR_DECL_LONG)) {
 					return;
 				}
 			break;
 
-			case OP_FN_DECL:
-			case OP_FN_DECL_LONG:
-				if (!execFnDecl(interpreter, opcode == OP_FN_DECL_LONG)) {
+			case TOY_OP_FN_DECL:
+			case TOY_OP_FN_DECL_LONG:
+				if (!execFnDecl(interpreter, opcode == TOY_OP_FN_DECL_LONG)) {
 					return;
 				}
 			break;
 
-			case OP_VAR_ASSIGN:
+			case TOY_OP_VAR_ASSIGN:
 				if (!execVarAssign(interpreter)) {
 					return;
 				}
 			break;
 
-			case OP_TYPE_CAST:
+			case TOY_OP_TYPE_CAST:
 				if (!execValCast(interpreter)) {
 					return;
 				}
 			break;
 
-			case OP_TYPE_OF:
+			case TOY_OP_TYPE_OF:
 				if (!execTypeOf(interpreter)) {
 					return;
 				}
 			break;
 
-			case OP_COMPARE_EQUAL:
+			case TOY_OP_COMPARE_EQUAL:
 				if (!execCompareEqual(interpreter, false)) {
 					return;
 				}
 			break;
 
-			case OP_COMPARE_NOT_EQUAL:
+			case TOY_OP_COMPARE_NOT_EQUAL:
 				if (!execCompareEqual(interpreter, true)) {
 					return;
 				}
 			break;
 
-			case OP_COMPARE_LESS:
+			case TOY_OP_COMPARE_LESS:
 				if (!execCompareLess(interpreter, false)) {
 					return;
 				}
 			break;
 
-			case OP_COMPARE_LESS_EQUAL:
+			case TOY_OP_COMPARE_LESS_EQUAL:
 				if (!execCompareLessEqual(interpreter, false)) {
 					return;
 				}
 			break;
 
-			case OP_COMPARE_GREATER:
+			case TOY_OP_COMPARE_GREATER:
 				if (!execCompareLess(interpreter, true)) {
 					return;
 				}
 			break;
 
-			case OP_COMPARE_GREATER_EQUAL:
+			case TOY_OP_COMPARE_GREATER_EQUAL:
 				if (!execCompareLessEqual(interpreter, true)) {
 					return;
 				}
 			break;
 
-			case OP_INVERT:
+			case TOY_OP_INVERT:
 				if (!execInvert(interpreter)) {
 					return;
 				}
 			break;
 
-			case OP_AND:
+			case TOY_OP_AND:
 				if (!execAnd(interpreter)) {
 					return;
 				}
 			break;
 
-			case OP_OR:
+			case TOY_OP_OR:
 				if (!execOr(interpreter)) {
 					return;
 				}
 			break;
 
-			case OP_JUMP:
+			case TOY_OP_JUMP:
 				if (!execJump(interpreter)) {
 					return;
 				}
 			break;
 
-			case OP_IF_FALSE_JUMP:
+			case TOY_OP_IF_FALSE_JUMP:
 				if (!execFalseJump(interpreter)) {
 					return;
 				}
 			break;
 
-			case OP_FN_CALL:
+			case TOY_OP_FN_CALL:
 				if (!execFnCall(interpreter, false)) {
 					return;
 				}
 			break;
 
-			case OP_DOT:
+			case TOY_OP_DOT:
 				if (!execFnCall(interpreter, true)) { //compensate for the out-of-order arguments
 					return;
 				}
 			break;
 
 
-			case OP_FN_RETURN:
+			case TOY_OP_FN_RETURN:
 				if (!execFnReturn(interpreter)) {
 					return;
 				}
 			break;
 
-			case OP_IMPORT:
+			case TOY_OP_IMPORT:
 				if (!execImport(interpreter)) {
 					return;
 				}
 			break;
 
-			case OP_INDEX:
+			case TOY_OP_INDEX:
 				if (!execIndex(interpreter, false)) {
 					return;
 				}
 			break;
 
-			case OP_INDEX_ASSIGN_INTERMEDIATE:
+			case TOY_OP_INDEX_ASSIGN_INTERMEDIATE:
 				if (!execIndex(interpreter, true)) {
 					return;
 				}
 			break;
 
-			case OP_INDEX_ASSIGN:
+			case TOY_OP_INDEX_ASSIGN:
 				if (!execIndexAssign(interpreter)) {
 					return;
 				}
 			break;
 
-			case OP_POP_STACK:
+			case TOY_OP_POP_STACK:
 				while (interpreter->stack.count > 0) {
-					freeLiteral(popLiteralArray(&interpreter->stack));
+					Toy_freeLiteral(Toy_popLiteralArray(&interpreter->stack));
 				}
 			break;
 
@@ -2047,13 +2047,13 @@ static void execInterpreter(Interpreter* interpreter) {
 	}
 }
 
-static void readInterpreterSections(Interpreter* interpreter) {
+static void readInterpreterSections(Toy_Interpreter* interpreter) {
 	//data section
 	const unsigned short literalCount = readShort(interpreter->bytecode, &interpreter->count);
 
 #ifndef TOY_EXPORT
 	if (command.verbose) {
-		printf(NOTICE "Reading %d literals\n" RESET, literalCount);
+		printf(TOY_CC_NOTICE "Reading %d literals\n" TOY_CC_RESET, literalCount);
 	}
 #endif
 
@@ -2061,9 +2061,9 @@ static void readInterpreterSections(Interpreter* interpreter) {
 		const unsigned char literalType = readByte(interpreter->bytecode, &interpreter->count);
 
 		switch(literalType) {
-			case LITERAL_NULL:
+			case TOY_LITERAL_NULL:
 				//read the null
-				pushLiteralArray(&interpreter->literalCache, TO_NULL_LITERAL);
+				Toy_pushLiteralArray(&interpreter->literalCache, TOY_TO_NULL_LITERAL);
 
 #ifndef TOY_EXPORT
 				if (command.verbose) {
@@ -2072,12 +2072,12 @@ static void readInterpreterSections(Interpreter* interpreter) {
 #endif
 			break;
 
-			case LITERAL_BOOLEAN: {
+			case TOY_LITERAL_BOOLEAN: {
 				//read the booleans
 				const bool b = readByte(interpreter->bytecode, &interpreter->count);
-				Literal literal = TO_BOOLEAN_LITERAL(b);
-				pushLiteralArray(&interpreter->literalCache, literal);
-				freeLiteral(literal);
+				Toy_Literal literal = TOY_TO_BOOLEAN_LITERAL(b);
+				Toy_pushLiteralArray(&interpreter->literalCache, literal);
+				Toy_freeLiteral(literal);
 
 #ifndef TOY_EXPORT
 				if (command.verbose) {
@@ -2087,11 +2087,11 @@ static void readInterpreterSections(Interpreter* interpreter) {
 			}
 			break;
 
-			case LITERAL_INTEGER: {
+			case TOY_LITERAL_INTEGER: {
 				const int d = readInt(interpreter->bytecode, &interpreter->count);
-				Literal literal = TO_INTEGER_LITERAL(d);
-				pushLiteralArray(&interpreter->literalCache, literal);
-				freeLiteral(literal);
+				Toy_Literal literal = TOY_TO_INTEGER_LITERAL(d);
+				Toy_pushLiteralArray(&interpreter->literalCache, literal);
+				Toy_freeLiteral(literal);
 
 #ifndef TOY_EXPORT
 				if (command.verbose) {
@@ -2101,11 +2101,11 @@ static void readInterpreterSections(Interpreter* interpreter) {
 			}
 			break;
 
-			case LITERAL_FLOAT: {
+			case TOY_LITERAL_FLOAT: {
 				const float f = readFloat(interpreter->bytecode, &interpreter->count);
-				Literal literal = TO_FLOAT_LITERAL(f);
-				pushLiteralArray(&interpreter->literalCache, literal);
-				freeLiteral(literal);
+				Toy_Literal literal = TOY_TO_FLOAT_LITERAL(f);
+				Toy_pushLiteralArray(&interpreter->literalCache, literal);
+				Toy_freeLiteral(literal);
 
 #ifndef TOY_EXPORT
 				if (command.verbose) {
@@ -2115,12 +2115,12 @@ static void readInterpreterSections(Interpreter* interpreter) {
 			}
 			break;
 
-			case LITERAL_STRING: {
+			case TOY_LITERAL_STRING: {
 				char* s = readString(interpreter->bytecode, &interpreter->count);
 				int length = strlen(s);
-				Literal literal = TO_STRING_LITERAL(createRefStringLength(s, length));
-				pushLiteralArray(&interpreter->literalCache, literal);
-				freeLiteral(literal);
+				Toy_Literal literal = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(s, length));
+				Toy_pushLiteralArray(&interpreter->literalCache, literal);
+				Toy_freeLiteral(literal);
 
 #ifndef TOY_EXPORT
 				if (command.verbose) {
@@ -2130,39 +2130,39 @@ static void readInterpreterSections(Interpreter* interpreter) {
 			}
 			break;
 
-			case LITERAL_ARRAY: {
-				LiteralArray* array = ALLOCATE(LiteralArray, 1);
-				initLiteralArray(array);
+			case TOY_LITERAL_ARRAY: {
+				Toy_LiteralArray* array = TOY_ALLOCATE(Toy_LiteralArray, 1);
+				Toy_initLiteralArray(array);
 
 				unsigned short length = readShort(interpreter->bytecode, &interpreter->count);
 
 				//read each index, then unpack the value from the existing literal cache
 				for (int i = 0; i < length; i++) {
 					int index = readShort(interpreter->bytecode, &interpreter->count);
-					pushLiteralArray(array, interpreter->literalCache.literals[index]);
+					Toy_pushLiteralArray(array, interpreter->literalCache.literals[index]);
 				}
 
 #ifndef TOY_EXPORT
 				if (command.verbose) {
 					printf("(array ");
-					Literal literal = TO_ARRAY_LITERAL(array);
-					printLiteral(literal);
+					Toy_Literal literal = TOY_TO_ARRAY_LITERAL(array);
+					Toy_printLiteral(literal);
 					printf(")\n");
 				}
 #endif
 
 				//finally, push the array proper
-				Literal literal = TO_ARRAY_LITERAL(array);
-				pushLiteralArray(&interpreter->literalCache, literal); //copied
+				Toy_Literal literal = TOY_TO_ARRAY_LITERAL(array);
+				Toy_pushLiteralArray(&interpreter->literalCache, literal); //copied
 
-				freeLiteralArray(array);
-				FREE(LiteralArray, array);
+				Toy_freeLiteralArray(array);
+				TOY_FREE(Toy_LiteralArray, array);
 			}
 			break;
 
-			case LITERAL_DICTIONARY: {
-				LiteralDictionary* dictionary = ALLOCATE(LiteralDictionary, 1);
-				initLiteralDictionary(dictionary);
+			case TOY_LITERAL_DICTIONARY: {
+				Toy_LiteralDictionary* dictionary = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
+				Toy_initLiteralDictionary(dictionary);
 
 				unsigned short length = readShort(interpreter->bytecode, &interpreter->count);
 
@@ -2170,37 +2170,37 @@ static void readInterpreterSections(Interpreter* interpreter) {
 				for (int i = 0; i < length / 2; i++) {
 					int key = readShort(interpreter->bytecode, &interpreter->count);
 					int val = readShort(interpreter->bytecode, &interpreter->count);
-					setLiteralDictionary(dictionary, interpreter->literalCache.literals[key], interpreter->literalCache.literals[val]);
+					Toy_setLiteralDictionary(dictionary, interpreter->literalCache.literals[key], interpreter->literalCache.literals[val]);
 				}
 
 #ifndef TOY_EXPORT
 				if (command.verbose) {
 					printf("(dictionary ");
-					Literal literal = TO_DICTIONARY_LITERAL(dictionary);
-					printLiteral(literal);
+					Toy_Literal literal = TOY_TO_DICTIONARY_LITERAL(dictionary);
+					Toy_printLiteral(literal);
 					printf(")\n");
 				}
 #endif
 
 				//finally, push the dictionary proper
-				Literal literal = TO_DICTIONARY_LITERAL(dictionary);
-				pushLiteralArray(&interpreter->literalCache, literal); //copied
+				Toy_Literal literal = TOY_TO_DICTIONARY_LITERAL(dictionary);
+				Toy_pushLiteralArray(&interpreter->literalCache, literal); //copied
 
-				freeLiteralDictionary(dictionary);
-				FREE(LiteralDictionary, dictionary);
+				Toy_freeLiteralDictionary(dictionary);
+				TOY_FREE(Toy_LiteralDictionary, dictionary);
 			}
 			break;
 
-			case LITERAL_FUNCTION: {
+			case TOY_LITERAL_FUNCTION: {
 				//read the index
 				unsigned short index = readShort(interpreter->bytecode, &interpreter->count);
-				Literal literal = TO_INTEGER_LITERAL(index);
+				Toy_Literal literal = TOY_TO_INTEGER_LITERAL(index);
 
 				//change the type, to read it PROPERLY below
-				literal.type = LITERAL_FUNCTION_INTERMEDIATE;
+				literal.type = TOY_LITERAL_FUNCTION_INTERMEDIATE;
 
 				//push to the literal cache
-				pushLiteralArray(&interpreter->literalCache, literal);
+				Toy_pushLiteralArray(&interpreter->literalCache, literal);
 
 #ifndef TOY_EXPORT
 				if (command.verbose) {
@@ -2210,84 +2210,84 @@ static void readInterpreterSections(Interpreter* interpreter) {
 			}
 			break;
 
-			case LITERAL_IDENTIFIER: {
+			case TOY_LITERAL_IDENTIFIER: {
 				char* str = readString(interpreter->bytecode, &interpreter->count);
 
 				int length = strlen(str);
-				Literal identifier = TO_IDENTIFIER_LITERAL(createRefStringLength(str, length));
+				Toy_Literal identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(str, length));
 
-				pushLiteralArray(&interpreter->literalCache, identifier);
+				Toy_pushLiteralArray(&interpreter->literalCache, identifier);
 
 #ifndef TOY_EXPORT
 				if (command.verbose) {
-					printf("(identifier %s (hash: %x))\n", toCString(AS_IDENTIFIER(identifier)), identifier.as.identifier.hash);
+					printf("(identifier %s (hash: %x))\n", Toy_toCString(TOY_AS_IDENTIFIER(identifier)), identifier.as.identifier.hash);
 				}
 #endif
 
-				freeLiteral(identifier);
+				Toy_freeLiteral(identifier);
 			}
 			break;
 
-			case LITERAL_TYPE: {
+			case TOY_LITERAL_TYPE: {
 				//what the literal is
-				LiteralType literalType = (LiteralType)readByte(interpreter->bytecode, &interpreter->count);
+				Toy_LiteralType literalType = (Toy_LiteralType)readByte(interpreter->bytecode, &interpreter->count);
 				unsigned char constant = readByte(interpreter->bytecode, &interpreter->count);
 
-				Literal typeLiteral = TO_TYPE_LITERAL(literalType, constant);
+				Toy_Literal typeLiteral = TOY_TO_TYPE_LITERAL(literalType, constant);
 
 				//save the type
-				pushLiteralArray(&interpreter->literalCache, typeLiteral);
+				Toy_pushLiteralArray(&interpreter->literalCache, typeLiteral);
 
 #ifndef TOY_EXPORT
 				if (command.verbose) {
 					printf("(type ");
-					printLiteral(typeLiteral);
+					Toy_printLiteral(typeLiteral);
 					printf(")\n");
 				}
 #endif
 			}
 			break;
 
-			case LITERAL_TYPE_INTERMEDIATE: {
+			case TOY_LITERAL_TYPE_INTERMEDIATE: {
 				//what the literal represents
-				LiteralType literalType = (LiteralType)readByte(interpreter->bytecode, &interpreter->count);
+				Toy_LiteralType literalType = (Toy_LiteralType)readByte(interpreter->bytecode, &interpreter->count);
 				unsigned char constant = readByte(interpreter->bytecode, &interpreter->count);
 
-				Literal typeLiteral = TO_TYPE_LITERAL(literalType, constant);
+				Toy_Literal typeLiteral = TOY_TO_TYPE_LITERAL(literalType, constant);
 
 				//if it's an array type
-				if (AS_TYPE(typeLiteral).typeOf == LITERAL_ARRAY) {
+				if (TOY_AS_TYPE(typeLiteral).typeOf == TOY_LITERAL_ARRAY) {
 					unsigned short vt = readShort(interpreter->bytecode, &interpreter->count);
 
-					TYPE_PUSH_SUBTYPE(&typeLiteral, copyLiteral(interpreter->literalCache.literals[vt]));
+					TOY_TYPE_PUSH_SUBTYPE(&typeLiteral, Toy_copyLiteral(interpreter->literalCache.literals[vt]));
 				}
 
-				if (AS_TYPE(typeLiteral).typeOf == LITERAL_DICTIONARY) {
+				if (TOY_AS_TYPE(typeLiteral).typeOf == TOY_LITERAL_DICTIONARY) {
 					unsigned short kt = readShort(interpreter->bytecode, &interpreter->count);
 					unsigned short vt = readShort(interpreter->bytecode, &interpreter->count);
 
-					TYPE_PUSH_SUBTYPE(&typeLiteral, copyLiteral(interpreter->literalCache.literals[kt]));
-					TYPE_PUSH_SUBTYPE(&typeLiteral, copyLiteral(interpreter->literalCache.literals[vt]));
+					TOY_TYPE_PUSH_SUBTYPE(&typeLiteral, Toy_copyLiteral(interpreter->literalCache.literals[kt]));
+					TOY_TYPE_PUSH_SUBTYPE(&typeLiteral, Toy_copyLiteral(interpreter->literalCache.literals[vt]));
 				}
 
 				//save the type
-				pushLiteralArray(&interpreter->literalCache, typeLiteral); //copied
+				Toy_pushLiteralArray(&interpreter->literalCache, typeLiteral); //copied
 
 #ifndef TOY_EXPORT
 				if (command.verbose) {
 					printf("(type ");
-					printLiteral(typeLiteral);
+					Toy_printLiteral(typeLiteral);
 					printf(")\n");
 				}
 #endif
 
-				freeLiteral(typeLiteral);
+				Toy_freeLiteral(typeLiteral);
 			}
 			break;
 
-			case LITERAL_INDEX_BLANK:
+			case TOY_LITERAL_INDEX_BLANK:
 				//read the blank
-				pushLiteralArray(&interpreter->literalCache, TO_INDEX_BLANK_LITERAL);
+				Toy_pushLiteralArray(&interpreter->literalCache, TOY_TO_INDEX_BLANK_LITERAL);
 
 #ifndef TOY_EXPORT
 				if (command.verbose) {
@@ -2298,7 +2298,7 @@ static void readInterpreterSections(Interpreter* interpreter) {
 		}
 	}
 
-	consumeByte(interpreter, OP_SECTION_END, interpreter->bytecode, &interpreter->count); //terminate the literal section
+	consumeByte(interpreter, TOY_OP_SECTION_END, interpreter->bytecode, &interpreter->count); //terminate the literal section
 
 	//read the function metadata
 	int functionCount = readShort(interpreter->bytecode, &interpreter->count);
@@ -2306,54 +2306,54 @@ static void readInterpreterSections(Interpreter* interpreter) {
 
 	//read in the functions
 	for (int i = 0; i < interpreter->literalCache.count; i++) {
-		if (interpreter->literalCache.literals[i].type == LITERAL_FUNCTION_INTERMEDIATE) {
+		if (interpreter->literalCache.literals[i].type == TOY_LITERAL_FUNCTION_INTERMEDIATE) {
 			//get the size of the function
 			size_t size = (size_t)readShort(interpreter->bytecode, &interpreter->count);
 
 			//read the function code (literal cache and all)
-			unsigned char* bytes = ALLOCATE(unsigned char, size);
+			unsigned char* bytes = TOY_ALLOCATE(unsigned char, size);
 			memcpy(bytes, interpreter->bytecode + interpreter->count, size); //TODO: -1 for the ending mark
 			interpreter->count += size;
 
 			//assert that the last memory slot is function end
-			if (bytes[size - 1] != OP_FN_END) {
+			if (bytes[size - 1] != TOY_OP_FN_END) {
 				interpreter->errorOutput("[internal] Failed to find function end");
-				FREE_ARRAY(unsigned char, bytes, size);
+				TOY_FREE_ARRAY(unsigned char, bytes, size);
 				return;
 			}
 
 			//change the type to normal
-			interpreter->literalCache.literals[i] = TO_FUNCTION_LITERAL(bytes, size);
-			AS_FUNCTION(interpreter->literalCache.literals[i]).scope = NULL;
+			interpreter->literalCache.literals[i] = TOY_TO_FUNCTION_LITERAL(bytes, size);
+			TOY_AS_FUNCTION(interpreter->literalCache.literals[i]).scope = NULL;
 		}
 	}
 
-	consumeByte(interpreter, OP_SECTION_END, interpreter->bytecode, &interpreter->count); //terminate the function section
+	consumeByte(interpreter, TOY_OP_SECTION_END, interpreter->bytecode, &interpreter->count); //terminate the function section
 }
 
 //exposed functions
-void initInterpreter(Interpreter* interpreter) {
-	interpreter->hooks = ALLOCATE(LiteralDictionary, 1);
-	initLiteralDictionary(interpreter->hooks);
+void Toy_initInterpreter(Toy_Interpreter* interpreter) {
+	interpreter->hooks = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
+	Toy_initLiteralDictionary(interpreter->hooks);
 
 	//set up the output streams
-	setInterpreterPrint(interpreter, printWrapper);
-	setInterpreterAssert(interpreter, assertWrapper);
-	setInterpreterError(interpreter, errorWrapper);
+	Toy_setInterpreterPrint(interpreter, printWrapper);
+	Toy_setInterpreterAssert(interpreter, assertWrapper);
+	Toy_setInterpreterError(interpreter, errorWrapper);
 
 	interpreter->scope = NULL;
-	resetInterpreter(interpreter);
+	Toy_resetInterpreter(interpreter);
 }
 
-void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int length) {
+void Toy_runInterpreter(Toy_Interpreter* interpreter, unsigned char* bytecode, int length) {
 	//initialize here instead of initInterpreter()
-	initLiteralArray(&interpreter->literalCache);
+	Toy_initLiteralArray(&interpreter->literalCache);
 	interpreter->bytecode = NULL;
 	interpreter->length = 0;
 	interpreter->count = 0;
 	interpreter->codeStart = -1;
 
-	initLiteralArray(&interpreter->stack);
+	Toy_initLiteralArray(&interpreter->stack);
 
 	interpreter->depth = 0;
 	interpreter->panic = false;
@@ -2370,7 +2370,7 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 
 	//prep the literal cache
 	if (interpreter->literalCache.count > 0) {
-		freeLiteralArray(&interpreter->literalCache); //automatically inits
+		Toy_freeLiteralArray(&interpreter->literalCache); //automatically inits
 	}
 
 	//header section
@@ -2379,8 +2379,8 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 	const unsigned char patch = readByte(interpreter->bytecode, &interpreter->count);
 
 	if (major != TOY_VERSION_MAJOR || minor > TOY_VERSION_MINOR) {
-		char buffer[MAX_STRING_LENGTH];
-		snprintf(buffer, MAX_STRING_LENGTH, "Interpreter/bytecode version mismatch (expected %d.%d.%d or earlier, given %d.%d.%d)\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, major, minor, patch);
+		char buffer[TOY_MAX_STRING_LENGTH];
+		snprintf(buffer, TOY_MAX_STRING_LENGTH, "Interpreter/bytecode version mismatch (expected %d.%d.%d or earlier, given %d.%d.%d)\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, major, minor, patch);
 		interpreter->errorOutput(buffer);
 		return;
 	}
@@ -2390,12 +2390,12 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 #ifndef TOY_EXPORT
 	if (command.verbose) {
 		if (strncmp(build, TOY_VERSION_BUILD, strlen(TOY_VERSION_BUILD))) {
-			printf(WARN "Warning: interpreter/bytecode build mismatch\n" RESET);
+			printf(TOY_CC_WARN "Warning: interpreter/bytecode build mismatch\n" TOY_CC_RESET);
 		}
 	}
 #endif
 
-	consumeByte(interpreter, OP_SECTION_END, interpreter->bytecode, &interpreter->count);
+	consumeByte(interpreter, TOY_OP_SECTION_END, interpreter->bytecode, &interpreter->count);
 
 	//read the sections of the bytecode
 	readInterpreterSections(interpreter);
@@ -2403,7 +2403,7 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 	//code section
 #ifndef TOY_EXPORT
 	if (command.verbose) {
-		printf(NOTICE "executing bytecode\n" RESET);
+		printf(TOY_CC_NOTICE "executing bytecode\n" TOY_CC_RESET);
 	}
 #endif
 
@@ -2412,45 +2412,45 @@ void runInterpreter(Interpreter* interpreter, unsigned char* bytecode, int lengt
 
 	//BUGFIX: clear the stack (for repl - stack must be balanced)
 	while(interpreter->stack.count > 0) {
-		Literal lit = popLiteralArray(&interpreter->stack);
-		freeLiteral(lit);
+		Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
+		Toy_freeLiteral(lit);
 	}
 
 	//free the bytecode immediately after use TODO: because why?
-	FREE_ARRAY(unsigned char, interpreter->bytecode, interpreter->length);
+	TOY_FREE_ARRAY(unsigned char, interpreter->bytecode, interpreter->length);
 
 	//free the associated data
-	freeLiteralArray(&interpreter->literalCache);
-	freeLiteralArray(&interpreter->stack);
+	Toy_freeLiteralArray(&interpreter->literalCache);
+	Toy_freeLiteralArray(&interpreter->stack);
 }
 
-void resetInterpreter(Interpreter* interpreter) {
+void Toy_resetInterpreter(Toy_Interpreter* interpreter) {
 	//free the interpreter scope
 	while(interpreter->scope != NULL) {
-		interpreter->scope = popScope(interpreter->scope);
+		interpreter->scope = Toy_popScope(interpreter->scope);
 	}
 
 	//prep the scope
-	interpreter->scope = pushScope(NULL);
+	interpreter->scope = Toy_pushScope(NULL);
 
 	//globally available functions
-	injectNativeFn(interpreter, "_set", _set);
-	injectNativeFn(interpreter, "_get", _get);
-	injectNativeFn(interpreter, "_push", _push);
-	injectNativeFn(interpreter, "_pop", _pop);
-	injectNativeFn(interpreter, "_length", _length);
-	injectNativeFn(interpreter, "_clear", _clear);
+	Toy_injectNativeFn(interpreter, "_set", _set);
+	Toy_injectNativeFn(interpreter, "_get", _get);
+	Toy_injectNativeFn(interpreter, "_push", _push);
+	Toy_injectNativeFn(interpreter, "_pop", _pop);
+	Toy_injectNativeFn(interpreter, "_length", _length);
+	Toy_injectNativeFn(interpreter, "_clear", _clear);
 }
 
-void freeInterpreter(Interpreter* interpreter) {
+void Toy_freeInterpreter(Toy_Interpreter* interpreter) {
 	//free the interpreter scope
 	while(interpreter->scope != NULL) {
-		interpreter->scope = popScope(interpreter->scope);
+		interpreter->scope = Toy_popScope(interpreter->scope);
 	}
 
 	if (interpreter->hooks) {
-		freeLiteralDictionary(interpreter->hooks);
-		FREE(LiteralDictionary, interpreter->hooks);
+		Toy_freeLiteralDictionary(interpreter->hooks);
+		TOY_FREE(Toy_LiteralDictionary, interpreter->hooks);
 	}
 
 	interpreter->hooks = NULL;

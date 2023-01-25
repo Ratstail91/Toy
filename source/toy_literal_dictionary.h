@@ -2,28 +2,28 @@
 
 #include "toy_common.h"
 
-#include "literal.h"
+#include "toy_literal.h"
 
 //TODO: benchmark this
-#define DICTIONARY_MAX_LOAD 0.75
+#define TOY_DICTIONARY_MAX_LOAD 0.75
 
-typedef struct _entry {
-	Literal key;
-	Literal value;
-} _entry;
+typedef struct Toy_private_entry {
+	Toy_Literal key;
+	Toy_Literal value;
+} Toy_private_entry;
 
-typedef struct LiteralDictionary {
-	_entry* entries;
+typedef struct Toy_LiteralDictionary {
+	Toy_private_entry* entries;
 	int capacity;
 	int count;
 	int contains; //count + tombstones, for internal use
-} LiteralDictionary;
+} Toy_LiteralDictionary;
 
-TOY_API void initLiteralDictionary(LiteralDictionary* dictionary);
-TOY_API void freeLiteralDictionary(LiteralDictionary* dictionary);
+TOY_API void Toy_initLiteralDictionary(Toy_LiteralDictionary* dictionary);
+TOY_API void Toy_freeLiteralDictionary(Toy_LiteralDictionary* dictionary);
 
-TOY_API void setLiteralDictionary(LiteralDictionary* dictionary, Literal key, Literal value);
-TOY_API Literal getLiteralDictionary(LiteralDictionary* dictionary, Literal key);
-TOY_API void removeLiteralDictionary(LiteralDictionary* dictionary, Literal key);
+TOY_API void Toy_setLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Literal key, Toy_Literal value);
+TOY_API Toy_Literal Toy_getLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Literal key);
+TOY_API void Toy_removeLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Literal key);
 
-TOY_API bool existsLiteralDictionary(LiteralDictionary* dictionary, Literal key);
+TOY_API bool Toy_existsLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Literal key);

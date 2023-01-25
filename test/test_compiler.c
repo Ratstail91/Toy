@@ -1,10 +1,10 @@
-#include "lexer.h"
-#include "parser.h"
-#include "compiler.h"
+#include "toy_lexer.h"
+#include "toy_parser.h"
+#include "toy_compiler.h"
 
-#include "console_colors.h"
+#include "toy_console_colors.h"
 
-#include "memory.h"
+#include "toy_memory.h"
 
 #include "../repl/repl_tools.h"
 
@@ -15,9 +15,9 @@
 int main() {
 	{
 		//test init & free
-		Compiler compiler;
-		initCompiler(&compiler);
-		freeCompiler(&compiler);
+		Toy_Compiler compiler;
+		Toy_initCompiler(&compiler);
+		Toy_freeCompiler(&compiler);
 	}
 
 	{
@@ -25,70 +25,70 @@ int main() {
 		char* source = "print null;";
 
 		//test basic compilation & collation
-		Lexer lexer;
-		Parser parser;
-		Compiler compiler;
+		Toy_Lexer lexer;
+		Toy_Parser parser;
+		Toy_Compiler compiler;
 
-		initLexer(&lexer, source);
-		initParser(&parser, &lexer);
-		initCompiler(&compiler);
+		Toy_initLexer(&lexer, source);
+		Toy_initParser(&parser, &lexer);
+		Toy_initCompiler(&compiler);
 
-		ASTNode* node = scanParser(&parser);
+		Toy_ASTNode* node = Toy_scanParser(&parser);
 
 		//write
-		writeCompiler(&compiler, node);
+		Toy_writeCompiler(&compiler, node);
 
 		//collate
 		int size = 0;
-		unsigned char* bytecode = collateCompiler(&compiler, &size);
+		unsigned char* bytecode = Toy_collateCompiler(&compiler, &size);
 
 		//cleanup
-		FREE_ARRAY(unsigned char, bytecode, size);
-		freeASTNode(node);
-		freeParser(&parser);
-		freeCompiler(&compiler);
+		TOY_FREE_ARRAY(unsigned char, bytecode, size);
+		Toy_freeASTNode(node);
+		Toy_freeParser(&parser);
+		Toy_freeCompiler(&compiler);
 	}
 
 	{
 		//source
 		size_t sourceLength = 0;
-		char* source = readFile("scripts/compiler_sample_code.toy", &sourceLength);
+		char* source = Toy_readFile("scripts/compiler_sample_code.toy", &sourceLength);
 
 		//test basic compilation & collation
-		Lexer lexer;
-		Parser parser;
-		Compiler compiler;
+		Toy_Lexer lexer;
+		Toy_Parser parser;
+		Toy_Compiler compiler;
 
-		initLexer(&lexer, source);
-		initParser(&parser, &lexer);
-		initCompiler(&compiler);
+		Toy_initLexer(&lexer, source);
+		Toy_initParser(&parser, &lexer);
+		Toy_initCompiler(&compiler);
 
-		ASTNode* node = scanParser(&parser);
+		Toy_ASTNode* node = Toy_scanParser(&parser);
 		while (node != NULL) {
-			if (node->type == AST_NODE_ERROR) {
-				fprintf(stderr, ERROR "ERROR: Error node found" RESET);
+			if (node->type == TOY_AST_NODE_ERROR) {
+				fprintf(stderr, TOY_CC_ERROR "ERROR: Error node found" TOY_CC_RESET);
 				return -1;
 			}
 
 			//write
-			writeCompiler(&compiler, node);
-			freeASTNode(node);
+			Toy_writeCompiler(&compiler, node);
+			Toy_freeASTNode(node);
 
-			node = scanParser(&parser);
+			node = Toy_scanParser(&parser);
 		}
 
 		//collate
 		int size = 0;
-		unsigned char* bytecode = collateCompiler(&compiler, &size);
+		unsigned char* bytecode = Toy_collateCompiler(&compiler, &size);
 
 		//cleanup
-		FREE_ARRAY(char, source, sourceLength);
-		FREE_ARRAY(unsigned char, bytecode, size);
-		freeParser(&parser);
-		freeCompiler(&compiler);
+		TOY_FREE_ARRAY(char, source, sourceLength);
+		TOY_FREE_ARRAY(unsigned char, bytecode, size);
+		Toy_freeParser(&parser);
+		Toy_freeCompiler(&compiler);
 	}
 
-	printf(NOTICE "All good\n" RESET);
+	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 	return 0;
 }
 

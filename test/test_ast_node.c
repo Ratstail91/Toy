@@ -1,14 +1,14 @@
-#include "ast_node.h"
+#include "toy_ast_node.h"
 
-#include "memory.h"
-#include "console_colors.h"
+#include "toy_memory.h"
+#include "toy_console_colors.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
 //lazy
 #define ASSERT(test_for_true) if (!(test_for_true)) {\
-	fprintf(stderr, ERROR "assert failed: %s\n" RESET, #test_for_true); \
+	fprintf(stderr, TOY_CC_ERROR "assert failed: %s\n" TOY_CC_RESET, #test_for_true); \
 	exit(-1); \
 }
 
@@ -17,61 +17,61 @@ int main() {
 	{
 		//test literals
 		char* str = "foobar";
-		Literal literal = TO_STRING_LITERAL(createRefString(str));
+		Toy_Literal literal = TOY_TO_STRING_LITERAL(Toy_createRefString(str));
 
 		//generate the node
-		ASTNode* node = NULL;
-		emitASTNodeLiteral(&node, literal);
+		Toy_ASTNode* node = NULL;
+		Toy_emitASTNodeLiteral(&node, literal);
 
 		//check node type
-		ASSERT(node->type == AST_NODE_LITERAL);
+		ASSERT(node->type == TOY_AST_NODE_LITERAL);
 
 		//cleanup
-		freeLiteral(literal);
-		freeASTNode(node);
+		Toy_freeLiteral(literal);
+		Toy_freeASTNode(node);
 	}
 
 	//test unary
 	{
 		//generate the child node
 		char* str = "foobar";
-		Literal literal = TO_STRING_LITERAL(createRefString(str));
-		ASTNode* childNode = NULL;
-		emitASTNodeLiteral(&childNode, literal);
+		Toy_Literal literal = TOY_TO_STRING_LITERAL(Toy_createRefString(str));
+		Toy_ASTNode* childNode = NULL;
+		Toy_emitASTNodeLiteral(&childNode, literal);
 
 		//generate the unary node
-		ASTNode* unary = NULL;
-		emitASTNodeUnary(&unary, OP_PRINT, childNode);
+		Toy_ASTNode* unary = NULL;
+		Toy_emitASTNodeUnary(&unary, TOY_OP_PRINT, childNode);
 
 		//check node type
-		ASSERT(unary->type == AST_NODE_UNARY);
+		ASSERT(unary->type == TOY_AST_NODE_UNARY);
 
 		//cleanup
-		freeLiteral(literal);
-		freeASTNode(unary);
+		Toy_freeLiteral(literal);
+		Toy_freeASTNode(unary);
 	}
 
 	//test binary
 	{
 		//generate the child node
 		char* str = "foobar";
-		Literal literal = TO_STRING_LITERAL(createRefString(str));
-		ASTNode* nodeHandle = NULL;
-		emitASTNodeLiteral(&nodeHandle, literal);
+		Toy_Literal literal = TOY_TO_STRING_LITERAL(Toy_createRefString(str));
+		Toy_ASTNode* nodeHandle = NULL;
+		Toy_emitASTNodeLiteral(&nodeHandle, literal);
 
-		ASTNode* rhsChildNode = NULL;
-		emitASTNodeLiteral(&rhsChildNode, literal);
+		Toy_ASTNode* rhsChildNode = NULL;
+		Toy_emitASTNodeLiteral(&rhsChildNode, literal);
 
 		//generate the unary node
-		emitASTNodeBinary(&nodeHandle, rhsChildNode, OP_PRINT);
+		Toy_emitASTNodeBinary(&nodeHandle, rhsChildNode, TOY_OP_PRINT);
 
 		//check node type
-		ASSERT(nodeHandle->type == AST_NODE_BINARY);
-		ASSERT(nodeHandle->binary.opcode == OP_PRINT);
+		ASSERT(nodeHandle->type == TOY_AST_NODE_BINARY);
+		ASSERT(nodeHandle->binary.opcode == TOY_OP_PRINT);
 
 		//cleanup
-		freeLiteral(literal);
-		freeASTNode(nodeHandle);
+		Toy_freeLiteral(literal);
+		Toy_freeASTNode(nodeHandle);
 	}
 
 	//TODO: more tests for other AST node types
@@ -82,35 +82,35 @@ int main() {
 		char* idn = "foobar";
 		char* str = "hello world";
 
-		ASTNode* dictionary;
-		ASTNode* left;
-		ASTNode* right;
+		Toy_ASTNode* dictionary;
+		Toy_ASTNode* left;
+		Toy_ASTNode* right;
 
-		Literal identifier = TO_IDENTIFIER_LITERAL(createRefString(idn));
-		Literal string = TO_STRING_LITERAL(createRefString(str));
+		Toy_Literal identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString(idn));
+		Toy_Literal string = TOY_TO_STRING_LITERAL(Toy_createRefString(str));
 
-		emitASTNodeCompound(&dictionary, LITERAL_DICTIONARY);
-		emitASTNodeLiteral(&left, identifier);
-		emitASTNodeLiteral(&right, string);
+		Toy_emitASTNodeCompound(&dictionary, TOY_LITERAL_DICTIONARY);
+		Toy_emitASTNodeLiteral(&left, identifier);
+		Toy_emitASTNodeLiteral(&right, string);
 
 		//grow the node if needed
 		if (dictionary->compound.capacity < dictionary->compound.count + 1) {
 			int oldCapacity = dictionary->compound.capacity;
 
-			dictionary->compound.capacity = GROW_CAPACITY(oldCapacity);
-			dictionary->compound.nodes = GROW_ARRAY(ASTNode, dictionary->compound.nodes, oldCapacity, dictionary->compound.capacity);
+			dictionary->compound.capacity = TOY_GROW_CAPACITY(oldCapacity);
+			dictionary->compound.nodes = TOY_GROW_ARRAY(Toy_ASTNode, dictionary->compound.nodes, oldCapacity, dictionary->compound.capacity);
 		}
 
 		//store the left and right in the node
-		setASTNodePair(&dictionary->compound.nodes[dictionary->compound.count++], left, right);
+		Toy_setASTNodePair(&dictionary->compound.nodes[dictionary->compound.count++], left, right);
 
 		//the real test
-		freeASTNode(dictionary);
-		freeLiteral(identifier);
-		freeLiteral(string);
+		Toy_freeASTNode(dictionary);
+		Toy_freeLiteral(identifier);
+		Toy_freeLiteral(string);
 	}
 
-	printf(NOTICE "All good\n" RESET);
+	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 	return 0;
 }
 

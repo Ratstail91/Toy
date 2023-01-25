@@ -1,13 +1,13 @@
 #include "lib_timer.h"
 
-#include "memory.h"
+#include "toy_memory.h"
 
 #include <stdio.h>
 #include <time.h>
 #include <sys/time.h>
 
 //GOD DAMN IT: https://stackoverflow.com/questions/15846762/timeval-subtract-explanation
-int timeval_subtract(struct timeval *result, struct timeval *x, struct timeval *y) {
+static int timeval_subtract(struct timeval *result, struct timeval *x, struct timeval *y) {
 	//normallize
 	if (x->tv_usec > 999999) {
 		x->tv_sec += x->tv_usec / 1000000;
@@ -34,7 +34,7 @@ int timeval_subtract(struct timeval *result, struct timeval *x, struct timeval *
 
 //god damn it
 static struct timeval* diff(struct timeval* lhs, struct timeval* rhs) {
-	struct timeval* d = ALLOCATE(struct timeval, 1);
+	struct timeval* d = TOY_ALLOCATE(struct timeval, 1);
 
 	//I gave up, copied from SO
 	timeval_subtract(d, rhs, lhs);
@@ -43,7 +43,7 @@ static struct timeval* diff(struct timeval* lhs, struct timeval* rhs) {
 }
 
 //callbacks
-static int nativeStartTimer(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeStartTimer(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 0) {
 		interpreter->errorOutput("Incorrect number of arguments to startTimer\n");
@@ -51,19 +51,19 @@ static int nativeStartTimer(Interpreter* interpreter, LiteralArray* arguments) {
 	}
 
 	//get the timeinfo from C
-	struct timeval* timeinfo = ALLOCATE(struct timeval, 1);
+	struct timeval* timeinfo = TOY_ALLOCATE(struct timeval, 1);
 	gettimeofday(timeinfo, NULL);
 
 	//wrap in an opaque literal for Toy
-	Literal timeLiteral = TO_OPAQUE_LITERAL(timeinfo, -1);
-	pushLiteralArray(&interpreter->stack, timeLiteral);
+	Toy_Literal timeLiteral = TOY_TO_OPAQUE_LITERAL(timeinfo, -1);
+	Toy_pushLiteralArray(&interpreter->stack, timeLiteral);
 
-	freeLiteral(timeLiteral);
+	Toy_freeLiteral(timeLiteral);
 
 	return 1;
 }
 
-static int nativeStopTimer(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeStopTimer(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments to _stopTimer\n");
@@ -75,34 +75,34 @@ static int nativeStopTimer(Interpreter* interpreter, LiteralArray* arguments) {
 	gettimeofday(&timerStop, NULL);
 
 	//unwrap the opaque literal
-	Literal timeLiteral = popLiteralArray(arguments);
+	Toy_Literal timeLiteral = Toy_popLiteralArray(arguments);
 
-	Literal timeLiteralIdn = timeLiteral;
-	if (IS_IDENTIFIER(timeLiteral) && parseIdentifierToValue(interpreter, &timeLiteral)) {
-		freeLiteral(timeLiteralIdn);
+	Toy_Literal timeLiteralIdn = timeLiteral;
+	if (TOY_IS_IDENTIFIER(timeLiteral) && Toy_parseIdentifierToValue(interpreter, &timeLiteral)) {
+		Toy_freeLiteral(timeLiteralIdn);
 	}
 
-	if (!IS_OPAQUE(timeLiteral)) {
+	if (!TOY_IS_OPAQUE(timeLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to _stopTimer\n");
-		freeLiteral(timeLiteral);
+		Toy_freeLiteral(timeLiteral);
 		return -1;
 	}
 
-	struct timeval* timerStart = AS_OPAQUE(timeLiteral);
+	struct timeval* timerStart = TOY_AS_OPAQUE(timeLiteral);
 
 	//determine the difference, and wrap it
 	struct timeval* d = diff(timerStart, &timerStop);
-	Literal diffLiteral = TO_OPAQUE_LITERAL(d, -1);
-	pushLiteralArray(&interpreter->stack, diffLiteral);
+	Toy_Literal diffLiteral = TOY_TO_OPAQUE_LITERAL(d, -1);
+	Toy_pushLiteralArray(&interpreter->stack, diffLiteral);
 
 	//cleanup
-	freeLiteral(timeLiteral);
-	freeLiteral(diffLiteral);
+	Toy_freeLiteral(timeLiteral);
+	Toy_freeLiteral(diffLiteral);
 
 	return 1;
 }
 
-static int nativeCreateTimer(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeCreateTimer(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
 		interpreter->errorOutput("Incorrect number of arguments to createTimer\n");
@@ -110,50 +110,50 @@ static int nativeCreateTimer(Interpreter* interpreter, LiteralArray* arguments) 
 	}
 
 	//get the args
-	Literal microsecondLiteral = popLiteralArray(arguments);
-	Literal secondLiteral = popLiteralArray(arguments);
+	Toy_Literal microsecondLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal secondLiteral = Toy_popLiteralArray(arguments);
 
-	Literal secondLiteralIdn = secondLiteral;
-	if (IS_IDENTIFIER(secondLiteral) && parseIdentifierToValue(interpreter, &secondLiteral)) {
-		freeLiteral(secondLiteralIdn);
+	Toy_Literal secondLiteralIdn = secondLiteral;
+	if (TOY_IS_IDENTIFIER(secondLiteral) && Toy_parseIdentifierToValue(interpreter, &secondLiteral)) {
+		Toy_freeLiteral(secondLiteralIdn);
 	}
 
-	Literal microsecondLiteralIdn = microsecondLiteral;
-	if (IS_IDENTIFIER(microsecondLiteral) && parseIdentifierToValue(interpreter, &microsecondLiteral)) {
-		freeLiteral(microsecondLiteralIdn);
+	Toy_Literal microsecondLiteralIdn = microsecondLiteral;
+	if (TOY_IS_IDENTIFIER(microsecondLiteral) && Toy_parseIdentifierToValue(interpreter, &microsecondLiteral)) {
+		Toy_freeLiteral(microsecondLiteralIdn);
 	}
 
-	if (!IS_INTEGER(secondLiteral) || !IS_INTEGER(microsecondLiteral)) {
+	if (!TOY_IS_INTEGER(secondLiteral) || !TOY_IS_INTEGER(microsecondLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to createTimer\n");
-		freeLiteral(secondLiteral);
-		freeLiteral(microsecondLiteral);
+		Toy_freeLiteral(secondLiteral);
+		Toy_freeLiteral(microsecondLiteral);
 		return -1;
 	}
 
-	if (AS_INTEGER(microsecondLiteral) <= -1000 * 1000 || AS_INTEGER(microsecondLiteral) >= 1000 * 1000 || (AS_INTEGER(secondLiteral) != 0 && AS_INTEGER(microsecondLiteral) < 0) ) {
+	if (TOY_AS_INTEGER(microsecondLiteral) <= -1000 * 1000 || TOY_AS_INTEGER(microsecondLiteral) >= 1000 * 1000 || (TOY_AS_INTEGER(secondLiteral) != 0 && TOY_AS_INTEGER(microsecondLiteral) < 0) ) {
 		interpreter->errorOutput("Microseconds out of range in createTimer\n");
-		freeLiteral(secondLiteral);
-		freeLiteral(microsecondLiteral);
+		Toy_freeLiteral(secondLiteral);
+		Toy_freeLiteral(microsecondLiteral);
 		return -1;
 	}
 
 	//get the timeinfo from toy
-	struct timeval* timeinfo = ALLOCATE(struct timeval, 1);
-	timeinfo->tv_sec = AS_INTEGER(secondLiteral);
-	timeinfo->tv_usec = AS_INTEGER(microsecondLiteral);
+	struct timeval* timeinfo = TOY_ALLOCATE(struct timeval, 1);
+	timeinfo->tv_sec = TOY_AS_INTEGER(secondLiteral);
+	timeinfo->tv_usec = TOY_AS_INTEGER(microsecondLiteral);
 
 	//wrap in an opaque literal for Toy
-	Literal timeLiteral = TO_OPAQUE_LITERAL(timeinfo, -1);
-	pushLiteralArray(&interpreter->stack, timeLiteral);
+	Toy_Literal timeLiteral = TOY_TO_OPAQUE_LITERAL(timeinfo, -1);
+	Toy_pushLiteralArray(&interpreter->stack, timeLiteral);
 
-	freeLiteral(timeLiteral);
-	freeLiteral(secondLiteral);
-	freeLiteral(microsecondLiteral);
+	Toy_freeLiteral(timeLiteral);
+	Toy_freeLiteral(secondLiteral);
+	Toy_freeLiteral(microsecondLiteral);
 
 	return 1;
 }
 
-static int nativeGetTimerSeconds(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeGetTimerSeconds(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments to _getTimerSeconds\n");
@@ -161,33 +161,33 @@ static int nativeGetTimerSeconds(Interpreter* interpreter, LiteralArray* argumen
 	}
 
 	//unwrap the opaque literal
-	Literal timeLiteral = popLiteralArray(arguments);
+	Toy_Literal timeLiteral = Toy_popLiteralArray(arguments);
 
-	Literal timeLiteralIdn = timeLiteral;
-	if (IS_IDENTIFIER(timeLiteral) && parseIdentifierToValue(interpreter, &timeLiteral)) {
-		freeLiteral(timeLiteralIdn);
+	Toy_Literal timeLiteralIdn = timeLiteral;
+	if (TOY_IS_IDENTIFIER(timeLiteral) && Toy_parseIdentifierToValue(interpreter, &timeLiteral)) {
+		Toy_freeLiteral(timeLiteralIdn);
 	}
 
-	if (!IS_OPAQUE(timeLiteral)) {
+	if (!TOY_IS_OPAQUE(timeLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to _getTimerSeconds\n");
-		freeLiteral(timeLiteral);
+		Toy_freeLiteral(timeLiteral);
 		return -1;
 	}
 
-	struct timeval* timer = AS_OPAQUE(timeLiteral);
+	struct timeval* timer = TOY_AS_OPAQUE(timeLiteral);
 
 	//create the result literal
-	Literal result = TO_INTEGER_LITERAL(timer->tv_sec);
-	pushLiteralArray(&interpreter->stack, result);
+	Toy_Literal result = TOY_TO_INTEGER_LITERAL(timer->tv_sec);
+	Toy_pushLiteralArray(&interpreter->stack, result);
 
 	//cleanup
-	freeLiteral(timeLiteral);
-	freeLiteral(result);
+	Toy_freeLiteral(timeLiteral);
+	Toy_freeLiteral(result);
 
 	return 1;
 }
 
-static int nativeGetTimerMicroseconds(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeGetTimerMicroseconds(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments to _getTimerMicroseconds\n");
@@ -195,33 +195,33 @@ static int nativeGetTimerMicroseconds(Interpreter* interpreter, LiteralArray* ar
 	}
 
 	//unwrap the opaque literal
-	Literal timeLiteral = popLiteralArray(arguments);
+	Toy_Literal timeLiteral = Toy_popLiteralArray(arguments);
 
-	Literal timeLiteralIdn = timeLiteral;
-	if (IS_IDENTIFIER(timeLiteral) && parseIdentifierToValue(interpreter, &timeLiteral)) {
-		freeLiteral(timeLiteralIdn);
+	Toy_Literal timeLiteralIdn = timeLiteral;
+	if (TOY_IS_IDENTIFIER(timeLiteral) && Toy_parseIdentifierToValue(interpreter, &timeLiteral)) {
+		Toy_freeLiteral(timeLiteralIdn);
 	}
 
-	if (!IS_OPAQUE(timeLiteral)) {
+	if (!TOY_IS_OPAQUE(timeLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to _getTimerMicroseconds\n");
-		freeLiteral(timeLiteral);
+		Toy_freeLiteral(timeLiteral);
 		return -1;
 	}
 
-	struct timeval* timer = AS_OPAQUE(timeLiteral);
+	struct timeval* timer = TOY_AS_OPAQUE(timeLiteral);
 
 	//create the result literal
-	Literal result = TO_INTEGER_LITERAL(timer->tv_usec);
-	pushLiteralArray(&interpreter->stack, result);
+	Toy_Literal result = TOY_TO_INTEGER_LITERAL(timer->tv_usec);
+	Toy_pushLiteralArray(&interpreter->stack, result);
 
 	//cleanup
-	freeLiteral(timeLiteral);
-	freeLiteral(result);
+	Toy_freeLiteral(timeLiteral);
+	Toy_freeLiteral(result);
 
 	return 1;
 }
 
-static int nativeCompareTimer(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeCompareTimer(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
 		interpreter->errorOutput("Incorrect number of arguments to _compareTimer\n");
@@ -229,43 +229,43 @@ static int nativeCompareTimer(Interpreter* interpreter, LiteralArray* arguments)
 	}
 
 	//unwrap the opaque literals
-	Literal rhsLiteral = popLiteralArray(arguments);
-	Literal lhsLiteral = popLiteralArray(arguments);
+	Toy_Literal rhsLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal lhsLiteral = Toy_popLiteralArray(arguments);
 
-	Literal lhsLiteralIdn = lhsLiteral;
-	if (IS_IDENTIFIER(lhsLiteral) && parseIdentifierToValue(interpreter, &lhsLiteral)) {
-		freeLiteral(lhsLiteralIdn);
+	Toy_Literal lhsLiteralIdn = lhsLiteral;
+	if (TOY_IS_IDENTIFIER(lhsLiteral) && Toy_parseIdentifierToValue(interpreter, &lhsLiteral)) {
+		Toy_freeLiteral(lhsLiteralIdn);
 	}
 
-	Literal rhsLiteralIdn = rhsLiteral;
-	if (IS_IDENTIFIER(rhsLiteral) && parseIdentifierToValue(interpreter, &rhsLiteral)) {
-		freeLiteral(rhsLiteralIdn);
+	Toy_Literal rhsLiteralIdn = rhsLiteral;
+	if (TOY_IS_IDENTIFIER(rhsLiteral) && Toy_parseIdentifierToValue(interpreter, &rhsLiteral)) {
+		Toy_freeLiteral(rhsLiteralIdn);
 	}
 
-	if (!IS_OPAQUE(lhsLiteral) || !IS_OPAQUE(rhsLiteral)) {
+	if (!TOY_IS_OPAQUE(lhsLiteral) || !TOY_IS_OPAQUE(rhsLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to _compareTimer\n");
-		freeLiteral(lhsLiteral);
-		freeLiteral(rhsLiteral);
+		Toy_freeLiteral(lhsLiteral);
+		Toy_freeLiteral(rhsLiteral);
 		return -1;
 	}
 
-	struct timeval* lhsTimer = AS_OPAQUE(lhsLiteral);
-	struct timeval* rhsTimer = AS_OPAQUE(rhsLiteral);
+	struct timeval* lhsTimer = TOY_AS_OPAQUE(lhsLiteral);
+	struct timeval* rhsTimer = TOY_AS_OPAQUE(rhsLiteral);
 
 	//determine the difference, and wrap it
 	struct timeval* d = diff(lhsTimer, rhsTimer);
-	Literal diffLiteral = TO_OPAQUE_LITERAL(d, -1);
-	pushLiteralArray(&interpreter->stack, diffLiteral);
+	Toy_Literal diffLiteral = TOY_TO_OPAQUE_LITERAL(d, -1);
+	Toy_pushLiteralArray(&interpreter->stack, diffLiteral);
 
 	//cleanup
-	freeLiteral(lhsLiteral);
-	freeLiteral(rhsLiteral);
-	freeLiteral(diffLiteral);
+	Toy_freeLiteral(lhsLiteral);
+	Toy_freeLiteral(rhsLiteral);
+	Toy_freeLiteral(diffLiteral);
 
 	return 1;
 }
 
-static int nativeTimerToString(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeTimerToString(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments to _timerToString\n");
@@ -273,44 +273,44 @@ static int nativeTimerToString(Interpreter* interpreter, LiteralArray* arguments
 	}
 
 	//unwrap in an opaque literal
-	Literal timeLiteral = popLiteralArray(arguments);
+	Toy_Literal timeLiteral = Toy_popLiteralArray(arguments);
 
-	Literal timeLiteralIdn = timeLiteral;
-	if (IS_IDENTIFIER(timeLiteral) && parseIdentifierToValue(interpreter, &timeLiteral)) {
-		freeLiteral(timeLiteralIdn);
+	Toy_Literal timeLiteralIdn = timeLiteral;
+	if (TOY_IS_IDENTIFIER(timeLiteral) && Toy_parseIdentifierToValue(interpreter, &timeLiteral)) {
+		Toy_freeLiteral(timeLiteralIdn);
 	}
 
-	if (!IS_OPAQUE(timeLiteral)) {
+	if (!TOY_IS_OPAQUE(timeLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to _timerToString\n");
-		freeLiteral(timeLiteral);
+		Toy_freeLiteral(timeLiteral);
 		return -1;
 	}
 
-	struct timeval* timer = AS_OPAQUE(timeLiteral);
+	struct timeval* timer = TOY_AS_OPAQUE(timeLiteral);
 
 	//create the string literal
-	Literal resultLiteral = TO_NULL_LITERAL;
+	Toy_Literal resultLiteral = TOY_TO_NULL_LITERAL;
 	if (timer->tv_sec == 0 && timer->tv_usec < 0) { //special case, for when the negative sign is encoded in the usec
 		char buffer[128];
 		snprintf(buffer, 128, "-%ld.%06ld", timer->tv_sec, -timer->tv_usec);
-		resultLiteral = TO_STRING_LITERAL(createRefStringLength(buffer, strlen(buffer)));
+		resultLiteral = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(buffer, strlen(buffer)));
 	}
 	else { //normal case
 		char buffer[128];
 		snprintf(buffer, 128, "%ld.%06ld", timer->tv_sec, timer->tv_usec);
-		resultLiteral = TO_STRING_LITERAL(createRefStringLength(buffer, strlen(buffer)));
+		resultLiteral = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(buffer, strlen(buffer)));
 	}
 
-	pushLiteralArray(&interpreter->stack, resultLiteral);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	//cleanup
-	freeLiteral(timeLiteral);
-	freeLiteral(resultLiteral);
+	Toy_freeLiteral(timeLiteral);
+	Toy_freeLiteral(resultLiteral);
 
 	return 1;
 }
 
-static int nativeDestroyTimer(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeDestroyTimer(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments to _destroyTimer\n");
@@ -318,24 +318,24 @@ static int nativeDestroyTimer(Interpreter* interpreter, LiteralArray* arguments)
 	}
 
 		//unwrap in an opaque literal
-	Literal timeLiteral = popLiteralArray(arguments);
+	Toy_Literal timeLiteral = Toy_popLiteralArray(arguments);
 
-	Literal timeLiteralIdn = timeLiteral;
-	if (IS_IDENTIFIER(timeLiteral) && parseIdentifierToValue(interpreter, &timeLiteral)) {
-		freeLiteral(timeLiteralIdn);
+	Toy_Literal timeLiteralIdn = timeLiteral;
+	if (TOY_IS_IDENTIFIER(timeLiteral) && Toy_parseIdentifierToValue(interpreter, &timeLiteral)) {
+		Toy_freeLiteral(timeLiteralIdn);
 	}
 
-	if (!IS_OPAQUE(timeLiteral)) {
+	if (!TOY_IS_OPAQUE(timeLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to _destroyTimer\n");
-		freeLiteral(timeLiteral);
+		Toy_freeLiteral(timeLiteral);
 		return -1;
 	}
 
-	struct timeval* timer = AS_OPAQUE(timeLiteral);
+	struct timeval* timer = TOY_AS_OPAQUE(timeLiteral);
 
-	FREE(struct timeval, timer);
+	TOY_FREE(struct timeval, timer);
 
-	freeLiteral(timeLiteral);
+	Toy_freeLiteral(timeLiteral);
 
 	return 0;
 }
@@ -343,10 +343,10 @@ static int nativeDestroyTimer(Interpreter* interpreter, LiteralArray* arguments)
 //call the hook
 typedef struct Natives {
 	char* name;
-	NativeFn fn;
+	Toy_NativeFn fn;
 } Natives;
 
-int hookTimer(Interpreter* interpreter, Literal identifier, Literal alias) {
+int Toy_hookTimer(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Literal alias) {
 	//build the natives list
 	Natives natives[] = {
 		{"startTimer", nativeStartTimer},
@@ -361,51 +361,51 @@ int hookTimer(Interpreter* interpreter, Literal identifier, Literal alias) {
 	};
 
 	//store the library in an aliased dictionary
-	if (!IS_NULL(alias)) {
+	if (!TOY_IS_NULL(alias)) {
 		//make sure the name isn't taken
-		if (isDelcaredScopeVariable(interpreter->scope, alias)) {
+		if (Toy_isDelcaredScopeVariable(interpreter->scope, alias)) {
 			interpreter->errorOutput("Can't override an existing variable\n");
-			freeLiteral(alias);
+			Toy_freeLiteral(alias);
 			return false;
 		}
 
 		//create the dictionary to load up with functions
-		LiteralDictionary* dictionary = ALLOCATE(LiteralDictionary, 1);
-		initLiteralDictionary(dictionary);
+		Toy_LiteralDictionary* dictionary = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
+		Toy_initLiteralDictionary(dictionary);
 
 		//load the dict with functions
 		for (int i = 0; natives[i].name; i++) {
-			Literal name = TO_STRING_LITERAL(createRefString(natives[i].name));
-			Literal func = TO_FUNCTION_LITERAL((void*)natives[i].fn, 0);
-			func.type = LITERAL_FUNCTION_NATIVE;
+			Toy_Literal name = TOY_TO_STRING_LITERAL(Toy_createRefString(natives[i].name));
+			Toy_Literal func = TOY_TO_FUNCTION_LITERAL((void*)natives[i].fn, 0);
+			func.type = TOY_LITERAL_FUNCTION_NATIVE;
 
-			setLiteralDictionary(dictionary, name, func);
+			Toy_setLiteralDictionary(dictionary, name, func);
 
-			freeLiteral(name);
-			freeLiteral(func);
+			Toy_freeLiteral(name);
+			Toy_freeLiteral(func);
 		}
 
 		//build the type
-		Literal type = TO_TYPE_LITERAL(LITERAL_DICTIONARY, true);
-		Literal strType = TO_TYPE_LITERAL(LITERAL_STRING, true);
-		Literal fnType = TO_TYPE_LITERAL(LITERAL_FUNCTION_NATIVE, true);
-		TYPE_PUSH_SUBTYPE(&type, strType);
-		TYPE_PUSH_SUBTYPE(&type, fnType);
+		Toy_Literal type = TOY_TO_TYPE_LITERAL(TOY_LITERAL_DICTIONARY, true);
+		Toy_Literal strType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_STRING, true);
+		Toy_Literal fnType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_FUNCTION_NATIVE, true);
+		TOY_TYPE_PUSH_SUBTYPE(&type, strType);
+		TOY_TYPE_PUSH_SUBTYPE(&type, fnType);
 
 		//set scope
-		Literal dict = TO_DICTIONARY_LITERAL(dictionary);
-		declareScopeVariable(interpreter->scope, alias, type);
-		setScopeVariable(interpreter->scope, alias, dict, false);
+		Toy_Literal dict = TOY_TO_DICTIONARY_LITERAL(dictionary);
+		Toy_declareScopeVariable(interpreter->scope, alias, type);
+		Toy_setScopeVariable(interpreter->scope, alias, dict, false);
 
 		//cleanup
-		freeLiteral(dict);
-		freeLiteral(type);
+		Toy_freeLiteral(dict);
+		Toy_freeLiteral(type);
 		return 0;
 	}
 
 	//default
 	for (int i = 0; natives[i].name; i++) {
-		injectNativeFn(interpreter, natives[i].name, natives[i].fn);
+		Toy_injectNativeFn(interpreter, natives[i].name, natives[i].fn);
 	}
 
 	return 0;

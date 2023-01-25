@@ -1,6 +1,6 @@
-#include "memory.h"
+#include "toy_memory.h"
 
-#include "console_colors.h"
+#include "toy_console_colors.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,29 +32,29 @@ void* allocator(void* pointer, size_t oldSize, size_t newSize) {
 void testMemoryAllocation() {
 	{
 		//test single pointer
-		int* integer = ALLOCATE(int, 1);
-		FREE(int, integer);
+		int* integer = TOY_ALLOCATE(int, 1);
+		TOY_FREE(int, integer);
 	}
 
 	{
 		//test single pointer array
-		int* array = ALLOCATE(int, 10);
+		int* array = TOY_ALLOCATE(int, 10);
 
 		array[1] = 42; //access the given memory
 
-		FREE_ARRAY(int, array, 10);
+		TOY_FREE_ARRAY(int, array, 10);
 	}
 
 	{
 		//test multiple pointer arrays
-		int* array1 = ALLOCATE(int, 10);
-		int* array2 = ALLOCATE(int, 10);
+		int* array1 = TOY_ALLOCATE(int, 10);
+		int* array2 = TOY_ALLOCATE(int, 10);
 
 		array1[1] = 42; //access the given memory
 		array2[1] = 42; //access the given memory
 
-		FREE_ARRAY(int, array1, 10);
-		FREE_ARRAY(int, array2, 10);
+		TOY_FREE_ARRAY(int, array1, 10);
+		TOY_FREE_ARRAY(int, array2, 10);
 	}
 }
 
@@ -63,14 +63,14 @@ int main() {
 	testMemoryAllocation();
 
 	//test the custom allocator
-	setMemoryAllocator(allocator);
+	Toy_setMemoryAllocator(allocator);
 	testMemoryAllocation();
 
 	if (callCount != 8) {
-		fprintf(stderr, ERROR "Unexpected call count for custom allocator; was called %d times" RESET, callCount);
+		fprintf(stderr, TOY_CC_ERROR "Unexpected call count for custom allocator; was called %d times" TOY_CC_RESET, callCount);
 		return -1;
 	}
 
-	printf(NOTICE "All good\n" RESET);
+	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 	return 0;
 }

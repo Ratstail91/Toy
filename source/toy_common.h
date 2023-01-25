@@ -5,8 +5,8 @@
 #include <stdint.h>
 
 #define TOY_VERSION_MAJOR 0
-#define TOY_VERSION_MINOR 7
-#define TOY_VERSION_PATCH 1
+#define TOY_VERSION_MINOR 8
+#define TOY_VERSION_PATCH 0
 #define TOY_VERSION_BUILD __DATE__ " " __TIME__
 
 //platform-specific specifications
@@ -37,9 +37,9 @@ typedef struct {
 
 extern Command command;
 
-void initCommand(int argc, const char* argv[]);
+void Toy_initCommand(int argc, const char* argv[]);
 
-void usageCommand(int argc, const char* argv[]);
-void helpCommand(int argc, const char* argv[]);
-void copyrightCommand(int argc, const char* argv[]);
+void Toy_usageCommand(int argc, const char* argv[]);
+void Toy_helpCommand(int argc, const char* argv[]);
+void Toy_copyrightCommand(int argc, const char* argv[]);
 #endif

@@ -1,11 +1,11 @@
-#include "lexer.h"
-#include "parser.h"
-#include "compiler.h"
-#include "interpreter.h"
+#include "toy_lexer.h"
+#include "toy_parser.h"
+#include "toy_compiler.h"
+#include "toy_interpreter.h"
 
-#include "console_colors.h"
+#include "toy_console_colors.h"
 
-#include "memory.h"
+#include "toy_memory.h"
 
 #include "../repl/repl_tools.h"
 
@@ -24,37 +24,37 @@ static void noErrorFn(const char* output) {
 }
 
 unsigned char* compileStringCustom(char* source, size_t* size) {
-	Lexer lexer;
-	Parser parser;
-	Compiler compiler;
+	Toy_Lexer lexer;
+	Toy_Parser parser;
+	Toy_Compiler compiler;
 
-	initLexer(&lexer, source);
-	initParser(&parser, &lexer);
-	initCompiler(&compiler);
+	Toy_initLexer(&lexer, source);
+	Toy_initParser(&parser, &lexer);
+	Toy_initCompiler(&compiler);
 
 	//run the parser until the end of the source
-	ASTNode* node = scanParser(&parser);
+	Toy_ASTNode* node = Toy_scanParser(&parser);
 	while(node != NULL) {
 		//pack up and leave
-		if (node->type == AST_NODE_ERROR) {
+		if (node->type == TOY_AST_NODE_ERROR) {
 			errorsTriggered++; //custom error catch
-			freeASTNode(node);
-			freeCompiler(&compiler);
-			freeParser(&parser);
+			Toy_freeASTNode(node);
+			Toy_freeCompiler(&compiler);
+			Toy_freeParser(&parser);
 			return NULL;
 		}
 
-		writeCompiler(&compiler, node);
-		freeASTNode(node);
-		node = scanParser(&parser);
+		Toy_writeCompiler(&compiler, node);
+		Toy_freeASTNode(node);
+		node = Toy_scanParser(&parser);
 	}
 
 	//get the bytecode dump
-	unsigned char* tb = collateCompiler(&compiler, (int*)(size));
+	unsigned char* tb = Toy_collateCompiler(&compiler, (int*)(size));
 
 	//cleanup
-	freeCompiler(&compiler);
-	freeParser(&parser);
+	Toy_freeCompiler(&compiler);
+	Toy_freeParser(&parser);
 	//no lexer to clean up
 
 	//finally
@@ -62,15 +62,15 @@ unsigned char* compileStringCustom(char* source, size_t* size) {
 }
 
 void runBinaryCustom(unsigned char* tb, size_t size) {
-	Interpreter interpreter;
-	initInterpreter(&interpreter);
+	Toy_Interpreter interpreter;
+	Toy_initInterpreter(&interpreter);
 
 	//NOTE: suppress print output for testing
-	setInterpreterPrint(&interpreter, noPrintFn);
-	setInterpreterError(&interpreter, noErrorFn);
+	Toy_setInterpreterPrint(&interpreter, noPrintFn);
+	Toy_setInterpreterError(&interpreter, noErrorFn);
 
-	runInterpreter(&interpreter, tb, size);
-	freeInterpreter(&interpreter);
+	Toy_runInterpreter(&interpreter, tb, size);
+	Toy_freeInterpreter(&interpreter);
 }
 
 void runSourceCustom(char* source) {
@@ -84,7 +84,7 @@ void runSourceCustom(char* source) {
 
 void runSourceFileCustom(char* fname) {
 	size_t size = 0; //not used
-	char* source = readFile(fname, &size);
+	char* source = Toy_readFile(fname, &size);
 	runSourceCustom(source);
 	free((void*)source);
 }
@@ -114,7 +114,7 @@ int main() {
 			runSourceFileCustom(buffer);
 
 			if (errorsTriggered == 0) {
-				printf(ERROR "Expected error did not occur in %s\n" RESET, filenames[i]);
+				printf(TOY_CC_ERROR "Expected error did not occur in %s\n" TOY_CC_RESET, filenames[i]);
 				success = false;
 			}
 
@@ -126,7 +126,7 @@ int main() {
 		return -1;
 	}
 
-	printf(NOTICE "All good\n" RESET);
+	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 	return 0;
 }
 

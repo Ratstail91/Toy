@@ -3,12 +3,12 @@
 #include "lib_timer.h"
 #include "lib_runner.h"
 
-#include "console_colors.h"
+#include "toy_console_colors.h"
 
-#include "lexer.h"
-#include "parser.h"
-#include "compiler.h"
-#include "interpreter.h"
+#include "toy_lexer.h"
+#include "toy_parser.h"
+#include "toy_compiler.h"
+#include "toy_interpreter.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,13 +22,13 @@ void repl() {
 	char input[size];
 	memset(input, 0, size);
 
-	Interpreter interpreter; //persist the interpreter for the scopes
-	initInterpreter(&interpreter);
+	Toy_Interpreter interpreter; //persist the interpreter for the scopes
+	Toy_initInterpreter(&interpreter);
 
 	//inject the libs
-	injectNativeHook(&interpreter, "standard", hookStandard);
-	injectNativeHook(&interpreter, "timer", hookTimer);
-	injectNativeHook(&interpreter, "runner", hookRunner);
+	Toy_injectNativeHook(&interpreter, "standard", Toy_hookStandard);
+	Toy_injectNativeHook(&interpreter, "timer", Toy_hookTimer);
+	Toy_injectNativeHook(&interpreter, "runner", Toy_hookRunner);
 
 	for(;;) {
 		printf("> ");
@@ -44,100 +44,100 @@ void repl() {
 		}
 
 		//setup this iteration
-		Lexer lexer;
-		Parser parser;
-		Compiler compiler;
+		Toy_Lexer lexer;
+		Toy_Parser parser;
+		Toy_Compiler compiler;
 
-		initLexer(&lexer, input);
-		initParser(&parser, &lexer);
-		initCompiler(&compiler);
+		Toy_initLexer(&lexer, input);
+		Toy_initParser(&parser, &lexer);
+		Toy_initCompiler(&compiler);
 
 		//run this iteration
-		ASTNode* node = scanParser(&parser);
+		Toy_ASTNode* node = Toy_scanParser(&parser);
 		while(node != NULL) {
 			//pack up and restart
-			if (node->type == AST_NODE_ERROR) {
-				printf(ERROR "error node detected\n" RESET);
+			if (node->type == TOY_AST_NODE_ERROR) {
+				printf(TOY_CC_ERROR "error node detected\n" TOY_CC_RESET);
 				error = true;
-				freeASTNode(node);
+				Toy_freeASTNode(node);
 				break;
 			}
 
-			writeCompiler(&compiler, node);
-			freeASTNode(node);
-			node = scanParser(&parser);
+			Toy_writeCompiler(&compiler, node);
+			Toy_freeASTNode(node);
+			node = Toy_scanParser(&parser);
 		}
 
 		if (!error) {
 			//get the bytecode dump
 			int size = 0;
-			unsigned char* tb = collateCompiler(&compiler, &size);
+			unsigned char* tb = Toy_collateCompiler(&compiler, &size);
 
 			//run the bytecode
-			runInterpreter(&interpreter, tb, size);
+			Toy_runInterpreter(&interpreter, tb, size);
 		}
 
 		//clean up this iteration
-		freeCompiler(&compiler);
-		freeParser(&parser);
+		Toy_freeCompiler(&compiler);
+		Toy_freeParser(&parser);
 		error = false;
 	}
 
-	freeInterpreter(&interpreter);
+	Toy_freeInterpreter(&interpreter);
 }
 
 //entry point
 int main(int argc, const char* argv[]) {
-	initCommand(argc, argv);
+	Toy_initCommand(argc, argv);
 
 	//lib setup (hacky - only really for this program)
-	initDriveDictionary();
+	Toy_initDriveDictionary();
 
-	Literal driveLiteral = TO_STRING_LITERAL(createRefString("scripts"));
-	Literal pathLiteral = TO_STRING_LITERAL(createRefString("scripts"));
+	Toy_Literal driveLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("scripts"));
+	Toy_Literal pathLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("scripts"));
 
-	setLiteralDictionary(getDriveDictionary(), driveLiteral, pathLiteral);
+	Toy_setLiteralDictionary(Toy_getDriveDictionary(), driveLiteral, pathLiteral);
 
-	freeLiteral(driveLiteral);
-	freeLiteral(pathLiteral);
+	Toy_freeLiteral(driveLiteral);
+	Toy_freeLiteral(pathLiteral);
 
 	//command specific actions
 	if (command.error) {
-		usageCommand(argc, argv);
+		Toy_usageCommand(argc, argv);
 		return 0;
 	}
 
 	if (command.help) {
-		helpCommand(argc, argv);
+		Toy_helpCommand(argc, argv);
 		return 0;
 	}
 
 	if (command.version) {
-		copyrightCommand(argc, argv);
+		Toy_copyrightCommand(argc, argv);
 		return 0;
 	}
 
 	//version
 	if (command.verbose) {
-		printf(NOTICE "Toy Programming Language Version %d.%d.%d\n" RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH);
+		printf(TOY_CC_NOTICE "Toy Programming Language Version %d.%d.%d\n" TOY_CC_RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH);
 	}
 
 	//run source file
 	if (command.sourcefile) {
-		runSourceFile(command.sourcefile);
+		Toy_runSourceFile(command.sourcefile);
 
 		//lib cleanup
-		freeDriveDictionary();
+		Toy_freeDriveDictionary();
 
 		return 0;
 	}
 
 	//run from stdin
 	if (command.source) {
-		runSource(command.source);
+		Toy_runSource(command.source);
 
 		//lib cleanup
-		freeDriveDictionary();
+		Toy_freeDriveDictionary();
 
 		return 0;
 	}
@@ -145,21 +145,21 @@ int main(int argc, const char* argv[]) {
 	//compile source file
 	if (command.compilefile && command.outfile) {
 		size_t size = 0;
-		char* source = readFile(command.compilefile, &size);
-		unsigned char* tb = compileString(source, &size);
+		char* source = Toy_readFile(command.compilefile, &size);
+		unsigned char* tb = Toy_compileString(source, &size);
 		if (!tb) {
 			return 1;
 		}
-		writeFile(command.outfile, tb, size);
+		Toy_writeFile(command.outfile, tb, size);
 		return 0;
 	}
 
 	//run binary
 	if (command.binaryfile) {
-		runBinaryFile(command.binaryfile);
+		Toy_runBinaryFile(command.binaryfile);
 
 		//lib cleanup
-		freeDriveDictionary();
+		Toy_freeDriveDictionary();
 
 		return 0;
 	}
@@ -167,7 +167,7 @@ int main(int argc, const char* argv[]) {
 	repl();
 
 	//lib cleanup
-	freeDriveDictionary();
+	Toy_freeDriveDictionary();
 
 	return 0;
 }

@@ -1,16 +1,16 @@
-#include "literal_dictionary.h"
+#include "toy_literal_dictionary.h"
 
-#include "memory.h"
-#include "console_colors.h"
+#include "toy_memory.h"
+#include "toy_console_colors.h"
 
 #include <stdio.h>
 
 int main() {
 	{
 		//test init & cleanup
-		LiteralDictionary dictionary;
-		initLiteralDictionary(&dictionary);
-		freeLiteralDictionary(&dictionary);
+		Toy_LiteralDictionary dictionary;
+		Toy_initLiteralDictionary(&dictionary);
+		Toy_freeLiteralDictionary(&dictionary);
 	}
 
 	{
@@ -18,21 +18,21 @@ int main() {
 		char* idn_raw = "foobar";
 		char* str_raw = "hello world";
 
-		Literal identifier = TO_IDENTIFIER_LITERAL(createRefString(idn_raw));
-		Literal string = TO_STRING_LITERAL(createRefString(str_raw));
+		Toy_Literal identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString(idn_raw));
+		Toy_Literal string = TOY_TO_STRING_LITERAL(Toy_createRefString(str_raw));
 
-		LiteralDictionary dictionary;
-		initLiteralDictionary(&dictionary);
+		Toy_LiteralDictionary dictionary;
+		Toy_initLiteralDictionary(&dictionary);
 
-		setLiteralDictionary(&dictionary, identifier, string);
+		Toy_setLiteralDictionary(&dictionary, identifier, string);
 
-		freeLiteral(identifier);
-		freeLiteral(string);
+		Toy_freeLiteral(identifier);
+		Toy_freeLiteral(string);
 
-		freeLiteralDictionary(&dictionary);
+		Toy_freeLiteralDictionary(&dictionary);
 	}
 
-	printf(NOTICE "All good\n" RESET);
+	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 	return 0;
 }
 

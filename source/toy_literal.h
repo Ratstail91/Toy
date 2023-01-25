@@ -2,41 +2,41 @@
 
 #include "toy_common.h"
 
-#include "refstring.h"
+#include "toy_refstring.h"
 
 #include <string.h>
 
 typedef enum {
-	LITERAL_NULL,
-	LITERAL_BOOLEAN,
-	LITERAL_INTEGER,
-	LITERAL_FLOAT,
-	LITERAL_STRING,
-	LITERAL_ARRAY,
-	LITERAL_DICTIONARY,
-	LITERAL_FUNCTION,
-	LITERAL_IDENTIFIER,
-	LITERAL_TYPE,
-	LITERAL_OPAQUE,
-	LITERAL_ANY,
+	TOY_LITERAL_NULL,
+	TOY_LITERAL_BOOLEAN,
+	TOY_LITERAL_INTEGER,
+	TOY_LITERAL_FLOAT,
+	TOY_LITERAL_STRING,
+	TOY_LITERAL_ARRAY,
+	TOY_LITERAL_DICTIONARY,
+	TOY_LITERAL_FUNCTION,
+	TOY_LITERAL_IDENTIFIER,
+	TOY_LITERAL_TYPE,
+	TOY_LITERAL_OPAQUE,
+	TOY_LITERAL_ANY,
 
 	//these are meta-level types - not for general use
-	LITERAL_TYPE_INTERMEDIATE, //used to process types in the compiler only
-	LITERAL_DICTIONARY_INTERMEDIATE, //used to process dictionaries in the compiler only
-	LITERAL_FUNCTION_INTERMEDIATE, //used to process functions in the compiler only
-	LITERAL_FUNCTION_ARG_REST, //used to process function rest parameters only
-	LITERAL_FUNCTION_NATIVE, //for handling native functions only
-	LITERAL_INDEX_BLANK, //for blank indexing i.e. arr[:]
-} LiteralType;
+	TOY_LITERAL_TYPE_INTERMEDIATE, //used to process types in the compiler only
+	TOY_LITERAL_DICTIONARY_INTERMEDIATE, //used to process dictionaries in the compiler only
+	TOY_LITERAL_FUNCTION_INTERMEDIATE, //used to process functions in the compiler only
+	TOY_LITERAL_FUNCTION_ARG_REST, //used to process function rest parameters only
+	TOY_LITERAL_FUNCTION_NATIVE, //for handling native functions only
+	TOY_LITERAL_INDEX_BLANK, //for blank indexing i.e. arr[:]
+} Toy_LiteralType;
 
 typedef struct {
-	LiteralType type;
+	Toy_LiteralType type;
 	union {
 		bool boolean;
 		int integer;
 		float number;
 		struct {
-			RefString* ptr;
+			Toy_RefString* ptr;
 			//string hash?
 		} string;
 
@@ -50,12 +50,12 @@ typedef struct {
 		} function;
 
 		struct { //for variable names
-            RefString* ptr;
+            Toy_RefString* ptr;
 			int hash;
         } identifier;
 
 		struct {
-			LiteralType typeOf; //no longer a mask
+			Toy_LiteralType typeOf; //no longer a mask
 			bool constant;
 			void* subtypes; //for nested types caused by compounds
 			int capacity;
@@ -67,67 +67,67 @@ typedef struct {
 			int tag; //TODO: remove tags?
 		} opaque;
 	} as;
-} Literal;
+} Toy_Literal;
 
-#define IS_NULL(value)						((value).type == LITERAL_NULL)
-#define IS_BOOLEAN(value)					((value).type == LITERAL_BOOLEAN)
-#define IS_INTEGER(value)					((value).type == LITERAL_INTEGER)
-#define IS_FLOAT(value)						((value).type == LITERAL_FLOAT)
-#define IS_STRING(value)					((value).type == LITERAL_STRING)
-#define IS_ARRAY(value)						((value).type == LITERAL_ARRAY)
-#define IS_DICTIONARY(value)				((value).type == LITERAL_DICTIONARY)
-#define IS_FUNCTION(value)					((value).type == LITERAL_FUNCTION)
-#define IS_FUNCTION_NATIVE(value)			((value).type == LITERAL_FUNCTION_NATIVE)
-#define IS_IDENTIFIER(value)				((value).type == LITERAL_IDENTIFIER)
-#define IS_TYPE(value)						((value).type == LITERAL_TYPE)
-#define IS_OPAQUE(value)					((value).type == LITERAL_OPAQUE)
+#define TOY_IS_NULL(value)						((value).type == TOY_LITERAL_NULL)
+#define TOY_IS_BOOLEAN(value)					((value).type == TOY_LITERAL_BOOLEAN)
+#define TOY_IS_INTEGER(value)					((value).type == TOY_LITERAL_INTEGER)
+#define TOY_IS_FLOAT(value)						((value).type == TOY_LITERAL_FLOAT)
+#define TOY_IS_STRING(value)					((value).type == TOY_LITERAL_STRING)
+#define TOY_IS_ARRAY(value)						((value).type == TOY_LITERAL_ARRAY)
+#define TOY_IS_DICTIONARY(value)				((value).type == TOY_LITERAL_DICTIONARY)
+#define TOY_IS_FUNCTION(value)					((value).type == TOY_LITERAL_FUNCTION)
+#define TOY_IS_FUNCTION_NATIVE(value)			((value).type == TOY_LITERAL_FUNCTION_NATIVE)
+#define TOY_IS_IDENTIFIER(value)				((value).type == TOY_LITERAL_IDENTIFIER)
+#define TOY_IS_TYPE(value)						((value).type == TOY_LITERAL_TYPE)
+#define TOY_IS_OPAQUE(value)					((value).type == TOY_LITERAL_OPAQUE)
 
-#define AS_BOOLEAN(value)					((value).as.boolean)
-#define AS_INTEGER(value)					((value).as.integer)
-#define AS_FLOAT(value)						((value).as.number)
-#define AS_STRING(value)					((value).as.string.ptr)
-#define AS_ARRAY(value)						((LiteralArray*)((value).as.array))
-#define AS_DICTIONARY(value)				((LiteralDictionary*)((value).as.dictionary))
-#define AS_FUNCTION(value)					((value).as.function)
-#define AS_IDENTIFIER(value)				((value).as.identifier.ptr)
-#define AS_TYPE(value)						((value).as.type)
-#define AS_OPAQUE(value)					((value).as.opaque.ptr)
+#define TOY_AS_BOOLEAN(value)					((value).as.boolean)
+#define TOY_AS_INTEGER(value)					((value).as.integer)
+#define TOY_AS_FLOAT(value)						((value).as.number)
+#define TOY_AS_STRING(value)					((value).as.string.ptr)
+#define TOY_AS_ARRAY(value)						((Toy_LiteralArray*)((value).as.array))
+#define TOY_AS_DICTIONARY(value)				((Toy_LiteralDictionary*)((value).as.dictionary))
+#define TOY_AS_FUNCTION(value)					((value).as.function)
+#define TOY_AS_IDENTIFIER(value)				((value).as.identifier.ptr)
+#define TOY_AS_TYPE(value)						((value).as.type)
+#define TOY_AS_OPAQUE(value)					((value).as.opaque.ptr)
 
-#define TO_NULL_LITERAL						((Literal){LITERAL_NULL,		{ .integer = 0 }})
-#define TO_BOOLEAN_LITERAL(value)			((Literal){LITERAL_BOOLEAN,		{ .boolean = value }})
-#define TO_INTEGER_LITERAL(value)			((Literal){LITERAL_INTEGER,		{ .integer = value }})
-#define TO_FLOAT_LITERAL(value)				((Literal){LITERAL_FLOAT,		{ .number = value }})
-#define TO_STRING_LITERAL(value)			_toStringLiteral(value)
-#define TO_ARRAY_LITERAL(value)				((Literal){LITERAL_ARRAY,		{ .array = value }})
-#define TO_DICTIONARY_LITERAL(value)		((Literal){LITERAL_DICTIONARY,	{ .dictionary = value }})
-#define TO_FUNCTION_LITERAL(value, l)		((Literal){LITERAL_FUNCTION,	{ .function.bytecode = value, .function.scope = NULL, .function.length = l }})
-#define TO_IDENTIFIER_LITERAL(value)		_toIdentifierLiteral(value)
-#define TO_TYPE_LITERAL(value, c)			((Literal){ LITERAL_TYPE,		{ .type.typeOf = value, .type.constant = c, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
-#define TO_OPAQUE_LITERAL(value, t)			((Literal){ LITERAL_OPAQUE,		{ .opaque.ptr = value, .opaque.tag = t }})
+#define TOY_TO_NULL_LITERAL						((Toy_Literal){TOY_LITERAL_NULL,		{ .integer = 0 }})
+#define TOY_TO_BOOLEAN_LITERAL(value)			((Toy_Literal){TOY_LITERAL_BOOLEAN,		{ .boolean = value }})
+#define TOY_TO_INTEGER_LITERAL(value)			((Toy_Literal){TOY_LITERAL_INTEGER,		{ .integer = value }})
+#define TOY_TO_FLOAT_LITERAL(value)				((Toy_Literal){TOY_LITERAL_FLOAT,		{ .number = value }})
+#define TOY_TO_STRING_LITERAL(value)			Toy_private_toStringLiteral(value)
+#define TOY_TO_ARRAY_LITERAL(value)				((Toy_Literal){TOY_LITERAL_ARRAY,		{ .array = value }})
+#define TOY_TO_DICTIONARY_LITERAL(value)		((Toy_Literal){TOY_LITERAL_DICTIONARY,	{ .dictionary = value }})
+#define TOY_TO_FUNCTION_LITERAL(value, l)		((Toy_Literal){TOY_LITERAL_FUNCTION,	{ .function.bytecode = value, .function.scope = NULL, .function.length = l }})
+#define TOY_TO_IDENTIFIER_LITERAL(value)		Toy_private_toIdentifierLiteral(value)
+#define TOY_TO_TYPE_LITERAL(value, c)			((Toy_Literal){ TOY_LITERAL_TYPE,		{ .type.typeOf = value, .type.constant = c, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
+#define TOY_TO_OPAQUE_LITERAL(value, t)			((Toy_Literal){ TOY_LITERAL_OPAQUE,		{ .opaque.ptr = value, .opaque.tag = t }})
 
 //BUGFIX: For blank indexing
-#define IS_INDEX_BLANK(value)				((value).type == LITERAL_INDEX_BLANK)
-#define TO_INDEX_BLANK_LITERAL				((Literal){LITERAL_INDEX_BLANK,	{ .integer = 0 }})
+#define TOY_IS_INDEX_BLANK(value)				((value).type == TOY_LITERAL_INDEX_BLANK)
+#define TOY_TO_INDEX_BLANK_LITERAL				((Toy_Literal){TOY_LITERAL_INDEX_BLANK,	{ .integer = 0 }})
 
-TOY_API void freeLiteral(Literal literal);
+TOY_API void Toy_freeLiteral(Toy_Literal literal);
 
-#define IS_TRUTHY(x) _isTruthy(x)
+#define TOY_IS_TRUTHY(x) Toy_private_isTruthy(x)
 
-#define MAX_STRING_LENGTH					4096
-#define HASH_I(lit)							((lit).as.identifier.hash)
-#define TYPE_PUSH_SUBTYPE(lit, subtype)		_typePushSubtype(lit, subtype)
-#define OPAQUE_TAG(o)						o.as.opaque.tag
+#define TOY_MAX_STRING_LENGTH					4096
+#define TOY_HASH_I(lit)							((lit).as.identifier.hash)
+#define TOY_TYPE_PUSH_SUBTYPE(lit, subtype)		Toy_private_typePushSubtype(lit, subtype)
+#define TOY_GET_OPAQUE_TAG(o)						o.as.opaque.tag
 
 //BUGFIX: macros are not functions
-TOY_API bool _isTruthy(Literal x);
-TOY_API Literal _toStringLiteral(RefString* ptr);
-TOY_API Literal _toIdentifierLiteral(RefString* ptr);
-TOY_API Literal* _typePushSubtype(Literal* lit, Literal subtype);
+TOY_API bool Toy_private_isTruthy(Toy_Literal x);
+TOY_API Toy_Literal Toy_private_toStringLiteral(Toy_RefString* ptr);
+TOY_API Toy_Literal Toy_private_toIdentifierLiteral(Toy_RefString* ptr);
+TOY_API Toy_Literal* Toy_private_typePushSubtype(Toy_Literal* lit, Toy_Literal subtype);
 
 //utils
-TOY_API Literal copyLiteral(Literal original);
-TOY_API bool literalsAreEqual(Literal lhs, Literal rhs);
-TOY_API int hashLiteral(Literal lit);
+TOY_API Toy_Literal Toy_copyLiteral(Toy_Literal original);
+TOY_API bool Toy_literalsAreEqual(Toy_Literal lhs, Toy_Literal rhs);
+TOY_API int Toy_hashLiteral(Toy_Literal lit);
 
-TOY_API void printLiteral(Literal literal);
-TOY_API void printLiteralCustom(Literal literal, void (printFn)(const char*));
+TOY_API void Toy_printLiteral(Toy_Literal literal);
+TOY_API void Toy_printLiteralCustom(Toy_Literal literal, void (printFn)(const char*));

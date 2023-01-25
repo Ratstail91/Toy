@@ -1,6 +1,6 @@
 #pragma once
 
-#include "interpreter.h"
+#include "toy_interpreter.h"
 
-int hookTimer(Interpreter* interpreter, Literal identifier, Literal alias);
+int Toy_hookTimer(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Literal alias);
 
