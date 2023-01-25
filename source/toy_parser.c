@@ -112,7 +112,8 @@ typedef struct {
 	PrecedenceRule precedence;
 } ParseRule;
 
-static ParseRule parseRules[];
+//no static!
+ParseRule parseRules[];
 
 //forward declarations
 static void declaration(Toy_Parser* parser, Toy_ASTNode** nodeHandle);
