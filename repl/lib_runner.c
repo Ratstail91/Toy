@@ -618,13 +618,6 @@ Toy_Literal Toy_getFilePathLiteral(Toy_Interpreter* interpreter, Toy_Literal* dr
 	Toy_deleteRefString(path);
 	Toy_deleteRefString(drivePath);
 
-	//check for file extensions
-	if (!(filePath[realLength - 5] == '.' && filePath[realLength - 4] == 't' && filePath[realLength - 3] == 'o' && filePath[realLength - 2] == 'y')) {
-		interpreter->errorOutput("Bad script file extension (expected .toy)\n"); //TODO: add a bytecode version too
-		TOY_FREE_ARRAY(char, filePath, realLength + 1);
-		return TOY_TO_NULL_LITERAL;
-	}
-
 	//check for break-out attempts
 	for (int i = 0; i < realLength - 1; i++) {
 		if (filePath[i] == '.' && filePath[i + 1] == '.') {
