@@ -626,7 +626,7 @@ Toy_Literal Toy_getFilePathLiteral(Toy_Interpreter* interpreter, Toy_Literal* dr
 	Toy_deleteRefString(path);
 	Toy_deleteRefString(drivePath);
 
-	return TOY_TO_STRING_LITERAL(Toy_createRefStringLength(filePath, realLength));
-
 	TOY_FREE_ARRAY(char, filePath, realLength + 1);
+
+	return TOY_TO_STRING_LITERAL(Toy_createRefStringLength(filePath, realLength));
 }
