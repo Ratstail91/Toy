@@ -62,6 +62,7 @@ static int nativeLoadScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 
 	if (!source) {
 		interpreter->errorOutput("Failed to load source file\n");
+		Toy_freeLiteral(filePathLiteral);
 		return -1;
 	}
 
@@ -70,6 +71,7 @@ static int nativeLoadScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 
 	if (!bytecode) {
 		interpreter->errorOutput("Failed to compile source file\n");
+		Toy_freeLiteral(filePathLiteral);
 		return -1;
 	}
 
@@ -626,7 +628,9 @@ Toy_Literal Toy_getFilePathLiteral(Toy_Interpreter* interpreter, Toy_Literal* dr
 	Toy_deleteRefString(path);
 	Toy_deleteRefString(drivePath);
 
+	Toy_Literal result = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(filePath, realLength));
+
 	TOY_FREE_ARRAY(char, filePath, realLength + 1);
 
-	return TOY_TO_STRING_LITERAL(Toy_createRefStringLength(filePath, realLength));
+	return result;
 }
