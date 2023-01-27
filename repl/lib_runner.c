@@ -40,22 +40,6 @@ static int nativeLoadScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 	char* filePath = Toy_toCString(TOY_AS_STRING(filePathLiteral));
 	int filePathLength = Toy_lengthRefString(TOY_AS_STRING(filePathLiteral));
 
-	//check for file extensions
-	if (!(filePath[filePathLength - 5] == '.' && filePath[filePathLength - 4] == 't' && filePath[filePathLength - 3] == 'o' && filePath[filePathLength - 2] == 'y')) {
-		interpreter->errorOutput("Bad script file extension (expected .toy)\n");
-		Toy_freeLiteral(filePathLiteral);
-		return -1;
-	}
-
-	//check for break-out attempts
-	for (int i = 0; i < filePathLength - 1; i++) {
-		if (filePath[i] == '.' && filePath[i + 1] == '.') {
-			interpreter->errorOutput("Parent directory access not allowed\n");
-			Toy_freeLiteral(filePathLiteral);
-			return -1;
-		}
-	}
-
 	//load and compile the bytecode
 	size_t fileSize = 0;
 	char* source = Toy_readFile(filePath, &fileSize);
@@ -633,6 +617,22 @@ Toy_Literal Toy_getFilePathLiteral(Toy_Interpreter* interpreter, Toy_Literal* dr
 	Toy_freeLiteral(driveLiteral);
 	Toy_deleteRefString(path);
 	Toy_deleteRefString(drivePath);
+
+	//check for file extensions
+	if (!(filePath[realLength - 5] == '.' && filePath[realLength - 4] == 't' && filePath[realLength - 3] == 'o' && filePath[realLength - 2] == 'y')) {
+		interpreter->errorOutput("Bad script file extension (expected .toy)\n"); //TODO: add a bytecode version too
+		TOY_FREE_ARRAY(char, filePath, realLength + 1);
+		return TOY_TO_NULL_LITERAL;
+	}
+
+	//check for break-out attempts
+	for (int i = 0; i < realLength - 1; i++) {
+		if (filePath[i] == '.' && filePath[i + 1] == '.') {
+			interpreter->errorOutput("Parent directory access not allowed\n");
+			TOY_FREE_ARRAY(char, filePath, realLength + 1);
+			return TOY_TO_NULL_LITERAL;
+		}
+	}
 
 	Toy_Literal result = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(filePath, realLength));
 
