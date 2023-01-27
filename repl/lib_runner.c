@@ -581,13 +581,19 @@ Toy_LiteralDictionary* Toy_getDriveDictionary() {
 }
 
 Toy_Literal Toy_getFilePathLiteral(Toy_Interpreter* interpreter, Toy_Literal* drivePathLiteral) {
+	//check argument types
+	if (!TOY_IS_STRING(*drivePathLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to Toy_getFilePathLiteral\n");
+		return TOY_TO_NULL_LITERAL;
+	}
+
 	Toy_RefString* drivePath = Toy_copyRefString(TOY_AS_STRING(*drivePathLiteral));
 
 	//get the drive and path as a string (can't trust that pesky strtok - custom split) TODO: move this to refstring library
 	int driveLength = 0;
 	while (Toy_toCString(drivePath)[driveLength] != ':') {
 		if (driveLength >= Toy_lengthRefString(drivePath)) {
-			interpreter->errorOutput("Incorrect drive path format given to getFilePathLiteral\n");
+			interpreter->errorOutput("Incorrect drive path format given to Toy_getFilePathLiteral\n");
 
 			return TOY_TO_NULL_LITERAL;
 		}
