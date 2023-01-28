@@ -11,7 +11,8 @@ STATIC_ASSERT(sizeof(int) == 4);
 STATIC_ASSERT(sizeof(char) == 1);
 
 //memory allocation
-static Toy_RefStringAllocatorFn allocate;
+extern void* Toy_private_defaultMemoryAllocator(void* pointer, size_t oldSize, size_t newSize);
+static Toy_RefStringAllocatorFn allocate = Toy_private_defaultMemoryAllocator;
 
 void Toy_setRefStringAllocatorFn(Toy_RefStringAllocatorFn allocator) {
 	allocate = allocator;

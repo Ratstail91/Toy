@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 //default allocator
-static void* defaultMemoryAllocator(void* pointer, size_t oldSize, size_t newSize) {
+void* Toy_private_defaultMemoryAllocator(void* pointer, size_t oldSize, size_t newSize) {
 	if (newSize == 0 && oldSize == 0) {
 		//causes issues, so just skip out with a NO-OP
 		return NULL;
@@ -30,12 +30,7 @@ static void* defaultMemoryAllocator(void* pointer, size_t oldSize, size_t newSiz
 }
 
 //static variables
-static Toy_MemoryAllocatorFn allocator;
-
-//preload
-static void __attribute__((constructor)) preloadMemoryAllocator() {
-	Toy_setMemoryAllocator(defaultMemoryAllocator);
-}
+static Toy_MemoryAllocatorFn allocator = Toy_private_defaultMemoryAllocator;
 
 //exposed API
 void* Toy_reallocate(void* pointer, size_t oldSize, size_t newSize) {
