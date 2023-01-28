@@ -206,6 +206,7 @@ Toy_Literal Toy_copyLiteral(Toy_Literal original) {
 
 		case TOY_LITERAL_FUNCTION_INTERMEDIATE: //caries a compiler
 		case TOY_LITERAL_FUNCTION_NATIVE:
+		case TOY_LITERAL_FUNCTION_HOOK:
 		case TOY_LITERAL_INDEX_BLANK:
 			//no copying possible
 			return original;
@@ -287,6 +288,7 @@ bool Toy_literalsAreEqual(Toy_Literal lhs, Toy_Literal rhs) {
 
 		case TOY_LITERAL_FUNCTION:
 		case TOY_LITERAL_FUNCTION_NATIVE:
+		case TOY_LITERAL_FUNCTION_HOOK:
 			return false; //functions are never equal
 		break;
 
@@ -384,6 +386,7 @@ int Toy_hashLiteral(Toy_Literal lit) {
 
 		case TOY_LITERAL_FUNCTION:
 		case TOY_LITERAL_FUNCTION_NATIVE:
+		case TOY_LITERAL_FUNCTION_HOOK:
 			return 0; //can't hash these
 
 		case TOY_LITERAL_IDENTIFIER:
@@ -570,6 +573,7 @@ void Toy_printLiteralCustom(Toy_Literal literal, void (printFn)(const char*)) {
 
 		case TOY_LITERAL_FUNCTION:
 		case TOY_LITERAL_FUNCTION_NATIVE:
+		case TOY_LITERAL_FUNCTION_HOOK:
 			printFn("(function)");
 		break;
 

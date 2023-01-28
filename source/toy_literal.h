@@ -4,6 +4,13 @@
 
 #include "toy_refstring.h"
 
+//forward delcare stuff
+struct Toy_Literal;
+struct Toy_Interpreter;
+struct Toy_LiteralArray;
+typedef int (*Toy_NativeFn)(struct Toy_Interpreter* interpreter, struct Toy_LiteralArray* arguments);
+typedef int (*Toy_HookFn)(struct Toy_Interpreter* interpreter, struct Toy_Literal identifier, struct Toy_Literal alias);
+
 #include <string.h>
 
 typedef enum {
@@ -26,10 +33,11 @@ typedef enum {
 	TOY_LITERAL_FUNCTION_INTERMEDIATE, //used to process functions in the compiler only
 	TOY_LITERAL_FUNCTION_ARG_REST, //used to process function rest parameters only
 	TOY_LITERAL_FUNCTION_NATIVE, //for handling native functions only
+	TOY_LITERAL_FUNCTION_HOOK, //for handling hook functions within literals only
 	TOY_LITERAL_INDEX_BLANK, //for blank indexing i.e. arr[:]
 } Toy_LiteralType;
 
-typedef struct {
+typedef struct Toy_Literal {
 	Toy_LiteralType type;
 	union {
 		bool boolean;
@@ -45,6 +53,8 @@ typedef struct {
 
 		struct {
 			void* bytecode;
+			Toy_NativeFn native; //already a pointer
+			Toy_HookFn hook; //already a pointer
 			void* scope;
 			int length;
 		} function;
@@ -78,6 +88,7 @@ typedef struct {
 #define TOY_IS_DICTIONARY(value)				((value).type == TOY_LITERAL_DICTIONARY)
 #define TOY_IS_FUNCTION(value)					((value).type == TOY_LITERAL_FUNCTION)
 #define TOY_IS_FUNCTION_NATIVE(value)			((value).type == TOY_LITERAL_FUNCTION_NATIVE)
+#define TOY_IS_FUNCTION_HOOK(value)				((value).type == TOY_LITERAL_FUNCTION_HOOK)
 #define TOY_IS_IDENTIFIER(value)				((value).type == TOY_LITERAL_IDENTIFIER)
 #define TOY_IS_TYPE(value)						((value).type == TOY_LITERAL_TYPE)
 #define TOY_IS_OPAQUE(value)					((value).type == TOY_LITERAL_OPAQUE)
@@ -89,21 +100,25 @@ typedef struct {
 #define TOY_AS_ARRAY(value)						((Toy_LiteralArray*)((value).as.array))
 #define TOY_AS_DICTIONARY(value)				((Toy_LiteralDictionary*)((value).as.dictionary))
 #define TOY_AS_FUNCTION(value)					((value).as.function)
+#define TOY_AS_FUNCTION_NATIVE(value)			((value).as.function.native)
+#define TOY_AS_FUNCTION_HOOK(value)				((value).as.function.hook)
 #define TOY_AS_IDENTIFIER(value)				((value).as.identifier.ptr)
 #define TOY_AS_TYPE(value)						((value).as.type)
 #define TOY_AS_OPAQUE(value)					((value).as.opaque.ptr)
 
-#define TOY_TO_NULL_LITERAL						((Toy_Literal){TOY_LITERAL_NULL,		{ .integer = 0 }})
-#define TOY_TO_BOOLEAN_LITERAL(value)			((Toy_Literal){TOY_LITERAL_BOOLEAN,		{ .boolean = value }})
-#define TOY_TO_INTEGER_LITERAL(value)			((Toy_Literal){TOY_LITERAL_INTEGER,		{ .integer = value }})
-#define TOY_TO_FLOAT_LITERAL(value)				((Toy_Literal){TOY_LITERAL_FLOAT,		{ .number = value }})
+#define TOY_TO_NULL_LITERAL						((Toy_Literal){TOY_LITERAL_NULL,			{ .integer = 0 }})
+#define TOY_TO_BOOLEAN_LITERAL(value)			((Toy_Literal){TOY_LITERAL_BOOLEAN,			{ .boolean = value }})
+#define TOY_TO_INTEGER_LITERAL(value)			((Toy_Literal){TOY_LITERAL_INTEGER,			{ .integer = value }})
+#define TOY_TO_FLOAT_LITERAL(value)				((Toy_Literal){TOY_LITERAL_FLOAT,			{ .number = value }})
 #define TOY_TO_STRING_LITERAL(value)			Toy_private_toStringLiteral(value)
-#define TOY_TO_ARRAY_LITERAL(value)				((Toy_Literal){TOY_LITERAL_ARRAY,		{ .array = value }})
-#define TOY_TO_DICTIONARY_LITERAL(value)		((Toy_Literal){TOY_LITERAL_DICTIONARY,	{ .dictionary = value }})
-#define TOY_TO_FUNCTION_LITERAL(value, l)		((Toy_Literal){TOY_LITERAL_FUNCTION,	{ .function.bytecode = value, .function.scope = NULL, .function.length = l }})
+#define TOY_TO_ARRAY_LITERAL(value)				((Toy_Literal){TOY_LITERAL_ARRAY,			{ .array = value }})
+#define TOY_TO_DICTIONARY_LITERAL(value)		((Toy_Literal){TOY_LITERAL_DICTIONARY,		{ .dictionary = value }})
+#define TOY_TO_FUNCTION_LITERAL(value, l)		((Toy_Literal){TOY_LITERAL_FUNCTION,		{ .function.bytecode = value, .function.scope = NULL, .function.length = l }})
+#define TOY_TO_FUNCTION_NATIVE_LITERAL(value)	((Toy_Literal){TOY_LITERAL_FUNCTION_NATIVE,	{ .function.native = value, .function.scope = NULL, .function.length = 0 }})
+#define TOY_TO_FUNCTION_HOOK_LITERAL(value)		((Toy_Literal){TOY_LITERAL_FUNCTION_HOOK,	{ .function.hook = value, .function.scope = NULL, .function.length = 0 }})
 #define TOY_TO_IDENTIFIER_LITERAL(value)		Toy_private_toIdentifierLiteral(value)
-#define TOY_TO_TYPE_LITERAL(value, c)			((Toy_Literal){ TOY_LITERAL_TYPE,		{ .type.typeOf = value, .type.constant = c, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
-#define TOY_TO_OPAQUE_LITERAL(value, t)			((Toy_Literal){ TOY_LITERAL_OPAQUE,		{ .opaque.ptr = value, .opaque.tag = t }})
+#define TOY_TO_TYPE_LITERAL(value, c)			((Toy_Literal){ TOY_LITERAL_TYPE,			{ .type.typeOf = value, .type.constant = c, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }})
+#define TOY_TO_OPAQUE_LITERAL(value, t)			((Toy_Literal){ TOY_LITERAL_OPAQUE,			{ .opaque.ptr = value, .opaque.tag = t }})
 
 //BUGFIX: For blank indexing
 #define TOY_IS_INDEX_BLANK(value)				((value).type == TOY_LITERAL_INDEX_BLANK)

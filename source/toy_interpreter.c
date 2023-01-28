@@ -42,9 +42,7 @@ bool Toy_injectNativeFn(Toy_Interpreter* interpreter, char* name, Toy_NativeFn f
 		return false;
 	}
 
-	Toy_Literal fn = TOY_TO_FUNCTION_LITERAL((void*)func, 0);
-	fn.type = TOY_LITERAL_FUNCTION_NATIVE;
-
+	Toy_Literal fn = TOY_TO_FUNCTION_NATIVE_LITERAL(func);
 	Toy_Literal type = TOY_TO_TYPE_LITERAL(fn.type, true);
 
 	Toy_setLiteralDictionary(&interpreter->scope->variables, identifier, fn);
@@ -72,9 +70,7 @@ bool Toy_injectNativeHook(Toy_Interpreter* interpreter, char* name, Toy_HookFn h
 		return false;
 	}
 
-	Toy_Literal fn = TOY_TO_FUNCTION_LITERAL((void*)hook, 0);
-	fn.type = TOY_LITERAL_FUNCTION_NATIVE;
-
+	Toy_Literal fn = TOY_TO_FUNCTION_HOOK_LITERAL(hook);
 	Toy_setLiteralDictionary(interpreter->hooks, identifier, fn);
 
 	Toy_freeLiteral(identifier);
@@ -1187,7 +1183,7 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 		Toy_freeLiteralArray(&arguments);
 
 		//call the native function
-		((Toy_NativeFn) TOY_AS_FUNCTION(func).bytecode )(interpreter, &correct);
+		TOY_AS_FUNCTION_NATIVE(func)(interpreter, &correct);
 
 		Toy_freeLiteralArray(&correct);
 		Toy_freeLiteral(identifier);
@@ -1494,8 +1490,8 @@ static bool execImport(Toy_Interpreter* interpreter) {
 
 	Toy_Literal func = Toy_getLiteralDictionary(interpreter->hooks, identifier);
 
-	if (!TOY_IS_FUNCTION_NATIVE(func)) {
-		interpreter->errorOutput("Expected native function for a hook: ");
+	if (!TOY_IS_FUNCTION_HOOK(func)) {
+		interpreter->errorOutput("Expected hook function, found: ");
 		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 
@@ -1505,9 +1501,7 @@ static bool execImport(Toy_Interpreter* interpreter) {
 		return false;
 	}
 
-	Toy_HookFn fn = (Toy_HookFn)TOY_AS_FUNCTION(func).bytecode;
-
-	fn(interpreter, identifier, alias);
+	TOY_AS_FUNCTION_HOOK(func)(interpreter, identifier, alias);
 
 	Toy_freeLiteral(func);
 	Toy_freeLiteral(alias);

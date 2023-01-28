@@ -514,8 +514,7 @@ int Toy_hookRunner(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Lit
 		//load the dict with functions
 		for (int i = 0; natives[i].name; i++) {
 			Toy_Literal name = TOY_TO_STRING_LITERAL(Toy_createRefString(natives[i].name));
-			Toy_Literal func = TOY_TO_FUNCTION_LITERAL((void*)natives[i].fn, 0);
-			func.type = TOY_LITERAL_FUNCTION_NATIVE;
+			Toy_Literal func = TOY_TO_FUNCTION_NATIVE_LITERAL(natives[i].fn);
 
 			Toy_setLiteralDictionary(dictionary, name, func);
 

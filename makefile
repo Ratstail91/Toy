@@ -2,6 +2,8 @@
 # export CFLAGS+=-O2 -mtune=native -march=native
 # export CFLAGS+=-fsanitize=address,undefined
 
+export CFLAGS+=-std=c18 -pedantic -Werror
+
 export TOY_OUTDIR = out
 
 all: $(TOY_OUTDIR) repl

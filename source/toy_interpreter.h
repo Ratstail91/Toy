@@ -34,10 +34,7 @@ typedef struct Toy_Interpreter {
 } Toy_Interpreter;
 
 //native API
-typedef int (*Toy_NativeFn)(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments);
 TOY_API bool Toy_injectNativeFn(Toy_Interpreter* interpreter, char* name, Toy_NativeFn func);
-
-typedef int (*Toy_HookFn)(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Literal alias);
 TOY_API bool Toy_injectNativeHook(Toy_Interpreter* interpreter, char* name, Toy_HookFn hook);
 
 TOY_API bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_LiteralArray* arguments, Toy_LiteralArray* returns);

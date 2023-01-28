@@ -20,7 +20,7 @@ void Toy_setRefStringAllocatorFn(Toy_RefStringAllocatorFn allocator) {
 
 //API
 Toy_RefString* Toy_createRefString(char* cstring) {
-	int length = strnlen(cstring, 4096);
+	int length = strlen(cstring);
 
 	return Toy_createRefStringLength(cstring, length);
 }
@@ -87,7 +87,7 @@ bool Toy_equalsRefString(Toy_RefString* lhs, Toy_RefString* rhs) {
 
 bool Toy_equalsRefStringCString(Toy_RefString* lhs, char* cstring) {
 	//get the rhs length
-	int length = strnlen(cstring, 4096);
+	int length = strlen(cstring);
 
 	//different length
 	if (lhs->length != length) {
