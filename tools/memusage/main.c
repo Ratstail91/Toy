@@ -32,7 +32,7 @@ static void* trackerAllocator(void* pointer, size_t oldSize, size_t newSize) {
 	void* mem = realloc(pointer, newSize);
 
 	if (mem == NULL) {
-		fprintf(stderr, TOY_CC_ERROR "[tracker] Memory allocation error (requested %d for %ld, replacing %d)\n" TOY_CC_RESET, (int)newSize, (long int)pointer, (int)oldSize);
+		fprintf(stderr, TOY_CC_ERROR "[internal] Memory allocation error (requested %d, replacing %d)\n" TOY_CC_RESET, (int)newSize, (int)oldSize);
 		exit(-1);
 	}
 
