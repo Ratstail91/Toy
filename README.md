@@ -21,9 +21,7 @@ Special thanks to http://craftinginterpreters.com/ for their fantastic book that
 
 ## Building
 
-For Windows, Linux and MacOS, simply run `make` in the root directory.
-
-Note: For Linux, you may need to `cd` into the `out` directory before running.
+For Windows(mingw32 & cygwin), Linux and MacOS, simply run `make` in the root directory.
 
 Note: MacOS is not officially supported (no machines for testing), but we'll do our best!
 

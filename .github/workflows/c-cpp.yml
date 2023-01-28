@@ -25,10 +25,10 @@ jobs:
     - name: make test (sanitized)
       run: make test-sanitized
   
-  test-windows:
+  test-mingw32:
     runs-on: windows-latest
     
     steps:
       - uses: actions/checkout@v3
-      - name: make test (windows)
+      - name: make test (mingw32)
         run: make test
