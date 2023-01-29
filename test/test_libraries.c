@@ -13,9 +13,10 @@
 
 #include "../repl/repl_tools.h"
 
+#include "../repl/lib_compound.h"
+#include "../repl/lib_runner.h"
 #include "../repl/lib_standard.h"
 #include "../repl/lib_timer.h"
-#include "../repl/lib_runner.h"
 
 //supress the print output
 static void noPrintFn(const char* output) {
@@ -73,9 +74,10 @@ int main() {
 		//run each file in test/scripts
 		Payload payloads[] = {
 			{"interactions.toy", "standard", Toy_hookStandard}, //interactions needs standard
+			{"compound.toy", "compound", Toy_hookCompound},
+			{"runner.toy", "runner", Toy_hookRunner},
 			{"standard.toy", "standard", Toy_hookStandard},
 			{"timer.toy", "timer", Toy_hookTimer},
-			{"runner.toy", "runner", Toy_hookRunner},
 			{NULL, NULL, NULL}
 		};
 

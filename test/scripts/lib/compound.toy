@@ -1,0 +1,13 @@
+import compound;
+
+//test toLower
+{
+	assert "Hello World".toLower() == "hello world", "toLower() failed";
+}
+
+//test toUpper
+{
+	assert "Hello World".toUpper() == "HELLO WORLD", "toUpper() failed";
+}
+
+print "All good";
