@@ -99,6 +99,11 @@ static int nativeTrim(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	if (arguments->count == 2) {
 		trimCharsLiteral = Toy_popLiteralArray(arguments);
+
+		Toy_Literal trimCharsLiteralIdn = trimCharsLiteral;
+		if (TOY_IS_IDENTIFIER(trimCharsLiteral) && Toy_parseIdentifierToValue(interpreter, &trimCharsLiteral)) {
+			Toy_freeLiteral(trimCharsLiteralIdn);
+		}
 	}
 	else {
 		trimCharsLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString(" \t\n\r"));

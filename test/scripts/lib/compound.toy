@@ -10,7 +10,7 @@ import compound;
 	assert "Hello World".toUpper() == "HELLO WORLD", "_toUpper() failed";
 }
 
-//test trim
+//test trim defaults
 {
 	//test a bunch
 	fn test(s, pass) {
@@ -32,5 +32,13 @@ import compound;
 	//one for goot luck
 	assert " hello world ".trim() == "hello world", "hello world.trim() failed";
 }
+
+//test trim custom values
+{
+	var chars = "heilod";
+
+	assert "hello world".trim(chars) == " wor", "custom _trim() failed";
+}
+
 
 print "All good";
