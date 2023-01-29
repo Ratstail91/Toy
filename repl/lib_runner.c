@@ -26,6 +26,12 @@ static int nativeLoadScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 
 	//get the file path literal with a handle
 	Toy_Literal drivePathLiteral = Toy_popLiteralArray(arguments);
+
+	Toy_Literal drivePathLiteralIdn = drivePathLiteral;
+	if (TOY_IS_IDENTIFIER(drivePathLiteral) && Toy_parseIdentifierToValue(interpreter, &drivePathLiteral)) {
+		Toy_freeLiteral(drivePathLiteralIdn);
+	}
+
 	Toy_Literal filePathLiteral = Toy_getFilePathLiteral(interpreter, &drivePathLiteral);
 
 	if (TOY_IS_NULL(filePathLiteral)) {
@@ -90,6 +96,12 @@ static int nativeLoadScriptBytecode(Toy_Interpreter* interpreter, Toy_LiteralArr
 
 	//get the argument
 	Toy_Literal drivePathLiteral = Toy_popLiteralArray(arguments);
+
+	Toy_Literal drivePathLiteralIdn = drivePathLiteral;
+	if (TOY_IS_IDENTIFIER(drivePathLiteral) && Toy_parseIdentifierToValue(interpreter, &drivePathLiteral)) {
+		Toy_freeLiteral(drivePathLiteralIdn);
+	}
+
 	Toy_RefString* drivePath = Toy_copyRefString(TOY_AS_STRING(drivePathLiteral));
 
 	//get the drive and path as a string (can't trust that pesky strtok - custom split) TODO: move this to refstring library

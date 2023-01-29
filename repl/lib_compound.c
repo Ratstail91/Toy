@@ -3,6 +3,7 @@
 #include "toy_memory.h"
 
 #include <ctype.h>
+#include <stdio.h>
 
 static int nativeToLower(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
@@ -13,6 +14,12 @@ static int nativeToLower(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 
 	//get the argument to a C-string
 	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
 	Toy_RefString* selfRefString = TOY_AS_STRING(selfLiteral);
 	char* self = Toy_toCString(selfRefString);
 
@@ -36,7 +43,7 @@ static int nativeToLower(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 	Toy_freeLiteral(resultLiteral);
 	Toy_freeLiteral(selfLiteral);
 
-	return -1;
+	return 1;
 }
 
 static int nativeToUpper(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
@@ -48,6 +55,12 @@ static int nativeToUpper(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 
 	//get the argument to a C-string
 	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
 	Toy_RefString* selfRefString = TOY_AS_STRING(selfLiteral);
 	char* self = Toy_toCString(selfRefString);
 
@@ -71,7 +84,106 @@ static int nativeToUpper(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 	Toy_freeLiteral(resultLiteral);
 	Toy_freeLiteral(selfLiteral);
 
-	return -1;
+	return 1;
+}
+
+static int nativeTrim(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count < 1 || arguments->count > 2) {
+		interpreter->errorOutput("Incorrect number of arguments to clock\n");
+		return -1;
+	}
+
+	//get the arguments
+	Toy_Literal trimCharsLiteral;
+	Toy_Literal selfLiteral;
+
+	if (arguments->count == 2) {
+		trimCharsLiteral = Toy_popLiteralArray(arguments);
+	}
+	else {
+		trimCharsLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString(" \t\n\r"));
+	}
+	selfLiteral = Toy_popLiteralArray(arguments);
+
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	//unwrap the arguments
+	Toy_RefString* trimCharsRefString = TOY_AS_STRING(trimCharsLiteral);
+	Toy_RefString* selfRefString = TOY_AS_STRING(selfLiteral);
+
+	//allocate space for the new string
+	int bufferBegin = 0;
+	int bufferEnd = Toy_lengthRefString(selfRefString);
+
+	//for each character in self, check it against each character in trimChars - on a fail, go to end
+	for (int i = 0; i < Toy_lengthRefString(selfRefString); i++) {
+		int trimIndex = 0;
+
+		while (trimIndex < Toy_lengthRefString(trimCharsRefString)) {
+			//there is a match - DON'T increment anymore
+			if (Toy_toCString(selfRefString)[i] == Toy_toCString(trimCharsRefString)[trimIndex]) {
+				break;
+			}
+
+			trimIndex++;
+		}
+
+		//if the match is found, increment buffer begin
+		if (trimIndex < Toy_lengthRefString(trimCharsRefString)) {
+			bufferBegin++;
+			continue;
+		}
+		else {
+			break;
+		}
+	}
+
+	//again, from the back
+	for (int i = Toy_lengthRefString(selfRefString); i >= 0; i--) {
+		int trimIndex = 0;
+
+		while (trimIndex < Toy_lengthRefString(trimCharsRefString)) {
+			//there is a match - DON'T increment anymore
+			if (Toy_toCString(selfRefString)[i-1] == Toy_toCString(trimCharsRefString)[trimIndex]) {
+				break;
+			}
+
+			trimIndex++;
+		}
+
+		//if the match is found, increment buffer begin
+		if (trimIndex < Toy_lengthRefString(trimCharsRefString)) {
+			bufferEnd--;
+			continue;
+		}
+		else {
+			break;
+		}
+	}
+
+	//generate the result
+	Toy_Literal resultLiteral;
+	if (bufferBegin >= bufferEnd) { //catch errors
+		resultLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString(""));
+	}
+	else {
+		char buffer[TOY_MAX_STRING_LENGTH];
+		snprintf(buffer, bufferEnd - bufferBegin + 1, "%s", &Toy_toCString(selfRefString)[ bufferBegin ]);
+		resultLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString(buffer)); //internal copy
+	}
+
+	//wrap up the buffer and return it
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral); //internal copy
+
+	//cleanup
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(trimCharsLiteral);
+	Toy_freeLiteral(selfLiteral);
+
+	return 1;
 }
 
 //call the hook
@@ -100,7 +212,7 @@ int Toy_hookCompound(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		{"_toLower", nativeToLower}, //string
 		// {"_toString", native}, //array, dictionary
 		{"_toUpper", nativeToUpper}, //string
-		// {"_trim", native}, //string
+		{"_trim", nativeTrim}, //string
 		// {"_values", native}, //dictionary
 		{NULL, NULL}
 	};

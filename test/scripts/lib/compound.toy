@@ -2,12 +2,35 @@ import compound;
 
 //test toLower
 {
-	assert "Hello World".toLower() == "hello world", "toLower() failed";
+	assert "Hello World".toLower() == "hello world", "_toLower() failed";
 }
 
 //test toUpper
 {
-	assert "Hello World".toUpper() == "HELLO WORLD", "toUpper() failed";
+	assert "Hello World".toUpper() == "HELLO WORLD", "_toUpper() failed";
+}
+
+//test trim
+{
+	//test a bunch
+	fn test(s, pass) {
+		var result = s.trim();
+		assert result == pass, "_trim(" + result + ") failed";
+	}
+
+	test("hello world", "hello world");
+	test(" hello world", "hello world");
+	test("hello world ", "hello world");
+	test(" hello world ", "hello world");
+	test("  hello world", "hello world");
+	test("hello world  ", "hello world");
+	test("  hello world  ", "hello world");
+	test("                           hello world", "hello world");
+	test("hello world                ", "hello world");
+	test("                           hello world                           ", "hello world");
+
+	//one for goot luck
+	assert " hello world ".trim() == "hello world", "hello world.trim() failed";
 }
 
 print "All good";
