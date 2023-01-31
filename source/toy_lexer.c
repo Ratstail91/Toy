@@ -171,11 +171,23 @@ static Toy_Token makeIntegerOrFloat(Toy_Lexer* lexer) {
 }
 
 static Toy_Token makeString(Toy_Lexer* lexer, char terminator) {
-	while (!isAtEnd(lexer) && peek(lexer) != terminator) {
+	while (!isAtEnd(lexer)) {
+		//skip escaped terminators
+		if (peek(lexer) == '\\' && peekNext(lexer) == terminator) {
+			advance(lexer);
+			advance(lexer);
+			continue;
+		}
+
+		//actually escape if you've hit the terminator
+		if (peek(lexer) == terminator) {
+			advance(lexer); //eat terminator
+			break;
+		}
+
+		//otherwise
 		advance(lexer);
 	}
-
-	advance(lexer); //eat terminator
 
 	if (isAtEnd(lexer)) {
 		return makeErrorToken(lexer, "Unterminated string");

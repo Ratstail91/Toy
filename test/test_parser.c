@@ -36,17 +36,17 @@ int main() {
 
 		//inspect the node
 		if (node == NULL) {
-			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode is null" TOY_CC_RESET);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode is null\n" TOY_CC_RESET);
 			return -1;
 		}
 
 		if (node->type != TOY_AST_NODE_UNARY || node->unary.opcode != TOY_OP_PRINT) {
-			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode is not a unary print instruction" TOY_CC_RESET);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode is not a unary print instruction\n" TOY_CC_RESET);
 			return -1;
 		}
 
 		if (node->unary.child->type != TOY_AST_NODE_LITERAL || !TOY_IS_NULL(node->unary.child->atomic.literal)) {
-			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode to be printed is not a null literal" TOY_CC_RESET);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode to be printed is not a null literal\n" TOY_CC_RESET);
 			return -1;
 		}
 
@@ -70,7 +70,7 @@ int main() {
 
 		while (node != NULL) {
 			if (node->type == TOY_AST_NODE_ERROR) {
-				fprintf(stderr, TOY_CC_ERROR "ERROR: Error node detected" TOY_CC_RESET);
+				fprintf(stderr, TOY_CC_ERROR "ERROR: Error node detected\n" TOY_CC_RESET);
 				return -1;
 			}
 
@@ -81,6 +81,44 @@ int main() {
 		//cleanup
 		Toy_freeParser(&parser);
 		free((void*)source);
+	}
+
+	{
+		//test parsing of escaped characters
+		char* source = "print \"\\\"\";"; //NOTE: this string goes through two layers of escaping
+
+		//test parsing
+		Toy_Lexer lexer;
+		Toy_Parser parser;
+		Toy_initLexer(&lexer, source);
+		Toy_initParser(&parser, &lexer);
+
+		Toy_ASTNode* node = Toy_scanParser(&parser);
+
+		//inspect the node
+		if (node == NULL) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode is null\n" TOY_CC_RESET);
+			return -1;
+		}
+
+		if (node->type != TOY_AST_NODE_UNARY || node->unary.opcode != TOY_OP_PRINT) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode is not a unary print instruction\n" TOY_CC_RESET);
+			return -1;
+		}
+
+		if (node->unary.child->type != TOY_AST_NODE_LITERAL || !TOY_IS_STRING(node->unary.child->atomic.literal)) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode to be printed is not a string literal\n" TOY_CC_RESET);
+			return -1;
+		}
+
+		if (!Toy_equalsRefStringCString(TOY_AS_STRING(node->unary.child->atomic.literal), "\"")) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode to be printed is not an escaped character, found: %s\n" TOY_CC_RESET, Toy_toCString(TOY_AS_STRING(node->unary.child->atomic.literal)));
+			return -1;
+		}
+
+		//cleanup
+		Toy_freeASTNode(node);
+		Toy_freeParser(&parser);
 	}
 
 	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);

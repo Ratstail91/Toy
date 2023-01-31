@@ -261,17 +261,51 @@ static Toy_Opcode string(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	//handle strings
 	switch(parser->previous.type) {
 		case TOY_TOKEN_LITERAL_STRING: {
-			int length = parser->previous.length;
+			//unescape valid escaped characters
+			int strLength = 0;
+			char* buffer = TOY_ALLOCATE(char, parser->previous.length);
 
-			//for safety
-			if (length > TOY_MAX_STRING_LENGTH) {
-				length = TOY_MAX_STRING_LENGTH;
-				char buffer[256];
-				snprintf(buffer, 256, TOY_CC_ERROR "Strings can only be a maximum of %d characters long" TOY_CC_RESET, TOY_MAX_STRING_LENGTH);
-				error(parser, parser->previous, buffer);
+			for (int i = 0; i < parser->previous.length; i++) {
+				if (parser->previous.lexeme[i] != '\\') { //copy normally
+					buffer[strLength++] = parser->previous.lexeme[i];
+					continue;
+				}
+
+				//unescape based on the character
+				switch(parser->previous.lexeme[++i]) {
+					case 'r':
+						buffer[strLength++] = '\r';
+						break;
+					case 'n':
+						buffer[strLength++] = '\n';
+						break;
+					case 't':
+						buffer[strLength++] = '\t';
+						break;
+					case '\\':
+						buffer[strLength++] = '\\';
+						break;
+					case '"':
+						buffer[strLength++] = '"';
+						break;
+					default: {
+						char msg[256];
+						snprintf(msg, 256, TOY_CC_ERROR "Unrecognized escape character %c in string" TOY_CC_RESET, parser->previous.lexeme[++i]);
+						error(parser, parser->previous, msg);
+					}
+				}
 			}
 
-			Toy_Literal literal = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(parser->previous.lexeme, length));
+			//for length safety
+			if (strLength > TOY_MAX_STRING_LENGTH) {
+				strLength = TOY_MAX_STRING_LENGTH;
+				char msg[256];
+				snprintf(msg, 256, TOY_CC_ERROR "Strings can only be a maximum of %d characters long" TOY_CC_RESET, TOY_MAX_STRING_LENGTH);
+				error(parser, parser->previous, msg);
+			}
+
+			Toy_Literal literal = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(buffer, strLength));
+			TOY_FREE_ARRAY(char, buffer, parser->previous.length);
 			Toy_emitASTNodeLiteral(nodeHandle, literal);
 			Toy_freeLiteral(literal);
 			return TOY_OP_EOF;

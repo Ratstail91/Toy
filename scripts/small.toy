@@ -1,21 +1,3 @@
-//test basic truth ternaries
-{
-	assert true ? true : false, "Basic true ternary failed";
-	assert false ? false : true, "Basic false ternary failed";
-}
 
 
-//test nesting
-{
-	fn least(a, b, c) {
-		return a < b ? a : b < c ? b : c;
-	}
-
-	assert least(1, 2, 3) == 1, "Least 1, 2, 3 failed";
-	assert least(10, 5, 7) == 5, "Least 10, 5, 7 failed";
-	assert least(9, 7, 5) == 5, "Least 9, 7, 5 failed"; 
-}
-
-
-print "All good";
-
+print " foo \n bar";
