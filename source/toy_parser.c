@@ -273,9 +273,6 @@ static Toy_Opcode string(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 
 				//unescape based on the character
 				switch(parser->previous.lexeme[++i]) {
-					case 'r':
-						buffer[strLength++] = '\r';
-						break;
 					case 'n':
 						buffer[strLength++] = '\n';
 						break;
