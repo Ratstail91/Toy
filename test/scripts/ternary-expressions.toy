@@ -4,7 +4,6 @@
 	assert false ? false : true, "Basic false ternary failed";
 }
 
-
 //test nesting
 {
 	fn least(a, b, c) {
@@ -14,6 +13,23 @@
 	assert least(1, 2, 3) == 1, "Least 1, 2, 3 failed";
 	assert least(10, 5, 7) == 5, "Least 10, 5, 7 failed";
 	assert least(9, 7, 5) == 5, "Least 9, 7, 5 failed"; 
+}
+
+//test division prevention
+{
+	var x = 0;
+	assert x ? 0 : 1 / x == 0, "Division by zero prevention failed";
+}
+
+//test ambiguous syntax
+{
+	var a = 1;
+	var b = 2;
+	var c = 3;
+	var d = 4;
+	var e = 5;
+
+	assert a ? b ? c : d : e == 3, "Ambiguous syntax failed";
 }
 
 
