@@ -18,7 +18,7 @@
 //test division prevention
 {
 	var x = 0;
-	assert x ? 0 : 1 / x == 0, "Division by zero prevention failed";
+	assert (x ? 0 : 1 / x) == 0, "Division by zero prevention failed";
 }
 
 //test ambiguous syntax
@@ -29,7 +29,7 @@
 	var ddddd = 4;
 	var eeeeee = 5;
 
-	assert aa ? bbb ? cccc : ddddd : eeeeee, "Ambiguous syntax failed";
+	assert (aa ? bbb ? cccc : ddddd : eeeeee) == 3, "Ambiguous syntax failed";
 }
 
 

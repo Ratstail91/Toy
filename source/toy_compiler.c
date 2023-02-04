@@ -279,7 +279,7 @@ static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode
 		break;
 
 		case TOY_AST_NODE_UNARY: {
-			//pass to the child node, then embed the unary Toy_commandLine (print, negate, etc.)
+			//pass to the child node, then embed the unary command (print, negate, etc.)
 			Toy_Opcode override = Toy_writeCompilerWithJumps(compiler, node->unary.child, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
 
 			if (override != TOY_OP_EOF) {//compensate for indexing & dot notation being screwy
@@ -292,7 +292,7 @@ static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode
 
 		//all infixes come here
 		case TOY_AST_NODE_BINARY: {
-			//pass to the child nodes, then embed the binary Toy_commandLine (math, etc.)
+			//pass to the child nodes, then embed the binary command (math, etc.)
 			Toy_Opcode override = Toy_writeCompilerWithJumps(compiler, node->binary.left, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
 
 			//special case for when indexing and assigning

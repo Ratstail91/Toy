@@ -59,7 +59,9 @@ void repl() {
 		while(node != NULL) {
 			//pack up and restart
 			if (node->type == TOY_AST_NODE_ERROR) {
-				printf(TOY_CC_ERROR "error node detected\n" TOY_CC_RESET);
+				if (Toy_commandLine.verbose) {
+					printf(TOY_CC_ERROR "Error node detected\n" TOY_CC_RESET);
+				}
 				error = true;
 				Toy_freeASTNode(node);
 				break;
@@ -103,7 +105,7 @@ int main(int argc, const char* argv[]) {
 	Toy_freeLiteral(driveLiteral);
 	Toy_freeLiteral(pathLiteral);
 
-	//Toy_commandLine specific actions
+	//command line specific actions
 	if (Toy_commandLine.error) {
 		Toy_usageCommandLine(argc, argv);
 		return 0;
@@ -121,7 +123,7 @@ int main(int argc, const char* argv[]) {
 
 	//version
 	if (Toy_commandLine.verbose) {
-		printf(TOY_CC_NOTICE "Toy Programming Language Version %d.%d.%d\n" TOY_CC_RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH);
+		printf(TOY_CC_NOTICE "Toy Programming Language Version %d.%d.%d, built '%s'\n" TOY_CC_RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, TOY_VERSION_BUILD);
 	}
 
 	//run source file

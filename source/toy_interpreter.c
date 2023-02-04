@@ -397,7 +397,7 @@ static bool execArithmetic(Toy_Interpreter* interpreter, Toy_Opcode opcode) {
 		//check for overflow
 		int totalLength = TOY_AS_STRING(lhs)->length + TOY_AS_STRING(rhs)->length;
 		if (totalLength > TOY_MAX_STRING_LENGTH) {
-			interpreter->errorOutput("Can't concatenate these strings (result is too long)\n");
+			interpreter->errorOutput("Can't concatenate these strings, result is too long (error found in interpreter)\n");
 			return false;
 		}
 
@@ -445,7 +445,7 @@ static bool execArithmetic(Toy_Interpreter* interpreter, Toy_Opcode opcode) {
 			case TOY_OP_DIVISION:
 			case TOY_OP_VAR_DIVISION_ASSIGN:
 				if (TOY_AS_INTEGER(rhs) == 0) {
-					interpreter->errorOutput("Can't divide by zero (error found in interpreter)");
+					interpreter->errorOutput("Can't divide by zero (error found in interpreter)\n");
 					return false;
 				}
 				Toy_pushLiteralArray(&interpreter->stack, TOY_TO_INTEGER_LITERAL( TOY_AS_INTEGER(lhs) / TOY_AS_INTEGER(rhs) ));
@@ -454,14 +454,14 @@ static bool execArithmetic(Toy_Interpreter* interpreter, Toy_Opcode opcode) {
 			case TOY_OP_MODULO:
 			case TOY_OP_VAR_MODULO_ASSIGN:
 				if (TOY_AS_INTEGER(rhs) == 0) {
-					interpreter->errorOutput("Can't modulo by zero (error found in interpreter)");
+					interpreter->errorOutput("Can't modulo by zero (error found in interpreter)\n");
 					return false;
 				}
 				Toy_pushLiteralArray(&interpreter->stack, TOY_TO_INTEGER_LITERAL( TOY_AS_INTEGER(lhs) % TOY_AS_INTEGER(rhs) ));
 				return true;
 
 			default:
-				interpreter->errorOutput("[internal] bad opcode argument passed to execArithmetic()");
+				interpreter->errorOutput("[internal] bad opcode argument passed to execArithmetic()\n");
 				return false;
 		}
 	}
@@ -492,14 +492,14 @@ static bool execArithmetic(Toy_Interpreter* interpreter, Toy_Opcode opcode) {
 			case TOY_OP_DIVISION:
 			case TOY_OP_VAR_DIVISION_ASSIGN:
 				if (TOY_AS_FLOAT(rhs) == 0) {
-					interpreter->errorOutput("Can't divide by zero (error found in interpreter)");
+					interpreter->errorOutput("Can't divide by zero (error found in interpreter)\n");
 					return false;
 				}
 				Toy_pushLiteralArray(&interpreter->stack, TOY_TO_FLOAT_LITERAL( TOY_AS_FLOAT(lhs) / TOY_AS_FLOAT(rhs) ));
 				return true;
 
 			default:
-				interpreter->errorOutput("[internal] bad opcode argument passed to execArithmetic()");
+				interpreter->errorOutput("[internal] bad opcode argument passed to execArithmetic()\n");
 				return false;
 		}
 	}
@@ -1558,7 +1558,7 @@ static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 	Toy_pushLiteralArray(&arguments, first);
 	Toy_pushLiteralArray(&arguments, second);
 	Toy_pushLiteralArray(&arguments, third);
-	Toy_pushLiteralArray(&arguments, TOY_TO_NULL_LITERAL); //it expects an assignment Toy_commandLine
+	Toy_pushLiteralArray(&arguments, TOY_TO_NULL_LITERAL); //it expects an assignment command
 	Toy_pushLiteralArray(&arguments, TOY_TO_NULL_LITERAL); //it expects an assignment "opcode"
 
 	//leave the idn and compound on the stack
@@ -1688,7 +1688,7 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 	Toy_pushLiteralArray(&arguments, first);
 	Toy_pushLiteralArray(&arguments, second);
 	Toy_pushLiteralArray(&arguments, third);
-	Toy_pushLiteralArray(&arguments, assign); //it expects an assignment Toy_commandLine
+	Toy_pushLiteralArray(&arguments, assign); //it expects an assignment command
 	Toy_pushLiteralArray(&arguments, op); //it expects an assignment "opcode"
 
 	//call the _index function

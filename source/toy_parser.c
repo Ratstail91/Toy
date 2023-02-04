@@ -59,7 +59,7 @@ static void consume(Toy_Parser* parser, Toy_TokenType tokenType, const char* msg
 static void synchronize(Toy_Parser* parser) {
 #ifndef TOY_EXPORT
 	if (Toy_commandLine.verbose) {
-		fprintf(stderr, TOY_CC_ERROR "synchronizing\n" TOY_CC_RESET);
+		fprintf(stderr, TOY_CC_ERROR "Synchronizing input\n" TOY_CC_RESET);
 	}
 #endif
 
@@ -981,6 +981,21 @@ static bool calcStaticBinaryArithmetic(Toy_Parser* parser, Toy_ASTNode** nodeHan
 	Toy_Literal lhs = (*nodeHandle)->binary.left->atomic.literal;
 	Toy_Literal rhs = (*nodeHandle)->binary.right->atomic.literal;
 	Toy_Literal result = TOY_TO_NULL_LITERAL;
+
+	//special case for string concatenation ONLY
+	if (TOY_IS_STRING(lhs) && TOY_IS_STRING(rhs)) {
+		//check for overflow
+		int totalLength = TOY_AS_STRING(lhs)->length + TOY_AS_STRING(rhs)->length;
+		if (totalLength > TOY_MAX_STRING_LENGTH) {
+			error(parser, parser->previous, "Can't concatenate these strings, result is too long (error found in constant folding)\n");
+			return false;
+		}
+
+		//concat the strings
+		char buffer[TOY_MAX_STRING_LENGTH];
+		snprintf(buffer, TOY_MAX_STRING_LENGTH, "%s%s", Toy_toCString(TOY_AS_STRING(lhs)), Toy_toCString(TOY_AS_STRING(rhs)));
+		result = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(buffer, totalLength));
+	}
 
 	//type coersion
 	if (TOY_IS_FLOAT(lhs) && TOY_IS_INTEGER(rhs)) {

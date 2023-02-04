@@ -22,7 +22,7 @@
 #endif
 
 #ifndef TOY_EXPORT
-//for processing the Toy_commandLine line arguments
+//for processing the command line arguments
 typedef struct {
 	bool error;
 	bool help;
