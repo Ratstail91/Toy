@@ -42,7 +42,7 @@ void Toy_freeLiteral(Toy_Literal literal) {
 	}
 
 	//compounds
-	if (TOY_IS_ARRAY(literal) || literal.type == TOY_LITERAL_DICTIONARY_INTERMEDIATE || literal.type == TOY_LITERAL_TYPE_INTERMEDIATE) {
+	if (TOY_IS_ARRAY(literal) || literal.type == TOY_LITERAL_ARRAY_INTERMEDIATE || literal.type == TOY_LITERAL_DICTIONARY_INTERMEDIATE || literal.type == TOY_LITERAL_TYPE_INTERMEDIATE) {
 		Toy_freeLiteralArray(TOY_AS_ARRAY(literal));
 		TOY_FREE(Toy_LiteralArray, TOY_AS_ARRAY(literal));
 		return;
@@ -172,6 +172,22 @@ Toy_Literal Toy_copyLiteral(Toy_Literal original) {
 			return original; //literally a shallow copy
 		}
 
+		case TOY_LITERAL_ARRAY_INTERMEDIATE: {
+			Toy_LiteralArray* array = TOY_ALLOCATE(Toy_LiteralArray, 1);
+			Toy_initLiteralArray(array);
+
+			//copy each element
+			for (int i = 0; i < TOY_AS_ARRAY(original)->count; i++) {
+				Toy_Literal literal = Toy_copyLiteral(TOY_AS_ARRAY(original)->literals[i]);
+				Toy_pushLiteralArray(array, literal);
+				Toy_freeLiteral(literal);
+			}
+
+			Toy_Literal ret = TOY_TO_ARRAY_LITERAL(array);
+			ret.type = TOY_LITERAL_ARRAY_INTERMEDIATE;
+			return ret;
+		}
+
 		case TOY_LITERAL_DICTIONARY_INTERMEDIATE: {
 			Toy_LiteralArray* array = TOY_ALLOCATE(Toy_LiteralArray, 1);
 			Toy_initLiteralArray(array);
@@ -250,6 +266,7 @@ bool Toy_literalsAreEqual(Toy_Literal lhs, Toy_Literal rhs) {
 			return Toy_equalsRefString(TOY_AS_STRING(lhs), TOY_AS_STRING(rhs));
 
 		case TOY_LITERAL_ARRAY:
+		case TOY_LITERAL_ARRAY_INTERMEDIATE:
 		case TOY_LITERAL_DICTIONARY_INTERMEDIATE: //BUGFIX
 		case TOY_LITERAL_TYPE_INTERMEDIATE: //BUGFIX: used for storing types as an array
 			//mismatched sizes

@@ -259,11 +259,8 @@ static bool execPrint(Toy_Interpreter* interpreter) {
 	//print what is on top of the stack, then pop it
 	Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
 
-	if (TOY_IS_IDENTIFIER(lit)) {
-		Toy_Literal idn = lit;
-		if (!Toy_parseIdentifierToValue(interpreter, &lit)) {
-			return false;
-		}
+	Toy_Literal idn = lit;
+	if (TOY_IS_IDENTIFIER(lit) && Toy_parseIdentifierToValue(interpreter, &lit)) {
 		Toy_freeLiteral(idn);
 	}
 
@@ -294,16 +291,12 @@ static bool execPushLiteral(Toy_Interpreter* interpreter, bool lng) {
 static bool rawLiteral(Toy_Interpreter* interpreter) {
 	Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
 
-	if (TOY_IS_IDENTIFIER(lit)) {
-		Toy_Literal idn = lit;
-		if (!Toy_parseIdentifierToValue(interpreter, &lit)) {
-			return false;
-		}
+	Toy_Literal idn = lit;
+	if (TOY_IS_IDENTIFIER(lit) && Toy_parseIdentifierToValue(interpreter, &lit)) {
 		Toy_freeLiteral(idn);
 	}
 
 	Toy_pushLiteralArray(&interpreter->stack, lit);
-
 	Toy_freeLiteral(lit);
 
 	return true;
@@ -313,11 +306,8 @@ static bool execNegate(Toy_Interpreter* interpreter) {
 	//negate the top literal on the stack (numbers only)
 	Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
 
-	if (TOY_IS_IDENTIFIER(lit)) {
-		Toy_Literal idn = lit;
-		if (!Toy_parseIdentifierToValue(interpreter, &lit)) {
-			return false;
-		}
+	Toy_Literal idn = lit;
+	if (TOY_IS_IDENTIFIER(lit) && Toy_parseIdentifierToValue(interpreter, &lit)) {
 		Toy_freeLiteral(idn);
 	}
 
@@ -338,7 +328,6 @@ static bool execNegate(Toy_Interpreter* interpreter) {
 	}
 
 	Toy_pushLiteralArray(&interpreter->stack, lit);
-
 	Toy_freeLiteral(lit);
 
 	return true;
@@ -348,11 +337,8 @@ static bool execInvert(Toy_Interpreter* interpreter) {
 	//negate the top literal on the stack (booleans only)
 	Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
 
-	if (TOY_IS_IDENTIFIER(lit)) {
-		Toy_Literal idn = lit;
-		if (!Toy_parseIdentifierToValue(interpreter, &lit)) {
-			return false;
-		}
+	Toy_Literal idn = lit;
+	if (TOY_IS_IDENTIFIER(lit) && Toy_parseIdentifierToValue(interpreter, &lit)) {
 		Toy_freeLiteral(idn);
 	}
 
@@ -370,7 +356,6 @@ static bool execInvert(Toy_Interpreter* interpreter) {
 	}
 
 	Toy_pushLiteralArray(&interpreter->stack, lit);
-
 	Toy_freeLiteral(lit);
 
 	return true;
@@ -380,16 +365,14 @@ static bool execArithmetic(Toy_Interpreter* interpreter, Toy_Opcode opcode) {
 	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
 	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
 
-	if (TOY_IS_IDENTIFIER(rhs)) {
-		Toy_Literal idn = rhs;
-		Toy_parseIdentifierToValue(interpreter, &rhs);
-		Toy_freeLiteral(idn);
+	Toy_Literal rhsIdn = rhs;
+	if (TOY_IS_IDENTIFIER(rhs) && Toy_parseIdentifierToValue(interpreter, &rhs)) {
+		Toy_freeLiteral(rhsIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(lhs)) {
-		Toy_Literal idn = lhs;
-		Toy_parseIdentifierToValue(interpreter, &lhs);
-		Toy_freeLiteral(idn);
+	Toy_Literal lhsIdn = lhs;
+	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
+		Toy_freeLiteral(lhsIdn);
 	}
 
 	//special case for string concatenation ONLY
@@ -519,10 +502,9 @@ static bool execArithmetic(Toy_Interpreter* interpreter, Toy_Opcode opcode) {
 
 static Toy_Literal parseTypeToValue(Toy_Interpreter* interpreter, Toy_Literal type) {
 	//if an identifier is embedded in the type, figure out what it iss
-	if (TOY_IS_IDENTIFIER(type)) {
-		Toy_Literal idn = type;
-		Toy_parseIdentifierToValue(interpreter, &type);
-		Toy_freeLiteral(idn);
+	Toy_Literal typeIdn = type;
+	if (TOY_IS_IDENTIFIER(type) && Toy_parseIdentifierToValue(interpreter, &type)) {
+		Toy_freeLiteral(typeIdn);
 	}
 
 	//if this is an array or dictionary, continue to the subtypes
@@ -560,10 +542,9 @@ static bool execVarDecl(Toy_Interpreter* interpreter, bool lng) {
 	Toy_Literal identifier = interpreter->literalCache.literals[identifierIndex];
 	Toy_Literal type = Toy_copyLiteral(interpreter->literalCache.literals[typeIndex]);
 
-	if (TOY_IS_IDENTIFIER(type)) {
-		Toy_Literal orig = type;
-		Toy_parseIdentifierToValue(interpreter, &type);
-		Toy_freeLiteral(orig);
+	Toy_Literal typeIdn = type;
+	if (TOY_IS_IDENTIFIER(type) && Toy_parseIdentifierToValue(interpreter, &type)) {
+		Toy_freeLiteral(typeIdn);
 	}
 
 	//BUGFIX: because identifiers are getting embedded in type definitions
@@ -578,10 +559,9 @@ static bool execVarDecl(Toy_Interpreter* interpreter, bool lng) {
 
 	Toy_Literal val = Toy_popLiteralArray(&interpreter->stack);
 
-	if (TOY_IS_IDENTIFIER(val)) {
-		Toy_Literal idn = val;
-		Toy_parseIdentifierToValue(interpreter, &val);
-		Toy_freeLiteral(idn);
+	Toy_Literal valIdn = val;
+	if (TOY_IS_IDENTIFIER(val) && Toy_parseIdentifierToValue(interpreter, &val)) {
+		Toy_freeLiteral(valIdn);
 	}
 
 	if (TOY_IS_ARRAY(val) || TOY_IS_DICTIONARY(val)) {
@@ -659,10 +639,9 @@ static bool execVarAssign(Toy_Interpreter* interpreter) {
 	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
 	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
 
-	if (TOY_IS_IDENTIFIER(rhs)) {
-		Toy_Literal idn = rhs;
-		Toy_parseIdentifierToValue(interpreter, &rhs);
-		Toy_freeLiteral(idn);
+	Toy_Literal rhsIdn = rhs;
+	if (TOY_IS_IDENTIFIER(rhs) && Toy_parseIdentifierToValue(interpreter, &rhs)) {
+		Toy_freeLiteral(rhsIdn);
 	}
 
 	if (TOY_IS_ARRAY(rhs) || TOY_IS_DICTIONARY(rhs)) {
@@ -729,12 +708,9 @@ static bool execValCast(Toy_Interpreter* interpreter) {
 	Toy_Literal value = Toy_popLiteralArray(&interpreter->stack);
 	Toy_Literal type = Toy_popLiteralArray(&interpreter->stack);
 
-	if (TOY_IS_IDENTIFIER(value)) {
-		Toy_Literal idn = value;
-		if (!Toy_parseIdentifierToValue(interpreter, &value)) {
-			return false;
-		}
-		Toy_freeLiteral(idn);
+	Toy_Literal valueIdn = value;
+	if (TOY_IS_IDENTIFIER(value) && Toy_parseIdentifierToValue(interpreter, &value)) {
+		Toy_freeLiteral(valueIdn);
 	}
 
 	Toy_Literal result = TOY_TO_NULL_LITERAL;
@@ -861,16 +837,14 @@ static bool execCompareEqual(Toy_Interpreter* interpreter, bool invert) {
 	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
 	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
 
-	if (TOY_IS_IDENTIFIER(rhs)) {
-		Toy_Literal idn = rhs;
-		Toy_parseIdentifierToValue(interpreter, &rhs);
-		Toy_freeLiteral(idn);
+	Toy_Literal rhsIdn = rhs;
+	if (TOY_IS_IDENTIFIER(rhs) && Toy_parseIdentifierToValue(interpreter, &rhs)) {
+		Toy_freeLiteral(rhsIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(lhs)) {
-		Toy_Literal idn = lhs;
-		Toy_parseIdentifierToValue(interpreter, &lhs);
-		Toy_freeLiteral(idn);
+	Toy_Literal lhsIdn = lhs;
+	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
+		Toy_freeLiteral(lhsIdn);
 	}
 
 	bool result = Toy_literalsAreEqual(lhs, rhs);
@@ -891,16 +865,14 @@ static bool execCompareLess(Toy_Interpreter* interpreter, bool invert) {
 	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
 	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
 
-	if (TOY_IS_IDENTIFIER(rhs)) {
-		Toy_Literal idn = rhs;
-		Toy_parseIdentifierToValue(interpreter, &rhs);
-		Toy_freeLiteral(idn);
+	Toy_Literal rhsIdn = rhs;
+	if (TOY_IS_IDENTIFIER(rhs) && Toy_parseIdentifierToValue(interpreter, &rhs)) {
+		Toy_freeLiteral(rhsIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(lhs)) {
-		Toy_Literal idn = lhs;
-		Toy_parseIdentifierToValue(interpreter, &lhs);
-		Toy_freeLiteral(idn);
+	Toy_Literal lhsIdn = lhs;
+	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
+		Toy_freeLiteral(lhsIdn);
 	}
 
 	//not a number, return falure
@@ -953,16 +925,14 @@ static bool execCompareLessEqual(Toy_Interpreter* interpreter, bool invert) {
 	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
 	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
 
-	if (TOY_IS_IDENTIFIER(rhs)) {
-		Toy_Literal idn = rhs;
-		Toy_parseIdentifierToValue(interpreter, &rhs);
-		Toy_freeLiteral(idn);
+	Toy_Literal rhsIdn = rhs;
+	if (TOY_IS_IDENTIFIER(rhs) && Toy_parseIdentifierToValue(interpreter, &rhs)) {
+		Toy_freeLiteral(rhsIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(lhs)) {
-		Toy_Literal idn = lhs;
-		Toy_parseIdentifierToValue(interpreter, &lhs);
-		Toy_freeLiteral(idn);
+	Toy_Literal lhsIdn = lhs;
+	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
+		Toy_freeLiteral(lhsIdn);
 	}
 
 	//not a number, return falure
@@ -1016,16 +986,14 @@ static bool execAnd(Toy_Interpreter* interpreter) {
 	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
 	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
 
-	if (TOY_IS_IDENTIFIER(rhs)) {
-		Toy_Literal idn = rhs;
-		Toy_parseIdentifierToValue(interpreter, &rhs);
-		Toy_freeLiteral(idn);
+	Toy_Literal rhsIdn = rhs;
+	if (TOY_IS_IDENTIFIER(rhs) && Toy_parseIdentifierToValue(interpreter, &rhs)) {
+		Toy_freeLiteral(rhsIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(lhs)) {
-		Toy_Literal idn = lhs;
-		Toy_parseIdentifierToValue(interpreter, &lhs);
-		Toy_freeLiteral(idn);
+	Toy_Literal lhsIdn = lhs;
+	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
+		Toy_freeLiteral(lhsIdn);
 	}
 
 	if (TOY_IS_TRUTHY(lhs) && TOY_IS_TRUTHY(rhs)) {
@@ -1045,16 +1013,14 @@ static bool execOr(Toy_Interpreter* interpreter) {
 	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
 	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
 
-	if (TOY_IS_IDENTIFIER(rhs)) {
-		Toy_Literal idn = rhs;
-		Toy_parseIdentifierToValue(interpreter, &rhs);
-		Toy_freeLiteral(idn);
+	Toy_Literal rhsIdn = rhs;
+	if (TOY_IS_IDENTIFIER(rhs) && Toy_parseIdentifierToValue(interpreter, &rhs)) {
+		Toy_freeLiteral(rhsIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(lhs)) {
-		Toy_Literal idn = lhs;
-		Toy_parseIdentifierToValue(interpreter, &lhs);
-		Toy_freeLiteral(idn);
+	Toy_Literal lhsIdn = lhs;
+	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
+		Toy_freeLiteral(lhsIdn);
 	}
 
 	if (TOY_IS_TRUTHY(lhs) || TOY_IS_TRUTHY(rhs)) {
@@ -1287,10 +1253,9 @@ bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_Liter
 
 		Toy_Literal arg = Toy_popLiteralArray(arguments);
 
-		if (TOY_IS_IDENTIFIER(arg)) {
-			Toy_Literal idn = arg;
-			Toy_parseIdentifierToValue(interpreter, &arg);
-			Toy_freeLiteral(idn);
+		Toy_Literal argIdn = arg;
+		if (TOY_IS_IDENTIFIER(arg) && Toy_parseIdentifierToValue(interpreter, &arg)) {
+			Toy_freeLiteral(argIdn);
 		}
 
 		if (!Toy_setScopeVariable(inner.scope, paramArray->literals[i], arg, false)) {
@@ -1451,10 +1416,10 @@ static bool execFnReturn(Toy_Interpreter* interpreter) {
 	//get the values of everything on the stack
 	while (interpreter->stack.count > 0) {
 		Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
-		if (TOY_IS_IDENTIFIER(lit)) {
-			Toy_Literal idn = lit;
-			Toy_parseIdentifierToValue(interpreter, &lit);
-			Toy_freeLiteral(idn);
+
+		Toy_Literal litIdn = lit;
+		if (TOY_IS_IDENTIFIER(lit) && Toy_parseIdentifierToValue(interpreter, &lit)) {
+			Toy_freeLiteral(litIdn);
 		}
 
 		if (TOY_IS_ARRAY(lit) || TOY_IS_DICTIONARY(lit)) {
@@ -1522,19 +1487,10 @@ static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 	Toy_Literal first = Toy_popLiteralArray(&interpreter->stack);
 	Toy_Literal compound = Toy_popLiteralArray(&interpreter->stack);
 
-	Toy_Literal idn = compound;
+	Toy_Literal compoundIdn = compound;
 	bool freeIdn = false;
-
-	if (TOY_IS_IDENTIFIER(compound)) {
+	if (TOY_IS_IDENTIFIER(compound) && Toy_parseIdentifierToValue(interpreter, &compound)) {
 		freeIdn = true;
-		if (!Toy_parseIdentifierToValue(interpreter, &compound)) {
-			Toy_freeLiteral(third);
-			Toy_freeLiteral(second);
-			Toy_freeLiteral(first);
-			Toy_freeLiteral(compound);
-			//freeLiteral(idn); //since compound is freed, idn is still pointing there
-			return false;
-		}
 	}
 
 	if (!TOY_IS_ARRAY(compound) && !TOY_IS_DICTIONARY(compound) && !TOY_IS_STRING(compound)) {
@@ -1544,9 +1500,11 @@ static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 		Toy_freeLiteral(second);
 		Toy_freeLiteral(first);
 		Toy_freeLiteral(compound);
+
 		if (freeIdn) {
-			Toy_freeLiteral(idn);
+			Toy_freeLiteral(compoundIdn);
 		}
+
 		return false;
 	}
 
@@ -1563,8 +1521,8 @@ static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 
 	//leave the idn and compound on the stack
 	if (assignIntermediate) {
-		if (TOY_IS_IDENTIFIER(idn)) {
-			Toy_pushLiteralArray(&interpreter->stack, idn);
+		if (TOY_IS_IDENTIFIER(compoundIdn)) {
+			Toy_pushLiteralArray(&interpreter->stack, compoundIdn);
 		}
 		Toy_pushLiteralArray(&interpreter->stack, compound);
 		Toy_pushLiteralArray(&interpreter->stack, first);
@@ -1574,8 +1532,8 @@ static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 
 	//call the _index function
 	if (Toy_private_index(interpreter, &arguments) < 0) {
-		interpreter->errorOutput("Something went wrong while indexing: ");
-		Toy_printLiteralCustom(idn, interpreter->errorOutput);
+		interpreter->errorOutput("Something went wrong while indexing (simple index): ");
+		Toy_printLiteralCustom(compoundIdn, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
 
 		//clean up
@@ -1584,7 +1542,7 @@ static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 		Toy_freeLiteral(first);
 		Toy_freeLiteral(compound);
 		if (freeIdn) {
-			Toy_freeLiteral(idn);
+			Toy_freeLiteral(compoundIdn);
 		}
 		Toy_freeLiteralArray(&arguments);
 		return false;
@@ -1596,7 +1554,7 @@ static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 	Toy_freeLiteral(first);
 	Toy_freeLiteral(compound);
 	if (freeIdn) {
-		Toy_freeLiteral(idn);
+		Toy_freeLiteral(compoundIdn);
 	}
 	Toy_freeLiteralArray(&arguments);
 
@@ -1612,20 +1570,15 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 	Toy_Literal first = Toy_popLiteralArray(&interpreter->stack);
 	Toy_Literal compound = Toy_popLiteralArray(&interpreter->stack);
 
-	Toy_Literal idn = compound;
-	bool freeIdn = false;
+	Toy_Literal assignIdn = assign;
+	if (TOY_IS_IDENTIFIER(assign) && Toy_parseIdentifierToValue(interpreter, &assign)) {
+		Toy_freeLiteral(assignIdn);
+	}
 
-	if (TOY_IS_IDENTIFIER(compound)) {
+	Toy_Literal compoundIdn = compound;
+	bool freeIdn = false;
+	if (TOY_IS_IDENTIFIER(compound) && Toy_parseIdentifierToValue(interpreter, &compound)) {
 		freeIdn = true;
-		if (!Toy_parseIdentifierToValue(interpreter, &compound)) {
-			Toy_freeLiteral(assign);
-			Toy_freeLiteral(third);
-			Toy_freeLiteral(second);
-			Toy_freeLiteral(first);
-			Toy_freeLiteral(compound);
-			Toy_freeLiteral(idn);
-			return false;
-		}
 	}
 
 	if (!TOY_IS_ARRAY(compound) && !TOY_IS_DICTIONARY(compound) && !TOY_IS_STRING(compound)) {
@@ -1636,7 +1589,7 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(first);
 		Toy_freeLiteral(compound);
 		if (freeIdn) {
-			Toy_freeLiteral(idn);
+			Toy_freeLiteral(compoundIdn);
 		}
 		return false;
 	}
@@ -1672,7 +1625,7 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 			Toy_freeLiteral(first);
 			Toy_freeLiteral(compound);
 			if (freeIdn) {
-				Toy_freeLiteral(idn);
+				Toy_freeLiteral(compoundIdn);
 			}
 			return false;
 	}
@@ -1700,7 +1653,7 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(first);
 		Toy_freeLiteral(compound);
 		if (freeIdn) {
-			Toy_freeLiteral(idn);
+			Toy_freeLiteral(compoundIdn);
 		}
 		Toy_freeLiteral(op);
 		Toy_freeLiteralArray(&arguments);
@@ -1711,11 +1664,11 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 	//save the result (assume top of the interpreter stack is the new compound value)
 	Toy_Literal result = Toy_popLiteralArray(&interpreter->stack);
 
-	//if idn is NOT an identifier, assign backwards while there are things on the stack (inner-compound assignment, BIG assumptions here)
-	if (!TOY_IS_IDENTIFIER(idn)) {
+	//deep
+	if (!freeIdn) {
 		while (interpreter->stack.count > 1) {
 			//read the new values
-			Toy_freeLiteral(idn);
+			Toy_freeLiteral(compound);
 			Toy_freeLiteral(third);
 			Toy_freeLiteral(second);
 			Toy_freeLiteral(first);
@@ -1723,17 +1676,18 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 			Toy_initLiteralArray(&arguments);
 			Toy_freeLiteral(op);
 
+			//reuse these like an idiot
 			third = Toy_popLiteralArray(&interpreter->stack);
 			second = Toy_popLiteralArray(&interpreter->stack);
 			first = Toy_popLiteralArray(&interpreter->stack);
-			idn = Toy_popLiteralArray(&interpreter->stack);
+			compound = Toy_popLiteralArray(&interpreter->stack);
 
 			char* opStr = "="; //shadow, but force assignment
 			int opLength = strlen(opStr);
 			op = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(opStr, opLength)); //TODO: static reference optimisation?
 
 			//assign to the idn / compound - with _index
-			Toy_pushLiteralArray(&arguments, idn);
+			Toy_pushLiteralArray(&arguments, compound); //
 			Toy_pushLiteralArray(&arguments, first);
 			Toy_pushLiteralArray(&arguments, second);
 			Toy_pushLiteralArray(&arguments, third);
@@ -1741,8 +1695,8 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 			Toy_pushLiteralArray(&arguments, op);
 
 			if (Toy_private_index(interpreter, &arguments) < 0) {
-				interpreter->errorOutput("Something went wrong while indexing: ");
-				Toy_printLiteralCustom(idn, interpreter->errorOutput);
+				interpreter->errorOutput("Something went wrong while indexing (index assign): ");
+				Toy_printLiteralCustom(compound, interpreter->errorOutput);
 				interpreter->errorOutput("\n");
 
 				//clean up
@@ -1750,13 +1704,11 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 				Toy_freeLiteral(third);
 				Toy_freeLiteral(second);
 				Toy_freeLiteral(first);
-				Toy_freeLiteral(compound);
 				if (freeIdn) {
-					Toy_freeLiteral(idn);
+					Toy_freeLiteral(compoundIdn);
 				}
 				Toy_freeLiteral(op);
 				Toy_freeLiteralArray(&arguments);
-				Toy_freeLiteral(result);
 				return false;
 			}
 
@@ -1764,14 +1716,15 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 			result = Toy_popLiteralArray(&interpreter->stack);
 		}
 
-		Toy_freeLiteral(idn);
-		idn = Toy_popLiteralArray(&interpreter->stack);
-		compound = idn;
+		Toy_freeLiteral(compound);
+		compound = Toy_popLiteralArray(&interpreter->stack);
+		compoundIdn = compound;
+		freeIdn = false;
 	}
 
-	if (TOY_IS_IDENTIFIER(idn) && !Toy_setScopeVariable(interpreter->scope, idn, result, true)) {
+	if (TOY_IS_IDENTIFIER(compoundIdn) && !Toy_setScopeVariable(interpreter->scope, compoundIdn, result, true)) {
 		interpreter->errorOutput("Incorrect type assigned to compound member ");
-		Toy_printLiteralCustom(idn, interpreter->errorOutput);
+		Toy_printLiteralCustom(compoundIdn, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
 
 		//clean up
@@ -1781,7 +1734,7 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(first);
 		Toy_freeLiteral(compound);
 		if (freeIdn) {
-			Toy_freeLiteral(idn);
+			Toy_freeLiteral(compoundIdn);
 		}
 		Toy_freeLiteral(op);
 		Toy_freeLiteralArray(&arguments);
@@ -1796,7 +1749,7 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 	Toy_freeLiteral(first);
 	Toy_freeLiteral(compound);
 	if (freeIdn) {
-		Toy_freeLiteral(idn);
+		Toy_freeLiteral(compoundIdn);
 	}
 	Toy_freeLiteral(op);
 	Toy_freeLiteralArray(&arguments);
@@ -2128,6 +2081,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 			}
 			break;
 
+			case TOY_LITERAL_ARRAY_INTERMEDIATE:
 			case TOY_LITERAL_ARRAY: {
 				Toy_LiteralArray* array = TOY_ALLOCATE(Toy_LiteralArray, 1);
 				Toy_initLiteralArray(array);
@@ -2158,6 +2112,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 			}
 			break;
 
+			case TOY_LITERAL_DICTIONARY_INTERMEDIATE:
 			case TOY_LITERAL_DICTIONARY: {
 				Toy_LiteralDictionary* dictionary = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
 				Toy_initLiteralDictionary(dictionary);

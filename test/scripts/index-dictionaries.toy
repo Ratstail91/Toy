@@ -30,13 +30,11 @@
 
 //test nested indexing
 {
-	var d = ["foo": ["bar": 0]];
+	var d = ["foo" : ["bar" : ["bazz" : ["fizz" : 5]]]];
 
-	d["foo"]["bar"] = 42;
+	d["foo"]["bar"]["bazz"]["fizz"] = 66;
 
-	print d;
-
-	assert d == ["foo": ["bar": 42]], "nested indexing failed";
+	assert d == ["foo": ["bar": ["bazz": ["fizz": 66]]]], "nested indexing failed";
 }
 
 

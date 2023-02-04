@@ -1,0 +1,21 @@
+//memoize the fib function
+var memo: [int : int] = [:];
+
+fn fib(n : int) {
+    if (n < 2) {
+        return n;
+    }
+
+	var result = memo[n];
+	if (result == null) {
+		result = fib(n-1) + fib(n-2);
+		memo[n] = result;
+	}
+
+    return result;
+}
+
+for (var i = 0; i < 40; i++) {
+	var res = fib(i);
+	print string i + ": " + string res;
+}

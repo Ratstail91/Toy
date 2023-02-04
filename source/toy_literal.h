@@ -29,6 +29,7 @@ typedef enum {
 
 	//these are meta-level types - not for general use
 	TOY_LITERAL_TYPE_INTERMEDIATE, //used to process types in the compiler only
+	TOY_LITERAL_ARRAY_INTERMEDIATE, //used to process arrays in the compiler only
 	TOY_LITERAL_DICTIONARY_INTERMEDIATE, //used to process dictionaries in the compiler only
 	TOY_LITERAL_FUNCTION_INTERMEDIATE, //used to process functions in the compiler only
 	TOY_LITERAL_FUNCTION_ARG_REST, //used to process function rest parameters only

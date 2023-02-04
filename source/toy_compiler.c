@@ -129,7 +129,7 @@ static int writeNodeCompoundToCache(Toy_Compiler* compiler, Toy_ASTNode* node) {
 
 		//push the store to the cache, with instructions about how pack it
 		Toy_Literal literal = TOY_TO_DICTIONARY_LITERAL(store);
-		literal.type = TOY_LITERAL_DICTIONARY_INTERMEDIATE; //god damn it
+		literal.type = TOY_LITERAL_DICTIONARY_INTERMEDIATE; //god damn it - nested in a dictionary
 		index = Toy_pushLiteralArray(&compiler->literalCache, literal);
 		Toy_freeLiteral(literal);
 	}
@@ -167,6 +167,7 @@ static int writeNodeCompoundToCache(Toy_Compiler* compiler, Toy_ASTNode* node) {
 
 		//push the store to the cache, with instructions about how pack it
 		Toy_Literal literal = TOY_TO_ARRAY_LITERAL(store);
+		literal.type = TOY_LITERAL_ARRAY_INTERMEDIATE; //god damn it - nested in an array
 		index = Toy_pushLiteralArray(&compiler->literalCache, literal);
 		Toy_freeLiteral(literal);
 	}
@@ -1095,8 +1096,38 @@ static unsigned char* collateCompilerHeaderOpt(Toy_Compiler* compiler, int* size
 			}
 			break;
 
-			case TOY_LITERAL_DICTIONARY_INTERMEDIATE: {
+			case TOY_LITERAL_ARRAY_INTERMEDIATE: {
+				emitByte(&collation, &capacity, &count, TOY_LITERAL_ARRAY_INTERMEDIATE);
+
+				Toy_LiteralArray* ptr = TOY_AS_ARRAY(compiler->literalCache.literals[i]);
+
+				//length of the array, as a short
+				Toy_emitShort(&collation, &capacity, &count, ptr->count);
+
+				//each element of the array
+				for (int i = 0; i < ptr->count; i++) {
+					Toy_emitShort(&collation, &capacity, &count, (unsigned short)TOY_AS_INTEGER(ptr->literals[i])); //shorts representing the indexes of the values
+				}
+			}
+			break;
+
+			case TOY_LITERAL_DICTIONARY: {
 				emitByte(&collation, &capacity, &count, TOY_LITERAL_DICTIONARY);
+
+				Toy_LiteralArray* ptr = TOY_AS_ARRAY(compiler->literalCache.literals[i]); //used an array for storage above
+
+				//length of the array, as a short
+				Toy_emitShort(&collation, &capacity, &count, ptr->count); //count is the array size, NOT the dictionary size
+
+				//each element of the array
+				for (int i = 0; i < ptr->count; i++) {
+					Toy_emitShort(&collation, &capacity, &count, (unsigned short)TOY_AS_INTEGER(ptr->literals[i])); //shorts representing the indexes of the values
+				}
+			}
+			break;
+
+			case TOY_LITERAL_DICTIONARY_INTERMEDIATE: {
+				emitByte(&collation, &capacity, &count, TOY_LITERAL_DICTIONARY_INTERMEDIATE);
 
 				Toy_LiteralArray* ptr = TOY_AS_ARRAY(compiler->literalCache.literals[i]); //used an array for storage above
 

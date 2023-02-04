@@ -1,3 +1,9 @@
 
 
-print " foo \n bar";
+var d = ["foo" : ["bar" : ["bazz": ["fizz" : 5]]]];
+
+print d;
+
+d["foo"]["bar"]["bazz"]["fizz"] = 66;
+
+print d;
