@@ -23,13 +23,13 @@
 
 //test ambiguous syntax
 {
-	var a = 1;
-	var b = 2;
-	var c = 3;
-	var d = 4;
-	var e = 5;
+	var aa = 1;
+	var bbb = 2;
+	var cccc = 3;
+	var ddddd = 4;
+	var eeeeee = 5;
 
-	assert a ? b ? c : d : e == 3, "Ambiguous syntax failed";
+	assert aa ? bbb ? cccc : ddddd : eeeeee, "Ambiguous syntax failed";
 }
 
 

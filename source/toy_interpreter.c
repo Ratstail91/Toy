@@ -224,19 +224,28 @@ static void consumeShort(Toy_Interpreter* interpreter, unsigned short bytes, uns
 static bool execAssert(Toy_Interpreter* interpreter) {
 	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
 	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
-	Toy_parseIdentifierToValue(interpreter, &lhs);
+
+	Toy_Literal lhsIdn = lhs;
+	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
+		Toy_freeLiteral(lhsIdn);
+	}
 
 	if (!TOY_IS_STRING(rhs)) {
 		interpreter->errorOutput("The assert keyword needs a string as the second argument, received: ");
 		Toy_printLiteralCustom(rhs, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
+
+		Toy_freeLiteral(rhs);
+		Toy_freeLiteral(lhs);
 		return false;
 	}
 
 	if (TOY_IS_NULL(lhs) || !TOY_IS_TRUTHY(lhs)) {
 		(*interpreter->assertOutput)(Toy_toCString(TOY_AS_STRING(rhs)));
-		Toy_freeLiteral(rhs);
 		interpreter->panic = true;
+
+		Toy_freeLiteral(rhs);
+		Toy_freeLiteral(lhs);
 		return false;
 	}
 
@@ -1086,16 +1095,14 @@ static bool execFalseJump(Toy_Interpreter* interpreter) {
 	//actually jump
 	Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
 
-	bool freeLit = false;
-	if (TOY_IS_IDENTIFIER(lit)) {
-		Toy_Literal idn = lit;
-		Toy_parseIdentifierToValue(interpreter, &lit);
-		Toy_freeLiteral(idn);
-		freeLit = true;
+	Toy_Literal litIdn = lit;
+	if (TOY_IS_IDENTIFIER(lit) && Toy_parseIdentifierToValue(interpreter, &lit)) {
+		Toy_freeLiteral(litIdn);
 	}
 
 	if (TOY_IS_NULL(lit)) {
 		interpreter->errorOutput("Null detected in comparison\n");
+		Toy_freeLiteral(lit);
 		return false;
 	}
 
@@ -1103,9 +1110,7 @@ static bool execFalseJump(Toy_Interpreter* interpreter) {
 		interpreter->count = target + interpreter->codeStart;
 	}
 
-	if (freeLit) {
-		Toy_freeLiteral(lit);
-	}
+	Toy_freeLiteral(lit);
 
 	return true;
 }
@@ -1994,7 +1999,6 @@ static void execInterpreter(Toy_Interpreter* interpreter) {
 					return;
 				}
 			break;
-
 
 			case TOY_OP_FN_RETURN:
 				if (!execFnReturn(interpreter)) {
