@@ -365,7 +365,7 @@ static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode
 			//write the else path
 			Toy_Opcode override2 = Toy_writeCompilerWithJumps(compiler, node->pathIf.elsePath, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
 			if (override2 != TOY_OP_EOF) {//compensate for indexing & dot notation being screwy
-				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+				compiler->bytecode[compiler->count++] = (unsigned char)override2; //1 byte
 			}
 
 			//update the jumpToEnd to point here
