@@ -1,14 +1,42 @@
 import compound;
 
+//test getKeys
+{
+	var d = ["foo": 1, "bar": 2];
+
+	var a = d.getKeys();
+
+	assert a.length() == 2, "_getKeys() length failed";
+
+	//NOTE: dependant on hash algorithm
+	assert a == ["bar", "foo"], "_getKeys() result failed";
+}
+
+
+//test getValues
+{
+	var d = ["foo": 1, "bar": 2];
+
+	var a = d.getValues();
+
+	assert a.length() == 2, "_getValues() length failed";
+
+	//NOTE: dependant on hash algorithm
+	assert a == [2, 1], "_getValues() result failed";
+}
+
+
 //test toLower
 {
 	assert "Hello World".toLower() == "hello world", "_toLower() failed";
 }
 
+
 //test toUpper
 {
 	assert "Hello World".toUpper() == "HELLO WORLD", "_toUpper() failed";
 }
+
 
 //test trim defaults
 {
@@ -32,6 +60,7 @@ import compound;
 	//one for goot luck
 	assert " hello world ".trim() == "hello world", "hello world.trim() failed";
 }
+
 
 //test trim custom values
 {

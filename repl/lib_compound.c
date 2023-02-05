@@ -5,10 +5,100 @@
 #include <ctype.h>
 #include <stdio.h>
 
+static int nativeGetKeys(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to _getKeys\n");
+		return -1;
+	}
+
+	//get the self
+	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	//parse to value if needed
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	//check type
+	if (!TOY_IS_DICTIONARY(selfLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to _getKeys\n");
+		Toy_freeLiteral(selfLiteral);
+		return -1;
+	}
+
+	//generate the result literal
+	Toy_LiteralArray* resultPtr = TOY_ALLOCATE(Toy_LiteralArray, 1);
+	Toy_initLiteralArray(resultPtr);
+
+	//get each key from the dictionary, pass it to the array
+	for (int i = 0; i < TOY_AS_DICTIONARY(selfLiteral)->capacity; i++) {
+		if (!TOY_IS_NULL( TOY_AS_DICTIONARY(selfLiteral)->entries[i].key )) {
+			Toy_pushLiteralArray(resultPtr, TOY_AS_DICTIONARY(selfLiteral)->entries[i].key);
+		}
+	}
+
+	//return the result
+	Toy_Literal result = TOY_TO_ARRAY_LITERAL(resultPtr); //no copy
+	Toy_pushLiteralArray(&interpreter->stack, result); //internal copy
+
+	//clean up
+	Toy_freeLiteralArray(resultPtr);
+	TOY_FREE(Toy_LiteralArray, resultPtr);
+	Toy_freeLiteral(selfLiteral);
+
+	return 1;
+}
+
+static int nativeGetValues(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to _getValues\n");
+		return -1;
+	}
+
+	//get the self
+	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	//parse to value if needed
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	//check type
+	if (!TOY_IS_DICTIONARY(selfLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to _getValues\n");
+		Toy_freeLiteral(selfLiteral);
+		return -1;
+	}
+
+	//generate the result literal
+	Toy_LiteralArray* resultPtr = TOY_ALLOCATE(Toy_LiteralArray, 1);
+	Toy_initLiteralArray(resultPtr);
+
+	//get each key from the dictionary, pass it to the array
+	for (int i = 0; i < TOY_AS_DICTIONARY(selfLiteral)->capacity; i++) {
+		if (!TOY_IS_NULL( TOY_AS_DICTIONARY(selfLiteral)->entries[i].key )) {
+			Toy_pushLiteralArray(resultPtr, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
+		}
+	}
+
+	//return the result
+	Toy_Literal result = TOY_TO_ARRAY_LITERAL(resultPtr); //no copy
+	Toy_pushLiteralArray(&interpreter->stack, result); //internal copy
+
+	//clean up
+	Toy_freeLiteralArray(resultPtr);
+	TOY_FREE(Toy_LiteralArray, resultPtr);
+	Toy_freeLiteral(selfLiteral);
+
+	return 1;
+}
+
 static int nativeToLower(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to clock\n");
+		interpreter->errorOutput("Incorrect number of arguments to _toLower\n");
 		return -1;
 	}
 
@@ -18,6 +108,12 @@ static int nativeToLower(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 	Toy_Literal selfLiteralIdn = selfLiteral;
 	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
 		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	if (!TOY_IS_STRING(selfLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to _toLower\n");
+		Toy_freeLiteral(selfLiteral);
+		return -1;
 	}
 
 	Toy_RefString* selfRefString = TOY_AS_STRING(selfLiteral);
@@ -49,7 +145,7 @@ static int nativeToLower(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 static int nativeToUpper(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to clock\n");
+		interpreter->errorOutput("Incorrect number of arguments to _toUpper\n");
 		return -1;
 	}
 
@@ -59,6 +155,12 @@ static int nativeToUpper(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 	Toy_Literal selfLiteralIdn = selfLiteral;
 	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
 		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	if (!TOY_IS_STRING(selfLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to _toUpper\n");
+		Toy_freeLiteral(selfLiteral);
+		return -1;
 	}
 
 	Toy_RefString* selfRefString = TOY_AS_STRING(selfLiteral);
@@ -89,7 +191,7 @@ static int nativeToUpper(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 
 static int nativeTrim(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count < 1 || arguments->count > 2) {
-		interpreter->errorOutput("Incorrect number of arguments to clock\n");
+		interpreter->errorOutput("Incorrect number of arguments to _trim\n");
 		return -1;
 	}
 
@@ -113,6 +215,13 @@ static int nativeTrim(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	Toy_Literal selfLiteralIdn = selfLiteral;
 	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
 		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	if (!TOY_IS_STRING(selfLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to _trim\n");
+		Toy_freeLiteral(trimCharsLiteral);
+		Toy_freeLiteral(selfLiteral);
+		return -1;
 	}
 
 	//unwrap the arguments
@@ -205,9 +314,10 @@ int Toy_hookCompound(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		// {"_containsValue", native}, //array, dictionary
 		// {"_every", native}, //array, dictionary, string
 		// {"_filter", native}, //array, dictionary
+		{"_getKeys", nativeGetKeys}, //dictionary
+		{"_getValues", nativeGetValues}, //dictionary
 		// {"_indexOf", native}, //array, string
 		// {"_insert", native}, //array, dictionary, string
-		// {"_keys", native}, //dictionary
 		// {"_map", native}, //array, dictionary
 		// {"_reduce", native}, //array, dictionary
 		// {"_remove", native}, //array, dictionary
@@ -218,7 +328,6 @@ int Toy_hookCompound(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		// {"_toString", native}, //array, dictionary
 		{"_toUpper", nativeToUpper}, //string
 		{"_trim", nativeTrim}, //string
-		// {"_values", native}, //dictionary
 		{NULL, NULL}
 	};
 
