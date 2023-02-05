@@ -1,0 +1,125 @@
+import node;
+
+//constants
+var SPEED: int const = 10;
+
+//variables
+var parent: opaque = null;
+var posX: int = 50;
+var posY: int = 50;
+var WIDTH: int const = 100;
+var HEIGHT: int const = 100;
+
+var xspeed: int = 0;
+var yspeed: int = 0;
+
+//accessors - variables are private, functions are public
+fn getX(node: opaque) {
+	return posX;
+}
+
+fn getY(node: opaque) {
+	return posY;
+}
+
+//lifecycle functions
+fn onInit(node: opaque) {
+	print "render.toy:onInit() called";
+
+	node.loadTexture("sprites:/character.png");
+	parent = node.getNodeParent();
+}
+
+fn onStep(node: opaque) {
+	posX += xspeed;
+	posY += yspeed;
+}
+
+fn onFree(node: opaque) {
+	print "render.toy:onFree() called";
+
+	node.freeTexture();
+}
+
+fn onDraw(node: opaque) {
+//	print "render.toy:onDraw() called";
+
+	var px = parent.callNode("getX");
+	var py = parent.callNode("getY");
+
+	if (px == null) {
+		px = 0;
+	}
+
+	if (py == null) {
+		py = 0;
+	}
+
+	node.drawNode(posX + px, posY + py, WIDTH, HEIGHT);
+}
+
+//event functions
+fn onKeyDown(node: opaque, event: string) {
+	if (event == "character_up") {
+		yspeed -= SPEED;
+		return;
+	}
+
+	if (event == "character_down") {
+		yspeed += SPEED;
+		return;
+	}
+
+	if (event == "character_left") {
+		xspeed -= SPEED;
+		return;
+	}
+
+	if (event == "character_right") {
+		xspeed += SPEED;
+		return;
+	}
+}
+
+fn onKeyUp(node: opaque, event: string) {
+	if (event == "character_up" && yspeed < 0) {
+		yspeed = 0;
+		return;
+	}
+
+	if (event == "character_down" && yspeed > 0) {
+		yspeed = 0;
+		return;
+	}
+
+	if (event == "character_left" && xspeed < 0) {
+		xspeed = 0;
+		return;
+	}
+
+	if (event == "character_right" && xspeed > 0) {
+		xspeed = 0;
+		return;
+	}
+}
+
+fn onMouseMotion(node: opaque, x: int, y: int, xrel: int, yrel: int) {
+	print "entity.toy:onMouseMotion(" + string x + ", " + string y + ", " + string xrel + ", " + string yrel + ")";
+}
+
+fn onMouseButtonDown(node: opaque, x: int, y: int, button: string) {
+	print "entity.toy:onMouseButtonDown(" + string x + ", " + string y + ", " + button + ")";
+
+	//jump to pos
+	posX = x - WIDTH / 2;
+	posY = y - HEIGHT / 2;
+}
+
+fn onMouseButtonUp(node: opaque, x: int, y: int, button: string) {
+	print "entity.toy:onMouseButtonUp(" + string x + ", " + string y + ", " + button + ")";
+}
+
+fn onMouseWheel(node: opaque, xrel: int, yrel: int) {
+	print "entity.toy:onMouseWheel(" + string xrel + ", " + string yrel + ")";
+}
+
