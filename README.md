@@ -44,6 +44,7 @@ print tally(); //3
 * [Quick Start Guide](quick-start-guide)
 * [Types](types)
 * [Standard Library](standard-library)
+* [About Library](about-library)
 * [Compound Library](compound-library) (under development)
 * [Timer Library](timer-library)
 * [Runner Library](runner-library)
