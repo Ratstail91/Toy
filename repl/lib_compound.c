@@ -171,6 +171,12 @@ static int nativeToString(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 		Toy_freeLiteral(selfLiteralIdn);
 	}
 
+	//BUGFIX: probably an undefined variable
+	if (TOY_IS_IDENTIFIER(selfLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		return -1;
+	}
+
 	//print it to a custom function
 	Toy_printLiteralCustom(selfLiteral, toStringUtil);
 
