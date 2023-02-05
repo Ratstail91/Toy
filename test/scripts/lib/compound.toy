@@ -32,6 +32,16 @@ import compound;
 }
 
 
+//test toString
+{
+	var a = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+
+	var s = a.toString();
+
+	assert s == "[[1,2,3],[4,5,6],[7,8,9]]", "array._toString() failed";
+}
+
+
 //test toUpper
 {
 	assert "Hello World".toUpper() == "HELLO WORLD", "_toUpper() failed";

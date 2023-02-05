@@ -142,6 +142,53 @@ static int nativeToLower(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 	return 1;
 }
 
+static char* toStringUtilObject = NULL;
+static void toStringUtil(const char* input) {
+	int len = strlen(input) + 1;
+
+	if (len > TOY_MAX_STRING_LENGTH) {
+		len = TOY_MAX_STRING_LENGTH;
+	}
+
+	toStringUtilObject = TOY_ALLOCATE(char, len);
+
+	snprintf(toStringUtilObject, len, "%s", input);
+}
+
+static int nativeToString(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	//no arguments
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to _toString\n");
+		return -1;
+	}
+
+	//get the argument
+	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	//parse to a value
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	//print it to a custom function
+	Toy_printLiteralCustom(selfLiteral, toStringUtil);
+
+	//create the resulting string and push it
+	Toy_Literal result = TOY_TO_STRING_LITERAL(Toy_createRefString(toStringUtilObject)); //internal copy
+
+	Toy_pushLiteralArray(&interpreter->stack, result);
+
+	//cleanup
+	TOY_FREE_ARRAY(char, toStringUtilObject, Toy_lengthRefString( TOY_AS_STRING(result) ) + 1);
+	toStringUtilObject = NULL;
+
+	Toy_freeLiteral(result);
+	Toy_freeLiteral(selfLiteral);
+
+	return 1;
+}
+
 static int nativeToUpper(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
@@ -325,7 +372,7 @@ int Toy_hookCompound(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		// {"_some", native}, //array, dictionary, string
 		// {"_sort", native}, //array
 		{"_toLower", nativeToLower}, //string
-		// {"_toString", native}, //array, dictionary
+		{"_toString", nativeToString}, //array, dictionary
 		{"_toUpper", nativeToUpper}, //string
 		{"_trim", nativeTrim}, //string
 		{NULL, NULL}
