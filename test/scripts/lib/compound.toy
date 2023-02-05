@@ -23,6 +23,16 @@ import compound;
 		assert c == ["one" : 1, "two": 2, "three": 3, "four" : 4, "five": 5, "six": 6], "dictionary.concat() comparison failed";
 	}
 
+	//test dictionary concat with clashing keys
+	{
+		var a = ["one" : 1, "two": 2, "three": 3, "random": 1];
+		var b = ["four" : 4, "five": 5, "six": 6, "random": 2];
+
+		var c = a.concat(b);
+
+		assert c["random"] == 1, "dictionary.concat() clashing keys failed";
+	}
+
 	//test string concat
 	{
 		var a = "foo";
