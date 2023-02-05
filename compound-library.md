@@ -10,6 +10,10 @@ The compound library can usually be accessed with the `import` keyword:
 import compound;
 ```
 
+## _concat(self, other)
+
+This function only works when self and other are matching compounds (both arrays, dictionaries or strings). It returns a new compound of that kind, with the content of `other` appended to the content of `self`.
+
 ## _getKeys(self: dictionary)
 
 This returns an array of all non-null keys stored within the dictionary. The order is undefined.
