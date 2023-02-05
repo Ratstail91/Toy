@@ -26,6 +26,8 @@ This function returns a new string which is identical to the string `self`, exce
 
 This function returns a string representation of `self`. This is intended for arrays and dictionaries, but can theoretically work on any printable value.
 
+If the resulting string is longer than `TOY_MAX_STRING_SIZE` - 1, then it is truncated.
+
 ## _toUpper(self: string)
 
 This function returns a new string which is identical to the string `self`, except any lowercase letters are replaced with the corresponding uppercase letters.
