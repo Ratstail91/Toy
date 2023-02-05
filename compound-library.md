@@ -22,6 +22,10 @@ This returns an array of all values with non-null keys stored within the diction
 
 This function returns a new string which is identical to the string `self`, except any uppercase letters are replaced with the corresponding lowercase letters.
 
+## _toString(self)
+
+This function returns a string representation of `self`. This is intended for arrays and dictionaries, but can theoretically work on any printable value.
+
 ## _toUpper(self: string)
 
 This function returns a new string which is identical to the string `self`, except any lowercase letters are replaced with the corresponding uppercase letters.
