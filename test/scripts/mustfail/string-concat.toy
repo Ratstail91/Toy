@@ -1,0 +1,5 @@
+{
+	var s = "foo" - "bar";
+}
+
+print "All good";
