@@ -10,6 +10,14 @@ The compound library can usually be accessed with the `import` keyword:
 import compound;
 ```
 
+## _getKeys(self: dictionary)
+
+This returns an array of all non-null keys stored within the dictionary. The order is undefined.
+
+## _getValues(self: dictionary)
+
+This returns an array of all values with non-null keys stored within the dictionary. The order is undefined.
+
 ## _toLower(self: string)
 
 This function returns a new string which is identical to the string `self`, except any uppercase letters are replaced with the corresponding lowercase letters.
