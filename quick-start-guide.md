@@ -4,12 +4,12 @@ This guide is intended to get you writing Toy code as fast as possible. As such,
 
 Toy programs begin at the top of the file, and continue until the end, unless an error is encountered.
 
-## Hello World
+## Print Keyword
 
-This prints to the stdout, and has a newline appended to the end. This can be altered by the host program.
+This keyword prints values to stdout for debugging (this can be altered by the host program), and usually has a newline appended to the end.
 
 ```
-print "Hello world";
+print "Hello World";
 ```
 
 ## Names and Variables
