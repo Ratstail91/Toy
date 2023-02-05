@@ -1,6 +1,36 @@
 import compound;
 
-//test getKeys
-var d = ["foo": 1, "bar": 2];
-var a = d.getValues();
-print a;
+//test array concat
+{
+	var a = [1, 2, 3];
+	var b = [4, 5, 6];
+
+	var c = a.concat(b).concat(b);
+
+	assert c == [1, 2, 3, 4, 5, 6, 4, 5, 6], "array.concat() failed";
+}
+
+//test dictionary concat
+{
+	var a = ["one" : 1, "two": 2, "three": 3];
+	var b = ["four" : 4, "five": 5, "six": 6];
+
+	var c = a.concat(b);
+
+	assert c.length() == 6, "dictionary.concat().length() failed";
+
+	assert c == ["one" : 1, "two": 2, "three": 3, "four" : 4, "five": 5, "six": 6], "dictionary.concat() comparison failed";
+}
+
+//test string concat
+{
+	var a = "foo";
+	var b = "bar";
+
+	var c = a.concat(b);
+
+	assert c == "foobar", "string.concat() failed";
+}
+
+
+print "All good";

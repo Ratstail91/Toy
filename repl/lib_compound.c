@@ -5,6 +5,115 @@
 #include <ctype.h>
 #include <stdio.h>
 
+static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	//no arguments
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments to _concat\n");
+		return -1;
+	}
+
+	//get the args
+	Toy_Literal otherLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	//parse to value if needed
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	Toy_Literal otherLiteralIdn = otherLiteral;
+	if (TOY_IS_IDENTIFIER(otherLiteral) && Toy_parseIdentifierToValue(interpreter, &otherLiteral)) {
+		Toy_freeLiteral(otherLiteralIdn);
+	}
+
+	//for each self type
+	if (TOY_IS_ARRAY(selfLiteral)) {
+		if (!TOY_IS_ARRAY(otherLiteral)) {
+			interpreter->errorOutput("Incorrect argument type passed to _concat (unknown type for other)\n");
+			Toy_freeLiteral(selfLiteral);
+			Toy_freeLiteral(otherLiteral);
+			return -1;
+		}
+
+		//append each element of other to self, one-by-one
+		for (int i = 0; i < TOY_AS_ARRAY(otherLiteral)->count; i++) {
+			Toy_pushLiteralArray(TOY_AS_ARRAY(selfLiteral), TOY_AS_ARRAY(otherLiteral)->literals[i]);
+		}
+
+		//return and clean up
+		Toy_pushLiteralArray(&interpreter->stack, selfLiteral);
+
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(otherLiteral);
+
+		return 1;
+	}
+
+	if (TOY_IS_DICTIONARY(selfLiteral)) {
+		if (!TOY_IS_DICTIONARY(otherLiteral)) {
+			interpreter->errorOutput("Incorrect argument type passed to _concat (unknown type for other)\n");
+			Toy_freeLiteral(selfLiteral);
+			Toy_freeLiteral(otherLiteral);
+			return -1;
+		}
+
+		//append each element of self to other, which will overwrite existing entries
+		for (int i = 0; i < TOY_AS_DICTIONARY(selfLiteral)->capacity; i++) {
+			if (!TOY_IS_NULL(TOY_AS_DICTIONARY(selfLiteral)->entries[i].key)) {
+				Toy_setLiteralDictionary(TOY_AS_DICTIONARY(otherLiteral), TOY_AS_DICTIONARY(selfLiteral)->entries[i].key, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
+			}
+		}
+
+		//return and clean up
+		Toy_pushLiteralArray(&interpreter->stack, otherLiteral);
+
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(otherLiteral);
+
+		return 1;
+	}
+
+	if (TOY_IS_STRING(selfLiteral)) { //a little redundant
+		if (!TOY_IS_STRING(otherLiteral)) {
+			interpreter->errorOutput("Incorrect argument type passed to _concat (unknown type for other)\n");
+			Toy_freeLiteral(selfLiteral);
+			Toy_freeLiteral(otherLiteral);
+			return -1;
+		}
+
+		//get the combined length for the new string
+		int length = TOY_AS_STRING(selfLiteral)->length + TOY_AS_STRING(otherLiteral)->length + 1;
+
+		if (length > TOY_MAX_STRING_LENGTH) {
+			interpreter->errorOutput("Can't concatenate these strings, result is too long (error found in _concat)\n");
+			Toy_freeLiteral(selfLiteral);
+			Toy_freeLiteral(otherLiteral);
+			return -1;
+		}
+
+		//allocate the space and generate
+		char* buffer = TOY_ALLOCATE(char, length);
+		snprintf(buffer, length, "%s%s", Toy_toCString(TOY_AS_STRING(selfLiteral)), Toy_toCString(TOY_AS_STRING(otherLiteral)));
+
+		Toy_Literal result = TOY_TO_STRING_LITERAL(Toy_createRefString(buffer));
+
+		//push and clean up
+		Toy_pushLiteralArray(&interpreter->stack, result);
+
+		TOY_FREE_ARRAY(char, buffer, length);
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(otherLiteral);
+
+		return 1;
+	} 
+
+	interpreter->errorOutput("Incorrect argument type passed to _concat (unknown type for self)\n");
+	Toy_freeLiteral(selfLiteral);
+	Toy_freeLiteral(otherLiteral);
+	return -1;
+}
+
 static int nativeGetKeys(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments to _getKeys\n");
@@ -147,7 +256,7 @@ static void toStringUtil(const char* input) {
 	int len = strlen(input) + 1;
 
 	if (len > TOY_MAX_STRING_LENGTH) {
-		len = TOY_MAX_STRING_LENGTH;
+		len = TOY_MAX_STRING_LENGTH; //TODO: don't truncate
 	}
 
 	toStringUtilObject = TOY_ALLOCATE(char, len);
@@ -362,7 +471,7 @@ typedef struct Natives {
 int Toy_hookCompound(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Literal alias) {
 	//build the natives list
 	Natives natives[] = {
-		// {"_concat", native}, //array, dictionary, string
+		{"_concat", nativeConcat}, //array, dictionary, string
 		// {"_containsKey", native}, //dictionary
 		// {"_containsValue", native}, //array, dictionary
 		// {"_every", native}, //array, dictionary, string
