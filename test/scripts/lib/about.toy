@@ -1,0 +1,7 @@
+import about as about;
+import about;
+
+assert author == "Kayne Ruse, KR Game Studios", "Author failed";
+
+
+print "All good";

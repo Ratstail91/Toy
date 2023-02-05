@@ -822,7 +822,7 @@ static bool execTypeOf(Toy_Interpreter* interpreter) {
 		type = Toy_getScopeType(interpreter->scope, rhs);
 	}
 	else {
-		type = TOY_TO_TYPE_LITERAL(rhs.type, false);
+		type = TOY_TO_TYPE_LITERAL(rhs.type, false); //see issue #53
 	}
 
 	Toy_pushLiteralArray(&interpreter->stack, type);

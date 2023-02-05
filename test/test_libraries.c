@@ -13,6 +13,7 @@
 
 #include "../repl/repl_tools.h"
 
+#include "../repl/lib_about.h"
 #include "../repl/lib_compound.h"
 #include "../repl/lib_runner.h"
 #include "../repl/lib_standard.h"
@@ -74,6 +75,7 @@ int main() {
 		//run each file in test/scripts
 		Payload payloads[] = {
 			{"interactions.toy", "standard", Toy_hookStandard}, //interactions needs standard
+			{"about.toy", "about", Toy_hookAbout},
 			{"compound.toy", "compound", Toy_hookCompound},
 			{"runner.toy", "runner", Toy_hookRunner},
 			{"standard.toy", "standard", Toy_hookStandard},

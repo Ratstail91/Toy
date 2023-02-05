@@ -114,7 +114,7 @@ void Toy_helpCommandLine(int argc, const char* argv[]) {
 
 void Toy_copyrightCommandLine(int argc, const char* argv[]) {
 	printf("Toy Programming Language Interpreter Version %d.%d.%d (built on %s)\n\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, TOY_VERSION_BUILD);
-	printf("Copyright (c) 2020-2022 Kayne Ruse, KR Game Studios\n\n");
+	printf("Copyright (c) 2020-2023 Kayne Ruse, KR Game Studios\n\n");
 	printf("This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.\n\n");
 	printf("Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:\n\n");
 	printf("1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.\n\n");

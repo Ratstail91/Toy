@@ -1,4 +1,5 @@
 #include "repl_tools.h"
+#include "lib_about.h"
 #include "lib_compound.h"
 #include "lib_standard.h"
 #include "lib_timer.h"
@@ -111,6 +112,7 @@ void Toy_runBinary(unsigned char* tb, size_t size) {
 	Toy_initInterpreter(&interpreter);
 
 	//inject the libs
+	Toy_injectNativeHook(&interpreter, "about", Toy_hookAbout);
 	Toy_injectNativeHook(&interpreter, "compound", Toy_hookCompound);
 	Toy_injectNativeHook(&interpreter, "standard", Toy_hookStandard);
 	Toy_injectNativeHook(&interpreter, "timer", Toy_hookTimer);

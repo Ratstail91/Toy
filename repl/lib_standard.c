@@ -49,7 +49,7 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		if (Toy_isDelcaredScopeVariable(interpreter->scope, alias)) {
 			interpreter->errorOutput("Can't override an existing variable\n");
 			Toy_freeLiteral(alias);
-			return false;
+			return -1;
 		}
 
 		//create the dictionary to load up with functions
