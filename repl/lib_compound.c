@@ -104,6 +104,7 @@ static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 		TOY_FREE_ARRAY(char, buffer, length);
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(otherLiteral);
+		Toy_freeLiteral(result);
 
 		return 1;
 	} 
