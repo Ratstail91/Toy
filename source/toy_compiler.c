@@ -312,7 +312,7 @@ static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode
 			//return this if...
 			Toy_Opcode ret = Toy_writeCompilerWithJumps(compiler, node->binary.right, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
 
-			if (node->binary.opcode == TOY_OP_INDEX && rootNode->type == TOY_AST_NODE_BINARY && rootNode->binary.opcode == TOY_OP_VAR_ASSIGN) { //why var assign?
+			if (node->binary.opcode == TOY_OP_INDEX && rootNode->type == TOY_AST_NODE_BINARY && (rootNode->binary.opcode >= TOY_OP_VAR_ASSIGN && rootNode->binary.opcode <= TOY_OP_VAR_MODULO_ASSIGN)) { //range-based check for assignment type
 				return TOY_OP_INDEX_ASSIGN_INTERMEDIATE;
 			}
 
