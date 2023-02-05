@@ -1,0 +1,31 @@
+# Compound Library
+
+The compound library contains a number of common utility functions for use with compound values, such as arrays, dictionaries and strings. These functions will allow you to manipulate these values in ways that would otherwise be quite difficult and inefficient using just Toy.
+
+The compound library is currently under development.
+
+The compound library can usually be accessed with the `import` keyword:
+
+```
+import compound;
+```
+
+## _toLower(self: string)
+
+This function returns a new string which is identical to the string `self`, except any uppercase letters are replaced with the corresponding lowercase letters.
+
+## _toUpper(self: string)
+
+This function returns a new string which is identical to the string `self`, except any lowercase letters are replaced with the corresponding uppercase letters.
+
+## _trim(self: string, trimChars: string = " \t\n\r")
+
+This function returns a new string which is identical to the string `self`, except any characters at the beginning or end of `self` which are present in the argument `trimChars` are removed. The argument `trimChars` is optional, and has the following characters as the default value:
+
+* The space character
+* The horizontal tab character
+* The newline character
+* The carriage return character
+
+These characters used because they are the only control characters currently supported by Toy.
+
