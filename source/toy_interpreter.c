@@ -376,7 +376,7 @@ static bool execArithmetic(Toy_Interpreter* interpreter, Toy_Opcode opcode) {
 	}
 
 	//special case for string concatenation ONLY
-	if (TOY_IS_STRING(lhs) && TOY_IS_STRING(rhs)) {
+	if (TOY_IS_STRING(lhs) && TOY_IS_STRING(rhs) && (opcode == TOY_OP_ADDITION || opcode == TOY_OP_VAR_ADDITION_ASSIGN)) {
 		//check for overflow
 		int totalLength = TOY_AS_STRING(lhs)->length + TOY_AS_STRING(rhs)->length;
 		if (totalLength > TOY_MAX_STRING_LENGTH) {

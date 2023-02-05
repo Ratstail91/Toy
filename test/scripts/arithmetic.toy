@@ -28,4 +28,15 @@ a %= 8;
 
 assert a == 4, "%= failed";
 
+//strings as special cases
+var s = "foo";
+
+assert s + "bar" == "foobar", "string addition failed";
+assert s == "foo", "string addition failed (was too sticky)";
+
+s += "bar";
+
+assert s == "foobar", "string addition failed (wasn't sticky enough)";
+
+
 print "All good";

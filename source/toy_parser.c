@@ -983,7 +983,7 @@ static bool calcStaticBinaryArithmetic(Toy_Parser* parser, Toy_ASTNode** nodeHan
 	Toy_Literal result = TOY_TO_NULL_LITERAL;
 
 	//special case for string concatenation ONLY
-	if (TOY_IS_STRING(lhs) && TOY_IS_STRING(rhs)) {
+	if (TOY_IS_STRING(lhs) && TOY_IS_STRING(rhs) && (*nodeHandle)->binary.opcode == TOY_OP_ADDITION) {
 		//check for overflow
 		int totalLength = TOY_AS_STRING(lhs)->length + TOY_AS_STRING(rhs)->length;
 		if (totalLength > TOY_MAX_STRING_LENGTH) {
