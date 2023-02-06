@@ -113,6 +113,20 @@ import compound;
 }
 
 
+//test reduce
+{
+	var a = [1, 2, 3, 4];
+	var d = ["one": 1, "two": 2, "three": 3, "four": 4];
+
+	fn f(acc, k, v) {
+		return acc + v;
+	}
+
+	assert a.reduce(0, f) == 10, "array.reduce() failed";
+	assert d.reduce(0, f) == 10, "dictionary.reduce() failed";
+}
+
+
 //test toLower
 {
 	assert "Hello World".toLower() == "hello world", "_toLower() failed";
@@ -161,12 +175,12 @@ import compound;
 
 	//test trim custom values
 	{
-		var chars = "heilod";
+		var chars = "heliod";
 
 		assert "hello world".trim(chars) == " wor", "custom _trim() failed";
 	}
 
-	//test trimBegin()
+	//test trimBegin() & trimEnd()
 	assert "  foo  ".trimBegin() == "foo  ", "string.trimBegin() failed";
 	assert "  foo  ".trimEnd() == "  foo", "string.trimBegin() failed";
 }
