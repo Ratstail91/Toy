@@ -23,6 +23,8 @@ var f = 3.14;
 var s = "Hello world";
 ```
 
+Numbers (both integers and floats) can be delimited with underscores (`_`), to break them up visually e.g. `100_000`.
+
 Strings can be 4096 characters long, and the following characters can be escaped: `/n`, `/t`, `//` and `/"`.
 
 ## Compounds
