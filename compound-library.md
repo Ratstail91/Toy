@@ -54,6 +54,21 @@ var a = [1, 2, 3];
 print a.map(increment); //prints [2,3,4];
 ```
 
+## _reduce(self, default, func: fn)
+
+This function takes either an array or a dictionary as the `self` argument, a default value, and a function as `func`. The argument `func` takes three arguments - the first is the accumulator, the second is the index/key and the third is the value. It applies the given function to every element, passing the result of each call as the accumulator to the next (the default value is used for the first call). Finally, the final value of the accumulator is returned to the caller.
+
+```
+import compound;
+
+fn f(acc, k, v) {
+	return acc + v;
+}
+
+var a = [1, 2, 3, 4];
+
+print a.reduce(0, f); //prints "10"
+```
 
 ## _toLower(self: string)
 
