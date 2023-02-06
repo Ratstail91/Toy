@@ -1187,6 +1187,50 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 }
 
 bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_LiteralArray* arguments, Toy_LiteralArray* returns) {
+	//check for side-loaded native functions
+	if (TOY_IS_FUNCTION_NATIVE(func)) {
+		//reverse the order to the correct order
+		Toy_LiteralArray correct;
+		Toy_initLiteralArray(&correct);
+
+		while(arguments->count) {
+			Toy_Literal lit =  Toy_popLiteralArray(arguments);
+			Toy_pushLiteralArray(&correct, lit);
+			Toy_freeLiteral(lit);
+		}
+
+		//call the native function
+		int returnsCount = TOY_AS_FUNCTION_NATIVE(func)(interpreter, &correct);
+
+		if (returnsCount < 0) {
+			interpreter->errorOutput("Unknown error from native function\n");
+			Toy_freeLiteralArray(&correct);
+			return false;
+		}
+
+		//get the results
+		Toy_LiteralArray returnsFromInner;
+		Toy_initLiteralArray(&returnsFromInner);
+
+		for (int i = 0; i < (returnsCount || 1); i++) {
+			Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
+			Toy_pushLiteralArray(&returnsFromInner, lit); //NOTE: also reverses the order
+			Toy_freeLiteral(lit);
+		}
+
+		//flip them around and pass to returns
+		while (returnsFromInner.count > 0) {
+			Toy_Literal lit = Toy_popLiteralArray(&returnsFromInner);
+			Toy_pushLiteralArray(returns, lit);
+			Toy_freeLiteral(lit);
+		}
+
+		Toy_freeLiteralArray(&returnsFromInner);
+		Toy_freeLiteralArray(&correct);
+		return true;
+	}
+
+	//normal Toy function
 	if (!TOY_IS_FUNCTION(func)) {
 		interpreter->errorOutput("Function required in Toy_callLiteralFn()\n");
 		return false;

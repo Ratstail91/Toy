@@ -115,6 +115,81 @@ static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 	return -1;
 }
 
+static int nativeForEach(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	//no arguments
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments to _forEach\n");
+		return -1;
+	}
+
+	//get the args
+	Toy_Literal fnLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	//parse to value if needed
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	Toy_Literal fnLiteralIdn = fnLiteral;
+	if (TOY_IS_IDENTIFIER(fnLiteral) && Toy_parseIdentifierToValue(interpreter, &fnLiteral)) {
+		Toy_freeLiteral(fnLiteralIdn);
+	}
+
+	//check type
+	if (!( TOY_IS_ARRAY(selfLiteral) || TOY_IS_DICTIONARY(selfLiteral) ) || !( TOY_IS_FUNCTION(fnLiteral) || TOY_IS_FUNCTION_NATIVE(fnLiteral) )) {
+		interpreter->errorOutput("Incorrect argument type passed to _forEach\n");
+		Toy_freeLiteral(selfLiteral);
+		return -1;
+	}
+
+	//call the given function on each element, based on the compound type
+	if (TOY_IS_ARRAY(selfLiteral)) {
+		for (int i = 0; i < TOY_AS_ARRAY(selfLiteral)->count; i++) {
+			Toy_Literal indexLiteral = TOY_TO_INTEGER_LITERAL(i);
+
+			Toy_LiteralArray arguments;
+			Toy_initLiteralArray(&arguments);
+			Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[i]);
+			Toy_pushLiteralArray(&arguments, indexLiteral);
+
+			Toy_LiteralArray returns;
+			Toy_initLiteralArray(&returns);
+
+			Toy_callLiteralFn(interpreter, fnLiteral, &arguments, &returns);
+
+			Toy_freeLiteralArray(&arguments);
+			Toy_freeLiteralArray(&returns);
+			Toy_freeLiteral(indexLiteral);
+		}
+	}
+
+	if (TOY_IS_DICTIONARY(selfLiteral)) {
+		for (int i = 0; i < TOY_AS_DICTIONARY(selfLiteral)->capacity; i++) {
+			//skip nulls
+			if (TOY_IS_NULL(TOY_AS_DICTIONARY(selfLiteral)->entries[i].key)) {
+				continue;
+			}
+
+			Toy_LiteralArray arguments;
+			Toy_initLiteralArray(&arguments);
+			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
+			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].key);
+
+			Toy_LiteralArray returns;
+			Toy_initLiteralArray(&returns);
+
+			Toy_callLiteralFn(interpreter, fnLiteral, &arguments, &returns);
+
+			Toy_freeLiteralArray(&arguments);
+			Toy_freeLiteralArray(&returns);
+		}
+	}
+
+	return 0;
+}
+
 static int nativeGetKeys(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments to _getKeys\n");
@@ -203,6 +278,105 @@ static int nativeGetValues(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 	Toy_freeLiteral(selfLiteral);
 
 	return 1;
+}
+
+static int nativeMap(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	//no arguments
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments to _map\n");
+		return -1;
+	}
+
+	//get the args
+	Toy_Literal fnLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	//parse to value if needed
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	Toy_Literal fnLiteralIdn = fnLiteral;
+	if (TOY_IS_IDENTIFIER(fnLiteral) && Toy_parseIdentifierToValue(interpreter, &fnLiteral)) {
+		Toy_freeLiteral(fnLiteralIdn);
+	}
+
+	//check type
+	if (!( TOY_IS_ARRAY(selfLiteral) || TOY_IS_DICTIONARY(selfLiteral) ) || !( TOY_IS_FUNCTION(fnLiteral) || TOY_IS_FUNCTION_NATIVE(fnLiteral) )) {
+		interpreter->errorOutput("Incorrect argument type passed to _map\n");
+		Toy_freeLiteral(selfLiteral);
+		return -1;
+	}
+
+	//call the given function on each element, based on the compound type
+	if (TOY_IS_ARRAY(selfLiteral)) {
+		Toy_LiteralArray* returnsPtr = TOY_ALLOCATE(Toy_LiteralArray, 1);
+		Toy_initLiteralArray(returnsPtr);
+
+		for (int i = 0; i < TOY_AS_ARRAY(selfLiteral)->count; i++) {
+			Toy_Literal indexLiteral = TOY_TO_INTEGER_LITERAL(i);
+
+			Toy_LiteralArray arguments;
+			Toy_initLiteralArray(&arguments);
+			Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[i]);
+			Toy_pushLiteralArray(&arguments, indexLiteral);
+
+			Toy_LiteralArray returns;
+			Toy_initLiteralArray(&returns);
+
+			Toy_callLiteralFn(interpreter, fnLiteral, &arguments, &returns);
+
+			//grab the results
+			Toy_Literal lit = Toy_popLiteralArray(&returns);
+			Toy_pushLiteralArray(returnsPtr, lit);
+			Toy_freeLiteral(lit);
+
+			Toy_freeLiteralArray(&arguments);
+			Toy_freeLiteralArray(&returns);
+			Toy_freeLiteral(indexLiteral);
+		}
+
+		Toy_Literal returnsLiteral = TOY_TO_ARRAY_LITERAL(returnsPtr);
+		Toy_pushLiteralArray(&interpreter->stack, returnsLiteral);
+		Toy_freeLiteral(returnsLiteral);
+	}
+
+	if (TOY_IS_DICTIONARY(selfLiteral)) {
+		Toy_LiteralArray* returnsPtr = TOY_ALLOCATE(Toy_LiteralArray, 1);
+		Toy_initLiteralArray(returnsPtr);
+
+		for (int i = 0; i < TOY_AS_DICTIONARY(selfLiteral)->capacity; i++) {
+			//skip nulls
+			if (TOY_IS_NULL(TOY_AS_DICTIONARY(selfLiteral)->entries[i].key)) {
+				continue;
+			}
+
+			Toy_LiteralArray arguments;
+			Toy_initLiteralArray(&arguments);
+			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
+			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].key);
+
+			Toy_LiteralArray returns;
+			Toy_initLiteralArray(&returns);
+
+			Toy_callLiteralFn(interpreter, fnLiteral, &arguments, &returns);
+
+			//grab the results
+			Toy_Literal lit = Toy_popLiteralArray(&returns);
+			Toy_pushLiteralArray(returnsPtr, lit);
+			Toy_freeLiteral(lit);
+
+			Toy_freeLiteralArray(&arguments);
+			Toy_freeLiteralArray(&returns);
+		}
+
+		Toy_Literal returnsLiteral = TOY_TO_ARRAY_LITERAL(returnsPtr);
+		Toy_pushLiteralArray(&interpreter->stack, returnsLiteral);
+		Toy_freeLiteral(returnsLiteral);
+	}
+
+	return 0;
 }
 
 static int nativeToLower(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
@@ -477,11 +651,12 @@ int Toy_hookCompound(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		// {"_containsValue", native}, //array, dictionary
 		// {"_every", native}, //array, dictionary, string
 		// {"_filter", native}, //array, dictionary
+		{"_forEach", nativeForEach}, //array, dictionary
 		{"_getKeys", nativeGetKeys}, //dictionary
 		{"_getValues", nativeGetValues}, //dictionary
 		// {"_indexOf", native}, //array, string
 		// {"_insert", native}, //array, dictionary, string
-		// {"_map", native}, //array, dictionary
+		{"_map", nativeMap}, //array, dictionary
 		// {"_reduce", native}, //array, dictionary
 		// {"_remove", native}, //array, dictionary
 		// {"_replace", native}, //string

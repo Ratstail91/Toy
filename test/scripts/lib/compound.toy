@@ -1,5 +1,6 @@
 import compound;
 
+//test concat
 {
 	//test array concat
 	{
@@ -44,6 +45,26 @@ import compound;
 	}
 }
 
+//test forEach
+{
+	var counter = 0;
+
+	fn p(k, v) {
+		counter++;
+		print string k + ": " + string v;
+	}
+
+	var a = ["a", "b"];
+	var d = ["foo": 1, "bar": 2, "bazz": 3, "fizz": 4];
+
+	a.forEach(p);
+	assert counter == 2, "forEach ran an unusual number of times";
+
+	counter = 0;
+	d.forEach(p);
+	assert counter == 4, "forEach ran an unusual number of times";
+}
+
 //test getKeys
 {
 	var d = ["foo": 1, "bar": 2];
@@ -67,6 +88,28 @@ import compound;
 
 	//NOTE: dependant on hash algorithm
 	assert a == [2, 1], "_getValues() result failed";
+}
+
+
+//test map
+{
+	//test map with toy functions
+	{
+		fn increment(k, v) {
+			return v + 1;
+		}
+
+		var a = [1, 2, 3];
+		var d = ["four": 4, "five": 5, "six": 6];
+
+		assert a.map(increment).map(increment).map(increment) == [4,5,6], "array.map() failed";
+		assert d.map(increment).map(increment).map(increment) == [8,9,7], "dictionary.map() failed";
+	}
+
+	//test map with native functions
+	{
+		//TODO: write some native functions for use with map
+	}
 }
 
 

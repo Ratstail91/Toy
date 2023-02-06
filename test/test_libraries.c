@@ -53,6 +53,26 @@ void runBinaryWithLibrary(unsigned char* tb, size_t size, char* library, Toy_Hoo
 	Toy_freeInterpreter(&interpreter);
 }
 
+void runBinaryQuietly(unsigned char* tb, size_t size) {
+	Toy_Interpreter interpreter;
+	Toy_initInterpreter(&interpreter);
+
+	//NOTE: supress print output for testing
+	Toy_setInterpreterPrint(&interpreter, noPrintFn);
+	Toy_setInterpreterAssert(&interpreter, assertWrapper);
+	Toy_setInterpreterError(&interpreter, errorWrapper);
+
+	//inject the libs
+	Toy_injectNativeHook(&interpreter, "about", Toy_hookAbout);
+	Toy_injectNativeHook(&interpreter, "compound", Toy_hookCompound);
+	Toy_injectNativeHook(&interpreter, "standard", Toy_hookStandard);
+	Toy_injectNativeHook(&interpreter, "timer", Toy_hookTimer);
+	Toy_injectNativeHook(&interpreter, "runner", Toy_hookRunner);
+
+	Toy_runInterpreter(&interpreter, tb, size);
+	Toy_freeInterpreter(&interpreter);
+}
+
 typedef struct Payload {
 	char* fname;
 	char* libname;
@@ -108,6 +128,41 @@ int main() {
 			}
 
 			runBinaryWithLibrary(tb, size, payloads[i].libname, payloads[i].hook);
+		}
+	}
+
+	{
+		//run whatever, testing stuff together to check for memory leaks
+		char* whatever[] = {
+			"random-stuff.toy",
+			NULL
+		};
+
+		for (int i = 0; whatever[i]; i++) {
+			printf("Running %s\n", whatever[i]);
+
+			char fname[128];
+			snprintf(fname, 128, "scripts/lib/%s", whatever[i]);
+
+			//compile the source
+			size_t size = 0;
+			char* source = Toy_readFile(fname, &size);
+			if (!source) {
+				printf(TOY_CC_ERROR "Failed to load file: %s\n" TOY_CC_RESET, fname);
+				failedAsserts++;
+				continue;
+			}
+
+			unsigned char* tb = Toy_compileString(source, &size);
+			free((void*)source);
+
+			if (!tb) {
+				printf(TOY_CC_ERROR "Failed to compile file: %s\n" TOY_CC_RESET, fname);
+				failedAsserts++;
+				continue;
+			}
+
+			runBinaryQuietly(tb, size);
 		}
 	}
 
