@@ -47,7 +47,7 @@ Toy_freeInterpreter(&interpreter);
 In addition to this, you might also wish to "inject" a series of usable libraries into the interpreter, which can be `import`-ed within the language itself. This process only needs to be done once, after initialization, but before the first run.
 
 ```c
-Toy_injectNativeHook(&interpreter, "standard", hookStandard);
+Toy_injectNativeHook(&interpreter, "standard", Toy_hookStandard);
 ```
 
 A "hook" is a callback function which is invoked when the given library is imported. `standard` is the most commonly used library available.
