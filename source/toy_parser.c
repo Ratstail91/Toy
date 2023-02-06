@@ -508,6 +508,22 @@ static Toy_Opcode unary(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	return TOY_OP_EOF;
 }
 
+static char* removeChar(char* lexeme, int length, char c) {
+	int resPos = 0;
+	char* result = TOY_ALLOCATE(char, length + 1);
+
+	for (int i = 0; i < length; i++) {
+		if (lexeme[i] == c) {
+			continue;
+		}
+
+		result[resPos++] = lexeme[i];
+	}
+
+	result[resPos] = '\0';
+	return result;
+}
+
 static Toy_Opcode atomic(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	switch(parser->previous.type) {
 		case TOY_TOKEN_NULL:
@@ -524,14 +540,18 @@ static Toy_Opcode atomic(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 
 		case TOY_TOKEN_LITERAL_INTEGER: {
 			int value = 0;
-			sscanf(parser->previous.lexeme, "%d", &value);
+			char* lexeme = removeChar(parser->previous.lexeme, parser->previous.length, '_');
+			sscanf(lexeme, "%d", &value);
+			TOY_FREE_ARRAY(char, lexeme, parser->previous.length + 1);
 			Toy_emitASTNodeLiteral(nodeHandle, TOY_TO_INTEGER_LITERAL(value));
 			return TOY_OP_EOF;
 		}
 
 		case TOY_TOKEN_LITERAL_FLOAT: {
 			float value = 0;
-			sscanf(parser->previous.lexeme, "%f", &value);
+			char* lexeme = removeChar(parser->previous.lexeme, parser->previous.length, '_');
+			sscanf(lexeme, "%f", &value);
+			TOY_FREE_ARRAY(char, lexeme, parser->previous.length + 1);
 			Toy_emitASTNodeLiteral(nodeHandle, TOY_TO_FLOAT_LITERAL(value));
 			return TOY_OP_EOF;
 		}

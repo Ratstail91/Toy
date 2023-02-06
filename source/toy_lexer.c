@@ -141,12 +141,12 @@ static Toy_Token makeToken(Toy_Lexer* lexer, Toy_TokenType type) {
 static Toy_Token makeIntegerOrFloat(Toy_Lexer* lexer) {
 	Toy_TokenType type = TOY_TOKEN_LITERAL_INTEGER; //what am I making?
 
-	while(isDigit(lexer)) advance(lexer);
+	while(isDigit(lexer) || peek(lexer) == '_') advance(lexer);
 
 	if (peek(lexer) == '.' && (peekNext(lexer) >= '0' && peekNext(lexer) <= '9')) { //BUGFIX: peekNext == digit
 		type = TOY_TOKEN_LITERAL_FLOAT;
 		advance(lexer);
-		while(isDigit(lexer)) advance(lexer);
+		while(isDigit(lexer) || peek(lexer) == '_') advance(lexer);
 	}
 
 	Toy_Token token;

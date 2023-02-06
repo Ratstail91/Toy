@@ -121,6 +121,44 @@ int main() {
 		Toy_freeParser(&parser);
 	}
 
+	{
+		//test parsing of underscored numbers
+		char* source = "print 1_000_000;";
+
+		//test parsing
+		Toy_Lexer lexer;
+		Toy_Parser parser;
+		Toy_initLexer(&lexer, source);
+		Toy_initParser(&parser, &lexer);
+
+		Toy_ASTNode* node = Toy_scanParser(&parser);
+
+		//inspect the node
+		if (node == NULL) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode is null\n" TOY_CC_RESET);
+			return -1;
+		}
+
+		if (node->type != TOY_AST_NODE_UNARY || node->unary.opcode != TOY_OP_PRINT) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode is not a unary print instruction\n" TOY_CC_RESET);
+			return -1;
+		}
+
+		if (node->unary.child->type != TOY_AST_NODE_LITERAL || !TOY_IS_INTEGER(node->unary.child->atomic.literal)) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode to be printed is not a string literal\n" TOY_CC_RESET);
+			return -1;
+		}
+
+		if (TOY_AS_INTEGER(node->unary.child->atomic.literal) != 1000000) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: ASTNode to be printed is not the correct value, found: %d\n" TOY_CC_RESET, TOY_AS_INTEGER(node->unary.child->atomic.literal));
+			return -1;
+		}
+
+		//cleanup
+		Toy_freeASTNode(node);
+		Toy_freeParser(&parser);
+	}
+
 	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 	return 0;
 }
