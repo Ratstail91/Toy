@@ -80,3 +80,11 @@ This function returns a new string which is identical to the string `self`, exce
 
 These characters used because they are the only control characters currently supported by Toy.
 
+## _trimBegin(self: string, trimChars: string = " \t\n\r")
+
+This is identical to `_trim(self, trimChars)`, except it is only applied to the beginning of the first argument.
+
+## _trimEnd(self: string, trimChars: string = " \t\n\r")
+
+This is identical to `_trim(self, trimChars)`, except it is only applied to the end of the first argument.
+
