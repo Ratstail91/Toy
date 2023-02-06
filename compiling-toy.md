@@ -26,8 +26,8 @@ bytecode -> interpreter -> result
 Exactly how the source code is loaded into memory is left up to the user, however once it's loaded, it can be bound to a `Lexer` structure.
 
 ```c
-Lexer lexer;
-initLexer(&lexer, source);
+Toy_Lexer lexer;
+Toy_initLexer(&lexer, source);
 ```
 
 The lexer, when invoked, will break down the string of characters into individual `Tokens`.
@@ -36,20 +36,20 @@ The lexer does not need to be freed after use, however the source code does.
 
 ## Parser
 
-The `Parser` structure takes a `Lexer` as an argument when initialized.
+The `Toy_Parser` structure takes a `Toy_Lexer` as an argument when initialized.
 
 ```c
-Parser parser; 
-initParser(&parser, &lexer);
+Toy_Parser parser; 
+Toy_initParser(&parser, &lexer);
 
-ASTNode* node = scanParser(&parser);
+Toy_ASTNode* node = Toy_scanParser(&parser);
 
-freeParser(&parser);
+Toy_freeParser(&parser);
 ```
 
-The parser takes tokens, one at a time, and converts them into structures called Abstract Syntax Trees, or ASTs for short. Each AST represents a single top-level statement within the Toy script. You'll know when the parser is finished when `scanParser()` begins returning `NULL` pointers.
+The parser takes tokens, one at a time, and converts them into structures called Abstract Syntax Trees, or ASTs for short. Each AST represents a single top-level statement within the Toy script. You'll know when the parser is finished when `Toy_scanParser()` begins returning `NULL` pointers.
 
-The AST Nodes produced by `scanParser()` must be freed manually, and the parser itself should not be used again.
+The AST Nodes produced by `Toy_scanParser()` must be freed manually, and the parser itself should not be used again.
 
 ## Compiler
 
@@ -57,14 +57,14 @@ The actual compilation phase has two steps - instruction writing and collation.
 
 ```c
 size_t size;
-Compiler compiler;
+Toy_Compiler compiler;
 
-initCompiler(&compiler);
-writeCompiler(&compiler, node);
+Toy_initCompiler(&compiler);
+Toy_writeCompiler(&compiler, node);
 
-unsigned char* tb = collateCompiler(&compiler, &size);
+unsigned char* tb = Toy_collateCompiler(&compiler, &size);
 
-freeCompiler(&compiler);
+Toy_freeCompiler(&compiler);
 ```
 
 The writing step is the process in which AST nodes are compressed into bytecode instructions, while literal values are extracted and placed aside in a cache (usually in an intermediate state).
@@ -75,17 +75,17 @@ The Toy bytecode (abbreviated to `tb`), along with the `size` variable indicatin
 
 This bytecode can be saved into a file for later consumption by the host at runtime - ensure that the file has the `.tb` extension.
 
-The bytecode loaded in memory is consumed and freed by `runInterpreter()`.
+The bytecode loaded in memory is consumed and freed by `Toy_runInterpreter()`.
 
 ## Interpreter
 
 The interpreter acts based on the contents of the bytecode given to it.
 
 ```c
-Interpreter interpreter;
-initInterpreter(&interpreter);
-runInterpreter(&interpreter, tb, size);
-freeInterpreter(&interpreter);
+Toy_Interpreter interpreter;
+Toy_initInterpreter(&interpreter);
+Toy_runInterpreter(&interpreter, tb, size);
+Toy_freeInterpreter(&interpreter);
 ```
 
 Exactly how it accomplishes this task is up to it - as long as the result matches expectations.
