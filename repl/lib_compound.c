@@ -187,6 +187,9 @@ static int nativeForEach(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 		}
 	}
 
+	Toy_freeLiteral(fnLiteral);
+	Toy_freeLiteral(selfLiteral);
+
 	return 0;
 }
 
@@ -375,6 +378,9 @@ static int nativeMap(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 		Toy_pushLiteralArray(&interpreter->stack, returnsLiteral);
 		Toy_freeLiteral(returnsLiteral);
 	}
+
+	Toy_freeLiteral(fnLiteral);
+	Toy_freeLiteral(selfLiteral);
 
 	return 0;
 }
