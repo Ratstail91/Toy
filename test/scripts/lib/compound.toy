@@ -137,33 +137,38 @@ import compound;
 
 //test trim defaults
 {
-	//test a bunch
-	fn test(s, pass) {
-		var result = s.trim();
-		assert result == pass, "_trim(" + result + ") failed";
+	{
+		//test a bunch
+		fn test(s, pass) {
+			var result = s.trim();
+			assert result == pass, "_trim(" + result + ") failed";
+		}
+
+		test("hello world", "hello world");
+		test(" hello world", "hello world");
+		test("hello world ", "hello world");
+		test(" hello world ", "hello world");
+		test("  hello world", "hello world");
+		test("hello world  ", "hello world");
+		test("  hello world  ", "hello world");
+		test("                           hello world", "hello world");
+		test("hello world                ", "hello world");
+		test("                           hello world                           ", "hello world");
+
+		//one for goot luck
+		assert " hello world ".trim() == "hello world", "hello world.trim() failed";
 	}
 
-	test("hello world", "hello world");
-	test(" hello world", "hello world");
-	test("hello world ", "hello world");
-	test(" hello world ", "hello world");
-	test("  hello world", "hello world");
-	test("hello world  ", "hello world");
-	test("  hello world  ", "hello world");
-	test("                           hello world", "hello world");
-	test("hello world                ", "hello world");
-	test("                           hello world                           ", "hello world");
+	//test trim custom values
+	{
+		var chars = "heilod";
 
-	//one for goot luck
-	assert " hello world ".trim() == "hello world", "hello world.trim() failed";
-}
+		assert "hello world".trim(chars) == " wor", "custom _trim() failed";
+	}
 
-
-//test trim custom values
-{
-	var chars = "heilod";
-
-	assert "hello world".trim(chars) == " wor", "custom _trim() failed";
+	//test trimBegin()
+	assert "  foo  ".trimBegin() == "foo  ", "string.trimBegin() failed";
+	assert "  foo  ".trimEnd() == "  foo", "string.trimBegin() failed";
 }
 
 
