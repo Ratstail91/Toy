@@ -2,9 +2,9 @@
 var memo: [int : int] = [:];
 
 fn fib(n : int) {
-    if (n < 2) {
-        return n;
-    }
+	if (n < 2) {
+		return n;
+	}
 
 	var result = memo[n];
 	if (result == null) {
@@ -12,7 +12,7 @@ fn fib(n : int) {
 		memo[n] = result;
 	}
 
-    return result;
+	return result;
 }
 
 for (var i = 0; i < 40; i++) {

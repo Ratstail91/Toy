@@ -1,5 +1,5 @@
 //number of iterations
-var SIZE: int const = 100;
+var SIZE: int const = 260;
 
 //lookup table
 var lookup = [
@@ -32,7 +32,7 @@ prev += "*"; //initial
 print prev;
 
 //run
-for (var iteration = 0; iteration < 100; iteration++) {
+for (var iteration = 0; iteration < SIZE -1; iteration++) {
 	//left
 	var output = (lookup[" "][prev[0]][prev[1]]);
 

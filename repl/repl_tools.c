@@ -145,6 +145,9 @@ void Toy_runSource(char* source) {
 void Toy_runSourceFile(char* fname) {
 	size_t size = 0; //not used
 	char* source = Toy_readFile(fname, &size);
+	if (!source) {
+		return;
+	}
 	Toy_runSource(source);
 	free((void*)source);
 }
