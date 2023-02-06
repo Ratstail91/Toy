@@ -100,7 +100,7 @@ var number: t = 0; //what if it had been false?
 Sometimes, you may need to pass data through Toy that Toy can't normally handle. This data is called "opaque" data, and is passed around by reference rather than value. Anything can be passed in as opaque data, as long as it's represented as a void pointer in C.
 
 ```c
-Literal opaque = TOY_TO_OPAQUE_LITERAL(&data, 0);
+Toy_Literal opaque = TOY_TO_OPAQUE_LITERAL(&data, 0);
 
 //...
 
