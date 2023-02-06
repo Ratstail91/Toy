@@ -14,5 +14,5 @@ More details, such as a name for the engine, will come eventually.
 
 The engine uses a node-based structure, inspired by Godot's own node structure. Each node has a script attached, and can programmatically load other nodes.
 
-The engine also uses Toy's memory model i.e. `reallocate()` wrapped in a number of macros.
+The engine also uses Toy's memory model i.e. `Toy_reallocate()` wrapped in a number of macros.
 
