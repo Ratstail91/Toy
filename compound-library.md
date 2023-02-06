@@ -14,6 +14,22 @@ import compound;
 
 This function only works when self and other are matching compounds (both arrays, dictionaries or strings). It returns a new compound of that kind, with the content of `other` appended to the content of `self`.
 
+## _forEach(self, func: fn)
+
+This function takes either an array or a dictionary as the `self` argument, and a function as `func`. The argument `func` must take two arguments - the first is the index/key, and the second is the value.
+
+```
+import compound;
+
+fn p(i, x) {
+    print x;
+}
+
+var a = [1, 3, 5];
+
+a.forEach(p); //prints 1, 3, and 5 to stdout
+```
+
 ## _getKeys(self: dictionary)
 
 This returns an array of all non-null keys stored within the dictionary. The order is undefined.
@@ -21,6 +37,23 @@ This returns an array of all non-null keys stored within the dictionary. The ord
 ## _getValues(self: dictionary)
 
 This returns an array of all values with non-null keys stored within the dictionary. The order is undefined.
+
+## _map(self, func: fn)
+
+This function takes either an array or a dictionary as the `self` argument, and a function as `func`. The argument `func` must take two arguments - the first is the index/key, and the second is the value. It returns an array with the results of each call - the order of the results when called on a dictionary are undefined.
+
+```
+import compound;
+
+fn increment(k, v) {
+    return v + 1;
+}
+
+var a = [1, 2, 3];
+
+print a.map(increment); //prints [2,3,4];
+```
+
 
 ## _toLower(self: string)
 
