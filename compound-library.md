@@ -16,7 +16,7 @@ This function only works when self and other are matching compounds (both arrays
 
 ## _forEach(self, func: fn)
 
-This function takes either an array or a dictionary as the `self` argument, and a function as `func`. The argument `func` must take two arguments - the first is the index/key, and the second is the value.
+This function takes either an array or a dictionary as the `self` argument, and a function as `func`. The argument `func` must take two arguments - the first is the index/key of the array/dictionary, and the second is the value.
 
 ```
 import compound;
@@ -40,7 +40,7 @@ This returns an array of all values with non-null keys stored within the diction
 
 ## _map(self, func: fn)
 
-This function takes either an array or a dictionary as the `self` argument, and a function as `func`. The argument `func` must take two arguments - the first is the index/key, and the second is the value. It returns an array with the results of each call - the order of the results when called on a dictionary are undefined.
+This function takes either an array or a dictionary as the `self` argument, and a function as `func`. The argument `func` must take two arguments - the first is the index/key of the array/dictionary, and the second is the value. It returns an array with the results of each call - the order of the results when called on a dictionary are undefined.
 
 ```
 import compound;
@@ -56,7 +56,7 @@ print a.map(increment); //prints [2,3,4];
 
 ## _reduce(self, default, func: fn)
 
-This function takes either an array or a dictionary as the `self` argument, a default value, and a function as `func`. The argument `func` takes three arguments - the first is the accumulator, the second is the index/key and the third is the value. It applies the given function to every element, passing the result of each call as the accumulator to the next (the default value is used for the first call). Finally, the final value of the accumulator is returned to the caller.
+This function takes either an array or a dictionary as the `self` argument, a default value, and a function as `func`. The argument `func` takes three arguments - the first is the accumulator, the second is the index/key and the third is the value. It applies the given function to every element of the array/dictionary, passing the result of each call as the accumulator to the next (the default value is used for the first call). Finally, the final value of the accumulator is returned to the caller.
 
 ```
 import compound;
