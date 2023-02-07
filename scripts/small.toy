@@ -1,2 +1,9 @@
 import compound;
 
+fn f(acc, k, v) {
+	return acc + v;
+}
+
+var a = [1, 2, 3, 4];
+
+print a.reduce(0, f); //prints "10"

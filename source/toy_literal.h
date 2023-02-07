@@ -66,7 +66,7 @@ typedef struct Toy_Literal {
         } identifier;
 
 		struct {
-			Toy_LiteralType typeOf; //no longer a mask
+			Toy_LiteralType typeOf;
 			bool constant;
 			void* subtypes; //for nested types caused by compounds
 			int capacity;
@@ -75,7 +75,7 @@ typedef struct Toy_Literal {
 
 		struct {
 			void* ptr;
-			int tag; //TODO: remove tags?
+			int tag;
 		} opaque;
 	} as;
 } Toy_Literal;
@@ -132,7 +132,7 @@ TOY_API void Toy_freeLiteral(Toy_Literal literal);
 #define TOY_MAX_STRING_LENGTH					4096
 #define TOY_HASH_I(lit)							((lit).as.identifier.hash)
 #define TOY_TYPE_PUSH_SUBTYPE(lit, subtype)		Toy_private_typePushSubtype(lit, subtype)
-#define TOY_GET_OPAQUE_TAG(o)						o.as.opaque.tag
+#define TOY_GET_OPAQUE_TAG(o)					o.as.opaque.tag
 
 //BUGFIX: macros are not functions
 TOY_API bool Toy_private_isTruthy(Toy_Literal x);
