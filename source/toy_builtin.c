@@ -258,8 +258,6 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	Toy_Literal first = Toy_popLiteralArray(arguments);
 	Toy_Literal compound = Toy_popLiteralArray(arguments);
 
-	Toy_Literal value = TOY_TO_NULL_LITERAL;
-
 	//dictionary - no slicing
 	if (TOY_IS_DICTIONARY(compound)) {
 		if (TOY_IS_IDENTIFIER(first)) {
@@ -280,7 +278,22 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			Toy_freeLiteral(idn);
 		}
 
-		value = Toy_getLiteralDictionary(TOY_AS_DICTIONARY(compound), first);
+		//second and third are bad args to dictionaries
+		if (!TOY_IS_NULL(second) || !TOY_IS_NULL(third)) {
+			interpreter->errorOutput("Index slicing not allowed for dictionaries\n");
+
+			Toy_freeLiteral(op);
+			Toy_freeLiteral(assign);
+			Toy_freeLiteral(third);
+			Toy_freeLiteral(second);
+			Toy_freeLiteral(first);
+			Toy_freeLiteral(compound);
+
+			return -1;
+		}
+
+		//get the value
+		Toy_Literal value = Toy_getLiteralDictionary(TOY_AS_DICTIONARY(compound), first);
 
 		//dictionary
 		if (TOY_IS_NULL(op)) {
@@ -330,6 +343,19 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			Toy_setLiteralDictionary(TOY_AS_DICTIONARY(compound), first, lit);
 			Toy_freeLiteral(lit);
 		}
+
+		//leave the dictionary on the stack
+		Toy_pushLiteralArray(&interpreter->stack, compound);
+
+		Toy_freeLiteral(op);
+		Toy_freeLiteral(assign);
+		Toy_freeLiteral(third);
+		Toy_freeLiteral(second);
+		Toy_freeLiteral(first);
+		Toy_freeLiteral(compound);
+		Toy_freeLiteral(value);
+
+		return 1;
 	}
 
 	//array - slicing
@@ -374,8 +400,10 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				Toy_freeLiteral(idn);
 			}
 
-			//handle each null case
-			if (TOY_IS_NULL(first) || !TOY_IS_INTEGER(first)) {
+			//handle each error case
+			if ((!TOY_IS_NULL(first) && !TOY_IS_INTEGER(first)) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= TOY_AS_ARRAY(compound)->count) {
+				interpreter->errorOutput("Bad first indexing\n");
+
 				//something is weird - skip out
 				Toy_freeLiteral(op);
 				Toy_freeLiteral(assign);
@@ -383,17 +411,42 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				Toy_freeLiteral(second);
 				Toy_freeLiteral(first);
 				Toy_freeLiteral(compound);
-				Toy_freeLiteral(value);
 
 				return -1;
 			}
 
-			if (TOY_IS_NULL(second)) { //assign only a single character
-				//get the "first" within the array, then skip out
+			if ((!TOY_IS_NULL(second) && !TOY_IS_INTEGER(second)) || TOY_AS_INTEGER(second) < 0 || TOY_AS_INTEGER(second) >= TOY_AS_ARRAY(compound)->count) {
+				interpreter->errorOutput("Bad second indexing\n");
 
-				Toy_freeLiteral(value);
-				value = Toy_getLiteralArray(TOY_AS_ARRAY(compound), first);
-				Toy_pushLiteralArray(&interpreter->stack, value);
+				//something is weird - skip out
+				Toy_freeLiteral(op);
+				Toy_freeLiteral(assign);
+				Toy_freeLiteral(third);
+				Toy_freeLiteral(second);
+				Toy_freeLiteral(first);
+				Toy_freeLiteral(compound);
+
+				return -1;
+			}
+
+			if ((!TOY_IS_NULL(third) && !TOY_IS_INTEGER(third)) || TOY_AS_INTEGER(third) == 0) {
+				interpreter->errorOutput("Bad third indexing\n");
+
+				//something is weird - skip out
+				Toy_freeLiteral(op);
+				Toy_freeLiteral(assign);
+				Toy_freeLiteral(third);
+				Toy_freeLiteral(second);
+				Toy_freeLiteral(first);
+				Toy_freeLiteral(compound);
+
+				return -1;
+			}
+
+			//simple indexing if second is null
+			if (TOY_IS_NULL(second)) {
+				Toy_Literal result = Toy_getLiteralArray(TOY_AS_ARRAY(compound), first);
+				Toy_pushLiteralArray(&interpreter->stack, result);
 
 				Toy_freeLiteral(op);
 				Toy_freeLiteral(assign);
@@ -401,43 +454,52 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				Toy_freeLiteral(second);
 				Toy_freeLiteral(first);
 				Toy_freeLiteral(compound);
-				Toy_freeLiteral(value);
+				Toy_freeLiteral(result);
 
 				return 1;
-			}
-
-			if (!TOY_IS_INTEGER(second) || (!TOY_IS_NULL(third) && !TOY_IS_INTEGER(third)) || TOY_AS_INTEGER(second) < 0 || TOY_AS_INTEGER(second) > TOY_AS_ARRAY(compound)->count || TOY_AS_INTEGER(third) == 0) {
-				//something is weird - skip out
-				Toy_freeLiteral(op);
-				Toy_freeLiteral(assign);
-				Toy_freeLiteral(third);
-				Toy_freeLiteral(second);
-				Toy_freeLiteral(first);
-				Toy_freeLiteral(compound);
-				Toy_freeLiteral(value);
-
-				return -1;
 			}
 
 			//start building a new array from the old one
 			Toy_LiteralArray* result = TOY_ALLOCATE(Toy_LiteralArray, 1);
 			Toy_initLiteralArray(result);
 
-			int min = TOY_AS_INTEGER(third) > 0 ? TOY_AS_INTEGER(first) : TOY_AS_INTEGER(second);
-
 			//copy compound into result
-			for (int i = min; i >= 0 && i <= TOY_AS_ARRAY(compound)->count && i >= TOY_AS_INTEGER(first) && i <= TOY_AS_INTEGER(second); i += TOY_AS_INTEGER(third)) {
-				Toy_Literal idx = TOY_TO_INTEGER_LITERAL(i);
-				Toy_Literal tmp = Toy_getLiteralArray(TOY_AS_ARRAY(compound), idx);
-				Toy_pushLiteralArray(result, tmp);
+			if (TOY_AS_INTEGER(third) > 0) {
+				for (int i = TOY_AS_INTEGER(first); i <= TOY_AS_INTEGER(second); i += TOY_AS_INTEGER(third)) {
+					Toy_Literal idx = TOY_TO_INTEGER_LITERAL(i);
+					Toy_Literal tmp = Toy_getLiteralArray(TOY_AS_ARRAY(compound), idx);
+					Toy_pushLiteralArray(result, tmp);
 
-				Toy_freeLiteral(idx);
-				Toy_freeLiteral(tmp);
+					Toy_freeLiteral(idx);
+					Toy_freeLiteral(tmp);
+				}
+			}
+			else {
+				for (int i = TOY_AS_INTEGER(second); i >= TOY_AS_INTEGER(first); i += TOY_AS_INTEGER(third)) {
+					Toy_Literal idx = TOY_TO_INTEGER_LITERAL(i);
+					Toy_Literal tmp = Toy_getLiteralArray(TOY_AS_ARRAY(compound), idx);
+					Toy_pushLiteralArray(result, tmp);
+
+					Toy_freeLiteral(idx);
+					Toy_freeLiteral(tmp);
+				}
 			}
 
 			//finally, swap out the compound for the result
 			Toy_freeLiteral(compound);
 			compound = TOY_TO_ARRAY_LITERAL(result);
+
+			//leave the array on the stack
+			Toy_pushLiteralArray(&interpreter->stack, compound);
+
+			Toy_freeLiteral(op);
+			Toy_freeLiteral(assign);
+			Toy_freeLiteral(third);
+			Toy_freeLiteral(second);
+			Toy_freeLiteral(first);
+			Toy_freeLiteral(compound);
+
+			return 1;
 		}
 
 		//array slice assignment
@@ -480,8 +542,10 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				Toy_freeLiteral(idn);
 			}
 
-			//handle each null case
-			if (TOY_IS_NULL(first) || !TOY_IS_INTEGER(first)) {
+			//handle each error case
+			if ((!TOY_IS_NULL(first) && !TOY_IS_INTEGER(first)) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= TOY_AS_ARRAY(compound)->count) {
+				interpreter->errorOutput("Bad first indexing assignment\n");
+
 				//something is weird - skip out
 				Toy_freeLiteral(op);
 				Toy_freeLiteral(assign);
@@ -489,28 +553,50 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				Toy_freeLiteral(second);
 				Toy_freeLiteral(first);
 				Toy_freeLiteral(compound);
-				Toy_freeLiteral(value);
 
 				return -1;
 			}
 
+			if ((!TOY_IS_NULL(second) && !TOY_IS_INTEGER(second)) || TOY_AS_INTEGER(second) < 0 || TOY_AS_INTEGER(second) >= TOY_AS_ARRAY(compound)->count) {
+				interpreter->errorOutput("Bad second indexing assignment\n");
+
+				//something is weird - skip out
+				Toy_freeLiteral(op);
+				Toy_freeLiteral(assign);
+				Toy_freeLiteral(third);
+				Toy_freeLiteral(second);
+				Toy_freeLiteral(first);
+				Toy_freeLiteral(compound);
+
+				return -1;
+			}
+
+			if ((!TOY_IS_NULL(third) && !TOY_IS_INTEGER(third)) || TOY_AS_INTEGER(third) == 0) {
+				interpreter->errorOutput("Bad third indexing assignment\n");
+
+				//something is weird - skip out
+				Toy_freeLiteral(op);
+				Toy_freeLiteral(assign);
+				Toy_freeLiteral(third);
+				Toy_freeLiteral(second);
+				Toy_freeLiteral(first);
+				Toy_freeLiteral(compound);
+
+				return -1;
+			}
+
+			//simple indexing assignment if second is null
 			if (TOY_IS_NULL(second)) {
-				//set the "first" within the array, then skip out
+				bool ret = -1;
+
 				if (!Toy_setLiteralArray(TOY_AS_ARRAY(compound), first, assign)) {
-					interpreter->errorOutput("Index assignment out of bounds\n");
-
-					Toy_freeLiteral(op);
-					Toy_freeLiteral(assign);
-					Toy_freeLiteral(third);
-					Toy_freeLiteral(second);
-					Toy_freeLiteral(first);
-					Toy_freeLiteral(compound);
-					Toy_freeLiteral(value);
-
+					interpreter->errorOutput("Array index out of bounds in assignment");
 					return -1;
 				}
-
-				Toy_pushLiteralArray(&interpreter->stack, compound);
+				else {
+					Toy_pushLiteralArray(&interpreter->stack, compound); //leave the array on the stack
+					ret = 1;
+				}
 
 				Toy_freeLiteral(op);
 				Toy_freeLiteral(assign);
@@ -518,22 +604,8 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				Toy_freeLiteral(second);
 				Toy_freeLiteral(first);
 				Toy_freeLiteral(compound);
-				Toy_freeLiteral(value);
 
-				return 1;
-			}
-
-			if (!TOY_IS_INTEGER(second) || (!TOY_IS_NULL(third) && !TOY_IS_INTEGER(third)) || TOY_AS_INTEGER(second) < 0 || TOY_AS_INTEGER(second) > TOY_AS_ARRAY(compound)->count || TOY_AS_INTEGER(third) == 0) {
-				//something is weird - skip out
-				Toy_freeLiteral(op);
-				Toy_freeLiteral(assign);
-				Toy_freeLiteral(third);
-				Toy_freeLiteral(second);
-				Toy_freeLiteral(first);
-				Toy_freeLiteral(compound);
-				Toy_freeLiteral(value);
-
-				return -1;
+				return ret;
 			}
 
 			//start building a new array from the old one
@@ -611,15 +683,28 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			//finally, swap out the compound for the result
 			Toy_freeLiteral(compound);
 			compound = TOY_TO_ARRAY_LITERAL(result);
+
+			//leave the array on the stack
+			Toy_pushLiteralArray(&interpreter->stack, compound);
+
+			Toy_freeLiteral(op);
+			Toy_freeLiteral(assign);
+			Toy_freeLiteral(third);
+			Toy_freeLiteral(second);
+			Toy_freeLiteral(first);
+			Toy_freeLiteral(compound);
+
+			return 1;
 		}
 
+		//assignment and other operations
 		if (TOY_IS_IDENTIFIER(first)) {
 			Toy_Literal idn = first;
 			Toy_parseIdentifierToValue(interpreter, &first);
 			Toy_freeLiteral(idn);
 		}
 
-		value = Toy_getLiteralArray(TOY_AS_ARRAY(compound), first);
+		Toy_Literal value = Toy_getLiteralArray(TOY_AS_ARRAY(compound), first);
 
 		if (TOY_IS_STRING(op) && Toy_equalsRefStringCString(TOY_AS_STRING(op), "+=")) {
 			Toy_Literal lit = addition(interpreter, value, assign);
@@ -650,6 +735,18 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			Toy_setLiteralArray(TOY_AS_ARRAY(compound), first, lit);
 			Toy_freeLiteral(lit);
 		}
+
+		//leave the array on the stack
+		Toy_pushLiteralArray(&interpreter->stack, compound);
+
+		Toy_freeLiteral(op);
+		Toy_freeLiteral(assign);
+		Toy_freeLiteral(third);
+		Toy_freeLiteral(second);
+		Toy_freeLiteral(first);
+		Toy_freeLiteral(compound);
+
+		return 1;
 	}
 
 	//string - slicing
@@ -674,7 +771,7 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			if (!TOY_IS_NULL(second)) {
 				if (TOY_IS_INDEX_BLANK(second)) {
 					Toy_freeLiteral(second);
-					second = TOY_TO_INTEGER_LITERAL(compoundLength);
+					second = TOY_TO_INTEGER_LITERAL(compoundLength - 1);
 				}
 
 				if (TOY_IS_IDENTIFIER(second)) {
@@ -695,8 +792,10 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				Toy_freeLiteral(idn);
 			}
 
-			//handle each null case
-			if (TOY_IS_NULL(first) || !TOY_IS_INTEGER(first)) {
+			//handle each error case
+			if ((!TOY_IS_NULL(first) && !TOY_IS_INTEGER(first)) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= TOY_AS_STRING(compound)->length) {
+				interpreter->errorOutput("Bad first indexing in string\n");
+
 				//something is weird - skip out
 				Toy_freeLiteral(op);
 				Toy_freeLiteral(assign);
@@ -704,22 +803,48 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				Toy_freeLiteral(second);
 				Toy_freeLiteral(first);
 				Toy_freeLiteral(compound);
-				Toy_freeLiteral(value);
 
 				return -1;
 			}
 
-			if (TOY_IS_NULL(second)) { //assign only a single character
-				char c = Toy_toCString(TOY_AS_STRING(compound))[TOY_AS_INTEGER(first)];
+			if ((!TOY_IS_NULL(second) && !TOY_IS_INTEGER(second)) || TOY_AS_INTEGER(second) < 0 || TOY_AS_INTEGER(second) >= TOY_AS_STRING(compound)->length) {
+				interpreter->errorOutput("Bad second indexing in string\n");
 
-				char buffer[16];
-				snprintf(buffer, 16, "%c", c);
+				//something is weird - skip out
+				Toy_freeLiteral(op);
+				Toy_freeLiteral(assign);
+				Toy_freeLiteral(third);
+				Toy_freeLiteral(second);
+				Toy_freeLiteral(first);
+				Toy_freeLiteral(compound);
 
-				Toy_freeLiteral(value);
-				int totalLength = strlen(buffer);
-				value = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(buffer, totalLength));
+				return -1;
+			}
 
-				Toy_pushLiteralArray(&interpreter->stack, value);
+			if ((!TOY_IS_NULL(third) && !TOY_IS_INTEGER(third)) || TOY_AS_INTEGER(third) == 0) {
+				interpreter->errorOutput("Bad third indexing in string\n");
+
+				//something is weird - skip out
+				Toy_freeLiteral(op);
+				Toy_freeLiteral(assign);
+				Toy_freeLiteral(third);
+				Toy_freeLiteral(second);
+				Toy_freeLiteral(first);
+				Toy_freeLiteral(compound);
+
+				return -1;
+			}
+
+			//simple indexing if second is null
+			if (TOY_IS_NULL(second)) {
+
+				char* cstr = Toy_toCString(TOY_AS_STRING(compound));
+				char buf[16];
+
+				snprintf(buf, 16, "%s", &(cstr[ TOY_AS_INTEGER(first) ]) );
+				Toy_Literal result = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(buf, 1));
+
+				Toy_pushLiteralArray(&interpreter->stack, result);
 
 				Toy_freeLiteral(op);
 				Toy_freeLiteral(assign);
@@ -727,35 +852,26 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				Toy_freeLiteral(second);
 				Toy_freeLiteral(first);
 				Toy_freeLiteral(compound);
-				Toy_freeLiteral(value);
+				Toy_freeLiteral(result);
 
 				return 1;
-			}
-
-			if (!TOY_IS_INTEGER(second) || (!TOY_IS_NULL(third) && !TOY_IS_INTEGER(third)) || TOY_AS_INTEGER(second) < 0 || TOY_AS_INTEGER(second) > compoundLength || TOY_AS_INTEGER(third) == 0) {
-				//something is weird - skip out
-				Toy_freeLiteral(op);
-				Toy_freeLiteral(assign);
-				Toy_freeLiteral(third);
-				Toy_freeLiteral(second);
-				Toy_freeLiteral(first);
-				Toy_freeLiteral(compound);
-				Toy_freeLiteral(value);
-
-				return -1;
 			}
 
 			//start building a new string from the old one
 			char* result = TOY_ALLOCATE(char, TOY_MAX_STRING_LENGTH);
 
-			int lower = TOY_AS_INTEGER(third) > 0 ? TOY_AS_INTEGER(first) : TOY_AS_INTEGER(first) -1;
-			int min = TOY_AS_INTEGER(third) > 0 ? TOY_AS_INTEGER(first) : TOY_AS_INTEGER(second) -1;
-			int max = TOY_AS_INTEGER(third) > 0 ? TOY_AS_INTEGER(second) + (TOY_AS_INTEGER(second) == compoundLength ? -1 : 0) : TOY_AS_INTEGER(second);
-
 			//copy compound into result
 			int resultIndex = 0;
-			for (int i = min; i >= 0 && i >= lower && i <= max; i += TOY_AS_INTEGER(third)) {
-				result[ resultIndex++ ] = Toy_toCString(TOY_AS_STRING(compound))[ i ];
+
+			if (TOY_AS_INTEGER(third) > 0) {
+				for (int i = TOY_AS_INTEGER(first); i <= TOY_AS_INTEGER(second); i += TOY_AS_INTEGER(third)) {
+					result[ resultIndex++ ] = Toy_toCString(TOY_AS_STRING(compound))[ i ];
+				}
+			}
+			else {
+				for (int i = TOY_AS_INTEGER(second); i >= TOY_AS_INTEGER(first); i += TOY_AS_INTEGER(third)) {
+					result[ resultIndex++ ] = Toy_toCString(TOY_AS_STRING(compound))[ i ];
+				}
 			}
 
 			result[ resultIndex ] = '\0';
@@ -765,6 +881,18 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			compound = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(result, resultIndex));
 
 			TOY_FREE_ARRAY(char, result, TOY_MAX_STRING_LENGTH);
+
+			//leave the string on the stack
+			Toy_pushLiteralArray(&interpreter->stack, compound);
+
+			Toy_freeLiteral(op);
+			Toy_freeLiteral(assign);
+			Toy_freeLiteral(third);
+			Toy_freeLiteral(second);
+			Toy_freeLiteral(first);
+			Toy_freeLiteral(compound);
+
+			return 1;
 		}
 
 		//string slice assignment
@@ -787,7 +915,7 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			if (!TOY_IS_NULL(second)) {
 				if (TOY_IS_INDEX_BLANK(second)) {
 					Toy_freeLiteral(second);
-					second = TOY_TO_INTEGER_LITERAL(compoundLength);
+					second = TOY_TO_INTEGER_LITERAL(compoundLength - 1);
 				}
 
 				if (TOY_IS_IDENTIFIER(second)) {
@@ -808,8 +936,10 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				Toy_freeLiteral(idn);
 			}
 
-			//handle each null case
-			if (TOY_IS_NULL(first) || !TOY_IS_INTEGER(first)) {
+			//handle each error case
+			if ((!TOY_IS_NULL(first) && !TOY_IS_INTEGER(first)) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= TOY_AS_ARRAY(compound)->count) {
+				interpreter->errorOutput("Bad first indexing in string assignment\n");
+
 				//something is weird - skip out
 				Toy_freeLiteral(op);
 				Toy_freeLiteral(assign);
@@ -817,44 +947,13 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				Toy_freeLiteral(second);
 				Toy_freeLiteral(first);
 				Toy_freeLiteral(compound);
-				Toy_freeLiteral(value);
 
 				return -1;
 			}
 
-			if (TOY_IS_NULL(second)) { //assign only a single character
-				//set the "first" within the array, then skip out
-				if (TOY_AS_STRING(assign)->length != 1) {
-					//something is weird - skip out
-					Toy_freeLiteral(op);
-					Toy_freeLiteral(assign);
-					Toy_freeLiteral(third);
-					Toy_freeLiteral(second);
-					Toy_freeLiteral(first);
-					Toy_freeLiteral(compound);
-					Toy_freeLiteral(value);
+			if ((!TOY_IS_NULL(second) && !TOY_IS_INTEGER(second)) || TOY_AS_INTEGER(second) < 0 || TOY_AS_INTEGER(second) >= TOY_AS_ARRAY(compound)->count) {
+				interpreter->errorOutput("Bad second indexing in string assignment\n");
 
-					return -1;
-				}
-
-				Toy_Literal copiedCompound = TOY_TO_STRING_LITERAL(Toy_deepCopyRefString(TOY_AS_STRING(compound)));
-
-				TOY_AS_STRING(copiedCompound)->data[TOY_AS_INTEGER(first)] = Toy_toCString(TOY_AS_STRING(assign))[0];
-
-				Toy_pushLiteralArray(&interpreter->stack, copiedCompound);
-
-				Toy_freeLiteral(op);
-				Toy_freeLiteral(assign);
-				Toy_freeLiteral(third);
-				Toy_freeLiteral(second);
-				Toy_freeLiteral(first);
-				Toy_freeLiteral(compound);
-				Toy_freeLiteral(value);
-
-				return 1;
-			}
-
-			if (!TOY_IS_INTEGER(second) || (!TOY_IS_NULL(third) && !TOY_IS_INTEGER(third)) || TOY_AS_INTEGER(second) < 0 || TOY_AS_INTEGER(second) > compoundLength || TOY_AS_INTEGER(third) == 0) {
 				//something is weird - skip out
 				Toy_freeLiteral(op);
 				Toy_freeLiteral(assign);
@@ -862,7 +961,20 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				Toy_freeLiteral(second);
 				Toy_freeLiteral(first);
 				Toy_freeLiteral(compound);
-				Toy_freeLiteral(value);
+
+				return -1;
+			}
+
+			if ((!TOY_IS_NULL(third) && !TOY_IS_INTEGER(third)) || TOY_AS_INTEGER(third) == 0) {
+				interpreter->errorOutput("Bad third indexing in string assignment\n");
+
+				//something is weird - skip out
+				Toy_freeLiteral(op);
+				Toy_freeLiteral(assign);
+				Toy_freeLiteral(third);
+				Toy_freeLiteral(second);
+				Toy_freeLiteral(first);
+				Toy_freeLiteral(compound);
 
 				return -1;
 			}
@@ -911,6 +1023,19 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			compound = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(result, resultIndex));
 
 			TOY_FREE_ARRAY(char, result, TOY_MAX_STRING_LENGTH);
+
+			//leave the string on the stack
+			Toy_pushLiteralArray(&interpreter->stack, compound);
+
+			Toy_freeLiteral(op);
+			Toy_freeLiteral(assign);
+			Toy_freeLiteral(third);
+			Toy_freeLiteral(second);
+			Toy_freeLiteral(first);
+			Toy_freeLiteral(compound);
+
+			return 1;
+
 		}
 
 		else if (TOY_IS_STRING(op) && Toy_equalsRefStringCString(TOY_AS_STRING(op), "+=")) {
@@ -918,20 +1043,21 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			Toy_freeLiteral(compound);
 			compound = tmp; //don't clear tmp
 		}
+
+		//leave the string on the stack
+		Toy_pushLiteralArray(&interpreter->stack, compound);
+
+		Toy_freeLiteral(op);
+		Toy_freeLiteral(assign);
+		Toy_freeLiteral(third);
+		Toy_freeLiteral(second);
+		Toy_freeLiteral(first);
+		Toy_freeLiteral(compound);
+
+		return 1;
 	}
 
-	//leave the compound on the stack
-	Toy_pushLiteralArray(&interpreter->stack, compound);
-
-	Toy_freeLiteral(op);
-	Toy_freeLiteral(assign);
-	Toy_freeLiteral(third);
-	Toy_freeLiteral(second);
-	Toy_freeLiteral(first);
-	Toy_freeLiteral(compound);
-	Toy_freeLiteral(value);
-
-	return 1;
+	return -1;
 }
 
 int Toy_private_set(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {

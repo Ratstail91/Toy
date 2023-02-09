@@ -18,7 +18,7 @@ assert greeting == "goodnight world", "basic replacement failed";
 
 //test backwards string
 assert greeting[::-1] == "dlrow thgindoog", "backwards string failed";
-assert greeting[11:15:-1] == "dlrow", "backwards indexed string failed";
+assert greeting[10:14:-1] == "dlrow", "backwards indexed string failed";
 
 
 //test string weird manipulation
@@ -26,12 +26,12 @@ var numbers = "0123456789";
 
 numbers[::-2] = "abc";
 
-assert numbers == "01234c6b8a", "string weird manipulation failed";
+assert numbers == "0123c5b7a9", "string weird manipulation failed";
 
 
 //test indexing with variables
-var first = 11;
-var second = 15;
+var first = 10;
+var second = 14;
 var third = -1;
 
 assert greeting[first:second:third] == "dlrow", "indexing with variables failed";
