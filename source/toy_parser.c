@@ -1220,7 +1220,7 @@ static void parsePrecedence(Toy_Parser* parser, Toy_ASTNode** nodeHandle, Preced
 		Toy_emitASTNodeBinary(nodeHandle, rhsNode, opcode);
 
 		//optimise away the constants
-		if (!calcStaticBinaryArithmetic(parser, nodeHandle)) {
+		if (!parser->panic && !calcStaticBinaryArithmetic(parser, nodeHandle)) {
 			return;
 		}
 	}
