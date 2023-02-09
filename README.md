@@ -60,8 +60,6 @@ var tally = makeCounter();
 print tally(); //1
 print tally(); //2
 print tally(); //3
-
-export tally; //export this variable to the host program
 ```
 
 # License
