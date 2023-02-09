@@ -401,7 +401,7 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			}
 
 			//handle each error case
-			if ((!TOY_IS_NULL(first) && !TOY_IS_INTEGER(first)) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= TOY_AS_ARRAY(compound)->count) {
+			if (!TOY_IS_INTEGER(first) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= TOY_AS_ARRAY(compound)->count) {
 				interpreter->errorOutput("Bad first indexing\n");
 
 				//something is weird - skip out
@@ -543,7 +543,7 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			}
 
 			//handle each error case
-			if ((!TOY_IS_NULL(first) && !TOY_IS_INTEGER(first)) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= TOY_AS_ARRAY(compound)->count) {
+			if (!TOY_IS_INTEGER(first) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= TOY_AS_ARRAY(compound)->count) {
 				interpreter->errorOutput("Bad first indexing assignment\n");
 
 				//something is weird - skip out
@@ -793,7 +793,7 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			}
 
 			//handle each error case
-			if ((!TOY_IS_NULL(first) && !TOY_IS_INTEGER(first)) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= TOY_AS_STRING(compound)->length) {
+			if (!TOY_IS_INTEGER(first) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= TOY_AS_STRING(compound)->length) {
 				interpreter->errorOutput("Bad first indexing in string\n");
 
 				//something is weird - skip out
@@ -937,7 +937,7 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			}
 
 			//handle each error case
-			if ((!TOY_IS_NULL(first) && !TOY_IS_INTEGER(first)) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= TOY_AS_ARRAY(compound)->count) {
+			if (!TOY_IS_INTEGER(first) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= TOY_AS_STRING(compound)->length) {
 				interpreter->errorOutput("Bad first indexing in string assignment\n");
 
 				//something is weird - skip out
@@ -951,7 +951,7 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				return -1;
 			}
 
-			if ((!TOY_IS_NULL(second) && !TOY_IS_INTEGER(second)) || TOY_AS_INTEGER(second) < 0 || TOY_AS_INTEGER(second) >= TOY_AS_ARRAY(compound)->count) {
+			if ((!TOY_IS_NULL(second) && !TOY_IS_INTEGER(second)) || TOY_AS_INTEGER(second) < 0 || TOY_AS_INTEGER(second) >= TOY_AS_STRING(compound)->length) {
 				interpreter->errorOutput("Bad second indexing in string assignment\n");
 
 				//something is weird - skip out
