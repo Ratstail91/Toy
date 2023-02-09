@@ -1,14 +1,50 @@
-import compound;
+//test the standard library, under a number of different circumstances
 
-fn p(x) {
-	print x;
-};
+//test basic import
+{
+	import standard;
 
-fn f(acc, k, v) {
-	acc(v);
-	return acc;
+	//this depends on external factors, so only check the length
+	assert clock().length() == 24, "import library failed";
 }
 
-var a = [1, 2, 3, 4];
 
-a.reduce(p, f); //prints "10"
+//test import within a function
+{
+	fn f() {
+		import standard;
+
+		assert clock != null, "import library within function failed";
+
+		return clock;
+	}
+
+	//invoke
+	assert f()().length() == 24, "import library within function and return failed";
+}
+
+
+//test closing over standard library element
+{
+	import standard;
+
+	fn f() {
+		assert clock != null, "import library outside function failed";
+
+		return clock;
+	}
+
+	//invoke
+	assert f()().length() == 24, "import library outside function and return failed";
+}
+
+
+//test importing as an alias
+{
+	import standard as std;
+
+	assert std["clock"]().length() == 24, "import library as alias failed";
+}
+
+
+print "All good";

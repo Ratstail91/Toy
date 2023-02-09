@@ -2,6 +2,3 @@
 	var t = astype [string:int];
 	var dict: t = ["one": 1, "two": 2, "pi": 3.14];
 }
-
-
-print "All good";

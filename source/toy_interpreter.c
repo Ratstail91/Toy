@@ -1123,6 +1123,14 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 
 	//let's screw with the fn name, too
 	if (looseFirstArgument) {
+		if (!TOY_IS_IDENTIFIER(identifier)) {
+			interpreter->errorOutput("Bad literal passed as a function identifier\n");
+			Toy_freeLiteral(identifier);
+			Toy_freeLiteral(stackSize);
+			Toy_freeLiteralArray(&arguments);
+			return false;
+		}
+
 		int length = TOY_AS_IDENTIFIER(identifier)->length + 1;
 		char buffer[TOY_MAX_STRING_LENGTH];
 		snprintf(buffer, TOY_MAX_STRING_LENGTH, "_%s", Toy_toCString(TOY_AS_IDENTIFIER(identifier))); //prepend an underscore
@@ -1135,6 +1143,7 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 
 	if (!Toy_parseIdentifierToValue(interpreter, &func)) {
 		Toy_freeLiteralArray(&arguments);
+		Toy_freeLiteral(stackSize);
 		Toy_freeLiteral(identifier);
 		return false;
 	}
@@ -1157,6 +1166,7 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 		TOY_AS_FUNCTION_NATIVE(func)(interpreter, &correct);
 
 		Toy_freeLiteralArray(&correct);
+		Toy_freeLiteral(stackSize);
 		Toy_freeLiteral(identifier);
 		return true;
 	}
@@ -1167,6 +1177,7 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 		interpreter->errorOutput("\n");
 
 		Toy_freeLiteral(identifier);
+		Toy_freeLiteral(stackSize);
 		Toy_freeLiteralArray(&arguments);
 		return false;
 	}
@@ -1181,6 +1192,7 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 
 	Toy_freeLiteralArray(&arguments);
 	Toy_freeLiteral(func);
+	Toy_freeLiteral(stackSize);
 	Toy_freeLiteral(identifier);
 
 	return ret;
