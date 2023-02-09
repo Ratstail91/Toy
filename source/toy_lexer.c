@@ -170,19 +170,32 @@ static Toy_Token makeIntegerOrFloat(Toy_Lexer* lexer) {
 	return token;
 }
 
+static bool isEscapableCharacter(char c) {
+	switch (c) {
+		case 'n':
+		case 't':
+		case '\\':
+		case '"':
+			return true;
+
+		default:
+			return false;
+	}
+}
+
 static Toy_Token makeString(Toy_Lexer* lexer, char terminator) {
 	while (!isAtEnd(lexer)) {
-		//skip escaped terminators
-		if (peek(lexer) == '\\' && peekNext(lexer) == terminator) {
-			advance(lexer);
-			advance(lexer);
-			continue;
-		}
-
-		//actually escape if you've hit the terminator
+		//stop if you've hit the terminator
 		if (peek(lexer) == terminator) {
 			advance(lexer); //eat terminator
 			break;
+		}
+
+		//skip escaped control characters
+		if (peek(lexer) == '\\' && isEscapableCharacter(peekNext(lexer))) {
+			advance(lexer);
+			advance(lexer);
+			continue;
 		}
 
 		//otherwise
