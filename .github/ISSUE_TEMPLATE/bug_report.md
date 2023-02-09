@@ -12,7 +12,9 @@ A clear and concise description of what the bug is.
 
 Steps to reproduce the behaviour:
 
-1. ...
+1. run `git pull` on the repository
+2. run `make rebuild` on the code
+3. ...
 
 You can include some screenshots here if you'd like!
 
