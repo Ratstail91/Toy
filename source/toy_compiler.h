@@ -11,6 +11,7 @@ typedef struct Toy_Compiler {
 	unsigned char* bytecode;
 	int capacity;
 	int count;
+	bool panic;
 } Toy_Compiler;
 
 TOY_API void Toy_initCompiler(Toy_Compiler* compiler);

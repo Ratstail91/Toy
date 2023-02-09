@@ -1,9 +1,14 @@
 import compound;
 
+fn p(x) {
+	print x;
+};
+
 fn f(acc, k, v) {
-	return acc + v;
+	acc(v);
+	return acc;
 }
 
 var a = [1, 2, 3, 4];
 
-print a.reduce(0, f); //prints "10"
+a.reduce(p, f); //prints "10"
