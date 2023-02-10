@@ -12,6 +12,7 @@ static void cleanLexer(Toy_Lexer* lexer) {
 	lexer->start = 0;
 	lexer->current = 0;
 	lexer->line = 1;
+	lexer->commentsEnabled = true;
 }
 
 static bool isAtEnd(Toy_Lexer* lexer) {
@@ -54,6 +55,10 @@ static void eatWhitespace(Toy_Lexer* lexer) {
 
 		//comments
 		case '/':
+			if (!lexer->commentsEnabled) {
+				return;
+			}
+
 			//eat the line
 			if (peekNext(lexer) == '/') {
 				while (advance(lexer) != '\n' && !isAtEnd(lexer));
@@ -371,4 +376,8 @@ void Toy_printToken(Toy_Token* token) {
 	}
 
 	printf("\n");
+}
+
+void Toy_private_setComments(Toy_Lexer* lexer, bool enabled) {
+	lexer->commentsEnabled = enabled;
 }

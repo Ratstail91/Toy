@@ -53,6 +53,7 @@ void repl() {
 		Toy_Compiler compiler;
 
 		Toy_initLexer(&lexer, input);
+		Toy_private_setComments(&lexer, false); //BUGFIX: disable comments here
 		Toy_initParser(&parser, &lexer);
 		Toy_initCompiler(&compiler);
 

@@ -9,6 +9,7 @@ typedef struct {
 	int start; //start of the token
 	int current; //current position of the lexer
 	int line; //track this for error handling
+	bool commentsEnabled; //BUGFIX: enable comments (disabled in repl)
 } Toy_Lexer;
 
 //tokens are intermediaries between lexers and parsers
@@ -24,3 +25,5 @@ Toy_Token Toy_scanLexer(Toy_Lexer* lexer);
 
 //for debugging
 void Toy_printToken(Toy_Token* token);
+
+void Toy_private_setComments(Toy_Lexer* lexer, bool enabled);
