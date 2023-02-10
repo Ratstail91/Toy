@@ -14,9 +14,21 @@ import compound;
 
 This function only works when self and other are matching compounds (both arrays, dictionaries or strings). It returns a new compound of that kind, with the content of `other` appended to the content of `self`.
 
+## _containsKey(self: dictionary, key)
+
+This function returns `true` if `self` contains the given `key`, otherwise it returns false.
+
+## _containsValue(self, value)
+
+This function returns `true` if `self` contains the given `value`, otherwise it returns false.
+
+## _every(self, func: fn)
+
+This function takes either an array or a dictionary as the `self` argument, and a function as `func`. The argument `func` must take two arguments - the first is the index/key of the array/dictionary, and the second is the value. The contents of `self` are passed into `func`, one element at a time, until `func` returns `false`, at which point this function returns `false`. Otherwise this function returns `true`.
+
 ## _forEach(self, func: fn)
 
-This function takes either an array or a dictionary as the `self` argument, and a function as `func`. The argument `func` must take two arguments - the first is the index/key of the array/dictionary, and the second is the value.
+This function takes either an array or a dictionary as the `self` argument, and a function as `func`. The argument `func` must take two arguments - the first is the index/key of the array/dictionary, and the second is the value. The contents of `self` are passed into `func`, one element at a time.
 
 ```
 import compound;
@@ -29,6 +41,10 @@ var a = [1, 3, 5];
 
 a.forEach(p); //prints 1, 3, and 5 to stdout
 ```
+
+## _filter(self, func: fn)
+
+This function takes either an array or a dictionary as the `self` argument, and a function as `func`. The argument `func` must take two arguments - the first is the index/key of the array/dictionary, and the second is the value. The contents of `self` are passed into `func`, one element at a time, and the function returns a new compound for every element that `func` returned a truthy value for.
 
 ## _getKeys(self: dictionary)
 
@@ -69,6 +85,10 @@ var a = [1, 2, 3, 4];
 
 print a.reduce(0, f); //prints "10"
 ```
+
+## _some(self, func: fn)
+
+This function takes either an array or a dictionary as the `self` argument, and a function as `func`. The argument `func` must take two arguments - the first is the index/key of the array/dictionary, and the second is the value. The contents of `self` are passed into `func`, one element at a time, until `func` returns `true`, at which point this function returns `true`. Otherwise this function returns `false`.
 
 ## _toLower(self: string)
 
