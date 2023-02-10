@@ -6,10 +6,10 @@ Toy programs begin at the top of the file, and continue until the end, unless an
 
 ## Print Keyword
 
-This keyword prints values to stdout for debugging (this can be altered by the host program), and usually has a newline appended to the end.
+This keyword prints values to stdout for debugging (this can be altered by the host program).
 
 ```
-print "Hello World";
+print "Hello World\n";
 ```
 
 ## Names and Variables
