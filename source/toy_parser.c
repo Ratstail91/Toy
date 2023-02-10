@@ -676,6 +676,10 @@ static Toy_Opcode incrementPrefix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) 
 	Toy_ASTNode* tmpNode = NULL;
 	identifier(parser, &tmpNode);
 
+	if (!tmpNode) {
+		return TOY_OP_EOF;
+	}
+
 	Toy_emitASTNodePrefixIncrement(nodeHandle, tmpNode->atomic.literal);
 
 	Toy_freeASTNode(tmpNode);
@@ -689,6 +693,10 @@ static Toy_Opcode incrementInfix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 
 	advance(parser);
 
+	if (!tmpNode) {
+		return TOY_OP_EOF;
+	}
+
 	Toy_emitASTNodePostfixIncrement(nodeHandle, tmpNode->atomic.literal);
 
 	Toy_freeASTNode(tmpNode);
@@ -700,7 +708,11 @@ static Toy_Opcode decrementPrefix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) 
 	advance(parser);
 
 	Toy_ASTNode* tmpNode = NULL;
-	identifier(parser, &tmpNode); //weird
+	identifier(parser, &tmpNode);
+	
+	if (!tmpNode) {
+		return TOY_OP_EOF;
+	}
 
 	Toy_emitASTNodePrefixDecrement(nodeHandle, tmpNode->atomic.literal);
 
@@ -714,6 +726,10 @@ static Toy_Opcode decrementInfix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	identifier(parser, &tmpNode);
 
 	advance(parser);
+
+	if (!tmpNode) {
+		return TOY_OP_EOF;
+	}
 
 	Toy_emitASTNodePostfixDecrement(nodeHandle, tmpNode->atomic.literal);
 
