@@ -1167,7 +1167,7 @@ static unsigned char* collateCompilerHeaderOpt(Toy_Compiler* compiler, int* size
 			case TOY_LITERAL_FUNCTION_INTERMEDIATE: {
 				//extract the compiler
 				Toy_Literal fn = compiler->literalCache.literals[i];
-				void* fnCompiler = TOY_AS_FUNCTION(fn).bytecode; //store the compiler here for now
+				void* fnCompiler = TOY_AS_FUNCTION(fn).inner.bytecode; //store the compiler here for now
 
 				//collate the function into bytecode (without header)
 				int size = 0;

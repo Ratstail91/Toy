@@ -10,10 +10,10 @@ all: $(TOY_OUTDIR) repl
 
 #repl builds
 repl: $(TOY_OUTDIR) library
-	$(MAKE) -C repl
+	$(MAKE) -j8 -C repl
 
 repl-static: $(TOY_OUTDIR) static
-	$(MAKE) -C repl
+	$(MAKE) -j8 -C repl
 
 repl-release: clean $(TOY_OUTDIR) library-release
 	$(MAKE) -C repl release

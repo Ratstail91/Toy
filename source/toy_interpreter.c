@@ -1254,8 +1254,8 @@ bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_Liter
 	//init the inner interpreter manually
 	Toy_initLiteralArray(&inner.literalCache);
 	inner.scope = Toy_pushScope(func.as.function.scope);
-	inner.bytecode = TOY_AS_FUNCTION(func).bytecode;
-	inner.length = TOY_AS_FUNCTION(func).length;
+	inner.bytecode = TOY_AS_FUNCTION(func).inner.bytecode;
+	inner.length = TOY_AS_FUNCTION_BYTECODE_LENGTH(func);
 	inner.count = 0;
 	inner.codeStart = -1;
 	inner.depth = interpreter->depth + 1;

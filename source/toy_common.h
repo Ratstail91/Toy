@@ -6,7 +6,7 @@
 
 #define TOY_VERSION_MAJOR 0
 #define TOY_VERSION_MINOR 8
-#define TOY_VERSION_PATCH 2
+#define TOY_VERSION_PATCH 3
 #define TOY_VERSION_BUILD __DATE__ " " __TIME__
 
 //platform-specific specifications

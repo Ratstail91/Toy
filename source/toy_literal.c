@@ -58,7 +58,7 @@ void Toy_freeLiteral(Toy_Literal literal) {
 	if (TOY_IS_FUNCTION(literal)) {
 		Toy_popScope(TOY_AS_FUNCTION(literal).scope);
 		TOY_AS_FUNCTION(literal).scope = NULL;
-		TOY_FREE_ARRAY(unsigned char, TOY_AS_FUNCTION(literal).bytecode, TOY_AS_FUNCTION(literal).length);
+		TOY_FREE_ARRAY(unsigned char, TOY_AS_FUNCTION(literal).inner.bytecode, TOY_AS_FUNCTION_BYTECODE_LENGTH(literal));
 	}
 
 	if (TOY_IS_TYPE(literal)) {
@@ -84,11 +84,11 @@ bool Toy_private_isTruthy(Toy_Literal x) {
 }
 
 Toy_Literal Toy_private_toStringLiteral(Toy_RefString* ptr) {
-	return ((Toy_Literal){TOY_LITERAL_STRING, { .string.ptr = ptr }});
+	return ((Toy_Literal){{ .string.ptr = ptr },TOY_LITERAL_STRING, 0});
 }
 
 Toy_Literal Toy_private_toIdentifierLiteral(Toy_RefString* ptr) {
-	return ((Toy_Literal){TOY_LITERAL_IDENTIFIER,{ .identifier.ptr = ptr, .identifier.hash = hashString(Toy_toCString(ptr), Toy_lengthRefString(ptr)) }});
+	return ((Toy_Literal){{ .identifier.ptr = ptr, .identifier.hash = hashString(Toy_toCString(ptr), Toy_lengthRefString(ptr)) },TOY_LITERAL_IDENTIFIER, 0});
 }
 
 Toy_Literal* Toy_private_typePushSubtype(Toy_Literal* lit, Toy_Literal subtype) {
@@ -145,10 +145,10 @@ Toy_Literal Toy_copyLiteral(Toy_Literal original) {
 		}
 
 		case TOY_LITERAL_FUNCTION: {
-			unsigned char* buffer = TOY_ALLOCATE(unsigned char, TOY_AS_FUNCTION(original).length);
-			memcpy(buffer, TOY_AS_FUNCTION(original).bytecode, TOY_AS_FUNCTION(original).length);
+			unsigned char* buffer = TOY_ALLOCATE(unsigned char, TOY_AS_FUNCTION_BYTECODE_LENGTH(original));
+			memcpy(buffer, TOY_AS_FUNCTION(original).inner.bytecode, TOY_AS_FUNCTION_BYTECODE_LENGTH(original));
 
-			Toy_Literal literal = TOY_TO_FUNCTION_LITERAL(buffer, TOY_AS_FUNCTION(original).length);
+			Toy_Literal literal = TOY_TO_FUNCTION_LITERAL(buffer, TOY_AS_FUNCTION_BYTECODE_LENGTH(original));
 			TOY_AS_FUNCTION(literal).scope = Toy_copyScope(TOY_AS_FUNCTION(original).scope);
 
 			return literal;
