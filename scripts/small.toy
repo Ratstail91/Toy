@@ -1,25 +1,2 @@
-import standard; //for a bunch of utility functions
+/*
 
-print "Hello world"; //"print" is a keyword
-
-var msg = "foobar"; //declare a variable like this
-
-assert true, "This message won't be seen"; //assert is another keyword
-
-//-------------------------
-
-fn makeCounter() { //declare a function like this
-	var total: int = 0; //declare a variable with a type like this
-
-	fn counter(): int { //declare a return type like this
-		return ++total;
-	}
-
-	return counter; //closures are explicitly supported
-}
-
-var tally = makeCounter();
-
-print tally(); //1
-print tally(); //2
-print tally(); //3

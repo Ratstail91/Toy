@@ -61,7 +61,7 @@ static void eatWhitespace(Toy_Lexer* lexer) {
 
 			//eat the line
 			if (peekNext(lexer) == '/') {
-				while (advance(lexer) != '\n' && !isAtEnd(lexer));
+				while (!isAtEnd(lexer) && advance(lexer) != '\n');
 				break;
 			}
 
@@ -69,7 +69,7 @@ static void eatWhitespace(Toy_Lexer* lexer) {
 			if (peekNext(lexer) == '*') {
 				advance(lexer);
 				advance(lexer);
-				while(!(peek(lexer) == '*' && peekNext(lexer) == '/')) advance(lexer);
+				while(!isAtEnd(lexer) && !(peek(lexer) == '*' && peekNext(lexer) == '/')) advance(lexer);
 				advance(lexer);
 				advance(lexer);
 				break;
