@@ -37,7 +37,7 @@ static void errorWrapper(const char* output) {
 	fprintf(stderr, TOY_CC_ERROR "%s" TOY_CC_RESET, output);
 }
 
-void runBinaryWithLibrary(unsigned char* tb, size_t size, char* library, Toy_HookFn hook) {
+void runBinaryWithLibrary(const unsigned char* tb, size_t size, const char* library, Toy_HookFn hook) {
 	Toy_Interpreter interpreter;
 	Toy_initInterpreter(&interpreter);
 
@@ -53,7 +53,7 @@ void runBinaryWithLibrary(unsigned char* tb, size_t size, char* library, Toy_Hoo
 	Toy_freeInterpreter(&interpreter);
 }
 
-void runBinaryQuietly(unsigned char* tb, size_t size) {
+void runBinaryQuietly(const unsigned char* tb, size_t size) {
 	Toy_Interpreter interpreter;
 	Toy_initInterpreter(&interpreter);
 
@@ -111,14 +111,14 @@ int main() {
 
 			//compile the source
 			size_t size = 0;
-			char* source = Toy_readFile(fname, &size);
+			const char* source = Toy_readFile(fname, &size);
 			if (!source) {
 				printf(TOY_CC_ERROR "Failed to load file: %s\n" TOY_CC_RESET, fname);
 				failedAsserts++;
 				continue;
 			}
 
-			unsigned char* tb = Toy_compileString(source, &size);
+			const unsigned char* tb = Toy_compileString(source, &size);
 			free((void*)source);
 
 			if (!tb) {
@@ -146,14 +146,14 @@ int main() {
 
 			//compile the source
 			size_t size = 0;
-			char* source = Toy_readFile(fname, &size);
+			const char* source = Toy_readFile(fname, &size);
 			if (!source) {
 				printf(TOY_CC_ERROR "Failed to load file: %s\n" TOY_CC_RESET, fname);
 				failedAsserts++;
 				continue;
 			}
 
-			unsigned char* tb = Toy_compileString(source, &size);
+			const unsigned char* tb = Toy_compileString(source, &size);
 			free((void*)source);
 
 			if (!tb) {

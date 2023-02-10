@@ -30,7 +30,7 @@ static void noAssertFn(const char* output) {
 	}
 }
 
-void runBinaryCustom(unsigned char* tb, size_t size) {
+void runBinaryCustom(const unsigned char* tb, size_t size) {
 	Toy_Interpreter interpreter;
 	Toy_initInterpreter(&interpreter);
 
@@ -42,18 +42,18 @@ void runBinaryCustom(unsigned char* tb, size_t size) {
 	Toy_freeInterpreter(&interpreter);
 }
 
-void runSourceCustom(char* source) {
+void runSourceCustom(const char* source) {
 	size_t size = 0;
-	unsigned char* tb = Toy_compileString(source, &size);
+	const unsigned char* tb = Toy_compileString(source, &size);
 	if (!tb) {
 		return;
 	}
 	runBinaryCustom(tb, size);
 }
 
-void runSourceFileCustom(char* fname) {
+void runSourceFileCustom(const char* fname) {
 	size_t size = 0; //not used
-	char* source = Toy_readFile(fname, &size);
+	const char* source = Toy_readFile(fname, &size);
 	runSourceCustom(source);
 	free((void*)source);
 }
@@ -68,7 +68,7 @@ int main() {
 
 	{
 		//source
-		char* source = "print null;";
+		const char* source = "print null;";
 
 		//test basic compilation & collation
 		Toy_Lexer lexer;
@@ -88,7 +88,7 @@ int main() {
 
 		//collate
 		int size = 0;
-		unsigned char* bytecode = Toy_collateCompiler(&compiler, &size);
+		const unsigned char* bytecode = Toy_collateCompiler(&compiler, &size);
 
 		//NOTE: suppress print output for testing
 		Toy_setInterpreterPrint(&interpreter, noPrintFn);
@@ -106,7 +106,7 @@ int main() {
 
 	{
 		//run each file in tests/scripts/
-		char* filenames[] = {
+		const char* filenames[] = {
 			"arithmetic.toy",
 			"casting.toy",
 			"coercions.toy",

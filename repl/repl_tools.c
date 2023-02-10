@@ -16,7 +16,7 @@
 #include <stdlib.h>
 
 //IO functions
-char* Toy_readFile(char* path, size_t* fileSize) {
+const char* Toy_readFile(const char* path, size_t* fileSize) {
 	FILE* file = fopen(path, "rb");
 
 	if (file == NULL) {
@@ -49,7 +49,7 @@ char* Toy_readFile(char* path, size_t* fileSize) {
 	return buffer;
 }
 
-int Toy_writeFile(char* path, unsigned char* bytes, size_t size) {
+int Toy_writeFile(const char* path, const unsigned char* bytes, size_t size) {
 	FILE* file = fopen(path, "wb");
 
 	if (file == NULL) {
@@ -70,7 +70,7 @@ int Toy_writeFile(char* path, unsigned char* bytes, size_t size) {
 }
 
 //repl functions
-unsigned char* Toy_compileString(char* source, size_t* size) {
+const unsigned char* Toy_compileString(const char* source, size_t* size) {
 	Toy_Lexer lexer;
 	Toy_Parser parser;
 	Toy_Compiler compiler;
@@ -96,7 +96,7 @@ unsigned char* Toy_compileString(char* source, size_t* size) {
 	}
 
 	//get the bytecode dump
-	unsigned char* tb = Toy_collateCompiler(&compiler, (int*)(size));
+	const unsigned char* tb = Toy_collateCompiler(&compiler, (int*)(size));
 
 	//cleanup
 	Toy_freeCompiler(&compiler);
@@ -107,7 +107,7 @@ unsigned char* Toy_compileString(char* source, size_t* size) {
 	return tb;
 }
 
-void Toy_runBinary(unsigned char* tb, size_t size) {
+void Toy_runBinary(const unsigned char* tb, size_t size) {
 	Toy_Interpreter interpreter;
 	Toy_initInterpreter(&interpreter);
 
@@ -122,9 +122,9 @@ void Toy_runBinary(unsigned char* tb, size_t size) {
 	Toy_freeInterpreter(&interpreter);
 }
 
-void Toy_runBinaryFile(char* fname) {
+void Toy_runBinaryFile(const char* fname) {
 	size_t size = 0; //not used
-	unsigned char* tb = (unsigned char*)Toy_readFile(fname, &size);
+	const unsigned char* tb = (const unsigned char*)Toy_readFile(fname, &size);
 	if (!tb) {
 		return;
 	}
@@ -132,9 +132,9 @@ void Toy_runBinaryFile(char* fname) {
 	//interpreter takes ownership of the binary data
 }
 
-void Toy_runSource(char* source) {
+void Toy_runSource(const char* source) {
 	size_t size = 0;
-	unsigned char* tb = Toy_compileString(source, &size);
+	const unsigned char* tb = Toy_compileString(source, &size);
 	if (!tb) {
 		return;
 	}
@@ -142,9 +142,9 @@ void Toy_runSource(char* source) {
 	Toy_runBinary(tb, size);
 }
 
-void Toy_runSourceFile(char* fname) {
+void Toy_runSourceFile(const char* fname) {
 	size_t size = 0; //not used
-	char* source = Toy_readFile(fname, &size);
+	const char* source = Toy_readFile(fname, &size);
 	if (!source) {
 		return;
 	}

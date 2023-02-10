@@ -68,8 +68,8 @@ static int consume(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 int main() {
 	{
 		size_t size = 0;
-		char* source = Toy_readFile("scripts/opaque-data-type.toy", &size);
-		unsigned char* tb = Toy_compileString(source, &size);
+		const char* source = Toy_readFile("scripts/opaque-data-type.toy", &size);
+		const unsigned char* tb = Toy_compileString(source, &size);
 		free((void*)source);
 
 		if (!tb) {

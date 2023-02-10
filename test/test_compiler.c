@@ -52,7 +52,7 @@ int main() {
 	{
 		//source
 		size_t sourceLength = 0;
-		char* source = Toy_readFile("scripts/compiler_sample_code.toy", &sourceLength);
+		const char* source = Toy_readFile("scripts/compiler_sample_code.toy", &sourceLength);
 
 		//test basic compilation & collation
 		Toy_Lexer lexer;

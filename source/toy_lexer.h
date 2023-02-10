@@ -5,7 +5,7 @@
 
 //lexers are bound to a string of code, and return a single token every time scan is called
 typedef struct {
-	char* source;
+	const char* source;
 	int start; //start of the token
 	int current; //current position of the lexer
 	int line; //track this for error handling
@@ -14,12 +14,12 @@ typedef struct {
 //tokens are intermediaries between lexers and parsers
 typedef struct {
 	Toy_TokenType type;
-	char* lexeme;
+	const char* lexeme;
 	int length;
 	int line;
 } Toy_Token;
 
-TOY_API void Toy_initLexer(Toy_Lexer* lexer, char* source);
+TOY_API void Toy_initLexer(Toy_Lexer* lexer, const char* source);
 Toy_Token Toy_scanLexer(Toy_Lexer* lexer);
 
 //for debugging

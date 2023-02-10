@@ -10,7 +10,7 @@
 
 typedef struct Toy_Runner {
 	Toy_Interpreter interpreter;
-	unsigned char* bytecode;
+	const unsigned char* bytecode;
 	size_t size;
 
 	bool dirty;
@@ -43,12 +43,12 @@ static int nativeLoadScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 	Toy_freeLiteral(drivePathLiteral);
 
 	//use raw types - easier
-	char* filePath = Toy_toCString(TOY_AS_STRING(filePathLiteral));
+	const char* filePath = Toy_toCString(TOY_AS_STRING(filePathLiteral));
 	int filePathLength = Toy_lengthRefString(TOY_AS_STRING(filePathLiteral));
 
 	//load and compile the bytecode
 	size_t fileSize = 0;
-	char* source = Toy_readFile(filePath, &fileSize);
+	const char* source = Toy_readFile(filePath, &fileSize);
 
 	if (!source) {
 		interpreter->errorOutput("Failed to load source file\n");
@@ -56,7 +56,7 @@ static int nativeLoadScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 		return -1;
 	}
 
-	unsigned char* bytecode = Toy_compileString(source, &fileSize);
+	const unsigned char* bytecode = Toy_compileString(source, &fileSize);
 	free((void*)source);
 
 	if (!bytecode) {
@@ -105,7 +105,7 @@ static int nativeLoadScriptBytecode(Toy_Interpreter* interpreter, Toy_LiteralArr
 	Toy_RefString* drivePath = Toy_copyRefString(TOY_AS_STRING(drivePathLiteral));
 
 	//get the drive and path as a string (can't trust that pesky strtok - custom split) TODO: move this to refstring library
-	int driveLength = 0;
+	size_t driveLength = 0;
 	while (Toy_toCString(drivePath)[driveLength] != ':') {
 		if (driveLength >= Toy_lengthRefString(drivePath)) {
 			interpreter->errorOutput("Incorrect drive path format given to loadScriptBytecode\n");
@@ -492,7 +492,7 @@ static int nativeCheckScriptDirty(Toy_Interpreter* interpreter, Toy_LiteralArray
 
 //call the hook
 typedef struct Natives {
-	char* name;
+	const char* name;
 	Toy_NativeFn fn;
 } Natives;
 
@@ -585,7 +585,7 @@ Toy_Literal Toy_getFilePathLiteral(Toy_Interpreter* interpreter, Toy_Literal* dr
 	Toy_RefString* drivePath = Toy_copyRefString(TOY_AS_STRING(*drivePathLiteral));
 
 	//get the drive and path as a string (can't trust that pesky strtok - custom split) TODO: move this to refstring library
-	int driveLength = 0;
+	size_t driveLength = 0;
 	while (Toy_toCString(drivePath)[driveLength] != ':') {
 		if (driveLength >= Toy_lengthRefString(drivePath)) {
 			interpreter->errorOutput("Incorrect drive path format given to Toy_getFilePathLiteral\n");

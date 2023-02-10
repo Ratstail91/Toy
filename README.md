@@ -36,7 +36,6 @@ Run `make install-tools` to install a number of tools, including:
 ```
 import standard; //for a bunch of utility functions
 
-
 print "Hello world"; //"print" is a keyword
 
 var msg = "foobar"; //declare a variable like this

@@ -151,11 +151,11 @@ int main(int argc, const char* argv[]) {
 	//compile source file
 	if (Toy_commandLine.compilefile && Toy_commandLine.outfile) {
 		size_t size = 0;
-		char* source = Toy_readFile(Toy_commandLine.compilefile, &size);
+		const char* source = Toy_readFile(Toy_commandLine.compilefile, &size);
 		if (!source) {
 			return 1;
 		}
-		unsigned char* tb = Toy_compileString(source, &size);
+		const unsigned char* tb = Toy_compileString(source, &size);
 		if (!tb) {
 			return 1;
 		}

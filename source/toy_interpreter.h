@@ -11,7 +11,7 @@ typedef void (*Toy_PrintFn)(const char*);
 //the interpreter acts depending on the bytecode instructions
 typedef struct Toy_Interpreter {
 	//input
-	unsigned char* bytecode;
+	const unsigned char* bytecode;
 	int length;
 	int count;
 	int codeStart; //BUGFIX: for jumps, must be initialized to -1
@@ -34,11 +34,11 @@ typedef struct Toy_Interpreter {
 } Toy_Interpreter;
 
 //native API
-TOY_API bool Toy_injectNativeFn(Toy_Interpreter* interpreter, char* name, Toy_NativeFn func);
-TOY_API bool Toy_injectNativeHook(Toy_Interpreter* interpreter, char* name, Toy_HookFn hook);
+TOY_API bool Toy_injectNativeFn(Toy_Interpreter* interpreter, const char* name, Toy_NativeFn func);
+TOY_API bool Toy_injectNativeHook(Toy_Interpreter* interpreter, const char* name, Toy_HookFn hook);
 
 TOY_API bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_LiteralArray* arguments, Toy_LiteralArray* returns);
-TOY_API bool Toy_callFn(Toy_Interpreter* interpreter, char* name, Toy_LiteralArray* arguments, Toy_LiteralArray* returns);
+TOY_API bool Toy_callFn(Toy_Interpreter* interpreter, const char* name, Toy_LiteralArray* arguments, Toy_LiteralArray* returns);
 
 //utilities for the host program
 TOY_API bool Toy_parseIdentifierToValue(Toy_Interpreter* interpreter, Toy_Literal* literalPtr);
@@ -48,6 +48,6 @@ TOY_API void Toy_setInterpreterError(Toy_Interpreter* interpreter, Toy_PrintFn e
 
 //main access
 TOY_API void Toy_initInterpreter(Toy_Interpreter* interpreter); //start of program
-TOY_API void Toy_runInterpreter(Toy_Interpreter* interpreter, unsigned char* bytecode, int length); //run the code
+TOY_API void Toy_runInterpreter(Toy_Interpreter* interpreter, const unsigned char* bytecode, int length); //run the code
 TOY_API void Toy_resetInterpreter(Toy_Interpreter* interpreter); //use this to reset the interpreter's environment between runs
 TOY_API void Toy_freeInterpreter(Toy_Interpreter* interpreter); //end of program

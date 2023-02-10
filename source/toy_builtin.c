@@ -793,7 +793,7 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			}
 
 			//handle each error case
-			if (!TOY_IS_INTEGER(first) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= TOY_AS_STRING(compound)->length) {
+			if (!TOY_IS_INTEGER(first) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= (int)Toy_lengthRefString(TOY_AS_STRING(compound))) {
 				interpreter->errorOutput("Bad first indexing in string\n");
 
 				//something is weird - skip out
@@ -807,7 +807,7 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				return -1;
 			}
 
-			if ((!TOY_IS_NULL(second) && !TOY_IS_INTEGER(second)) || TOY_AS_INTEGER(second) < 0 || TOY_AS_INTEGER(second) >= TOY_AS_STRING(compound)->length) {
+			if ((!TOY_IS_NULL(second) && !TOY_IS_INTEGER(second)) || TOY_AS_INTEGER(second) < 0 || TOY_AS_INTEGER(second) >= (int)Toy_lengthRefString(TOY_AS_STRING(compound))) {
 				interpreter->errorOutput("Bad second indexing in string\n");
 
 				//something is weird - skip out
@@ -838,7 +838,7 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			//simple indexing if second is null
 			if (TOY_IS_NULL(second)) {
 
-				char* cstr = Toy_toCString(TOY_AS_STRING(compound));
+				const char* cstr = Toy_toCString(TOY_AS_STRING(compound));
 				char buf[16];
 
 				snprintf(buf, 16, "%s", &(cstr[ TOY_AS_INTEGER(first) ]) );
@@ -937,7 +937,7 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			}
 
 			//handle each error case
-			if (!TOY_IS_INTEGER(first) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= TOY_AS_STRING(compound)->length) {
+			if (!TOY_IS_INTEGER(first) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= (int)Toy_lengthRefString(TOY_AS_STRING(compound))) {
 				interpreter->errorOutput("Bad first indexing in string assignment\n");
 
 				//something is weird - skip out
@@ -951,7 +951,7 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				return -1;
 			}
 
-			if ((!TOY_IS_NULL(second) && !TOY_IS_INTEGER(second)) || TOY_AS_INTEGER(second) < 0 || TOY_AS_INTEGER(second) >= TOY_AS_STRING(compound)->length) {
+			if ((!TOY_IS_NULL(second) && !TOY_IS_INTEGER(second)) || TOY_AS_INTEGER(second) < 0 || TOY_AS_INTEGER(second) >= (int)Toy_lengthRefString(TOY_AS_STRING(compound))) {
 				interpreter->errorOutput("Bad second indexing in string assignment\n");
 
 				//something is weird - skip out

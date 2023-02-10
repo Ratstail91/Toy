@@ -487,10 +487,10 @@ void Toy_printLiteralCustom(Toy_Literal literal, void (printFn)(const char*)) {
 		case TOY_LITERAL_STRING: {
 			char buffer[TOY_MAX_STRING_LENGTH];
 			if (!quotes) {
-				snprintf(buffer, TOY_MAX_STRING_LENGTH, "%.*s", Toy_lengthRefString(TOY_AS_STRING(literal)), Toy_toCString(TOY_AS_STRING(literal)));
+				snprintf(buffer, TOY_MAX_STRING_LENGTH, "%.*s", (int)Toy_lengthRefString(TOY_AS_STRING(literal)), Toy_toCString(TOY_AS_STRING(literal)));
 			}
 			else {
-				snprintf(buffer, TOY_MAX_STRING_LENGTH, "%c%.*s%c", quotes, Toy_lengthRefString(TOY_AS_STRING(literal)), Toy_toCString(TOY_AS_STRING(literal)), quotes);
+				snprintf(buffer, TOY_MAX_STRING_LENGTH, "%c%.*s%c", quotes, (int)Toy_lengthRefString(TOY_AS_STRING(literal)), Toy_toCString(TOY_AS_STRING(literal)), quotes);
 			}
 			printFn(buffer);
 		}
@@ -596,7 +596,7 @@ void Toy_printLiteralCustom(Toy_Literal literal, void (printFn)(const char*)) {
 
 		case TOY_LITERAL_IDENTIFIER: {
 			char buffer[256];
-			snprintf(buffer, 256, "%.*s", Toy_lengthRefString(TOY_AS_IDENTIFIER(literal)), Toy_toCString(TOY_AS_IDENTIFIER(literal)));
+			snprintf(buffer, 256, "%.*s", (int)Toy_lengthRefString(TOY_AS_IDENTIFIER(literal)), Toy_toCString(TOY_AS_IDENTIFIER(literal)));
 			printFn(buffer);
 		}
 		break;

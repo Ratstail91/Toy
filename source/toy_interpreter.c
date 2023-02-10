@@ -26,7 +26,7 @@ static void errorWrapper(const char* output) {
 	fprintf(stderr, TOY_CC_ERROR "%s" TOY_CC_RESET, output); //no newline
 }
 
-bool Toy_injectNativeFn(Toy_Interpreter* interpreter, char* name, Toy_NativeFn func) {
+bool Toy_injectNativeFn(Toy_Interpreter* interpreter, const char* name, Toy_NativeFn func) {
 	//reject reserved words
 	if (Toy_findTypeByKeyword(name) != TOY_TOKEN_EOF) {
 		interpreter->errorOutput("Can't override an existing keyword\n");
@@ -54,7 +54,7 @@ bool Toy_injectNativeFn(Toy_Interpreter* interpreter, char* name, Toy_NativeFn f
 	return true;
 }
 
-bool Toy_injectNativeHook(Toy_Interpreter* interpreter, char* name, Toy_HookFn hook) {
+bool Toy_injectNativeHook(Toy_Interpreter* interpreter, const char* name, Toy_HookFn hook) {
 	//reject reserved words
 	if (Toy_findTypeByKeyword(name) != TOY_TOKEN_EOF) {
 		interpreter->errorOutput("Can't inject a hook on an existing keyword\n");
@@ -169,40 +169,40 @@ void Toy_setInterpreterError(Toy_Interpreter* interpreter, Toy_PrintFn errorOutp
 }
 
 //utils
-static unsigned char readByte(unsigned char* tb, int* count) {
+static unsigned char readByte(const unsigned char* tb, int* count) {
 	unsigned char ret = *(unsigned char*)(tb + *count);
 	*count += 1;
 	return ret;
 }
 
-static unsigned short readShort(unsigned char* tb, int* count) {
+static unsigned short readShort(const unsigned char* tb, int* count) {
 	unsigned short ret = 0;
 	memcpy(&ret, tb + *count, 2);
 	*count += 2;
 	return ret;
 }
 
-static int readInt(unsigned char* tb, int* count) {
+static int readInt(const unsigned char* tb, int* count) {
 	int ret = 0;
 	memcpy(&ret, tb + *count, 4);
 	*count += 4;
 	return ret;
 }
 
-static float readFloat(unsigned char* tb, int* count) {
+static float readFloat(const unsigned char* tb, int* count) {
 	float ret = 0;
 	memcpy(&ret, tb + *count, 4);
 	*count += 4;
 	return ret;
 }
 
-static char* readString(unsigned char* tb, int* count) {
-	unsigned char* ret = tb + *count;
+static const char* readString(const unsigned char* tb, int* count) {
+	const unsigned char* ret = tb + *count;
 	*count += strlen((char*)ret) + 1; //+1 for null character
-	return (char*)ret;
+	return (const char*)ret;
 }
 
-static void consumeByte(Toy_Interpreter* interpreter, unsigned char byte, unsigned char* tb, int* count) {
+static void consumeByte(Toy_Interpreter* interpreter, unsigned char byte, const unsigned char* tb, int* count) {
 	if (byte != tb[*count]) {
 		char buffer[512];
 		snprintf(buffer, 512, "[internal] Failed to consume the correct byte (expected %u, found %u)\n", byte, tb[*count]);
@@ -211,7 +211,7 @@ static void consumeByte(Toy_Interpreter* interpreter, unsigned char byte, unsign
 	*count += 1;
 }
 
-static void consumeShort(Toy_Interpreter* interpreter, unsigned short bytes, unsigned char* tb, int* count) {
+static void consumeShort(Toy_Interpreter* interpreter, unsigned short bytes, const unsigned char* tb, int* count) {
 	if (bytes != *(unsigned short*)(tb + *count)) {
 		char buffer[512];
 		snprintf(buffer, 512, "[internal] Failed to consume the correct bytes (expected %u, found %u)\n", bytes, *(unsigned short*)(tb + *count));
@@ -1446,7 +1446,7 @@ bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_Liter
 	return true;
 }
 
-bool Toy_callFn(Toy_Interpreter* interpreter, char* name, Toy_LiteralArray* arguments, Toy_LiteralArray* returns) {
+bool Toy_callFn(Toy_Interpreter* interpreter, const char* name, Toy_LiteralArray* arguments, Toy_LiteralArray* returns) {
 	Toy_Literal key = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(name, strlen(name)));
 	Toy_Literal val = TOY_TO_NULL_LITERAL;
 	
@@ -2125,7 +2125,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 			break;
 
 			case TOY_LITERAL_STRING: {
-				char* s = readString(interpreter->bytecode, &interpreter->count);
+				const char* s = readString(interpreter->bytecode, &interpreter->count);
 				int length = strlen(s);
 				Toy_Literal literal = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(s, length));
 				Toy_pushLiteralArray(&interpreter->literalCache, literal);
@@ -2222,7 +2222,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 			break;
 
 			case TOY_LITERAL_IDENTIFIER: {
-				char* str = readString(interpreter->bytecode, &interpreter->count);
+				const char* str = readString(interpreter->bytecode, &interpreter->count);
 
 				int length = strlen(str);
 				Toy_Literal identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(str, length));
@@ -2356,7 +2356,7 @@ void Toy_initInterpreter(Toy_Interpreter* interpreter) {
 	Toy_resetInterpreter(interpreter);
 }
 
-void Toy_runInterpreter(Toy_Interpreter* interpreter, unsigned char* bytecode, int length) {
+void Toy_runInterpreter(Toy_Interpreter* interpreter, const unsigned char* bytecode, int length) {
 	//initialize here instead of initInterpreter()
 	Toy_initLiteralArray(&interpreter->literalCache);
 	interpreter->bytecode = NULL;

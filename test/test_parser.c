@@ -11,7 +11,7 @@
 int main() {
 	{
 		//source
-		char* source = "print null;";
+		const char* source = "print null;";
 
 		//test init & quit
 		Toy_Lexer lexer;
@@ -24,7 +24,7 @@ int main() {
 
 	{
 		//source
-		char* source = "print null;";
+		const char* source = "print null;";
 
 		//test parsing
 		Toy_Lexer lexer;
@@ -58,7 +58,7 @@ int main() {
 	{
 		//get the source file
 		size_t size = 0;
-		char* source = Toy_readFile("scripts/parser_sample_code.toy", &size);
+		const char* source = Toy_readFile("scripts/parser_sample_code.toy", &size);
 
 		//test parsing a chunk of junk (valgrind will find leaks)
 		Toy_Lexer lexer;
@@ -85,7 +85,7 @@ int main() {
 
 	{
 		//test parsing of escaped characters
-		char* source = "print \"\\\"\";"; //NOTE: this string goes through two layers of escaping
+		const char* source = "print \"\\\"\";"; //NOTE: this string goes through two layers of escaping
 
 		//test parsing
 		Toy_Lexer lexer;
@@ -123,7 +123,7 @@ int main() {
 
 	{
 		//test parsing of underscored numbers
-		char* source = "print 1_000_000;";
+		const char* source = "print 1_000_000;";
 
 		//test parsing
 		Toy_Lexer lexer;

@@ -1,14 +1,6 @@
 #include "toy_refstring.h"
 
 #include <string.h>
-#include <assert.h>
-
-//test variable sizes based on platform (safety)
-#define STATIC_ASSERT(test_for_true) static_assert((test_for_true), "(" #test_for_true ") failed")
-
-STATIC_ASSERT(sizeof(Toy_RefString) == 12);
-STATIC_ASSERT(sizeof(int) == 4);
-STATIC_ASSERT(sizeof(char) == 1);
 
 //memory allocation
 extern void* Toy_private_defaultMemoryAllocator(void* pointer, size_t oldSize, size_t newSize);
@@ -19,18 +11,22 @@ void Toy_setRefStringAllocatorFn(Toy_RefStringAllocatorFn allocator) {
 }
 
 //API
-Toy_RefString* Toy_createRefString(char* cstring) {
-	int length = strlen(cstring);
+Toy_RefString* Toy_createRefString(const char* cstring) {
+	size_t length = strlen(cstring);
 
 	return Toy_createRefStringLength(cstring, length);
 }
 
-Toy_RefString* Toy_createRefStringLength(char* cstring, int length) {
+Toy_RefString* Toy_createRefStringLength(const char* cstring, size_t length) {
 	//allocate the memory area (including metadata space)
-	Toy_RefString* refString = (Toy_RefString*)allocate(NULL, 0, sizeof(int) * 2 + sizeof(char) * length + 1);
+	Toy_RefString* refString = allocate(NULL, 0, sizeof(size_t) + sizeof(int) + sizeof(char) * (length + 1));
+
+	if (refString == NULL) {
+		return NULL;
+	}
 
 	//set the data
-	refString->refcount = 1;
+	refString->refCount = 1;
 	refString->length = length;
 	strncpy(refString->data, cstring, refString->length);
 
@@ -41,32 +37,32 @@ Toy_RefString* Toy_createRefStringLength(char* cstring, int length) {
 
 void Toy_deleteRefString(Toy_RefString* refString) {
 	//decrement, then check
-	refString->refcount--;
-	if (refString->refcount <= 0) {
-		allocate(refString, sizeof(int) * 2 + sizeof(char) * refString->length + 1, 0);
+	refString->refCount--;
+	if (refString->refCount <= 0) {
+		allocate(refString, sizeof(size_t) + sizeof(int) + sizeof(char) * (refString->length + 1), 0);
 	}
 }
 
 int Toy_countRefString(Toy_RefString* refString) {
-	return refString->refcount;
+	return refString->refCount;
 }
 
-int Toy_lengthRefString(Toy_RefString* refString) {
+size_t Toy_lengthRefString(Toy_RefString* refString) {
 	return refString->length;
 }
 
 Toy_RefString* Toy_copyRefString(Toy_RefString* refString) {
 	//Cheaty McCheater Face
-	refString->refcount++;
+	refString->refCount++;
 	return refString;
 }
 
 Toy_RefString* Toy_deepCopyRefString(Toy_RefString* refString) {
-	//create a new string, with a new refcount
+	//create a new string, with a new refCount
 	return Toy_createRefStringLength(refString->data, refString->length);
 }
 
-char* Toy_toCString(Toy_RefString* refString) {
+const char* Toy_toCString(Toy_RefString* refString) {
 	return refString->data;
 }
 
@@ -87,7 +83,7 @@ bool Toy_equalsRefString(Toy_RefString* lhs, Toy_RefString* rhs) {
 
 bool Toy_equalsRefStringCString(Toy_RefString* lhs, char* cstring) {
 	//get the rhs length
-	int length = strlen(cstring);
+	size_t length = strlen(cstring);
 
 	//different length
 	if (lhs->length != length) {

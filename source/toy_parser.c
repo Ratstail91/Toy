@@ -508,7 +508,7 @@ static Toy_Opcode unary(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	return TOY_OP_EOF;
 }
 
-static char* removeChar(char* lexeme, int length, char c) {
+static char* removeChar(const char* lexeme, int length, char c) {
 	int resPos = 0;
 	char* result = TOY_ALLOCATE(char, length + 1);
 
@@ -540,7 +540,7 @@ static Toy_Opcode atomic(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 
 		case TOY_TOKEN_LITERAL_INTEGER: {
 			int value = 0;
-			char* lexeme = removeChar(parser->previous.lexeme, parser->previous.length, '_');
+			const char* lexeme = removeChar(parser->previous.lexeme, parser->previous.length, '_');
 			sscanf(lexeme, "%d", &value);
 			TOY_FREE_ARRAY(char, lexeme, parser->previous.length + 1);
 			Toy_emitASTNodeLiteral(nodeHandle, TOY_TO_INTEGER_LITERAL(value));
@@ -549,7 +549,7 @@ static Toy_Opcode atomic(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 
 		case TOY_TOKEN_LITERAL_FLOAT: {
 			float value = 0;
-			char* lexeme = removeChar(parser->previous.lexeme, parser->previous.length, '_');
+			const char* lexeme = removeChar(parser->previous.lexeme, parser->previous.length, '_');
 			sscanf(lexeme, "%f", &value);
 			TOY_FREE_ARRAY(char, lexeme, parser->previous.length + 1);
 			Toy_emitASTNodeLiteral(nodeHandle, TOY_TO_FLOAT_LITERAL(value));

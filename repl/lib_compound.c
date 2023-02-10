@@ -506,13 +506,13 @@ static int nativeToLower(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 	}
 
 	Toy_RefString* selfRefString = TOY_AS_STRING(selfLiteral);
-	char* self = Toy_toCString(selfRefString);
+	const char* self = Toy_toCString(selfRefString);
 
 	//allocate buffer space for the result
 	char* result = TOY_ALLOCATE(char, Toy_lengthRefString(selfRefString) + 1);
 
 	//set each new character
-	for (int i = 0; i < Toy_lengthRefString(selfRefString); i++) {
+	for (int i = 0; i < (int)Toy_lengthRefString(selfRefString); i++) {
 		result[i] = tolower(self[i]);
 	}
 	result[Toy_lengthRefString(selfRefString)] = '\0'; //end the string
@@ -533,7 +533,7 @@ static int nativeToLower(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 
 static char* toStringUtilObject = NULL;
 static void toStringUtil(const char* input) {
-	int len = strlen(input) + 1;
+	size_t len = strlen(input) + 1;
 
 	if (len > TOY_MAX_STRING_LENGTH) {
 		len = TOY_MAX_STRING_LENGTH; //TODO: don't truncate
@@ -606,13 +606,13 @@ static int nativeToUpper(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 	}
 
 	Toy_RefString* selfRefString = TOY_AS_STRING(selfLiteral);
-	char* self = Toy_toCString(selfRefString);
+	const char* self = Toy_toCString(selfRefString);
 
 	//allocate buffer space for the result
 	char* result = TOY_ALLOCATE(char, Toy_lengthRefString(selfRefString) + 1);
 
 	//set each new character
-	for (int i = 0; i < Toy_lengthRefString(selfRefString); i++) {
+	for (int i = 0; i < (int)Toy_lengthRefString(selfRefString); i++) {
 		result[i] = toupper(self[i]);
 	}
 	result[Toy_lengthRefString(selfRefString)] = '\0'; //end the string
@@ -675,10 +675,10 @@ static int nativeTrim(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	int bufferEnd = Toy_lengthRefString(selfRefString);
 
 	//for each character in self, check it against each character in trimChars - on a fail, go to end
-	for (int i = 0; i < Toy_lengthRefString(selfRefString); i++) {
+	for (int i = 0; i < (int)Toy_lengthRefString(selfRefString); i++) {
 		int trimIndex = 0;
 
-		while (trimIndex < Toy_lengthRefString(trimCharsRefString)) {
+		while (trimIndex < (int)Toy_lengthRefString(trimCharsRefString)) {
 			//there is a match - DON'T increment anymore
 			if (Toy_toCString(selfRefString)[i] == Toy_toCString(trimCharsRefString)[trimIndex]) {
 				break;
@@ -688,7 +688,7 @@ static int nativeTrim(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 		}
 
 		//if the match is found, increment buffer begin
-		if (trimIndex < Toy_lengthRefString(trimCharsRefString)) {
+		if (trimIndex < (int)Toy_lengthRefString(trimCharsRefString)) {
 			bufferBegin++;
 			continue;
 		}
@@ -701,7 +701,7 @@ static int nativeTrim(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	for (int i = Toy_lengthRefString(selfRefString); i >= 0; i--) {
 		int trimIndex = 0;
 
-		while (trimIndex < Toy_lengthRefString(trimCharsRefString)) {
+		while (trimIndex < (int)Toy_lengthRefString(trimCharsRefString)) {
 			//there is a match - DON'T increment anymore
 			if (Toy_toCString(selfRefString)[i-1] == Toy_toCString(trimCharsRefString)[trimIndex]) {
 				break;
@@ -711,7 +711,7 @@ static int nativeTrim(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 		}
 
 		//if the match is found, increment buffer begin
-		if (trimIndex < Toy_lengthRefString(trimCharsRefString)) {
+		if (trimIndex < (int)Toy_lengthRefString(trimCharsRefString)) {
 			bufferEnd--;
 			continue;
 		}
@@ -786,10 +786,10 @@ static int nativeTrimBegin(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 	int bufferEnd = Toy_lengthRefString(selfRefString);
 
 	//for each character in self, check it against each character in trimChars - on a fail, go to end
-	for (int i = 0; i < Toy_lengthRefString(selfRefString); i++) {
+	for (int i = 0; i < (int)Toy_lengthRefString(selfRefString); i++) {
 		int trimIndex = 0;
 
-		while (trimIndex < Toy_lengthRefString(trimCharsRefString)) {
+		while (trimIndex < (int)Toy_lengthRefString(trimCharsRefString)) {
 			//there is a match - DON'T increment anymore
 			if (Toy_toCString(selfRefString)[i] == Toy_toCString(trimCharsRefString)[trimIndex]) {
 				break;
@@ -799,7 +799,7 @@ static int nativeTrimBegin(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 		}
 
 		//if the match is found, increment buffer begin
-		if (trimIndex < Toy_lengthRefString(trimCharsRefString)) {
+		if (trimIndex < (int)Toy_lengthRefString(trimCharsRefString)) {
 			bufferBegin++;
 			continue;
 		}
@@ -874,10 +874,10 @@ static int nativeTrimEnd(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 	int bufferEnd = Toy_lengthRefString(selfRefString);
 
 	//again, from the back
-	for (int i = Toy_lengthRefString(selfRefString); i >= 0; i--) {
+	for (int i = (int)Toy_lengthRefString(selfRefString); i >= 0; i--) {
 		int trimIndex = 0;
 
-		while (trimIndex < Toy_lengthRefString(trimCharsRefString)) {
+		while (trimIndex < (int)Toy_lengthRefString(trimCharsRefString)) {
 			//there is a match - DON'T increment anymore
 			if (Toy_toCString(selfRefString)[i-1] == Toy_toCString(trimCharsRefString)[trimIndex]) {
 				break;
@@ -887,7 +887,7 @@ static int nativeTrimEnd(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 		}
 
 		//if the match is found, increment buffer begin
-		if (trimIndex < Toy_lengthRefString(trimCharsRefString)) {
+		if (trimIndex < (int)Toy_lengthRefString(trimCharsRefString)) {
 			bufferEnd--;
 			continue;
 		}

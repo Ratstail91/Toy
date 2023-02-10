@@ -270,7 +270,7 @@ static Toy_Token makeKeywordOrIdentifier(Toy_Lexer* lexer) {
 }
 
 //exposed functions
-void Toy_initLexer(Toy_Lexer* lexer, char* source) {
+void Toy_initLexer(Toy_Lexer* lexer, const char* source) {
 	cleanLexer(lexer);
 
 	lexer->source = source;
@@ -363,7 +363,7 @@ void Toy_printToken(Toy_Token* token) {
 		if (keyword != NULL) {
 			printf("%s", keyword);
 		} else {
-			char* str = token->lexeme;
+			char* str = (char*)token->lexeme; //strip const-ness for trimming
 			int length = token->length;
 			trim(&str, &length);
 			printf("%.*s", length, str);

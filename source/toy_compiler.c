@@ -1096,7 +1096,7 @@ static unsigned char* collateCompilerHeaderOpt(Toy_Compiler* compiler, int* size
 
 				Toy_Literal str = compiler->literalCache.literals[i];
 
-				for (int c = 0; c < TOY_AS_STRING(str)->length; c++) {
+				for (int c = 0; c < (int)Toy_lengthRefString(TOY_AS_STRING(str)); c++) {
 					emitByte(&collation, &capacity, &count, Toy_toCString(TOY_AS_STRING(str))[c]);
 				}
 
@@ -1198,7 +1198,7 @@ static unsigned char* collateCompilerHeaderOpt(Toy_Compiler* compiler, int* size
 
 				Toy_Literal identifier = compiler->literalCache.literals[i];
 
-				for (int c = 0; c < TOY_AS_IDENTIFIER(identifier)->length; c++) {
+				for (int c = 0; c < (int)Toy_lengthRefString(TOY_AS_IDENTIFIER(identifier)); c++) {
 					emitByte(&collation, &capacity, &count, Toy_toCString(TOY_AS_IDENTIFIER(identifier))[c]);
 				}
 
@@ -1284,6 +1284,7 @@ static unsigned char* collateCompilerHeaderOpt(Toy_Compiler* compiler, int* size
 	return collation;
 }
 
+//the whole point of the compiler is to alter bytecode, so leave it as non-const
 unsigned char* Toy_collateCompiler(Toy_Compiler* compiler, int* size) {
 	return collateCompilerHeaderOpt(compiler, size, true);
 }

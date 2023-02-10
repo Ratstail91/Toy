@@ -23,7 +23,7 @@ static void noErrorFn(const char* output) {
 	errorsTriggered++;
 }
 
-unsigned char* compileStringCustom(char* source, size_t* size) {
+const unsigned char* compileStringCustom(const char* source, size_t* size) {
 	Toy_Lexer lexer;
 	Toy_Parser parser;
 	Toy_Compiler compiler;
@@ -50,7 +50,7 @@ unsigned char* compileStringCustom(char* source, size_t* size) {
 	}
 
 	//get the bytecode dump
-	unsigned char* tb = Toy_collateCompiler(&compiler, (int*)(size));
+	const unsigned char* tb = Toy_collateCompiler(&compiler, (int*)(size));
 
 	//cleanup
 	Toy_freeCompiler(&compiler);
@@ -61,7 +61,7 @@ unsigned char* compileStringCustom(char* source, size_t* size) {
 	return tb;
 }
 
-void runBinaryCustom(unsigned char* tb, size_t size) {
+void runBinaryCustom(const unsigned char* tb, size_t size) {
 	Toy_Interpreter interpreter;
 	Toy_initInterpreter(&interpreter);
 
@@ -73,18 +73,18 @@ void runBinaryCustom(unsigned char* tb, size_t size) {
 	Toy_freeInterpreter(&interpreter);
 }
 
-void runSourceCustom(char* source) {
+void runSourceCustom(const char* source) {
 	size_t size = 0;
-	unsigned char* tb = compileStringCustom(source, &size);
+	const unsigned char* tb = compileStringCustom(source, &size);
 	if (!tb) {
 		return;
 	}
 	runBinaryCustom(tb, size);
 }
 
-void runSourceFileCustom(char* fname) {
+void runSourceFileCustom(const char* fname) {
 	size_t size = 0; //not used
-	char* source = Toy_readFile(fname, &size);
+	const char* source = Toy_readFile(fname, &size);
 	runSourceCustom(source);
 	free((void*)source);
 }
