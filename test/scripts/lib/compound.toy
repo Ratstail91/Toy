@@ -46,6 +46,27 @@ import compound;
 }
 
 
+//test containsKey
+{
+	var d = ["one": 1, "two": 2];
+
+	assert d.containsKey("one") == true, "dictionary.containsKey() == true failed";
+	assert d.containsKey("three") == false, "dictionary.containsKey() == false failed";
+}
+
+
+//test containsValue
+{
+	var a = [1, 2, 3];
+	var d = ["one": 1, "two": 2];
+
+	assert a.containsValue(1) == true, "array.containsValue() == true failed";
+	assert a.containsValue(5) == false, "array.containsValue() == false failed";
+	assert d.containsValue(1) == true, "dictionary.containsValue() == true failed";
+	assert d.containsValue(3) == false, "dictionary.containsValue() == false failed";
+}
+
+
 //test every
 {
 	var a = [1, 2, 3];

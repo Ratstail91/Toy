@@ -3,13 +3,6 @@ import compound;
 var a = [false, false, false];
 var d = ["one": false, "two": false];
 
-fn f(k, v) { return v; }
+print d.containsKey("one");
+print d.containsKey("three");
 
-print a.some(f);
-print d.some(f);
-
-a[1] = true;
-d["two"] = true;
-
-print a.some(f);
-print d.some(f);
