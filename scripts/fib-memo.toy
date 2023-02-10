@@ -17,5 +17,5 @@ fn fib(n : int) {
 
 for (var i = 0; i < 40; i++) {
 	var res = fib(i);
-	print string i + ": " + string res;
+	print string i + ": " + string res + "\n";
 }

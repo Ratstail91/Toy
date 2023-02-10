@@ -13,7 +13,7 @@
 
 static void printWrapper(const char* output) {
 	printf("%s", output);
-	printf("\n"); //default new line
+	// printf("\n"); //default new line
 }
 
 static void assertWrapper(const char* output) {

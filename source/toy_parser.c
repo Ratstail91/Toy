@@ -428,12 +428,12 @@ static Toy_Opcode binary(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 		}
 
 		case TOY_TOKEN_AND: {
-			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
+			parsePrecedence(parser, nodeHandle, PREC_AND);
 			return TOY_OP_AND;
 		}
 
 		case TOY_TOKEN_OR: {
-			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
+			parsePrecedence(parser, nodeHandle, PREC_OR);
 			return TOY_OP_OR;
 		}
 
@@ -448,7 +448,7 @@ static Toy_Opcode unary(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 
 	if (parser->previous.type == TOY_TOKEN_MINUS) {
 		//temp handle to potentially negate values
-		parsePrecedence(parser, &tmpNode, PREC_TERNARY); //can be a literal
+		parsePrecedence(parser, &tmpNode, PREC_TERM); //can be a literal
 
 		//optimisation: check for negative literals
 		if (tmpNode != NULL && tmpNode->type == TOY_AST_NODE_LITERAL && (TOY_IS_INTEGER(tmpNode->atomic.literal) || TOY_IS_FLOAT(tmpNode->atomic.literal))) {

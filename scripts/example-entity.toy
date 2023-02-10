@@ -24,7 +24,7 @@ fn getY(node: opaque) {
 
 //lifecycle functions
 fn onInit(node: opaque) {
-	print "render.toy:onInit() called";
+	print "render.toy:onInit() called\n";
 
 	node.loadTexture("sprites:/character.png");
 	parent = node.getNodeParent();
@@ -36,13 +36,13 @@ fn onStep(node: opaque) {
 }
 
 fn onFree(node: opaque) {
-	print "render.toy:onFree() called";
+	print "render.toy:onFree() called\n";
 
 	node.freeTexture();
 }
 
 fn onDraw(node: opaque) {
-//	print "render.toy:onDraw() called";
+//	print "render.toy:onDraw() called\n";
 
 	var px = parent.callNode("getX");
 	var py = parent.callNode("getY");
@@ -104,11 +104,11 @@ fn onKeyUp(node: opaque, event: string) {
 }
 
 fn onMouseMotion(node: opaque, x: int, y: int, xrel: int, yrel: int) {
-	print "entity.toy:onMouseMotion(" + string x + ", " + string y + ", " + string xrel + ", " + string yrel + ")";
+	// print "entity.toy:onMouseMotion(" + string x + ", " + string y + ", " + string xrel + ", " + string yrel + ")\n";
 }
 
 fn onMouseButtonDown(node: opaque, x: int, y: int, button: string) {
-	print "entity.toy:onMouseButtonDown(" + string x + ", " + string y + ", " + button + ")";
+	// print "entity.toy:onMouseButtonDown(" + string x + ", " + string y + ", " + button + ")\n";
 
 	//jump to pos
 	posX = x - WIDTH / 2;
@@ -116,10 +116,10 @@ fn onMouseButtonDown(node: opaque, x: int, y: int, button: string) {
 }
 
 fn onMouseButtonUp(node: opaque, x: int, y: int, button: string) {
-	print "entity.toy:onMouseButtonUp(" + string x + ", " + string y + ", " + button + ")";
+	// print "entity.toy:onMouseButtonUp(" + string x + ", " + string y + ", " + button + ")\n";
 }
 
 fn onMouseWheel(node: opaque, xrel: int, yrel: int) {
-	print "entity.toy:onMouseWheel(" + string xrel + ", " + string yrel + ")";
+	// print "entity.toy:onMouseWheel(" + string xrel + ", " + string yrel + ")\n";
 }
 

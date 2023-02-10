@@ -1,0 +1,7 @@
+//This is just a check to ensure that unary minus doesn't screw up the AST
+
+var xrel: int = 0;
+var yrel: int = 0;
+
+assert (xrel > 1 || xrel < -1 || yrel > 1 || yrel < -1) == false, "or-chaining bugfix failed";
+

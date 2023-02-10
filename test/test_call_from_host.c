@@ -41,7 +41,7 @@ int main() {
 
 		//test answer
 		{
-			interpreter.printOutput("Testing answer");
+			interpreter.printOutput("Testing answer\n");
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
@@ -69,7 +69,7 @@ int main() {
 
 		//test identity
 		{
-			interpreter.printOutput("Testing identity");
+			interpreter.printOutput("Testing identity\n");
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
@@ -104,7 +104,7 @@ int main() {
 
 		//test makeCounter (closures)
 		{
-			interpreter.printOutput("Testing makeCounter (closures)");
+			interpreter.printOutput("Testing makeCounter (closures)\n");
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
@@ -209,7 +209,7 @@ int main() {
 
 		//test assertion failure
 		{
-			interpreter.printOutput("Testing assertion failure");
+			interpreter.printOutput("Testing assertion failure\n");
 
 			Toy_setInterpreterAssert(&interpreter, noPrintFn);
 

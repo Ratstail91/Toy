@@ -1,8 +1,10 @@
-import compound;
 
-var a = [false, false, false];
-var d = ["one": false, "two": false];
+var xrel: int = 0;
+var yrel: int = 0;
 
-print d.containsKey("one");
-print d.containsKey("three");
-
+if (xrel > 1 || xrel < -1 || yrel > 1 || yrel < -1) {
+	print "outside";
+}
+else {
+	print "inside";
+}

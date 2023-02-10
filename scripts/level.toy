@@ -1,0 +1,61 @@
+//constants
+var WIDTH: int const = 10;
+var HEIGHT: int const = 10;
+
+//WIDTH * HEIGHT in size
+var tiles: [[int]] const = [
+	[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+	[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+];
+
+var tileset: [int: string] const = [
+	0: "   ",
+	1: " X "
+];
+
+//variables
+var posX: int = 5;
+var posY: int = 5;
+
+//functions
+fn draw() {
+	for (var j: int = 0; j < HEIGHT; j++) {
+		for (var i: int = 0; i < WIDTH; i++) {
+			//draw the player pos
+			if (i == posX && j == posY) {
+				print " O ";
+				continue;
+			}
+
+			print tileset[ tiles[i][j] ];
+		}
+		print "\n";
+	}
+	print "\n";
+}
+
+fn move(xrel: int, yrel: int) {
+	if (xrel > 1 || xrel < -1 || yrel > 1 || yrel < -1 || (xrel != 0 && yrel != 0)) {
+		print "too fast!\n";
+		return;
+	}
+
+	if (tiles[posX + xrel][posY + yrel] > 0) {
+		print "Can't move that way\n";
+		return;
+	}
+
+	posX += xrel;
+	posY += yrel;
+
+	draw();
+}
+
