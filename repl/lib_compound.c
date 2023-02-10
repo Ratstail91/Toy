@@ -346,6 +346,120 @@ static int nativeEvery(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	return 1;
 }
 
+static int nativeFilter(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	//no arguments
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments to _filter\n");
+		return -1;
+	}
+
+	//get the args
+	Toy_Literal fnLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	//parse to value if needed
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	Toy_Literal fnLiteralIdn = fnLiteral;
+	if (TOY_IS_IDENTIFIER(fnLiteral) && Toy_parseIdentifierToValue(interpreter, &fnLiteral)) {
+		Toy_freeLiteral(fnLiteralIdn);
+	}
+
+	//check type
+	if (!( TOY_IS_ARRAY(selfLiteral) || TOY_IS_DICTIONARY(selfLiteral) ) || !( TOY_IS_FUNCTION(fnLiteral) || TOY_IS_FUNCTION_NATIVE(fnLiteral) )) {
+		interpreter->errorOutput("Incorrect argument type passed to _filter\n");
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(fnLiteral);
+		return -1;
+	}
+
+	//call the given function on each element, based on the compound type
+	if (TOY_IS_ARRAY(selfLiteral)) {
+		Toy_LiteralArray* result = TOY_ALLOCATE(Toy_LiteralArray, 1);
+		Toy_initLiteralArray(result);
+
+		//
+		for (int i = 0; i < TOY_AS_ARRAY(selfLiteral)->count; i++) {
+			Toy_Literal indexLiteral = TOY_TO_INTEGER_LITERAL(i);
+
+			Toy_LiteralArray arguments;
+			Toy_initLiteralArray(&arguments);
+			Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[i]);
+			Toy_pushLiteralArray(&arguments, indexLiteral);
+
+			Toy_LiteralArray returns;
+			Toy_initLiteralArray(&returns);
+
+			Toy_callLiteralFn(interpreter, fnLiteral, &arguments, &returns);
+
+			//grab the results
+			Toy_Literal lit = Toy_popLiteralArray(&returns);
+
+			Toy_freeLiteralArray(&arguments);
+			Toy_freeLiteralArray(&returns);
+			Toy_freeLiteral(indexLiteral);
+
+			//if truthy
+			if (TOY_IS_TRUTHY(lit)) {
+				Toy_pushLiteralArray(result, TOY_AS_ARRAY(selfLiteral)->literals[i]);
+			}
+
+			Toy_freeLiteral(lit);
+		}
+
+		Toy_Literal resultLiteral = TOY_TO_ARRAY_LITERAL(result);
+		Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+		Toy_freeLiteral(resultLiteral);
+	}
+
+	if (TOY_IS_DICTIONARY(selfLiteral)) {
+		Toy_LiteralDictionary* result = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
+		Toy_initLiteralDictionary(result);
+
+		for (int i = 0; i < TOY_AS_DICTIONARY(selfLiteral)->capacity; i++) {
+			//skip nulls
+			if (TOY_IS_NULL(TOY_AS_DICTIONARY(selfLiteral)->entries[i].key)) {
+				continue;
+			}
+
+			Toy_LiteralArray arguments;
+			Toy_initLiteralArray(&arguments);
+			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
+			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].key);
+
+			Toy_LiteralArray returns;
+			Toy_initLiteralArray(&returns);
+
+			Toy_callLiteralFn(interpreter, fnLiteral, &arguments, &returns);
+
+			//grab the results
+			Toy_Literal lit = Toy_popLiteralArray(&returns);
+
+			Toy_freeLiteralArray(&arguments);
+			Toy_freeLiteralArray(&returns);
+
+			//if truthy
+			if (TOY_IS_TRUTHY(lit)) {
+				Toy_setLiteralDictionary(result, TOY_AS_DICTIONARY(selfLiteral)->entries[i].key, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
+			}
+
+			Toy_freeLiteral(lit);
+		}
+
+		Toy_Literal resultLiteral = TOY_TO_DICTIONARY_LITERAL(result);
+		Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+		Toy_freeLiteral(resultLiteral);
+	}
+
+	Toy_freeLiteral(fnLiteral);
+	Toy_freeLiteral(selfLiteral);
+
+	return 1;
+}
+
 static int nativeForEach(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
@@ -1282,7 +1396,7 @@ int Toy_hookCompound(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		{"_containsKey", nativeContainsKey}, //dictionary
 		{"_containsValue", nativeContainsValue}, //array, dictionary
 		{"_every", nativeEvery}, //array, dictionary
-		// {"_filter", native}, //array, dictionary
+		{"_filter", nativeFilter}, //array, dictionary
 		{"_forEach", nativeForEach}, //array, dictionary
 		{"_getKeys", nativeGetKeys}, //dictionary
 		{"_getValues", nativeGetValues}, //dictionary

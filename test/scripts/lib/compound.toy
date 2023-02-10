@@ -94,6 +94,20 @@ import compound;
 }
 
 
+//test filter
+{
+	var a = [1, 2, 3, 4];
+	var d = ["one": 1, "two": 2, "three": 3, "four": 4];
+
+	fn f(k, v) {
+		return v % 2 == 0;
+	}
+
+	assert a.filter(f) == [2, 4], "array.filter() failed";
+	assert d.filter(f) == ["two": 2, "four": 4], "dictionary.filter() failed";
+}
+
+
 //test forEach
 {
 	var counter = 0;
