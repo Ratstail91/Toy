@@ -45,6 +45,34 @@ import compound;
 	}
 }
 
+
+//test every
+{
+	var a = [1, 2, 3];
+	var d = ["one": 1, "two": 2];
+
+	var counter = 0;
+	fn f(k, v) {
+		counter++;
+		return v;
+	}
+
+	assert a.every(f) == true, "array.every() == true failed";
+	assert d.every(f) == true, "dictionary.every() == true failed";
+
+	assert counter == 5, "Unexpected number of calls for _every() == true";
+
+	counter = 0;
+	a[1] = false;
+	d["two"] = false;
+
+	assert a.every(f) == false, "array.every() == false failed";
+	assert d.every(f) == false, "dictionary.every() == false failed";
+
+	assert counter == 4, "Unexpected number of calls for _every() == false";
+}
+
+
 //test forEach
 {
 	var counter = 0;
@@ -64,6 +92,7 @@ import compound;
 	d.forEach(p);
 	assert counter == 4, "forEach ran an unusual number of times";
 }
+
 
 //test getKeys
 {
@@ -124,6 +153,33 @@ import compound;
 
 	assert a.reduce(0, f) == 10, "array.reduce() failed";
 	assert d.reduce(0, f) == 10, "dictionary.reduce() failed";
+}
+
+
+//test some
+{
+	var a = [false, false, false];
+	var d = ["one": false, "two": false];
+
+	var counter = 0;
+	fn f(k, v) {
+		counter++;
+		return v;
+	}
+
+	assert a.some(f) == false, "array.some() == false failed";
+	assert d.some(f) == false, "dictionary.some() == false failed";
+
+	assert counter == 5, "Unexpected number of calls for _some() == false";
+
+	counter = 0;
+	a[1] = true;
+	d["two"] = true;
+
+	assert a.some(f) == true, "array.some() == true failed";
+	assert d.some(f) == true, "dictionary.some() == true failed";
+
+	assert counter == 4, "Unexpected number of calls for _some() == true";
 }
 
 

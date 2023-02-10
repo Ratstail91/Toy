@@ -72,7 +72,7 @@ void Toy_freeLiteral(Toy_Literal literal) {
 
 bool Toy_private_isTruthy(Toy_Literal x) {
 	if (TOY_IS_NULL(x)) {
-		fprintf(stderr, TOY_CC_ERROR "TOY_CC_ERROR: Null is neither true nor false\n" TOY_CC_RESET);
+		fprintf(stderr, TOY_CC_ERROR "Null is neither true nor false\n" TOY_CC_RESET);
 		return false;
 	}
 
@@ -228,7 +228,7 @@ Toy_Literal Toy_copyLiteral(Toy_Literal original) {
 			return original;
 
 		default:
-			fprintf(stderr, TOY_CC_ERROR "TOY_CC_ERROR: Can't copy that literal type: %d\n" TOY_CC_RESET, original.type);
+			fprintf(stderr, TOY_CC_ERROR "Can't copy that literal type: %d\n" TOY_CC_RESET, original.type);
 			return TOY_TO_NULL_LITERAL;
 	}
 }
