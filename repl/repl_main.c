@@ -2,8 +2,8 @@
 #include "lib_about.h"
 #include "lib_compound.h"
 #include "lib_standard.h"
-#include "lib_timer.h"
 #include "lib_runner.h"
+// #include "lib_timer.h"
 
 #include "toy_console_colors.h"
 
@@ -32,8 +32,8 @@ void repl() {
 	Toy_injectNativeHook(&interpreter, "about", Toy_hookAbout);
 	Toy_injectNativeHook(&interpreter, "compound", Toy_hookCompound);
 	Toy_injectNativeHook(&interpreter, "standard", Toy_hookStandard);
-	Toy_injectNativeHook(&interpreter, "timer", Toy_hookTimer);
 	Toy_injectNativeHook(&interpreter, "runner", Toy_hookRunner);
+	// Toy_injectNativeHook(&interpreter, "timer", Toy_hookTimer);
 
 	for(;;) {
 		printf("> ");

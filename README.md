@@ -23,6 +23,8 @@ Special thanks to http://craftinginterpreters.com/ for their fantastic book that
 
 For Windows(mingw32 & cygwin), Linux and MacOS, simply run `make` in the root directory.
 
+For Windows(MSVC), project files are included.
+
 Note: MacOS is not officially supported (no machines for testing), but we'll do our best!
 
 ## Tools

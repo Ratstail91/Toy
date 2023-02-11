@@ -9,12 +9,12 @@
 #define TOY_VERSION_PATCH 3
 #define TOY_VERSION_BUILD __DATE__ " " __TIME__
 
-//platform-specific specifications
+//platform/compiler-specific specifications
 #if defined(__linux__)
 
 #define TOY_API extern
 
-#elif defined(_WIN32) || defined(_MSC_VER)
+#elif defined(_MSC_VER)
 
 #ifndef TOY_EXPORT
 #define TOY_API __declspec(dllimport)
@@ -22,7 +22,12 @@
 #define TOY_API __declspec(dllexport)
 #endif
 
+#elif defined(__MINGW32__)
+
+#define TOY_API extern
+
 #else
+
 #define TOY_API extern
 
 #endif
