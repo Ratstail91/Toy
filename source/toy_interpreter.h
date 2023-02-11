@@ -48,6 +48,6 @@ TOY_API void Toy_setInterpreterError(Toy_Interpreter* interpreter, Toy_PrintFn e
 
 //main access
 TOY_API void Toy_initInterpreter(Toy_Interpreter* interpreter); //start of program
-TOY_API void Toy_runInterpreter(Toy_Interpreter* interpreter, const unsigned char* bytecode, int length); //run the code
+TOY_API void Toy_runInterpreter(Toy_Interpreter* interpreter, const unsigned char* bytecode, size_t length); //run the code
 TOY_API void Toy_resetInterpreter(Toy_Interpreter* interpreter); //use this to reset the interpreter's environment between runs
 TOY_API void Toy_freeInterpreter(Toy_Interpreter* interpreter); //end of program

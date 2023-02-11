@@ -16,13 +16,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define INPUT_BUFFER_SIZE 2048
+
 void repl() {
 	//repl does it's own thing for now
 	bool error = false;
 
-	const int size = 2048;
-	char input[size];
-	memset(input, 0, size);
+	char input[INPUT_BUFFER_SIZE];
+	memset(input, 0, INPUT_BUFFER_SIZE);
 
 	Toy_Interpreter interpreter; //persist the interpreter for the scopes
 	Toy_initInterpreter(&interpreter);
@@ -38,7 +39,7 @@ void repl() {
 		printf("> ");
 
 		//handle EOF for exits
-		if (!fgets(input, size, stdin)) {
+		if (!fgets(input, INPUT_BUFFER_SIZE, stdin)) {
 			break;
 		}
 

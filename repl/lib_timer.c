@@ -4,45 +4,8 @@
 
 #include <stdio.h>
 #include <time.h>
-#include <sys/time.h>
 
-//GOD DAMN IT: https://stackoverflow.com/questions/15846762/timeval-subtract-explanation
-static int timeval_subtract(struct timeval *result, struct timeval *x, struct timeval *y) {
-	//normallize
-	if (x->tv_usec > 999999) {
-		x->tv_sec += x->tv_usec / 1000000;
-		x->tv_usec %= 1000000;
-	}
-
-	if (y->tv_usec > 999999) {
-		y->tv_sec += y->tv_usec / 1000000;
-		y->tv_usec %= 1000000;
-	}
-
-	//calc
-	result->tv_sec = x->tv_sec - y->tv_sec;
-
-	if ((result->tv_usec = x->tv_usec - y->tv_usec) < 0) {
-		if (result->tv_sec != 0) { //only works far from 0
-			result->tv_usec += 1000000;
-			result->tv_sec--; // borrow
-		}
-	}
-
-	return result->tv_sec < 0 || (result->tv_sec == 0 && result->tv_usec < 0);
-}
-
-//god damn it
-static struct timeval* diff(struct timeval* lhs, struct timeval* rhs) {
-	struct timeval* d = TOY_ALLOCATE(struct timeval, 1);
-
-	//I gave up, copied from SO
-	timeval_subtract(d, rhs, lhs);
-
-	return d;
-}
-
-//callbacks
+//natives
 static int nativeStartTimer(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 0) {
@@ -50,15 +13,15 @@ static int nativeStartTimer(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 		return -1;
 	}
 
-	//get the timeinfo from C
-	struct timeval* timeinfo = TOY_ALLOCATE(struct timeval, 1);
-	gettimeofday(timeinfo, NULL);
+	//get the time from C (this is dumb)
+	clock_t* ptr = TOY_ALLOCATE(clock_t, 1);
+	*ptr = clock();
 
 	//wrap in an opaque literal for Toy
-	Toy_Literal timeLiteral = TOY_TO_OPAQUE_LITERAL(timeinfo, -1);
-	Toy_pushLiteralArray(&interpreter->stack, timeLiteral);
+	Toy_Literal timerLiteral = TOY_TO_OPAQUE_LITERAL(ptr, -1); //TODO: sort out the tags
+	Toy_pushLiteralArray(&interpreter->stack, timerLiteral);
 
-	Toy_freeLiteral(timeLiteral);
+	Toy_freeLiteral(timerLiteral);
 
 	return 1;
 }
@@ -70,33 +33,33 @@ static int nativeStopTimer(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 		return -1;
 	}
 
-	//get the timeinfo from C
-	struct timeval timerStop;
-	gettimeofday(&timerStop, NULL);
+	clock_t stop = clock();
 
 	//unwrap the opaque literal
-	Toy_Literal timeLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal timerLiteral = Toy_popLiteralArray(arguments);
 
-	Toy_Literal timeLiteralIdn = timeLiteral;
-	if (TOY_IS_IDENTIFIER(timeLiteral) && Toy_parseIdentifierToValue(interpreter, &timeLiteral)) {
-		Toy_freeLiteral(timeLiteralIdn);
+	Toy_Literal timerLiteralIdn = timerLiteral;
+	if (TOY_IS_IDENTIFIER(timerLiteral) && Toy_parseIdentifierToValue(interpreter, &timerLiteral)) {
+		Toy_freeLiteral(timerLiteralIdn);
 	}
 
-	if (!TOY_IS_OPAQUE(timeLiteral)) {
+	if (!TOY_IS_OPAQUE(timerLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to _stopTimer\n");
-		Toy_freeLiteral(timeLiteral);
+		Toy_freeLiteral(timerLiteral);
 		return -1;
 	}
 
-	struct timeval* timerStart = TOY_AS_OPAQUE(timeLiteral);
+	clock_t* ptr = TOY_AS_OPAQUE(timerLiteral);
 
 	//determine the difference, and wrap it
-	struct timeval* d = diff(timerStart, &timerStop);
-	Toy_Literal diffLiteral = TOY_TO_OPAQUE_LITERAL(d, -1);
+	clock_t* diff = TOY_ALLOCATE(clock_t, 1);
+	*diff = *ptr - stop;
+	Toy_Literal diffLiteral = TOY_TO_OPAQUE_LITERAL(diff, -1);
+
 	Toy_pushLiteralArray(&interpreter->stack, diffLiteral);
 
 	//cleanup
-	Toy_freeLiteral(timeLiteral);
+	Toy_freeLiteral(timerLiteral);
 	Toy_freeLiteral(diffLiteral);
 
 	return 1;
@@ -137,13 +100,12 @@ static int nativeCreateTimer(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 		return -1;
 	}
 
-	//get the timeinfo from toy
-	struct timeval* timeinfo = TOY_ALLOCATE(struct timeval, 1);
-	timeinfo->tv_sec = TOY_AS_INTEGER(secondLiteral);
-	timeinfo->tv_usec = TOY_AS_INTEGER(microsecondLiteral);
+	//determine the clocks per whatever
+	clock_t* timer = TOY_ALLOCATE(clock_t, 1);
+	*timer = TOY_AS_INTEGER(secondLiteral) * CLOCKS_PER_SEC + TOY_AS_INTEGER(microsecondLiteral);
 
 	//wrap in an opaque literal for Toy
-	Toy_Literal timeLiteral = TOY_TO_OPAQUE_LITERAL(timeinfo, -1);
+	Toy_Literal timeLiteral = TOY_TO_OPAQUE_LITERAL(timer, -1);
 	Toy_pushLiteralArray(&interpreter->stack, timeLiteral);
 
 	Toy_freeLiteral(timeLiteral);
@@ -174,10 +136,10 @@ static int nativeGetTimerSeconds(Toy_Interpreter* interpreter, Toy_LiteralArray*
 		return -1;
 	}
 
-	struct timeval* timer = TOY_AS_OPAQUE(timeLiteral);
+	clock_t* timer = TOY_AS_OPAQUE(timeLiteral);
 
 	//create the result literal
-	Toy_Literal result = TOY_TO_INTEGER_LITERAL(timer->tv_sec);
+	Toy_Literal result = TOY_TO_INTEGER_LITERAL(*timer / CLOCKS_PER_SEC);
 	Toy_pushLiteralArray(&interpreter->stack, result);
 
 	//cleanup
@@ -208,10 +170,10 @@ static int nativeGetTimerMicroseconds(Toy_Interpreter* interpreter, Toy_LiteralA
 		return -1;
 	}
 
-	struct timeval* timer = TOY_AS_OPAQUE(timeLiteral);
+	clock_t* timer = TOY_AS_OPAQUE(timeLiteral);
 
 	//create the result literal
-	Toy_Literal result = TOY_TO_INTEGER_LITERAL(timer->tv_usec);
+	Toy_Literal result = TOY_TO_INTEGER_LITERAL(*timer % CLOCKS_PER_SEC);
 	Toy_pushLiteralArray(&interpreter->stack, result);
 
 	//cleanup
@@ -249,12 +211,14 @@ static int nativeCompareTimer(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 		return -1;
 	}
 
-	struct timeval* lhsTimer = TOY_AS_OPAQUE(lhsLiteral);
-	struct timeval* rhsTimer = TOY_AS_OPAQUE(rhsLiteral);
+	clock_t* lhsTimer = TOY_AS_OPAQUE(lhsLiteral);
+	clock_t* rhsTimer = TOY_AS_OPAQUE(rhsLiteral);
 
 	//determine the difference, and wrap it
-	struct timeval* d = diff(lhsTimer, rhsTimer);
-	Toy_Literal diffLiteral = TOY_TO_OPAQUE_LITERAL(d, -1);
+	clock_t* diff = TOY_ALLOCATE(clock_t, 1);
+	*diff = *lhsTimer - *rhsTimer;
+
+	Toy_Literal diffLiteral = TOY_TO_OPAQUE_LITERAL(diff, -1);
 	Toy_pushLiteralArray(&interpreter->stack, diffLiteral);
 
 	//cleanup
@@ -286,20 +250,12 @@ static int nativeTimerToString(Toy_Interpreter* interpreter, Toy_LiteralArray* a
 		return -1;
 	}
 
-	struct timeval* timer = TOY_AS_OPAQUE(timeLiteral);
+	clock_t* timer = TOY_AS_OPAQUE(timeLiteral);
 
 	//create the string literal
-	Toy_Literal resultLiteral = TOY_TO_NULL_LITERAL;
-	if (timer->tv_sec == 0 && timer->tv_usec < 0) { //special case, for when the negative sign is encoded in the usec
-		char buffer[128];
-		snprintf(buffer, 128, "-%ld.%06ld", timer->tv_sec, -timer->tv_usec);
-		resultLiteral = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(buffer, strlen(buffer)));
-	}
-	else { //normal case
-		char buffer[128];
-		snprintf(buffer, 128, "%ld.%06ld", timer->tv_sec, timer->tv_usec);
-		resultLiteral = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(buffer, strlen(buffer)));
-	}
+	char buffer[128];
+	snprintf(buffer, 128, "%ld.%06ld", *timer / CLOCKS_PER_SEC, *timer % CLOCKS_PER_SEC);
+	Toy_Literal resultLiteral = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(buffer, strlen(buffer)));
 
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
@@ -317,7 +273,7 @@ static int nativeDestroyTimer(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 		return -1;
 	}
 
-		//unwrap in an opaque literal
+	//unwrap in an opaque literal
 	Toy_Literal timeLiteral = Toy_popLiteralArray(arguments);
 
 	Toy_Literal timeLiteralIdn = timeLiteral;
@@ -331,9 +287,9 @@ static int nativeDestroyTimer(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 		return -1;
 	}
 
-	struct timeval* timer = TOY_AS_OPAQUE(timeLiteral);
+	clock_t* timer = TOY_AS_OPAQUE(timeLiteral);
 
-	TOY_FREE(struct timeval, timer);
+	TOY_FREE(clock_t, timer);
 
 	Toy_freeLiteral(timeLiteral);
 

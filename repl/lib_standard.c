@@ -3,7 +3,6 @@
 #include "toy_memory.h"
 
 #include <time.h>
-#include <sys/time.h>
 
 static int nativeClock(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
@@ -18,7 +17,7 @@ static int nativeClock(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	char* timestr = asctime(timeinfo);
 
 	//push to the stack
-	int len = strlen(timestr) - 1; //-1 for the newline
+	size_t len = strlen(timestr) - 1; //-1 for the newline
 	Toy_Literal timeLiteral = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(timestr, len));
 
 	//push to the stack
@@ -32,7 +31,7 @@ static int nativeClock(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 
 //call the hook
 typedef struct Natives {
-	char* name;
+	const char* name;
 	Toy_NativeFn fn;
 } Natives;
 

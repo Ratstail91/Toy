@@ -15,8 +15,6 @@ STATIC_ASSERT(sizeof(unsigned char) == 1);
 STATIC_ASSERT(sizeof(unsigned short) == 2);
 STATIC_ASSERT(sizeof(unsigned int) == 4);
 
-#ifndef TOY_EXPORT
-
 //declare the singleton
 Toy_CommandLine Toy_commandLine;
 
@@ -121,5 +119,3 @@ void Toy_copyrightCommandLine(int argc, const char* argv[]) {
 	printf("2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.\n\n");
 	printf("3. This notice may not be removed or altered from any source distribution.\n\n");
 }
-
-#endif

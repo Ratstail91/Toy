@@ -11,7 +11,7 @@
 #define TOY_FREE_ARRAY(type, pointer, oldCount) Toy_reallocate((type*)pointer, sizeof(type) * (oldCount), 0)
 
 //implementation details
-void* Toy_reallocate(void* pointer, size_t oldSize, size_t newSize);
+TOY_API void* Toy_reallocate(void* pointer, size_t oldSize, size_t newSize);
 
 //assign the memory allocator
 typedef void* (*Toy_MemoryAllocatorFn)(void* pointer, size_t oldSize, size_t newSize);

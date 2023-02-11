@@ -11,17 +11,22 @@
 
 //platform-specific specifications
 #if defined(__linux__)
+
 #define TOY_API extern
 
-#elif defined(_WIN32) || defined(WIN32)
-#define TOY_API
+#elif defined(_WIN32) || defined(_MSC_VER)
+
+#ifndef TOY_EXPORT
+#define TOY_API __declspec(dllimport)
+#else
+#define TOY_API __declspec(dllexport)
+#endif
 
 #else
-#define TOY_API
+#define TOY_API extern
 
 #endif
 
-#ifndef TOY_EXPORT
 //for processing the command line arguments
 typedef struct {
 	bool error;
@@ -35,11 +40,10 @@ typedef struct {
 	bool verbose;
 } Toy_CommandLine;
 
-extern Toy_CommandLine Toy_commandLine;
+TOY_API Toy_CommandLine Toy_commandLine;
 
-void Toy_initCommandLine(int argc, const char* argv[]);
+TOY_API void Toy_initCommandLine(int argc, const char* argv[]);
 
-void Toy_usageCommandLine(int argc, const char* argv[]);
-void Toy_helpCommandLine(int argc, const char* argv[]);
-void Toy_copyrightCommandLine(int argc, const char* argv[]);
-#endif
+TOY_API void Toy_usageCommandLine(int argc, const char* argv[]);
+TOY_API void Toy_helpCommandLine(int argc, const char* argv[]);
+TOY_API void Toy_copyrightCommandLine(int argc, const char* argv[]);

@@ -2356,7 +2356,7 @@ void Toy_initInterpreter(Toy_Interpreter* interpreter) {
 	Toy_resetInterpreter(interpreter);
 }
 
-void Toy_runInterpreter(Toy_Interpreter* interpreter, const unsigned char* bytecode, int length) {
+void Toy_runInterpreter(Toy_Interpreter* interpreter, const unsigned char* bytecode, size_t length) {
 	//initialize here instead of initInterpreter()
 	Toy_initLiteralArray(&interpreter->literalCache);
 	interpreter->bytecode = NULL;

@@ -83,7 +83,7 @@ static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 		}
 
 		//get the combined length for the new string
-		int length = TOY_AS_STRING(selfLiteral)->length + TOY_AS_STRING(otherLiteral)->length + 1;
+		size_t length = TOY_AS_STRING(selfLiteral)->length + TOY_AS_STRING(otherLiteral)->length + 1;
 
 		if (length > TOY_MAX_STRING_LENGTH) {
 			interpreter->errorOutput("Can't concatenate these strings, result is too long (error found in _concat)\n");
@@ -1136,8 +1136,8 @@ static int nativeTrim(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	Toy_RefString* selfRefString = TOY_AS_STRING(selfLiteral);
 
 	//allocate space for the new string
-	int bufferBegin = 0;
-	int bufferEnd = Toy_lengthRefString(selfRefString);
+	size_t bufferBegin = 0;
+	size_t bufferEnd = Toy_lengthRefString(selfRefString);
 
 	//for each character in self, check it against each character in trimChars - on a fail, go to end
 	for (int i = 0; i < (int)Toy_lengthRefString(selfRefString); i++) {
@@ -1163,7 +1163,7 @@ static int nativeTrim(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	}
 
 	//again, from the back
-	for (int i = Toy_lengthRefString(selfRefString); i >= 0; i--) {
+	for (int i = (int)Toy_lengthRefString(selfRefString); i >= 0; i--) {
 		int trimIndex = 0;
 
 		while (trimIndex < (int)Toy_lengthRefString(trimCharsRefString)) {
@@ -1247,8 +1247,8 @@ static int nativeTrimBegin(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 	Toy_RefString* selfRefString = TOY_AS_STRING(selfLiteral);
 
 	//allocate space for the new string
-	int bufferBegin = 0;
-	int bufferEnd = Toy_lengthRefString(selfRefString);
+	size_t bufferBegin = 0;
+	size_t bufferEnd = Toy_lengthRefString(selfRefString);
 
 	//for each character in self, check it against each character in trimChars - on a fail, go to end
 	for (int i = 0; i < (int)Toy_lengthRefString(selfRefString); i++) {
@@ -1335,8 +1335,8 @@ static int nativeTrimEnd(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 	Toy_RefString* selfRefString = TOY_AS_STRING(selfLiteral);
 
 	//allocate space for the new string
-	int bufferBegin = 0;
-	int bufferEnd = Toy_lengthRefString(selfRefString);
+	size_t bufferBegin = 0;
+	size_t bufferEnd = Toy_lengthRefString(selfRefString);
 
 	//again, from the back
 	for (int i = (int)Toy_lengthRefString(selfRefString); i >= 0; i--) {
