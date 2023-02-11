@@ -94,7 +94,7 @@ void Toy_initCommandLine(int argc, const char* argv[]) {
 }
 
 void Toy_usageCommandLine(int argc, const char* argv[]) {
-	printf("Usage: %s [<file.tb> | -h | -v | [-d][-f file | -i source | -c file [-o outfile]]]\n\n", argv[0]);
+	printf("Usage: %s [ file.tb | -h | -v | [ -d ][ -f file.toy | -i source | -c file.toy [ -o outfile.tb ]]]\n\n", argv[0]);
 }
 
 void Toy_helpCommandLine(int argc, const char* argv[]) {

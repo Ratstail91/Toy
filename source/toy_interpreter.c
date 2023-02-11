@@ -1507,7 +1507,7 @@ static bool execImport(Toy_Interpreter* interpreter) {
 	if (!Toy_existsLiteralDictionary(interpreter->hooks, identifier)) {
 		interpreter->errorOutput("Unknown library name in import statement: ");
 		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
-		interpreter->errorOutput("\"\n");
+		interpreter->errorOutput("\n");
 
 		Toy_freeLiteral(alias);
 		Toy_freeLiteral(identifier);

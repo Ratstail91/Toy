@@ -132,6 +132,14 @@ int main(int argc, const char* argv[]) {
 
 	//run source file
 	if (Toy_commandLine.sourcefile) {
+		//only works on toy files
+		const char* s = strrchr(Toy_commandLine.sourcefile, '.');
+		if (!s || strcmp(s, ".toy")) {
+			fprintf(stderr, TOY_CC_ERROR "Bad file extension passed to %s (expected '.toy', found '%s')" TOY_CC_RESET, argv[0], s);
+			return -1;
+		}
+
+		//run the source file
 		Toy_runSourceFile(Toy_commandLine.sourcefile);
 
 		//lib cleanup
@@ -152,6 +160,19 @@ int main(int argc, const char* argv[]) {
 
 	//compile source file
 	if (Toy_commandLine.compilefile && Toy_commandLine.outfile) {
+		//only works on toy and tb files
+		const char* c = strrchr(Toy_commandLine.compilefile, '.');
+		if (!c || strcmp(c, ".toy")) {
+			fprintf(stderr, TOY_CC_ERROR "Bad file extension passed to %s (expected '.toy', found '%s')" TOY_CC_RESET, argv[0], c);
+			return -1;
+		}
+		const char* o = strrchr(Toy_commandLine.outfile, '.');
+		if (!o || strcmp(o, ".tb")) {
+			fprintf(stderr, TOY_CC_ERROR "Bad file extension passed to %s (expected '.tb', found '%s')" TOY_CC_RESET, argv[0], o);
+			return -1;
+		}
+
+		//compile and save
 		size_t size = 0;
 		const char* source = Toy_readFile(Toy_commandLine.compilefile, &size);
 		if (!source) {
@@ -167,6 +188,14 @@ int main(int argc, const char* argv[]) {
 
 	//run binary
 	if (Toy_commandLine.binaryfile) {
+		//only works on tb files
+		const char* c = strrchr(Toy_commandLine.binaryfile, '.');
+		if (!c || strcmp(c, ".tb")) {
+			fprintf(stderr, TOY_CC_ERROR "Bad file extension passed to %s (expected '.tb', found '%s')" TOY_CC_RESET, argv[0], c); //this one is never seen
+			return -1;
+		}
+
+		//run the binary file
 		Toy_runBinaryFile(Toy_commandLine.binaryfile);
 
 		//lib cleanup
