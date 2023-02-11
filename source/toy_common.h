@@ -9,7 +9,7 @@
 #define TOY_VERSION_PATCH 3
 #define TOY_VERSION_BUILD __DATE__ " " __TIME__
 
-//platform/compiler-specific specifications
+//platform/compiler-specific instructions
 #if defined(__linux__)
 
 #define TOY_API extern

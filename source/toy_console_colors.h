@@ -2,6 +2,9 @@
 
 //NOTE: you need both font AND background for these to work
 
+//platform/compiler-specific instructions
+#if defined(__linux__) || defined(__MINGW32__)
+
 //fonts color
 #define TOY_CC_FONT_BLACK      "\033[30;"
 #define TOY_CC_FONT_RED        "\033[31;"
@@ -25,6 +28,37 @@
 
 //useful
 #define TOY_CC_NOTICE TOY_CC_FONT_GREEN TOY_CC_BACK_BLACK
-#define TOY_CC_WARN TOY_CC_FONT_YELLOW TOY_CC_BACK_BLACK   
-#define TOY_CC_ERROR TOY_CC_FONT_RED TOY_CC_BACK_BLACK   
+#define TOY_CC_WARN TOY_CC_FONT_YELLOW TOY_CC_BACK_BLACK
+#define TOY_CC_ERROR TOY_CC_FONT_RED TOY_CC_BACK_BLACK
 #define TOY_CC_RESET "\033[0m"
+
+#else
+
+//fonts color
+#define TOY_CC_FONT_BLACK
+#define TOY_CC_FONT_RED
+#define TOY_CC_FONT_GREEN
+#define TOY_CC_FONT_YELLOW
+#define TOY_CC_FONT_BLUE
+#define TOY_CC_FONT_PURPLE
+#define TOY_CC_FONT_DGREEN
+#define TOY_CC_FONT_WHITE
+#define TOY_CC_FONT_CYAN
+
+//background color
+#define TOY_CC_BACK_BLACK
+#define TOY_CC_BACK_RED
+#define TOY_CC_BACK_GREEN
+#define TOY_CC_BACK_YELLOW
+#define TOY_CC_BACK_BLUE
+#define TOY_CC_BACK_PURPLE
+#define TOY_CC_BACK_DGREEN
+#define TOY_CC_BACK_WHITE
+
+//useful
+#define TOY_CC_NOTICE TOY_CC_FONT_GREEN TOY_CC_BACK_BLACK
+#define TOY_CC_WARN TOY_CC_FONT_YELLOW TOY_CC_BACK_BLACK
+#define TOY_CC_ERROR TOY_CC_FONT_RED TOY_CC_BACK_BLACK
+#define TOY_CC_RESET
+
+#endif
