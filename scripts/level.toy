@@ -22,8 +22,8 @@ var tileset: [int: string] const = [
 ];
 
 //variables
-var posX: int = 5;
-var posY: int = 5;
+var posX: int = 4;
+var posY: int = 4;
 
 //functions
 fn draw() {
@@ -59,3 +59,5 @@ fn move(xrel: int, yrel: int) {
 	draw();
 }
 
+//initial display
+move(0, 0);

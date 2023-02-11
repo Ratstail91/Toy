@@ -42,6 +42,7 @@ typedef struct {
 	char* compilefile;
 	char* outfile; //defaults to out.tb
 	char* source;
+	char* initialfile;
 	bool verbose;
 } Toy_CommandLine;
 

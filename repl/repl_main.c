@@ -18,7 +18,7 @@
 
 #define INPUT_BUFFER_SIZE 2048
 
-void repl() {
+void repl(const char* initialInput) {
 	//repl does it's own thing for now
 	bool error = false;
 
@@ -36,11 +36,12 @@ void repl() {
 	// Toy_injectNativeHook(&interpreter, "timer", Toy_hookTimer);
 
 	for(;;) {
-		printf("> ");
-
-		//handle EOF for exits
-		if (!fgets(input, INPUT_BUFFER_SIZE, stdin)) {
-			break;
+		if (!initialInput) {
+			//handle EOF for exits
+			printf("> ");
+			if (!fgets(input, INPUT_BUFFER_SIZE, stdin)) {
+				break;
+			}
 		}
 
 		//escape the repl (length of 5 to accomodate the newline)
@@ -53,8 +54,8 @@ void repl() {
 		Toy_Parser parser;
 		Toy_Compiler compiler;
 
-		Toy_initLexer(&lexer, input);
-		Toy_private_setComments(&lexer, false); //BUGFIX: disable comments here
+		Toy_initLexer(&lexer, initialInput ? initialInput : input);
+		Toy_private_setComments(&lexer, initialInput != NULL); //BUGFIX: disable comments here
 		Toy_initParser(&parser, &lexer);
 		Toy_initCompiler(&compiler);
 
@@ -89,6 +90,11 @@ void repl() {
 		Toy_freeCompiler(&compiler);
 		Toy_freeParser(&parser);
 		error = false;
+
+		if (initialInput) {
+			free((void*)initialInput);
+			initialInput = NULL;
+		}
 	}
 
 	Toy_freeInterpreter(&interpreter);
@@ -204,7 +210,20 @@ int main(int argc, const char* argv[]) {
 		return 0;
 	}
 
-	repl();
+	const char* initialSource = NULL;
+	if (Toy_commandLine.initialfile) {
+		//only works on toy files
+		const char* s = strrchr(Toy_commandLine.initialfile, '.');
+		if (!s || strcmp(s, ".toy")) {
+			fprintf(stderr, TOY_CC_ERROR "Bad file extension passed to %s (expected '.toy', found '%s')" TOY_CC_RESET, argv[0], s);
+			return -1;
+		}
+
+		size_t size;
+		initialSource = Toy_readFile(Toy_commandLine.initialfile, &size);
+	}
+
+	repl(initialSource);
 
 	//lib cleanup
 	Toy_freeDriveDictionary();

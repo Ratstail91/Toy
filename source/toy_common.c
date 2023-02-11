@@ -28,6 +28,7 @@ void Toy_initCommandLine(int argc, const char* argv[]) {
 	Toy_commandLine.compilefile = NULL;
 	Toy_commandLine.outfile = "out.tb";
 	Toy_commandLine.source = NULL;
+	Toy_commandLine.initialfile = NULL;
 	Toy_commandLine.verbose = false;
 
 	for (int i = 1; i < argc; i++) { //start at 1 to skip the program name
@@ -79,6 +80,13 @@ void Toy_initCommandLine(int argc, const char* argv[]) {
 			continue;
 		}
 
+		if ((!strcmp(argv[i], "-t") || !strcmp(argv[i], "--initial")) && i + 1 < argc) {
+			Toy_commandLine.initialfile = (char*)argv[i + 1];
+			i++;
+			Toy_commandLine.error = false;
+			continue;
+		}
+
 		//option without a flag + ending in .tb = binary input
 		if (i < argc) {
 			if (strncmp(&(argv[i][strlen(argv[i]) - 3]), ".tb", 3) == 0) {
@@ -94,7 +102,7 @@ void Toy_initCommandLine(int argc, const char* argv[]) {
 }
 
 void Toy_usageCommandLine(int argc, const char* argv[]) {
-	printf("Usage: %s [ file.tb | -h | -v | [ -d ][ -f file.toy | -i source | -c file.toy [ -o outfile.tb ]]]\n\n", argv[0]);
+	printf("Usage: %s [ file.tb | -h | -v | -d | -f file.toy | -i source | -c file.toy -o out.tb | -t file.toy ]\n\n", argv[0]);
 }
 
 void Toy_helpCommandLine(int argc, const char* argv[]) {
@@ -108,6 +116,7 @@ void Toy_helpCommandLine(int argc, const char* argv[]) {
 	printf("-i\t| --input source\tParse, compile and execute this given string of source code.\n\n");
 	printf("-c\t| --compile filename\tParse and compile the specified source file into an output file.\n\n");
 	printf("-o\t| --output outfile\tName of the output file built with --compile (default: out.tb).\n\n");
+	printf("-t\t| --initial filename\tStart the repl as normal, after first running the given file.\n\n");
 }
 
 void Toy_copyrightCommandLine(int argc, const char* argv[]) {
