@@ -94,6 +94,10 @@ void repl(const char* initialInput) {
 		if (initialInput) {
 			free((void*)initialInput);
 			initialInput = NULL;
+
+			if (interpreter.panic) {
+				break;
+			}
 		}
 	}
 
