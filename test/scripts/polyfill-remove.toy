@@ -1,0 +1,23 @@
+//polyfill the remove function
+fn _remove(self, k) {
+	var result = [];
+
+	for (var i = 0; i <= k - 1; i++) {
+		result.push( self[i] );
+	}
+
+	for (var i = k + 1; i < self.length(); i++) {
+		result.push( self[i] );
+	}
+
+	return result;
+}
+
+var a = [1, 2, 3];
+
+assert a.remove(0) == [2, 3], "polyfill remove(start) failed";
+assert a.remove(1) == [1, 3], "polyfill remove(middle) failed";
+assert a.remove(2) == [1, 2], "polyfill remove(end) failed";
+
+
+print "All good";

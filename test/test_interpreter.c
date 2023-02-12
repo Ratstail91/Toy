@@ -117,6 +117,8 @@ int main() {
 			"dottify-bugfix.toy",
 			"functions.toy",
 			"index-arrays.toy",
+			"index-assignment-both-bugfix.toy",
+			"index-assignment-left-bugfix.toy",
 			"index-dictionaries.toy",
 			"index-strings.toy",
 			"jumps.toy",
@@ -128,6 +130,8 @@ int main() {
 			"native-functions.toy",
 			"or-chaining-bugfix.toy",
 			"panic-within-functions.toy",
+			"polyfill-insert.toy",
+			"polyfill-remove.toy",
 			"ternary-expressions.toy",
 			"types.toy",
 			NULL

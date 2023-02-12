@@ -1,0 +1,19 @@
+/*
+
+Compiler note:
+This is also to test a specific element in the compiler.
+It ensures that when doing indexing and assignment in one statement,
+the index is NOT on the right. If it is, then it is treated like a normal
+assignment.
+
+*/
+
+//polyfill the _insert function
+var a = [1, 2, 3];
+
+var b = a[1];
+
+assert b == 2, "index assignment left failed";
+
+
+print "All good";

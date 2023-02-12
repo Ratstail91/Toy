@@ -1448,11 +1448,8 @@ int Toy_hookCompound(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		{"_getKeys", nativeGetKeys}, //dictionary
 		{"_getValues", nativeGetValues}, //dictionary
 		{"_indexOf", nativeIndexOf}, //array
-		// {"_insert", native}, //array, dictionary, string
 		{"_map", nativeMap}, //array, dictionary
 		{"_reduce", nativeReduce}, //array, dictionary
-		// {"_remove", native}, //array, dictionary
-		// {"_replace", native}, //string
 		{"_some", nativeSome}, //array, dictionary
 		// {"_sort", native}, //array
 		{"_toLower", nativeToLower}, //string

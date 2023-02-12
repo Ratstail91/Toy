@@ -160,7 +160,8 @@ import compound;
 	var a = [1, 2, 42, 3];
 
 	//results are zero-indexed
-	assert a.indexOf(42) == 2, "_indexOf failed";
+	assert a.indexOf(42) == 2, "_indexOf() failed";
+	assert a.indexOf(4) == null, "_indexOf() == null failed";
 }
 
 

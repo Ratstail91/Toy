@@ -16,7 +16,7 @@ var a = [1, 2, 3];
 
 a = a.insert(1, 42);
 
-assert a == [1, 5, 2, 3], "index assignment left failed";
+assert a == [1, 42, 2, 3], "polyfill insert failed";
 
 
 print "All good";
