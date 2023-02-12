@@ -47,7 +47,7 @@ print tally(); //3
 * [About Library](about-library)
 * [Compound Library](compound-library) (under development)
 * [Timer Library](timer-library)
-* [Runner Library](runner-library)
+* ~~[Runner Library](runner-library)~~ (currently disabled)
 * [Game Engine](game-engine)
 
 # Deep Dive
