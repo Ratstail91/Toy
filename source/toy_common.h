@@ -10,7 +10,7 @@
 #define TOY_VERSION_BUILD __DATE__ " " __TIME__
 
 //platform/compiler-specific instructions
-#if defined(__linux__)
+#if defined(__linux__) || defined(__MINGW32__) || defined(__GNUC__)
 
 #define TOY_API extern
 
@@ -21,10 +21,6 @@
 #else
 #define TOY_API __declspec(dllexport)
 #endif
-
-#elif defined(__MINGW32__)
-
-#define TOY_API extern
 
 #else
 

@@ -3,7 +3,7 @@
 //NOTE: you need both font AND background for these to work
 
 //platform/compiler-specific instructions
-#if defined(__linux__) || defined(__MINGW32__)
+#if defined(__linux__) || defined(__MINGW32__) || defined(__GNUC__)
 
 //fonts color
 #define TOY_CC_FONT_BLACK      "\033[30;"

@@ -155,6 +155,15 @@ import compound;
 }
 
 
+//test indexOf
+{
+	var a = [1, 2, 42, 3];
+
+	//results are zero-indexed
+	assert a.indexOf(42) == 2, "_indexOf failed";
+}
+
+
 //test map
 {
 	//test map with toy functions

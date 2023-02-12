@@ -629,6 +629,53 @@ static int nativeGetValues(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 	return 1;
 }
 
+static int nativeIndexOf(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	//no arguments
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments to _indexOf\n");
+		return -1;
+	}
+
+	//get the args
+	Toy_Literal valueLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	//parse to value if needed
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	Toy_Literal valueLiteralIdn = valueLiteral;
+	if (TOY_IS_IDENTIFIER(valueLiteral) && Toy_parseIdentifierToValue(interpreter, &valueLiteral)) {
+		Toy_freeLiteral(valueLiteralIdn);
+	}
+
+	//check type
+	if (!TOY_IS_ARRAY(selfLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to indexOf\n");
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(valueLiteral);
+		return -1;
+	}
+
+	//search the array for the matching literal
+	Toy_Literal resultLiteral = TOY_TO_NULL_LITERAL;
+	for (int i = 0; i < TOY_AS_ARRAY(selfLiteral)->count; i++) {
+		if (Toy_literalsAreEqual(valueLiteral, TOY_AS_ARRAY(selfLiteral)->literals[i])) {
+			resultLiteral = TOY_TO_INTEGER_LITERAL(i);
+			break;
+		}
+	}
+
+	//return the result and clean up
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(selfLiteral);
+
+	return 1;
+}
+
 static int nativeMap(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
@@ -1400,7 +1447,7 @@ int Toy_hookCompound(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		{"_forEach", nativeForEach}, //array, dictionary
 		{"_getKeys", nativeGetKeys}, //dictionary
 		{"_getValues", nativeGetValues}, //dictionary
-		// {"_indexOf", native}, //array, string
+		{"_indexOf", nativeIndexOf}, //array
 		// {"_insert", native}, //array, dictionary, string
 		{"_map", nativeMap}, //array, dictionary
 		{"_reduce", nativeReduce}, //array, dictionary
