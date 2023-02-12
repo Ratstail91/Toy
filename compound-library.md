@@ -54,6 +54,10 @@ This returns an array of all non-null keys stored within the dictionary. The ord
 
 This returns an array of all values with non-null keys stored within the dictionary. The order is undefined.
 
+## _indexOf(self: array, value)
+
+This function returns the first index within `self` that is equal to `value`, or `null` if none are found.
+
 ## _map(self, func: fn)
 
 This function takes either an array or a dictionary as the `self` argument, and a function as `func`. The argument `func` must take two arguments - the first is the index/key of the array/dictionary, and the second is the value. It returns an array with the results of each call - the order of the results when called on a dictionary are undefined.
