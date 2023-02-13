@@ -14,10 +14,8 @@
 #include "../repl/repl_tools.h"
 
 #include "../repl/lib_about.h"
-#include "../repl/lib_compound.h"
 #include "../repl/lib_runner.h"
 #include "../repl/lib_standard.h"
-// #include "../repl/lib_timer.h"
 
 //supress the print output
 static void noPrintFn(const char* output) {
@@ -64,9 +62,7 @@ void runBinaryQuietly(const unsigned char* tb, size_t size) {
 
 	//inject the libs
 	Toy_injectNativeHook(&interpreter, "about", Toy_hookAbout);
-	Toy_injectNativeHook(&interpreter, "compound", Toy_hookCompound);
 	Toy_injectNativeHook(&interpreter, "standard", Toy_hookStandard);
-	// Toy_injectNativeHook(&interpreter, "timer", Toy_hookTimer);
 	Toy_injectNativeHook(&interpreter, "runner", Toy_hookRunner);
 
 	Toy_runInterpreter(&interpreter, tb, size);
@@ -96,10 +92,8 @@ int main() {
 		Payload payloads[] = {
 			{"interactions.toy", "standard", Toy_hookStandard}, //interactions needs standard
 			{"about.toy", "about", Toy_hookAbout},
-			{"compound.toy", "compound", Toy_hookCompound},
-			{"runner.toy", "runner", Toy_hookRunner},
 			{"standard.toy", "standard", Toy_hookStandard},
-			// {"timer.toy", "timer", Toy_hookTimer},
+			{"runner.toy", "runner", Toy_hookRunner},
 			{NULL, NULL, NULL}
 		};
 
