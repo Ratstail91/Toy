@@ -43,16 +43,13 @@ print tally(); //3
 
 * [Quick Start Guide](quick-start-guide)
 * [Types](types)
-* [Standard Library](standard-library)
 * [About Library](about-library)
-* [Compound Library](compound-library) (under development)
-* ~~[Timer Library](timer-library)~~ (currently disabled)
+* [Standard Library](standard-library)
 * [Runner Library](runner-library)
 * [Game Engine](game-engine)
 
 # Deep Dive
 
-* [Theorizing Toy](theorizing-toy)
 * [Embedding Toy](embedding-toy)
 * [Using Toy](using-toy)
 * [Compiling Toy](compiling-toy)
@@ -60,6 +57,3 @@ print tally(); //3
 * [Testing Toy](testing-toy)
 * [Roadmap](roadmap)
 
-# Version Differences
-
-There have been a number of versions of Toy over the years, the current actively developed version is in the `main` branch for the time being. The best version to use is either the code in the main branch, or the latest tagged version.
