@@ -94,6 +94,22 @@ print a.reduce(0, f); //prints "10"
 
 This function takes either an array or a dictionary as the `self` argument, and a function as `func`. The argument `func` must take two arguments - the first is the index/key of the array/dictionary, and the second is the value. The contents of `self` are passed into `func`, one element at a time, until `func` returns `true`, at which point this function returns `true`. Otherwise this function returns `false`.
 
+## _sort(self: array, func: fn)
+
+This function takes an array as the `self` argument, and a comparison function as `func`. The argument `func` must take two arguments, and return a truthy or falsy value. The contents of the array in `self` are sorted based on the results of `func`, as though function were the less comparison function.
+
+```
+import compound;
+
+fn less(a, b) {
+    return a < b;
+}
+
+var a = [4, 2, 3, 1];
+
+print a.sort(less); //prints "[1, 2, 3, 4]"
+```
+
 ## _toLower(self: string)
 
 This function returns a new string which is identical to the string `self`, except any uppercase letters are replaced with the corresponding lowercase letters.
