@@ -29,6 +29,7 @@ void Toy_initCommandLine(int argc, const char* argv[]) {
 	Toy_commandLine.outfile = "out.tb";
 	Toy_commandLine.source = NULL;
 	Toy_commandLine.initialfile = NULL;
+	Toy_commandLine.enablePrintNewline = true;
 	Toy_commandLine.verbose = false;
 
 	for (int i = 1; i < argc; i++) { //start at 1 to skip the program name
@@ -87,6 +88,12 @@ void Toy_initCommandLine(int argc, const char* argv[]) {
 			continue;
 		}
 
+		if (!strcmp(argv[i], "-n")) {
+			Toy_commandLine.enablePrintNewline = false;
+			Toy_commandLine.error = false;
+			continue;
+		}
+
 		//option without a flag + ending in .tb = binary input
 		if (i < argc) {
 			if (strncmp(&(argv[i][strlen(argv[i]) - 3]), ".tb", 3) == 0) {
@@ -117,6 +124,7 @@ void Toy_helpCommandLine(int argc, const char* argv[]) {
 	printf("-c\t| --compile filename\tParse and compile the specified source file into an output file.\n\n");
 	printf("-o\t| --output outfile\tName of the output file built with --compile (default: out.tb).\n\n");
 	printf("-t\t| --initial filename\tStart the repl as normal, after first running the given file.\n\n");
+	printf("-n\t|\t\t\tDisable the newline character at the end of the print statement.\n\n");
 }
 
 void Toy_copyrightCommandLine(int argc, const char* argv[]) {

@@ -39,6 +39,7 @@ typedef struct {
 	char* outfile; //defaults to out.tb
 	char* source;
 	char* initialfile;
+	bool enablePrintNewline;
 	bool verbose;
 } Toy_CommandLine;
 

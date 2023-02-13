@@ -12,8 +12,12 @@
 #include <string.h>
 
 static void printWrapper(const char* output) {
-	printf("%s", output);
-	// printf("\n"); //default new line
+	if (Toy_commandLine.enablePrintNewline) {
+		printf("%s\n", output);
+	}
+	else {
+		printf("%s", output);
+	}
 }
 
 static void assertWrapper(const char* output) {
