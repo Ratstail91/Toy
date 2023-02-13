@@ -996,6 +996,97 @@ static int nativeSome(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	return 1;
 }
 
+static void swapLiteralsUtil(Toy_Literal* lhs, Toy_Literal* rhs) {
+	Toy_Literal tmp = *lhs;
+	*lhs = *rhs;
+	*rhs = tmp;
+}
+
+//https://www.youtube.com/watch?v=MZaf_9IZCrc
+static void recursiveLiteralQuicksortUtil(Toy_Interpreter* interpreter, Toy_Literal* ptr, int literalCount, Toy_Literal fnCompareLiteral) {
+	//base case
+	if (literalCount <= 1) {
+		return;
+	}
+
+	int runner = 0;
+
+	//iterate through the array
+	for (int checker = 0; checker < literalCount - 1; checker++) {
+		Toy_LiteralArray arguments;
+		Toy_LiteralArray returns;
+
+		Toy_initLiteralArray(&arguments);
+		Toy_initLiteralArray(&returns);
+
+		Toy_pushLiteralArray(&arguments, ptr[literalCount - 1]); //backwards
+		Toy_pushLiteralArray(&arguments, ptr[checker]);
+
+		Toy_callLiteralFn(interpreter, fnCompareLiteral, &arguments, &returns);
+
+		Toy_Literal lessThan = Toy_popLiteralArray(&returns);
+
+		Toy_freeLiteralArray(&arguments);
+		Toy_freeLiteralArray(&returns);
+
+		if (TOY_IS_TRUTHY(lessThan)) {
+			swapLiteralsUtil(&ptr[runner++], &ptr[checker]);
+		}
+
+		Toy_freeLiteral(lessThan);
+	}
+
+	//"shift everything up" so the pivot is in the middle
+	swapLiteralsUtil(&ptr[runner], &ptr[literalCount - 1]);
+
+	//recurse on each end
+	recursiveLiteralQuicksortUtil(interpreter, &ptr[0], runner, fnCompareLiteral);
+	recursiveLiteralQuicksortUtil(interpreter, &ptr[runner + 1], literalCount - runner - 1, fnCompareLiteral);
+}
+
+static int nativeSort(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	//no arguments
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments to _sort\n");
+		return -1;
+	}
+
+	//get the args
+	Toy_Literal fnLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	//parse to value if needed
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	Toy_Literal fnLiteralIdn = fnLiteral;
+	if (TOY_IS_IDENTIFIER(fnLiteral) && Toy_parseIdentifierToValue(interpreter, &fnLiteral)) {
+		Toy_freeLiteral(fnLiteralIdn);
+	}
+
+	//check type
+	if (!TOY_IS_ARRAY(selfLiteral) || !( TOY_IS_FUNCTION(fnLiteral) || TOY_IS_FUNCTION_NATIVE(fnLiteral) )) {
+		interpreter->errorOutput("Incorrect argument type passed to _sort\n");
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(fnLiteral);
+		return -1;
+	}
+
+	//call the quicksort util
+	if (TOY_IS_ARRAY(selfLiteral)) {
+		recursiveLiteralQuicksortUtil(interpreter, TOY_AS_ARRAY(selfLiteral)->literals, TOY_AS_ARRAY(selfLiteral)->count, fnLiteral);
+	}
+
+	Toy_pushLiteralArray(&interpreter->stack, selfLiteral);
+
+	Toy_freeLiteral(fnLiteral);
+	Toy_freeLiteral(selfLiteral);
+
+	return 1;
+}
+
 static int nativeToLower(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
@@ -1451,7 +1542,7 @@ int Toy_hookCompound(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		{"_map", nativeMap}, //array, dictionary
 		{"_reduce", nativeReduce}, //array, dictionary
 		{"_some", nativeSome}, //array, dictionary
-		// {"_sort", native}, //array
+		{"_sort", nativeSort}, //array
 		{"_toLower", nativeToLower}, //string
 		{"_toString", nativeToString}, //array, dictionary
 		{"_toUpper", nativeToUpper}, //string
