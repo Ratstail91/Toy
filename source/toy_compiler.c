@@ -965,6 +965,11 @@ static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode
 			return TOY_OP_INDEX_ASSIGN; //override binary's instruction IF it is assign
 		}
 		break;
+
+		case TOY_AST_NODE_PASS: {
+			return TOY_OP_PASS;
+		}
+		break;
 	}
 
 	return TOY_OP_EOF;

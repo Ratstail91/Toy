@@ -1827,6 +1827,10 @@ static void execInterpreter(Toy_Interpreter* interpreter) {
 
 	while(opcode != TOY_OP_EOF && opcode != TOY_OP_SECTION_END && !interpreter->panic) {
 		switch(opcode) {
+			case TOY_OP_PASS:
+				//DO NOTHING
+			break;
+
 			case TOY_OP_ASSERT:
 				if (!execAssert(interpreter)) {
 					return;

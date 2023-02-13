@@ -1350,13 +1350,36 @@ static void forStmt(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	//read the clauses
 	consume(parser, TOY_TOKEN_PAREN_LEFT, "Expected '(' at beginning of for clause");
 
-	declaration(parser, &preClause); //allow defining variables in the pre-clause
+	//check the pre-clause
+	if (parser->current.type != TOY_TOKEN_SEMICOLON) {
+		declaration(parser, &preClause); //allow defining variables in the pre-clause
+	}
+	else {
+		consume(parser, TOY_TOKEN_SEMICOLON, "Expected ';' after empty declaration of for clause");
+		Toy_emitASTNodePass(&preClause);
+	}
 
-	parsePrecedence(parser, &condition, PREC_TERNARY);
-	consume(parser, TOY_TOKEN_SEMICOLON, "Expected ';' after condition of for clause");
+	//check the condition clause
+	if (parser->current.type != TOY_TOKEN_SEMICOLON) {
+		parsePrecedence(parser, &condition, PREC_TERNARY);
+		consume(parser, TOY_TOKEN_SEMICOLON, "Expected ';' after condition of for clause");
+	}
+	else {
+		consume(parser, TOY_TOKEN_SEMICOLON, "Expected ';' after empty condition of for clause");
+		//empty clause defaults to forever
+		Toy_Literal f = TOY_TO_BOOLEAN_LITERAL(true);
+		Toy_emitASTNodeLiteral(&condition, f);
+	}
 
-	parsePrecedence(parser, &postClause, PREC_ASSIGNMENT);
-	consume(parser, TOY_TOKEN_PAREN_RIGHT, "Expected ')' at end of for clause");
+	//check the postfix clause
+	if (parser->current.type != TOY_TOKEN_PAREN_RIGHT) {
+		parsePrecedence(parser, &postClause, PREC_ASSIGNMENT);
+		consume(parser, TOY_TOKEN_PAREN_RIGHT, "Expected ')' at end of for clause");
+	}
+	else {
+		consume(parser, TOY_TOKEN_PAREN_RIGHT, "Expected ')' after empty increment of for clause");
+		Toy_emitASTNodePass(&postClause);
+	}
 
 	//read the path
 	declaration(parser, &thenPath);

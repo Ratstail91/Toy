@@ -34,6 +34,7 @@ typedef enum Toy_ASTNodeType {
 	TOY_AST_NODE_PREFIX_DECREMENT, //decrement a variable
 	TOY_AST_NODE_POSTFIX_DECREMENT, //decrement a variable
 	TOY_AST_NODE_IMPORT, //import a library
+	TOY_AST_NODE_PASS, //for doing nothing
 } Toy_ASTNodeType;
 
 //literals
@@ -237,6 +238,9 @@ typedef struct Toy_NodeImport {
 	Toy_Literal identifier;
 	Toy_Literal alias;
 } Toy_NodeImport;
+
+//for doing nothing
+void Toy_emitASTNodePass(Toy_ASTNode** nodeHandle);
 
 union Toy_private_node {
 	Toy_ASTNodeType type;

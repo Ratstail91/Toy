@@ -135,6 +135,10 @@ static void freeASTNodeCustom(Toy_ASTNode* node, bool freeSelf) {
 			Toy_freeLiteral(node->import.identifier);
 			Toy_freeLiteral(node->import.alias);
 		break;
+
+		case TOY_AST_NODE_PASS:
+			//EMPTY
+		break;
 	}
 
 	if (freeSelf) {
@@ -380,6 +384,14 @@ void Toy_emitASTNodeImport(Toy_ASTNode** nodeHandle, Toy_Literal identifier, Toy
 	tmp->type = TOY_AST_NODE_IMPORT;
 	tmp->import.identifier = Toy_copyLiteral(identifier);
 	tmp->import.alias = Toy_copyLiteral(alias);
+
+	*nodeHandle = tmp;
+}
+
+void Toy_emitASTNodePass(Toy_ASTNode** nodeHandle) {
+	Toy_ASTNode* tmp = TOY_ALLOCATE(Toy_ASTNode, 1);
+
+	tmp->type = TOY_AST_NODE_PASS;
 
 	*nodeHandle = tmp;
 }

@@ -3,6 +3,9 @@
 typedef enum Toy_Opcode {
 	TOY_OP_EOF,
 
+	//do nothing
+	TOY_OP_PASS,
+
 	//basic statements
 	TOY_OP_ASSERT,
 	TOY_OP_PRINT,
