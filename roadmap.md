@@ -10,10 +10,6 @@ To that end, I've begun working on this: [Airport Game](https://github.com/Ratst
 
 This is a simple game concept, which I can implement within a reasonable amount of time, before extracting parts to create the engine proper. It feels almost like a mobile game, so I'm hoping this engine will be runnable on android (though at the time of writing, I've yet to investigate how).
 
-## Bugfixes
-
-This is probably the easiest goal to accomplish, but also the least urgent. The [issue tracker](https://github.com/Ratstail91/Toy/issues) provides a list of known bugs and issues that need to be addressed, but for the time being, my attention is focused elsewhere.
-
 ## New Features I'd Like One Day
 
 Some things I'd like to add in the future include:
@@ -26,7 +22,7 @@ Some things I'd like to add in the future include:
 * Multiple return values from functions
 * ~~Ternary operator~~
 * interpolated strings
-* MSVC compilation
+* ~~MSVC compilation~~
 
 Some of these have always been planned, but were sidelined or are incomplete for one reason or another.
 

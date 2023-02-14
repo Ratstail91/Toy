@@ -85,27 +85,27 @@ fn combine(...rest) {
 print combine(1, 2, 3);
 ```
 
-## Dot Notation and Global Functions
+## UFCS and Global Functions
 
-Any function that begins with an underscore can be called using the dot notation, which is syntactic sugar:
+Functions can be called using the universal function call syntax, which is just syntactic sugar for a normal function call:
 
 ```
-fn _printMe(self) {
+fn printMe(self) {
     print self;
 }
 
 array.printMe();
 ```
 
-There are several underscore functions provided by default:
+There are several globally available functions provided by default:
 
 ```
-_set(self, key, value)                         //array, dictionary
-_get(self, key)                                //array, dictionary
-_push(self, value)                             //array
-_pop(self)                                     //array
-_length(self)                                  //array, dictionary, string
-_clear(self)                                   //array, dictionary
+set(self, key, value)                         //array, dictionary
+get(self, key)                                //array, dictionary
+push(self, value)                             //array
+pop(self)                                     //array
+length(self)                                  //array, dictionary, string
+clear(self)                                   //array, dictionary
 ```
 
 ## Slice Notation

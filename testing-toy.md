@@ -4,5 +4,4 @@ Toy uses GitHub CI for comprehensive automated testing - however, all of the tes
 
 The tests consist of a number of different situations and edge cases which have been discovered, and should probably be thoroughly tested one way or another. There are also several "-bugfix.toy" scripts which explicitly test a bug that has been encountered in one way or another. The libs that are stored in `repl/` are also tested - their tests are under `/tests/scripts/lib`; some error cases are also checked by the mustfail tests in `/test/scripts/mustfail`.
 
-Finally, GitHub CI has access to the option `make test-sanitized` which attempts to use memory sanitation. I don't know enough about this to offer much comentary, only that several invisible issues are monitored this way.
-
+GitHub CI also has access to the option `make test-sanitized` which attempts to use memory sanitation. I don't know enough about this to offer much comentary, only that several invisible issues are monitored this way.

@@ -17,7 +17,7 @@ The header consists of four values:
 
 The first three are single unsigned bytes, embedded at the beginning of the bytecode in sequence. These represent the major, minor and patch versions of the language. The fourth value is a null-terminated string of unspecified data, which is *intended* but not required to specify the time that the langauge's compiler was itself compiled. The build string can also hold arbitrary data, such as the current maintainer's name, current fork of the language, or other versioning info.
 
-There are some strict rules when interpreting these values (mimicking, but not conforming to semver.org):
+There are some strict rules when interpreting these values (mimicking, but not conforming to [semver.org](https://semver.org/)):
 
 * Under no circumstance, should you ever run bytecode whose major version is different - there are definitely broken APIs involved.
 * Under no circumstance, should you ever run bytecode whose minor version is above the interpreter's minor version - the bytecode could potentially use unimplemented features.

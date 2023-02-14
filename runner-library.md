@@ -63,23 +63,23 @@ This function does a lot of work:
 
 Note: This function resembles `loadScript()`, but skips the compilation step.
 
-## _runScript(self: opaque)
+## runScript(self: opaque)
 
 This function executes an external script, which must first be loaded into an opaque variable with either `loadScript()` or `loadScriptBytecode()`.
 
-## _getScriptVar(self: opaque, name: string)
+## getScriptVar(self: opaque, name: string)
 
 This function retrieves a variable from the top level of a script's environment.
 
-## _callScriptFn(self: opaque, name: string, ...rest)
+## callScriptFn(self: opaque, name: string, ...rest)
 
 This function retrieves a function from the top level of a script's environment, and calls it with `rest` as the argument list.
 
-## _resetScript(self: opaque)
+## resetScript(self: opaque)
 
-This function resets the script so that it is no longer in a "dirty" state, and can be re-run using `_runScript()`.
+This function resets the script so that it is no longer in a "dirty" state, and can be re-run using `runScript()`.
 
-## _freeScript(self: opaque)
+## freeScript(self: opaque)
 
 This function frees a script's resources, cleaning up any memory that is no longer needed. Failing to call this will result in a memory leak.
 
