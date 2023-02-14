@@ -50,6 +50,7 @@ print tally(); //3
 
 # Deep Dive
 
+* [Theorizing Toy](theorizing-toy)
 * [Embedding Toy](embedding-toy)
 * [Using Toy](using-toy)
 * [Compiling Toy](compiling-toy)
