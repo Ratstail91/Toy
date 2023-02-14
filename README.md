@@ -48,6 +48,10 @@ print tally(); //3
 * [Runner Library](runner-library)
 * [Game Engine](game-engine)
 
+# Full C API
+
+* Coming Soon! (check out the [Using Toy](using-toy) page for a brief description for now)
+
 # Deep Dive
 
 * [Theorizing Toy](theorizing-toy)
