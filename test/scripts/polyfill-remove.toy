@@ -1,5 +1,5 @@
 //polyfill the remove function
-fn _remove(self, k) {
+fn remove(self, k) {
 	var result = [];
 
 	for (var i = 0; i <= k - 1; i++) {

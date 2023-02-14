@@ -63,7 +63,7 @@ extra("one", "two", "three", "four", "five", "six", "seven");
 
 
 //test underscore functions
-fn _example(self, a, b, c) {
+fn example(self, a, b, c) {
 	assert a == "a", "underscore failed (a)";
 	assert b == "b", "underscore failed (b)";
 	assert c == "c", "underscore failed (c)";

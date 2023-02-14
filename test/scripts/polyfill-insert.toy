@@ -1,5 +1,5 @@
-//polyfill the _insert function
-fn _insert(self, k, v) {
+//polyfill the insert function
+fn insert(self, k, v) {
 	var tmp1 = v;
 	var tmp2;
 	for (var i = k; i < self.length(); i++) {

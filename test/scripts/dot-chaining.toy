@@ -1,10 +1,10 @@
 //test function chaining with the dot operator
 
-fn _identity(self) {
+fn identity(self) {
 	return self;
 }
 
-fn _check(self) {
+fn check(self) {
 	assert self == 42, "dot chaining failed";
 	return self;
 }
@@ -20,7 +20,7 @@ val
 
 
 //test the value is actually altered
-fn _increment(self) {
+fn increment(self) {
 	return self + 1;
 }
 

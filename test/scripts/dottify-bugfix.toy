@@ -1,5 +1,5 @@
 
-fn _add(self, inc) {
+fn add(self, inc) {
 	return self + inc;
 }
 

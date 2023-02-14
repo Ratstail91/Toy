@@ -34,7 +34,7 @@ static int nativeClock(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _concat\n");
+		interpreter->errorOutput("Incorrect number of arguments to concat\n");
 		return -1;
 	}
 
@@ -56,7 +56,7 @@ static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 	//for each self type
 	if (TOY_IS_ARRAY(selfLiteral)) {
 		if (!TOY_IS_ARRAY(otherLiteral)) {
-			interpreter->errorOutput("Incorrect argument type passed to _concat (unknown type for other)\n");
+			interpreter->errorOutput("Incorrect argument type passed to concat (unknown type for other)\n");
 			Toy_freeLiteral(selfLiteral);
 			Toy_freeLiteral(otherLiteral);
 			return -1;
@@ -78,7 +78,7 @@ static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 
 	if (TOY_IS_DICTIONARY(selfLiteral)) {
 		if (!TOY_IS_DICTIONARY(otherLiteral)) {
-			interpreter->errorOutput("Incorrect argument type passed to _concat (unknown type for other)\n");
+			interpreter->errorOutput("Incorrect argument type passed to concat (unknown type for other)\n");
 			Toy_freeLiteral(selfLiteral);
 			Toy_freeLiteral(otherLiteral);
 			return -1;
@@ -102,7 +102,7 @@ static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 
 	if (TOY_IS_STRING(selfLiteral)) { //a little redundant
 		if (!TOY_IS_STRING(otherLiteral)) {
-			interpreter->errorOutput("Incorrect argument type passed to _concat (unknown type for other)\n");
+			interpreter->errorOutput("Incorrect argument type passed to concat (unknown type for other)\n");
 			Toy_freeLiteral(selfLiteral);
 			Toy_freeLiteral(otherLiteral);
 			return -1;
@@ -112,7 +112,7 @@ static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 		size_t length = TOY_AS_STRING(selfLiteral)->length + TOY_AS_STRING(otherLiteral)->length + 1;
 
 		if (length > TOY_MAX_STRING_LENGTH) {
-			interpreter->errorOutput("Can't concatenate these strings, result is too long (error found in _concat)\n");
+			interpreter->errorOutput("Can't concatenate these strings, result is too long (error found in concat)\n");
 			Toy_freeLiteral(selfLiteral);
 			Toy_freeLiteral(otherLiteral);
 			return -1;
@@ -135,7 +135,7 @@ static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 		return 1;
 	} 
 
-	interpreter->errorOutput("Incorrect argument type passed to _concat (unknown type for self)\n");
+	interpreter->errorOutput("Incorrect argument type passed to concat (unknown type for self)\n");
 	Toy_freeLiteral(selfLiteral);
 	Toy_freeLiteral(otherLiteral);
 	return -1;
@@ -144,7 +144,7 @@ static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 static int nativeContainsKey(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _containsKey\n");
+		interpreter->errorOutput("Incorrect number of arguments to containsKey\n");
 		return -1;
 	}
 
@@ -165,7 +165,7 @@ static int nativeContainsKey(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 
 	//check type
 	if (!(/* TOY_IS_ARRAY(selfLiteral) || */ TOY_IS_DICTIONARY(selfLiteral) )) {
-		interpreter->errorOutput("Incorrect argument type passed to _containsKey\n");
+		interpreter->errorOutput("Incorrect argument type passed to containsKey\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(keyLiteral);
 		return -1;
@@ -189,7 +189,7 @@ static int nativeContainsKey(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 static int nativeContainsValue(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _containsValue\n");
+		interpreter->errorOutput("Incorrect number of arguments to containsValue\n");
 		return -1;
 	}
 
@@ -210,7 +210,7 @@ static int nativeContainsValue(Toy_Interpreter* interpreter, Toy_LiteralArray* a
 
 	//check type
 	if (!( TOY_IS_ARRAY(selfLiteral) || TOY_IS_DICTIONARY(selfLiteral) )) {
-		interpreter->errorOutput("Incorrect argument type passed to _containsValue\n");
+		interpreter->errorOutput("Incorrect argument type passed to containsValue\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(valueLiteral);
 		return -1;
@@ -259,7 +259,7 @@ static int nativeContainsValue(Toy_Interpreter* interpreter, Toy_LiteralArray* a
 static int nativeEvery(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _every\n");
+		interpreter->errorOutput("Incorrect number of arguments to every\n");
 		return -1;
 	}
 
@@ -280,7 +280,7 @@ static int nativeEvery(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 
 	//check type
 	if (!( TOY_IS_ARRAY(selfLiteral) || TOY_IS_DICTIONARY(selfLiteral) ) || !( TOY_IS_FUNCTION(fnLiteral) || TOY_IS_FUNCTION_NATIVE(fnLiteral) )) {
-		interpreter->errorOutput("Incorrect argument type passed to _every\n");
+		interpreter->errorOutput("Incorrect argument type passed to every\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(fnLiteral);
 		return -1;
@@ -375,7 +375,7 @@ static int nativeEvery(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 static int nativeFilter(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _filter\n");
+		interpreter->errorOutput("Incorrect number of arguments to filter\n");
 		return -1;
 	}
 
@@ -396,7 +396,7 @@ static int nativeFilter(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 
 	//check type
 	if (!( TOY_IS_ARRAY(selfLiteral) || TOY_IS_DICTIONARY(selfLiteral) ) || !( TOY_IS_FUNCTION(fnLiteral) || TOY_IS_FUNCTION_NATIVE(fnLiteral) )) {
-		interpreter->errorOutput("Incorrect argument type passed to _filter\n");
+		interpreter->errorOutput("Incorrect argument type passed to filter\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(fnLiteral);
 		return -1;
@@ -489,7 +489,7 @@ static int nativeFilter(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 static int nativeForEach(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _forEach\n");
+		interpreter->errorOutput("Incorrect number of arguments to forEach\n");
 		return -1;
 	}
 
@@ -510,7 +510,7 @@ static int nativeForEach(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 
 	//check type
 	if (!( TOY_IS_ARRAY(selfLiteral) || TOY_IS_DICTIONARY(selfLiteral) ) || !( TOY_IS_FUNCTION(fnLiteral) || TOY_IS_FUNCTION_NATIVE(fnLiteral) )) {
-		interpreter->errorOutput("Incorrect argument type passed to _forEach\n");
+		interpreter->errorOutput("Incorrect argument type passed to forEach\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(fnLiteral);
 		return -1;
@@ -567,7 +567,7 @@ static int nativeForEach(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 
 static int nativeGetKeys(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _getKeys\n");
+		interpreter->errorOutput("Incorrect number of arguments to getKeys\n");
 		return -1;
 	}
 
@@ -582,7 +582,7 @@ static int nativeGetKeys(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 
 	//check type
 	if (!TOY_IS_DICTIONARY(selfLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to _getKeys\n");
+		interpreter->errorOutput("Incorrect argument type passed to getKeys\n");
 		Toy_freeLiteral(selfLiteral);
 		return -1;
 	}
@@ -612,7 +612,7 @@ static int nativeGetKeys(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 
 static int nativeGetValues(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _getValues\n");
+		interpreter->errorOutput("Incorrect number of arguments to getValues\n");
 		return -1;
 	}
 
@@ -627,7 +627,7 @@ static int nativeGetValues(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 
 	//check type
 	if (!TOY_IS_DICTIONARY(selfLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to _getValues\n");
+		interpreter->errorOutput("Incorrect argument type passed to getValues\n");
 		Toy_freeLiteral(selfLiteral);
 		return -1;
 	}
@@ -658,7 +658,7 @@ static int nativeGetValues(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 static int nativeIndexOf(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _indexOf\n");
+		interpreter->errorOutput("Incorrect number of arguments to indexOf\n");
 		return -1;
 	}
 
@@ -705,7 +705,7 @@ static int nativeIndexOf(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 static int nativeMap(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _map\n");
+		interpreter->errorOutput("Incorrect number of arguments to map\n");
 		return -1;
 	}
 
@@ -726,7 +726,7 @@ static int nativeMap(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 
 	//check type
 	if (!( TOY_IS_ARRAY(selfLiteral) || TOY_IS_DICTIONARY(selfLiteral) ) || !( TOY_IS_FUNCTION(fnLiteral) || TOY_IS_FUNCTION_NATIVE(fnLiteral) )) {
-		interpreter->errorOutput("Incorrect argument type passed to _map\n");
+		interpreter->errorOutput("Incorrect argument type passed to map\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(fnLiteral);
 		return -1;
@@ -808,7 +808,7 @@ static int nativeMap(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 static int nativeReduce(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 3) {
-		interpreter->errorOutput("Incorrect number of arguments to _reduce\n");
+		interpreter->errorOutput("Incorrect number of arguments to reduce\n");
 		return -1;
 	}
 
@@ -835,7 +835,7 @@ static int nativeReduce(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 
 	//check type
 	if (!( TOY_IS_ARRAY(selfLiteral) || TOY_IS_DICTIONARY(selfLiteral) ) || !( TOY_IS_FUNCTION(fnLiteral) || TOY_IS_FUNCTION_NATIVE(fnLiteral) )) {
-		interpreter->errorOutput("Incorrect argument type passed to _reduce\n");
+		interpreter->errorOutput("Incorrect argument type passed to reduce\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(defaultLiteral);
 		Toy_freeLiteral(fnLiteral);
@@ -909,7 +909,7 @@ static int nativeReduce(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 static int nativeSome(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _some\n");
+		interpreter->errorOutput("Incorrect number of arguments to some\n");
 		return -1;
 	}
 
@@ -930,7 +930,7 @@ static int nativeSome(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	//check type
 	if (!( TOY_IS_ARRAY(selfLiteral) || TOY_IS_DICTIONARY(selfLiteral) ) || !( TOY_IS_FUNCTION(fnLiteral) || TOY_IS_FUNCTION_NATIVE(fnLiteral) )) {
-		interpreter->errorOutput("Incorrect argument type passed to _some\n");
+		interpreter->errorOutput("Incorrect argument type passed to some\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(fnLiteral);
 		return -1;
@@ -1073,7 +1073,7 @@ static void recursiveLiteralQuicksortUtil(Toy_Interpreter* interpreter, Toy_Lite
 static int nativeSort(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _sort\n");
+		interpreter->errorOutput("Incorrect number of arguments to sort\n");
 		return -1;
 	}
 
@@ -1094,7 +1094,7 @@ static int nativeSort(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	//check type
 	if (!TOY_IS_ARRAY(selfLiteral) || !( TOY_IS_FUNCTION(fnLiteral) || TOY_IS_FUNCTION_NATIVE(fnLiteral) )) {
-		interpreter->errorOutput("Incorrect argument type passed to _sort\n");
+		interpreter->errorOutput("Incorrect argument type passed to sort\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(fnLiteral);
 		return -1;
@@ -1116,7 +1116,7 @@ static int nativeSort(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 static int nativeToLower(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _toLower\n");
+		interpreter->errorOutput("Incorrect number of arguments to toLower\n");
 		return -1;
 	}
 
@@ -1129,7 +1129,7 @@ static int nativeToLower(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 	}
 
 	if (!TOY_IS_STRING(selfLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to _toLower\n");
+		interpreter->errorOutput("Incorrect argument type passed to toLower\n");
 		Toy_freeLiteral(selfLiteral);
 		return -1;
 	}
@@ -1176,7 +1176,7 @@ static void toStringUtil(const char* input) {
 static int nativeToString(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _toString\n");
+		interpreter->errorOutput("Incorrect number of arguments to toString\n");
 		return -1;
 	}
 
@@ -1216,7 +1216,7 @@ static int nativeToString(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 static int nativeToUpper(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _toUpper\n");
+		interpreter->errorOutput("Incorrect number of arguments to toUpper\n");
 		return -1;
 	}
 
@@ -1229,7 +1229,7 @@ static int nativeToUpper(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 	}
 
 	if (!TOY_IS_STRING(selfLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to _toUpper\n");
+		interpreter->errorOutput("Incorrect argument type passed to toUpper\n");
 		Toy_freeLiteral(selfLiteral);
 		return -1;
 	}
@@ -1262,7 +1262,7 @@ static int nativeToUpper(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 
 static int nativeTrim(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count < 1 || arguments->count > 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _trim\n");
+		interpreter->errorOutput("Incorrect number of arguments to trim\n");
 		return -1;
 	}
 
@@ -1289,7 +1289,7 @@ static int nativeTrim(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	}
 
 	if (!TOY_IS_STRING(selfLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to _trim\n");
+		interpreter->errorOutput("Incorrect argument type passed to trim\n");
 		Toy_freeLiteral(trimCharsLiteral);
 		Toy_freeLiteral(selfLiteral);
 		return -1;
@@ -1373,7 +1373,7 @@ static int nativeTrim(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 static int nativeTrimBegin(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count < 1 || arguments->count > 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _trimBegin\n");
+		interpreter->errorOutput("Incorrect number of arguments to trimBegin\n");
 		return -1;
 	}
 
@@ -1400,7 +1400,7 @@ static int nativeTrimBegin(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 	}
 
 	if (!TOY_IS_STRING(selfLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to _trimBegin\n");
+		interpreter->errorOutput("Incorrect argument type passed to trimBegin\n");
 		Toy_freeLiteral(trimCharsLiteral);
 		Toy_freeLiteral(selfLiteral);
 		return -1;
@@ -1461,7 +1461,7 @@ static int nativeTrimBegin(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 
 static int nativeTrimEnd(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count < 1 || arguments->count > 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _trimEnd\n");
+		interpreter->errorOutput("Incorrect number of arguments to trimEnd\n");
 		return -1;
 	}
 
@@ -1488,7 +1488,7 @@ static int nativeTrimEnd(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 	}
 
 	if (!TOY_IS_STRING(selfLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to _trimEnd\n");
+		interpreter->errorOutput("Incorrect argument type passed to trimEnd\n");
 		Toy_freeLiteral(trimCharsLiteral);
 		Toy_freeLiteral(selfLiteral);
 		return -1;
@@ -1557,25 +1557,25 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 	//build the natives list
 	Natives natives[] = {
 		{"clock", nativeClock},
-		{"_concat", nativeConcat}, //array, dictionary, string
-		{"_containsKey", nativeContainsKey}, //dictionary
-		{"_containsValue", nativeContainsValue}, //array, dictionary
-		{"_every", nativeEvery}, //array, dictionary
-		{"_filter", nativeFilter}, //array, dictionary
-		{"_forEach", nativeForEach}, //array, dictionary
-		{"_getKeys", nativeGetKeys}, //dictionary
-		{"_getValues", nativeGetValues}, //dictionary
-		{"_indexOf", nativeIndexOf}, //array
-		{"_map", nativeMap}, //array, dictionary
-		{"_reduce", nativeReduce}, //array, dictionary
-		{"_some", nativeSome}, //array, dictionary
-		{"_sort", nativeSort}, //array
-		{"_toLower", nativeToLower}, //string
-		{"_toString", nativeToString}, //array, dictionary
-		{"_toUpper", nativeToUpper}, //string
-		{"_trim", nativeTrim}, //string
-		{"_trimBegin", nativeTrimBegin}, //string
-		{"_trimEnd", nativeTrimEnd}, //string
+		{"concat", nativeConcat}, //array, dictionary, string
+		{"containsKey", nativeContainsKey}, //dictionary
+		{"containsValue", nativeContainsValue}, //array, dictionary
+		{"every", nativeEvery}, //array, dictionary
+		{"filter", nativeFilter}, //array, dictionary
+		{"forEach", nativeForEach}, //array, dictionary
+		{"getKeys", nativeGetKeys}, //dictionary
+		{"getValues", nativeGetValues}, //dictionary
+		{"indexOf", nativeIndexOf}, //array
+		{"map", nativeMap}, //array, dictionary
+		{"reduce", nativeReduce}, //array, dictionary
+		{"some", nativeSome}, //array, dictionary
+		{"sort", nativeSort}, //array
+		{"toLower", nativeToLower}, //string
+		{"toString", nativeToString}, //array, dictionary
+		{"toUpper", nativeToUpper}, //string
+		{"trim", nativeTrim}, //string
+		{"trimBegin", nativeTrimBegin}, //string
+		{"trimEnd", nativeTrimEnd}, //string
 		{NULL, NULL}
 	};
 

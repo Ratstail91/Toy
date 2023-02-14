@@ -9,7 +9,7 @@ It appears to be a compiler issue, see issue #38 for more info.
 
 */
 
-fn _getValue(self) {
+fn getValue(self) {
 	return self;
 }
 

@@ -200,7 +200,7 @@ static int nativeLoadScriptBytecode(Toy_Interpreter* interpreter, Toy_LiteralArr
 static int nativeRunScript(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _runScript\n");
+		interpreter->errorOutput("Incorrect number of arguments to runScript\n");
 		return -1;
 	}
 
@@ -213,7 +213,7 @@ static int nativeRunScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 	}
 
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
-		interpreter->errorOutput("Unrecognized opaque literal in _runScript\n");
+		interpreter->errorOutput("Unrecognized opaque literal in runScript\n");
 		return -1;
 	}
 
@@ -241,7 +241,7 @@ static int nativeRunScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 static int nativeGetScriptVar(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _getScriptVar\n");
+		interpreter->errorOutput("Incorrect number of arguments to getScriptVar\n");
 		return -1;
 	}
 
@@ -260,7 +260,7 @@ static int nativeGetScriptVar(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	}
 
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
-		interpreter->errorOutput("Unrecognized opaque literal in _runScript\n");
+		interpreter->errorOutput("Unrecognized opaque literal in getScriptVar\n");
 		return -1;
 	}
 
@@ -292,7 +292,7 @@ static int nativeGetScriptVar(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 static int nativeCallScriptFn(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count < 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _callScriptFn\n");
+		interpreter->errorOutput("Incorrect number of arguments to callScriptFn\n");
 		return -1;
 	}
 
@@ -332,7 +332,7 @@ static int nativeCallScriptFn(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	}
 
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
-		interpreter->errorOutput("Unrecognized opaque literal in _runScript\n");
+		interpreter->errorOutput("Unrecognized opaque literal in callScriptFn\n");
 		return -1;
 	}
 
@@ -388,7 +388,7 @@ static int nativeCallScriptFn(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 static int nativeResetScript(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _resetScript\n");
+		interpreter->errorOutput("Incorrect number of arguments to resetScript\n");
 		return -1;
 	}
 
@@ -401,7 +401,7 @@ static int nativeResetScript(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 	}
 
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
-		interpreter->errorOutput("Unrecognized opaque literal in _runScript\n");
+		interpreter->errorOutput("Unrecognized opaque literal in resetScript\n");
 		return -1;
 	}
 
@@ -424,7 +424,7 @@ static int nativeResetScript(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 static int nativeFreeScript(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _freeScript\n");
+		interpreter->errorOutput("Incorrect number of arguments to freeScript\n");
 		return -1;
 	}
 
@@ -437,7 +437,7 @@ static int nativeFreeScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 	}
 
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
-		interpreter->errorOutput("Unrecognized opaque literal in _freeScript\n");
+		interpreter->errorOutput("Unrecognized opaque literal in freeScript\n");
 		return -1;
 	}
 
@@ -458,7 +458,7 @@ static int nativeFreeScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 static int nativeCheckScriptDirty(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _runScript\n");
+		interpreter->errorOutput("Incorrect number of arguments to checkScriptDirty\n");
 		return -1;
 	}
 
@@ -471,7 +471,7 @@ static int nativeCheckScriptDirty(Toy_Interpreter* interpreter, Toy_LiteralArray
 	}
 
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
-		interpreter->errorOutput("Unrecognized opaque literal in _runScript\n");
+		interpreter->errorOutput("Unrecognized opaque literal in checkScriptDirty\n");
 		return -1;
 	}
 
@@ -500,12 +500,12 @@ int Toy_hookRunner(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Lit
 	Natives natives[] = {
 		{"loadScript", nativeLoadScript},
 		{"loadScriptBytecode", nativeLoadScriptBytecode},
-		{"_runScript", nativeRunScript},
-		{"_getScriptVar", nativeGetScriptVar},
-		{"_callScriptFn", nativeCallScriptFn},
-		{"_resetScript", nativeResetScript},
-		{"_freeScript", nativeFreeScript},
-		{"_checkScriptDirty", nativeCheckScriptDirty},
+		{"runScript", nativeRunScript},
+		{"getScriptVar", nativeGetScriptVar},
+		{"callScriptFn", nativeCallScriptFn},
+		{"resetScript", nativeResetScript},
+		{"freeScript", nativeFreeScript},
+		{"checkScriptDirty", nativeCheckScriptDirty},
 		{NULL, NULL}
 	};
 

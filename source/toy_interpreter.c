@@ -1127,24 +1127,6 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 		Toy_freeLiteral(lit);
 	}
 
-	//let's screw with the fn name, too
-	if (looseFirstArgument) {
-		if (!TOY_IS_IDENTIFIER(identifier)) {
-			interpreter->errorOutput("Bad literal passed as a function identifier\n");
-			Toy_freeLiteral(identifier);
-			Toy_freeLiteral(stackSize);
-			Toy_freeLiteralArray(&arguments);
-			return false;
-		}
-
-		int length = TOY_AS_IDENTIFIER(identifier)->length + 1;
-		char buffer[TOY_MAX_STRING_LENGTH];
-		snprintf(buffer, TOY_MAX_STRING_LENGTH, "_%s", Toy_toCString(TOY_AS_IDENTIFIER(identifier))); //prepend an underscore
-
-		Toy_freeLiteral(identifier);
-		identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(buffer, length));
-	}
-
 	//get the function literal
 	Toy_Literal func = identifier;
 
@@ -2445,12 +2427,12 @@ void Toy_resetInterpreter(Toy_Interpreter* interpreter) {
 	interpreter->scope = Toy_pushScope(NULL);
 
 	//globally available functions
-	Toy_injectNativeFn(interpreter, "_set", Toy_private_set);
-	Toy_injectNativeFn(interpreter, "_get", Toy_private_get);
-	Toy_injectNativeFn(interpreter, "_push", Toy_private_push);
-	Toy_injectNativeFn(interpreter, "_pop", Toy_private_pop);
-	Toy_injectNativeFn(interpreter, "_length", Toy_private_length);
-	Toy_injectNativeFn(interpreter, "_clear", Toy_private_clear);
+	Toy_injectNativeFn(interpreter, "set", Toy_private_set);
+	Toy_injectNativeFn(interpreter, "get", Toy_private_get);
+	Toy_injectNativeFn(interpreter, "push", Toy_private_push);
+	Toy_injectNativeFn(interpreter, "pop", Toy_private_pop);
+	Toy_injectNativeFn(interpreter, "length", Toy_private_length);
+	Toy_injectNativeFn(interpreter, "clear", Toy_private_clear);
 }
 
 void Toy_freeInterpreter(Toy_Interpreter* interpreter) {
