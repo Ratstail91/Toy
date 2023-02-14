@@ -29,7 +29,7 @@ for (var i = 0; i < SIZE -1; i++) {
 	prev += " ";
 }
 prev += "*"; //initial
-print prev + "\n";
+print prev;
 
 //run
 for (var iteration = 0; iteration < SIZE -1; iteration++) {
@@ -44,6 +44,6 @@ for (var iteration = 0; iteration < SIZE -1; iteration++) {
 	//right
 	output += (lookup[prev[SIZE-2]][prev[SIZE-1]][" "]);
 
-	print output + "\n";
+	print output;
 	prev = output;
 }
