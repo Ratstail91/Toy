@@ -39,10 +39,13 @@ static void* trackerAllocator(void* pointer, size_t oldSize, size_t newSize) {
 	return mem;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, const char* argv[]) {
 	if (argc <= 1) {
 		return -1;
 	}
+
+	//not used, except for print
+	Toy_initCommandLine(argc, argv);
 
 	//setup for runner
 	Toy_initDriveDictionary();
