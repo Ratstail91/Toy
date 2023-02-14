@@ -20,7 +20,7 @@ static void noPrintFn(const char* output) {
 }
 
 void error(char* msg) {
-	printf("%s", msg);
+	printf("%s\n", msg);
 	exit(-1);
 }
 
@@ -41,7 +41,7 @@ int main() {
 
 		//test answer
 		{
-			interpreter.printOutput("Testing answer\n");
+			interpreter.printOutput("Testing answer");
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
@@ -52,15 +52,15 @@ int main() {
 
 			//check the results
 			if (arguments.count != 0) {
-				error("Arguments has the wrong number of members\n");
+				error("Arguments has the wrong number of members");
 			}
 
 			if (returns.count != 1) {
-				error("Returns has the wrong number of members\n");
+				error("Returns has the wrong number of members");
 			}
 
 			if (!TOY_IS_INTEGER(returns.literals[0]) || TOY_AS_INTEGER(returns.literals[0]) != 42) {
-				error("Returned value is incorrect\n");
+				error("Returned value is incorrect");
 			}
 
 			Toy_freeLiteralArray(&arguments);
@@ -69,7 +69,7 @@ int main() {
 
 		//test identity
 		{
-			interpreter.printOutput("Testing identity\n");
+			interpreter.printOutput("Testing identity");
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
@@ -85,17 +85,17 @@ int main() {
 
 			//check the results
 			if (arguments.count != 0) {
-				error("Arguments has the wrong number of members\n");
+				error("Arguments has the wrong number of members");
 			}
 
 			if (returns.count != 1) {
-				error("Returns has the wrong number of members\n");
+				error("Returns has the wrong number of members");
 			}
 
 			float epsilon = 0.1; //because floats are evil
 
 			if (!TOY_IS_FLOAT(returns.literals[0]) || fabs(TOY_AS_FLOAT(returns.literals[0]) - pi) > epsilon) {
-				error("Returned value is incorrect\n");
+				error("Returned value is incorrect");
 			}
 
 			Toy_freeLiteralArray(&arguments);
@@ -104,7 +104,7 @@ int main() {
 
 		//test makeCounter (closures)
 		{
-			interpreter.printOutput("Testing makeCounter (closures)\n");
+			interpreter.printOutput("Testing makeCounter (closures)");
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
@@ -115,11 +115,11 @@ int main() {
 
 			//check the results
 			if (arguments.count != 0) {
-				error("Arguments has the wrong number of members\n");
+				error("Arguments has the wrong number of members");
 			}
 
 			if (returns.count != 1) {
-				error("Returns has the wrong number of members\n");
+				error("Returns has the wrong number of members");
 			}
 
 			//grab the resulting literal
@@ -139,15 +139,15 @@ int main() {
 
 				//check the results
 				if (arguments.count != 0) {
-					error("Arguments (1) has the wrong number of members\n");
+					error("Arguments (1) has the wrong number of members");
 				}
 
 				if (returns.count != 1) {
-					error("Returns (1) has the wrong number of members\n");
+					error("Returns (1) has the wrong number of members");
 				}
 
 				if (!TOY_IS_INTEGER(returns.literals[0]) || TOY_AS_INTEGER(returns.literals[0]) != 1) {
-					error("Returned value (1) is incorrect\n");
+					error("Returned value (1) is incorrect");
 				}
 
 				Toy_freeLiteralArray(&arguments);
@@ -164,15 +164,15 @@ int main() {
 
 				//check the results
 				if (arguments.count != 0) {
-					error("Arguments (2) has the wrong number of members\n");
+					error("Arguments (2) has the wrong number of members");
 				}
 
 				if (returns.count != 1) {
-					error("Returns (2) has the wrong number of members\n");
+					error("Returns (2) has the wrong number of members");
 				}
 
 				if (!TOY_IS_INTEGER(returns.literals[0]) || TOY_AS_INTEGER(returns.literals[0]) != 2) {
-					error("Returned value (2) is incorrect\n");
+					error("Returned value (2) is incorrect");
 				}
 
 				Toy_freeLiteralArray(&arguments);
@@ -189,15 +189,15 @@ int main() {
 
 				//check the results
 				if (arguments.count != 0) {
-					error("Arguments (3) has the wrong number of members\n");
+					error("Arguments (3) has the wrong number of members");
 				}
 
 				if (returns.count != 1) {
-					error("Returns (3) has the wrong number of members\n");
+					error("Returns (3) has the wrong number of members");
 				}
 
 				if (!TOY_IS_INTEGER(returns.literals[0]) || TOY_AS_INTEGER(returns.literals[0]) != 3) {
-					error("Returned value (3) is incorrect\n");
+					error("Returned value (3) is incorrect");
 				}
 
 				Toy_freeLiteralArray(&arguments);
@@ -209,7 +209,7 @@ int main() {
 
 		//test assertion failure
 		{
-			interpreter.printOutput("Testing assertion failure\n");
+			interpreter.printOutput("Testing assertion failure");
 
 			Toy_setInterpreterAssert(&interpreter, noPrintFn);
 
@@ -222,15 +222,15 @@ int main() {
 
 			//check the results
 			if (arguments.count != 0) {
-				error("Arguments has the wrong number of members\n");
+				error("Arguments has the wrong number of members");
 			}
 
 			if (returns.count != 1 || !TOY_IS_NULL(returns.literals[0])) {
-				error("Returns has the wrong number of members\n");
+				error("Returns has the wrong number of members");
 			}
 
 			if (!ret) {
-				error("Assertion gives the wrong return value\n");
+				error("Assertion gives the wrong return value");
 			}
 
 			Toy_freeLiteralArray(&arguments);

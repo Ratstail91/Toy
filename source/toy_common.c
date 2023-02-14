@@ -15,23 +15,22 @@ STATIC_ASSERT(sizeof(unsigned char) == 1);
 STATIC_ASSERT(sizeof(unsigned short) == 2);
 STATIC_ASSERT(sizeof(unsigned int) == 4);
 
-//declare the singleton
-Toy_CommandLine Toy_commandLine;
+//declare the singleton with default values
+Toy_CommandLine Toy_commandLine = {
+	.error = false,
+	.help = false,
+	.version = false,
+	.binaryfile = NULL,
+	.sourcefile = NULL,
+	.compilefile = NULL,
+	.outfile = "out.tb",
+	.source = NULL,
+	.initialfile = NULL,
+	.enablePrintNewline = true,
+	.verbose = false
+};
 
 void Toy_initCommandLine(int argc, const char* argv[]) {
-	//default values
-	Toy_commandLine.error = false;
-	Toy_commandLine.help = false;
-	Toy_commandLine.version = false;
-	Toy_commandLine.binaryfile = NULL;
-	Toy_commandLine.sourcefile = NULL;
-	Toy_commandLine.compilefile = NULL;
-	Toy_commandLine.outfile = "out.tb";
-	Toy_commandLine.source = NULL;
-	Toy_commandLine.initialfile = NULL;
-	Toy_commandLine.enablePrintNewline = true;
-	Toy_commandLine.verbose = false;
-
 	for (int i = 1; i < argc; i++) { //start at 1 to skip the program name
 		Toy_commandLine.error = true; //error state by default, set to false by successful flags
 
