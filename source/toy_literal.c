@@ -84,11 +84,11 @@ bool Toy_private_isTruthy(Toy_Literal x) {
 }
 
 Toy_Literal Toy_private_toStringLiteral(Toy_RefString* ptr) {
-	return ((Toy_Literal){{ .string.ptr = ptr },TOY_LITERAL_STRING, 0});
+	return ((Toy_Literal){{ .string = { .ptr = ptr }},TOY_LITERAL_STRING, 0});
 }
 
 Toy_Literal Toy_private_toIdentifierLiteral(Toy_RefString* ptr) {
-	return ((Toy_Literal){{ .identifier.ptr = ptr, .identifier.hash = hashString(Toy_toCString(ptr), Toy_lengthRefString(ptr)) },TOY_LITERAL_IDENTIFIER, 0});
+	return ((Toy_Literal){{ .identifier = { .ptr = ptr, .hash = hashString(Toy_toCString(ptr), Toy_lengthRefString(ptr)) }},TOY_LITERAL_IDENTIFIER, 0});
 }
 
 Toy_Literal* Toy_private_typePushSubtype(Toy_Literal* lit, Toy_Literal subtype) {
