@@ -296,8 +296,8 @@ static int nativeEvery(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
-			Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[i]);
 			Toy_pushLiteralArray(&arguments, indexLiteral);
+			Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[i]);
 
 			Toy_LiteralArray returns;
 			Toy_initLiteralArray(&returns);
@@ -337,8 +337,8 @@ static int nativeEvery(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
-			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
 			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].key);
+			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
 
 			Toy_LiteralArray returns;
 			Toy_initLiteralArray(&returns);
@@ -413,8 +413,8 @@ static int nativeFilter(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
-			Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[i]);
 			Toy_pushLiteralArray(&arguments, indexLiteral);
+			Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[i]);
 
 			Toy_LiteralArray returns;
 			Toy_initLiteralArray(&returns);
@@ -453,8 +453,8 @@ static int nativeFilter(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
-			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
 			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].key);
+			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
 
 			Toy_LiteralArray returns;
 			Toy_initLiteralArray(&returns);
@@ -523,8 +523,8 @@ static int nativeForEach(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
-			Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[i]);
 			Toy_pushLiteralArray(&arguments, indexLiteral);
+			Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[i]);
 
 			Toy_LiteralArray returns;
 			Toy_initLiteralArray(&returns);
@@ -546,8 +546,8 @@ static int nativeForEach(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
-			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
 			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].key);
+			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
 
 			Toy_LiteralArray returns;
 			Toy_initLiteralArray(&returns);
@@ -742,8 +742,8 @@ static int nativeMap(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
-			Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[i]);
 			Toy_pushLiteralArray(&arguments, indexLiteral);
+			Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[i]);
 
 			Toy_LiteralArray returns;
 			Toy_initLiteralArray(&returns);
@@ -777,8 +777,8 @@ static int nativeMap(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
-			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
 			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].key);
+			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
 
 			Toy_LiteralArray returns;
 			Toy_initLiteralArray(&returns);
@@ -849,9 +849,9 @@ static int nativeReduce(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
-			Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[i]);
-			Toy_pushLiteralArray(&arguments, indexLiteral);
 			Toy_pushLiteralArray(&arguments, defaultLiteral);
+			Toy_pushLiteralArray(&arguments, indexLiteral);
+			Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[i]);
 
 			Toy_LiteralArray returns;
 			Toy_initLiteralArray(&returns);
@@ -879,9 +879,9 @@ static int nativeReduce(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
-			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
-			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].key);
 			Toy_pushLiteralArray(&arguments, defaultLiteral);
+			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].key);
+			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
 
 			Toy_LiteralArray returns;
 			Toy_initLiteralArray(&returns);
@@ -946,8 +946,8 @@ static int nativeSome(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
-			Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[i]);
 			Toy_pushLiteralArray(&arguments, indexLiteral);
+			Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[i]);
 
 			Toy_LiteralArray returns;
 			Toy_initLiteralArray(&returns);
@@ -987,8 +987,8 @@ static int nativeSome(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 			Toy_LiteralArray arguments;
 			Toy_initLiteralArray(&arguments);
-			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
 			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].key);
+			Toy_pushLiteralArray(&arguments, TOY_AS_DICTIONARY(selfLiteral)->entries[i].value);
 
 			Toy_LiteralArray returns;
 			Toy_initLiteralArray(&returns);
@@ -1045,8 +1045,8 @@ static void recursiveLiteralQuicksortUtil(Toy_Interpreter* interpreter, Toy_Lite
 		Toy_initLiteralArray(&arguments);
 		Toy_initLiteralArray(&returns);
 
-		Toy_pushLiteralArray(&arguments, ptr[literalCount - 1]); //backwards
 		Toy_pushLiteralArray(&arguments, ptr[checker]);
+		Toy_pushLiteralArray(&arguments, ptr[literalCount - 1]);
 
 		Toy_callLiteralFn(interpreter, fnCompareLiteral, &arguments, &returns);
 

@@ -1,27 +1,28 @@
-import compound;
+import standard;
 
-fn less(a, b) {
-	return a < b;
+//test every
+{
+	var a = [1, 2, 3];
+	var d = ["one": 1, "two": 2];
+
+	var counter = 0;
+	fn f(k, v) {
+		print " > " + string k + " : " + string v;
+		counter++;
+		return v;
+	}
+
+	assert a.every(f) == true, "array.every() == true failed";
+	assert d.every(f) == true, "dictionary.every() == true failed";
+
+	assert counter == 5, "Unexpected number of calls for _every() == true";
+
+	counter = 0;
+	a[1] = false;
+	d["two"] = false;
+
+	assert a.every(f) == false, "array.every() == false failed";
+	assert d.every(f) == false, "dictionary.every() == false failed";
+
+	assert counter == 4, "Unexpected number of calls for _every() == false";
 }
-
-fn greater(a, b) {
-	return a > b;
-}
-
-var a = [7, 2, 1, 8, 6, 3, 5, 4];
-var b = [7, 2, 1, 4, 6, 3, 5, 8];
-var c = [1, 2, 3, 4, 5, 6, 7, 8];
-var d = [7, 2, 1, 8, 6, 3, 5, 4];
-
-a = a.sort(less);
-b = b.sort(less);
-c = c.sort(less);
-d = d.sort(greater);
-
-assert a == [1, 2, 3, 4, 5, 6, 7, 8], "array.sort(less) failed";
-assert b == [1, 2, 3, 4, 5, 6, 7, 8], "array.sort(less) with pivot high failed";
-assert c == [1, 2, 3, 4, 5, 6, 7, 8], "array.sort(less) pre-sorted array failed";
-assert d == [8, 7, 6, 5, 4, 3, 2, 1], "array.sort(greater) failed";
-
-
-print "All good";

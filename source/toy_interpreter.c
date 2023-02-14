@@ -1089,6 +1089,8 @@ static bool execFalseJump(Toy_Interpreter* interpreter) {
 static void execInterpreter(Toy_Interpreter*);
 static void readInterpreterSections(Toy_Interpreter* interpreter);
 
+//expect stack: identifier, arg1, arg2, arg3..., stackSize
+//also supports identifier & arg1 to be other way around (looseFirstArgument)
 static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 	//BUGFIX: depth check - don't drown!
 	if (interpreter->depth >= 200) {
@@ -1143,6 +1145,7 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 		identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(buffer, length));
 	}
 
+	//get the function literal
 	Toy_Literal func = identifier;
 
 	if (!Toy_parseIdentifierToValue(interpreter, &func)) {
@@ -1152,30 +1155,7 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 		return false;
 	}
 
-	//check for side-loaded native functions
-	if (TOY_IS_FUNCTION_NATIVE(func)) {
-		//reverse the order to the correct order
-		Toy_LiteralArray correct;
-		Toy_initLiteralArray(&correct);
-
-		while(arguments.count) {
-			Toy_Literal lit =  Toy_popLiteralArray(&arguments);
-			Toy_pushLiteralArray(&correct, lit);
-			Toy_freeLiteral(lit);
-		}
-
-		Toy_freeLiteralArray(&arguments);
-
-		//call the native function
-		TOY_AS_FUNCTION_NATIVE(func)(interpreter, &correct);
-
-		Toy_freeLiteralArray(&correct);
-		Toy_freeLiteral(stackSize);
-		Toy_freeLiteral(identifier);
-		return true;
-	}
-
-	if (!TOY_IS_FUNCTION(func)) {
+	if (!TOY_IS_FUNCTION(func) && !TOY_IS_FUNCTION_NATIVE(func)) {
 		interpreter->errorOutput("Function not found: ");
 		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
@@ -1186,7 +1166,18 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 		return false;
 	}
 
-	bool ret = Toy_callLiteralFn(interpreter, func, &arguments, &interpreter->stack);
+	//BUGFIX: correct the argument order
+	Toy_LiteralArray correct;
+	Toy_initLiteralArray(&correct);
+
+	while (arguments.count > 0) {
+		Toy_Literal lit = Toy_popLiteralArray(&arguments);
+		Toy_pushLiteralArray(&correct, lit);
+		Toy_freeLiteral(lit);
+	}
+
+	//call the function literal
+	bool ret = Toy_callLiteralFn(interpreter, func, &correct, &interpreter->stack);
 
 	if (!ret) {
 		interpreter->errorOutput("Error encountered in function \"");
@@ -1194,6 +1185,7 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 		interpreter->errorOutput("\"\n");
 	}
 
+	Toy_freeLiteralArray(&correct);
 	Toy_freeLiteralArray(&arguments);
 	Toy_freeLiteral(func);
 	Toy_freeLiteral(stackSize);
@@ -1202,25 +1194,15 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 	return ret;
 }
 
+//expects arguments in correct order
 bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_LiteralArray* arguments, Toy_LiteralArray* returns) {
 	//check for side-loaded native functions
 	if (TOY_IS_FUNCTION_NATIVE(func)) {
-		//reverse the order to the correct order
-		Toy_LiteralArray correct;
-		Toy_initLiteralArray(&correct);
-
-		while(arguments->count) {
-			Toy_Literal lit =  Toy_popLiteralArray(arguments);
-			Toy_pushLiteralArray(&correct, lit);
-			Toy_freeLiteral(lit);
-		}
-
 		//call the native function
-		int returnsCount = TOY_AS_FUNCTION_NATIVE(func)(interpreter, &correct);
+		int returnsCount = TOY_AS_FUNCTION_NATIVE(func)(interpreter, arguments);
 
 		if (returnsCount < 0) {
 			interpreter->errorOutput("Unknown error from native function\n");
-			Toy_freeLiteralArray(&correct);
 			return false;
 		}
 
@@ -1242,13 +1224,12 @@ bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_Liter
 		}
 
 		Toy_freeLiteralArray(&returnsFromInner);
-		Toy_freeLiteralArray(&correct);
 		return true;
 	}
 
 	//normal Toy function
 	if (!TOY_IS_FUNCTION(func)) {
-		interpreter->errorOutput("Function required in Toy_callLiteralFn()\n");
+		interpreter->errorOutput("Function literal required in Toy_callLiteralFn()\n");
 		return false;
 	}
 
@@ -1296,6 +1277,9 @@ bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_Liter
 		return false;
 	}
 
+	//BUGFIX: access the arguments from the beginning
+	int argumentIndex = 0;
+
 	//contents is the indexes of identifier & type
 	for (int i = 0; i < paramArray->count - (TOY_IS_NULL(restParam) ? 0 : 2); i += 2) { //don't count the rest parameter, if present
 		//declare and define each entry in the scope
@@ -1311,7 +1295,11 @@ bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_Liter
 			return false;
 		}
 
-		Toy_Literal arg = Toy_popLiteralArray(arguments);
+		//access the arguments in order
+		Toy_Literal arg = TOY_TO_NULL_LITERAL;
+		if (argumentIndex < arguments->count) {
+			arg = Toy_copyLiteral(arguments->literals[argumentIndex++]);
+		}
 
 		Toy_Literal argIdn = arg;
 		if (TOY_IS_IDENTIFIER(arg) && Toy_parseIdentifierToValue(interpreter, &arg)) {
@@ -1338,8 +1326,9 @@ bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_Liter
 		Toy_LiteralArray rest;
 		Toy_initLiteralArray(&rest);
 
-		while (arguments->count > 0) {
-			Toy_Literal lit = Toy_popLiteralArray(arguments);
+		//access the arguments in order
+		while (argumentIndex < arguments->count) {
+			Toy_Literal lit = Toy_copyLiteral(arguments->literals[argumentIndex++]);
 			Toy_pushLiteralArray(&rest, lit);
 			Toy_freeLiteral(lit);
 		}
@@ -1445,6 +1434,9 @@ bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_Liter
 	Toy_freeLiteralArray(&returnsFromInner);
 	Toy_freeLiteralArray(&inner.stack);
 	Toy_freeLiteralArray(&inner.literalCache);
+
+	//BUGFIX: this function needs to eat the arguments
+	Toy_freeLiteralArray(arguments);
 
 	//actual bytecode persists until next call
 	return true;

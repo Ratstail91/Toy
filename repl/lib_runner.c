@@ -309,14 +309,13 @@ static int nativeCallScriptFn(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	Toy_LiteralArray rest;
 	Toy_initLiteralArray(&rest);
 
-	while (tmp.count) { //correct the order of the rest args
+	while (tmp.count > 0) { //correct the order of the rest args
 		Toy_Literal lit = Toy_popLiteralArray(&tmp);
 		Toy_pushLiteralArray(&rest, lit);
 		Toy_freeLiteral(lit);
 	}
 
 	Toy_freeLiteralArray(&tmp);
-
 
 	//get the runner object
 	Toy_Literal varName = Toy_popLiteralArray(arguments);
