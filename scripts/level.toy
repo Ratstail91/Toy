@@ -1,3 +1,18 @@
+/*
+
+How to run this program:
+
+	toyrepl -n -t scripts/level.toy
+
+How to move around:
+
+	move(up);
+	move(down);
+	move(left);
+	move(right);
+
+*/
+
 //constants
 var WIDTH: int const = 12;
 var HEIGHT: int const = 12;

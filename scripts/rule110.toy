@@ -1,5 +1,5 @@
 //number of iterations
-var SIZE: int const = 260;
+var SIZE: int const = 100;
 
 //lookup table
 var lookup = [
