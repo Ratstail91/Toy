@@ -417,7 +417,7 @@ int Toy_hashLiteral(Toy_Literal lit) {
 			return -1;
 
 		default:
-			//should never bee seen
+			//should never be seen
 			fprintf(stderr, TOY_CC_ERROR "[internal] Unrecognized literal type in hash: %d\n" TOY_CC_RESET, lit.type);
 			return 0;
 	}

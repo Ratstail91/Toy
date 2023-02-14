@@ -110,11 +110,11 @@
     </Link>
     <ClCompile>
       <AdditionalIncludeDirectories>C:\Users\kayne\Desktop\Toy\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="repl\lib_about.c" />
-    <ClCompile Include="repl\lib_compound.c" />
     <ClCompile Include="repl\lib_runner.c" />
     <ClCompile Include="repl\lib_standard.c" />
     <ClCompile Include="repl\repl_main.c" />
@@ -122,7 +122,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="repl\lib_about.h" />
-    <ClInclude Include="repl\lib_compound.h" />
     <ClInclude Include="repl\lib_runner.h" />
     <ClInclude Include="repl\lib_standard.h" />
     <ClInclude Include="repl\repl_tools.h" />

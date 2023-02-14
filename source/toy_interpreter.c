@@ -37,8 +37,7 @@ bool Toy_injectNativeFn(Toy_Interpreter* interpreter, const char* name, Toy_Nati
 		return false;
 	}
 
-	int identifierLength = strlen(name);
-	Toy_Literal identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(name, identifierLength));
+	Toy_Literal identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString(name));
 
 	//make sure the name isn't taken
 	if (Toy_existsLiteralDictionary(&interpreter->scope->variables, identifier)) {

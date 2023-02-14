@@ -118,12 +118,12 @@ typedef struct Toy_Literal {
 #define TOY_TO_STRING_LITERAL(value)			Toy_private_toStringLiteral(value)
 #define TOY_TO_ARRAY_LITERAL(value)				((Toy_Literal){{ .array = value }, TOY_LITERAL_ARRAY, 0})
 #define TOY_TO_DICTIONARY_LITERAL(value)		((Toy_Literal){{ .dictionary = value }, TOY_LITERAL_DICTIONARY, 0})
-#define TOY_TO_FUNCTION_LITERAL(value, l)		((Toy_Literal){{ .function.inner.bytecode = value, .function.scope = NULL }, TOY_LITERAL_FUNCTION, l})
-#define TOY_TO_FUNCTION_NATIVE_LITERAL(value)	((Toy_Literal){{ .function.inner.native = value, .function.scope = NULL }, TOY_LITERAL_FUNCTION_NATIVE, 0})
-#define TOY_TO_FUNCTION_HOOK_LITERAL(value)		((Toy_Literal){{ .function.inner.hook = value, .function.scope = NULL }, TOY_LITERAL_FUNCTION_HOOK, 0})
+#define TOY_TO_FUNCTION_LITERAL(value, l)		((Toy_Literal){{ .function = { .inner = { .bytecode = value }, .scope = NULL }}, TOY_LITERAL_FUNCTION, l})
+#define TOY_TO_FUNCTION_NATIVE_LITERAL(value)	((Toy_Literal){{ .function = { .inner = { .native = value }, .scope = NULL }}, TOY_LITERAL_FUNCTION_NATIVE, 0})
+#define TOY_TO_FUNCTION_HOOK_LITERAL(value)		((Toy_Literal){{ .function = { .inner = { .hook = value }, .scope = NULL }}, TOY_LITERAL_FUNCTION_HOOK, 0})
 #define TOY_TO_IDENTIFIER_LITERAL(value)		Toy_private_toIdentifierLiteral(value)
-#define TOY_TO_TYPE_LITERAL(value, c)			((Toy_Literal){{ .type.typeOf = value, .type.constant = c, .type.subtypes = NULL, .type.capacity = 0, .type.count = 0 }, TOY_LITERAL_TYPE, 0})
-#define TOY_TO_OPAQUE_LITERAL(value, t)			((Toy_Literal){{ .opaque.ptr = value, .opaque.tag = t }, TOY_LITERAL_OPAQUE, 0})
+#define TOY_TO_TYPE_LITERAL(value, c)			((Toy_Literal){{ .type = { .typeOf = value, .constant = c, .subtypes = NULL, .capacity = 0, .count = 0 }}, TOY_LITERAL_TYPE, 0})
+#define TOY_TO_OPAQUE_LITERAL(value, t)			((Toy_Literal){{ .opaque = { .ptr = value, .tag = t }}, TOY_LITERAL_OPAQUE, 0})
 
 //BUGFIX: For blank indexing
 #define TOY_IS_INDEX_BLANK(value)				((value).type == TOY_LITERAL_INDEX_BLANK)
