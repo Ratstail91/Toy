@@ -58,13 +58,14 @@ print tally(); //3
 * [Testing Toy](deep-dive/testing-toy)
 * [Roadmap](deep-dive/roadmap)
 
-# Full C API
+# Public C API
 
-* [toy_ast_node.h]
+* [repl_tools.h]
+* [toy_ast_node.h](c-api/toy_ast_node_h.md)
 * [toy_common.h](c-api/toy_common_h.md)
 * [toy_compiler.h]
 * [toy_interpreter.h]
-* [toy_lexer.h]
+* [toy_lexer.h](c-api/toy_lexer_h.md)
 * [toy_literal_array.h]
 * [toy_literal_dictionary.h]
 * [toy_literal.h]
