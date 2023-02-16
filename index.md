@@ -64,7 +64,7 @@ print tally(); //3
 * [toy_ast_node.h](c-api/toy_ast_node_h.md)
 * [toy_common.h](c-api/toy_common_h.md)
 * [toy_compiler.h](c-api/toy_compiler_h.md)
-* [toy_interpreter.h]
+* [toy_interpreter.h](c-api/toy_interpreter_h.md)
 * [toy_lexer.h](c-api/toy_lexer_h.md)
 * [toy_literal_array.h]
 * [toy_literal_dictionary.h]
