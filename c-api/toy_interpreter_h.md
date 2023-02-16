@@ -63,7 +63,14 @@ This utility function will find a `Toy_literal` within the `Toy_Interpreter`'s s
 
 ### bool Toy_parseIdentifierToValue(Toy_Interpreter* interpreter, Toy_Literal* literalPtr)
 
-Note: Bugfixes related to this function are currently in prgress.
+Sometimes, native functions will receive `Toy_Literal` identifiers instead of the values - the values can be retreived from the given interpreter's scope using the following pattern:
+
+```c
+Toy_Literal foobarIdn = foobar;
+if (TOY_IS_IDENTIFIER(foobar) && Toy_parseIdentifierToValue(interpreter, &foobar)) {
+	freeLiteral(foobarIdn); //remember to free the identifier
+}
+```
 
 ### void Toy_setInterpreterPrint(Toy_Interpreter* interpreter, Toy_PrintFn printOutput)
 
