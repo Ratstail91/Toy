@@ -1,8 +1,8 @@
 # Compiling Toy
 
-This tutorial is a sub-section of [Using Toy](using-toy) that has been spun off into it's own page for the sake of brevity/sanity. It's recommended that you read the main article first.
+This tutorial is a sub-section of [Embedding Toy](embedding-toy) that has been spun off into it's own page for the sake of brevity/sanity. It's recommended that you read the main article first.
 
-The exact phases outline here are entirely implementation-dependent - that is, they aren't required, and are simply how the canonical version of Toy works.
+The exact phases outlined here are entirely implementation-dependent - that is, they aren't required, and are simply how the canonical version of Toy works.
 
 ## How the Compilation works
 
