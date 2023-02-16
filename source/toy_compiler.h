@@ -19,4 +19,4 @@ TOY_API void Toy_writeCompiler(Toy_Compiler* compiler, Toy_ASTNode* node);
 TOY_API void Toy_freeCompiler(Toy_Compiler* compiler);
 
 //embed the header, data section, code section, function section, etc.
-TOY_API unsigned char* Toy_collateCompiler(Toy_Compiler* compiler, int* size);
+TOY_API unsigned char* Toy_collateCompiler(Toy_Compiler* compiler, size_t* size);

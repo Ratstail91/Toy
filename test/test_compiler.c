@@ -39,7 +39,7 @@ int main() {
 		Toy_writeCompiler(&compiler, node);
 
 		//collate
-		int size = 0;
+		size_t size = 0;
 		unsigned char* bytecode = Toy_collateCompiler(&compiler, &size);
 
 		//cleanup
@@ -78,7 +78,7 @@ int main() {
 		}
 
 		//collate
-		int size = 0;
+		size_t size = 0;
 		unsigned char* bytecode = Toy_collateCompiler(&compiler, &size);
 
 		//cleanup

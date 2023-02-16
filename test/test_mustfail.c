@@ -50,7 +50,7 @@ const unsigned char* compileStringCustom(const char* source, size_t* size) {
 	}
 
 	//get the bytecode dump
-	const unsigned char* tb = Toy_collateCompiler(&compiler, (int*)(size));
+	const unsigned char* tb = Toy_collateCompiler(&compiler, size);
 
 	//cleanup
 	Toy_freeCompiler(&compiler);

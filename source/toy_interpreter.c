@@ -21,9 +21,7 @@ static void printWrapper(const char* output) {
 }
 
 static void assertWrapper(const char* output) {
-	fprintf(stderr, TOY_CC_ERROR "Assertion failure: ");
-	fprintf(stderr, "%s", output);
-	fprintf(stderr, "\n" TOY_CC_RESET); //default new line
+	fprintf(stderr, TOY_CC_ERROR "Assertion failure: %s\n" TOY_CC_RESET, output);
 }
 
 static void errorWrapper(const char* output) {
@@ -1179,6 +1177,8 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_LiteralArray* arguments, Toy_LiteralArray* returns) {
 	//check for side-loaded native functions
 	if (TOY_IS_FUNCTION_NATIVE(func)) {
+		//TODO: parse out identifier values, see issue #64
+
 		//call the native function
 		int returnsCount = TOY_AS_FUNCTION_NATIVE(func)(interpreter, arguments);
 

@@ -21,9 +21,9 @@ typedef struct {
 } Toy_Token;
 
 TOY_API void Toy_initLexer(Toy_Lexer* lexer, const char* source);
-TOY_API Toy_Token Toy_scanLexer(Toy_Lexer* lexer);
+TOY_API Toy_Token Toy_private_scanLexer(Toy_Lexer* lexer);
 
 //for debugging
-TOY_API void Toy_printToken(Toy_Token* token);
+TOY_API void Toy_private_printToken(Toy_Token* token);
 
 TOY_API void Toy_private_setComments(Toy_Lexer* lexer, bool enabled);

@@ -117,7 +117,7 @@ static Toy_Token makeErrorToken(Toy_Lexer* lexer, char* msg) {
 #ifndef TOY_EXPORT
 	if (Toy_commandLine.verbose) {
 		printf("err:");
-		Toy_printToken(&token);
+		Toy_private_printToken(&token);
 	}
 #endif
 
@@ -136,7 +136,7 @@ static Toy_Token makeToken(Toy_Lexer* lexer, Toy_TokenType type) {
 	//BUG #10: this shows TOKEN_EOF twice due to the overarching structure of the program - can't be fixed
 	if (Toy_commandLine.verbose) {
 		printf("tok:");
-		Toy_printToken(&token);
+		Toy_private_printToken(&token);
 	}
 #endif
 
@@ -168,7 +168,7 @@ static Toy_Token makeIntegerOrFloat(Toy_Lexer* lexer) {
 		} else {
 			printf("flt:");
 		}
-		Toy_printToken(&token);
+		Toy_private_printToken(&token);
 	}
 #endif
 
@@ -221,7 +221,7 @@ static Toy_Token makeString(Toy_Lexer* lexer, char terminator) {
 #ifndef TOY_EXPORT
 	if (Toy_commandLine.verbose) {
 		printf("str:");
-		Toy_printToken(&token);
+		Toy_private_printToken(&token);
 	}
 #endif
 
@@ -248,7 +248,7 @@ static Toy_Token makeKeywordOrIdentifier(Toy_Lexer* lexer) {
 #ifndef TOY_EXPORT
 			if (Toy_commandLine.verbose) {
 				printf("kwd:");
-				Toy_printToken(&token);
+				Toy_private_printToken(&token);
 			}
 #endif
 
@@ -267,7 +267,7 @@ static Toy_Token makeKeywordOrIdentifier(Toy_Lexer* lexer) {
 #ifndef TOY_EXPORT
 	if (Toy_commandLine.verbose) {
 		printf("idf:");
-		Toy_printToken(&token);
+		Toy_private_printToken(&token);
 	}
 #endif
 
@@ -281,7 +281,7 @@ void Toy_initLexer(Toy_Lexer* lexer, const char* source) {
 	lexer->source = source;
 }
 
-Toy_Token Toy_scanLexer(Toy_Lexer* lexer) {
+Toy_Token Toy_private_scanLexer(Toy_Lexer* lexer) {
 	eatWhitespace(lexer);
 
 	lexer->start = lexer->current;
@@ -352,7 +352,7 @@ static void trim(char** s, int* l) { //all this to remove a newline?
 }
 
 //for debugging
-void Toy_printToken(Toy_Token* token) {
+void Toy_private_printToken(Toy_Token* token) {
 	if (token->type == TOY_TOKEN_ERROR) {
 		printf(TOY_CC_ERROR "Error\t%d\t%.*s\n" TOY_CC_RESET, token->line, token->length, token->lexeme);
 		return;

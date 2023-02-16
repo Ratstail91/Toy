@@ -981,6 +981,8 @@ void Toy_writeCompiler(Toy_Compiler* compiler, Toy_ASTNode* node) {
 	if (op != TOY_OP_EOF) {//compensate for indexing & dot notation being screwy
 		compiler->bytecode[compiler->count++] = (unsigned char)op; //1 byte
 	}
+
+	//TODO: could free up AST Nodes
 }
 
 void Toy_freeCompiler(Toy_Compiler* compiler) {
@@ -989,6 +991,7 @@ void Toy_freeCompiler(Toy_Compiler* compiler) {
 	compiler->bytecode = NULL;
 	compiler->capacity = 0;
 	compiler->count = 0;
+	compiler->panic = false;
 }
 
 static void emitByte(unsigned char** collationPtr, int* capacityPtr, int* countPtr, unsigned char byte) {
@@ -1036,7 +1039,7 @@ static void emitFloat(unsigned char** collationPtr, int* capacityPtr, int* count
 }
 
 //return the result
-static unsigned char* collateCompilerHeaderOpt(Toy_Compiler* compiler, int* size, bool embedHeader) {
+static unsigned char* collateCompilerHeaderOpt(Toy_Compiler* compiler, size_t* size, bool embedHeader) {
 	if (compiler->panic) {
 		fprintf(stderr, TOY_CC_ERROR "[internal] Can't collate a panicked compiler\n" TOY_CC_RESET);
 		return NULL;
@@ -1181,14 +1184,14 @@ static unsigned char* collateCompilerHeaderOpt(Toy_Compiler* compiler, int* size
 				void* fnCompiler = TOY_AS_FUNCTION(fn).inner.bytecode; //store the compiler here for now
 
 				//collate the function into bytecode (without header)
-				int size = 0;
+				size_t size = 0;
 				unsigned char* bytes = collateCompilerHeaderOpt((Toy_Compiler*)fnCompiler, &size, false);
 
 				//emit how long this section is, +1 for ending mark
 				Toy_emitShort(&fnCollation, &fnCapacity, &fnCount, (unsigned short)size + 1);
 
 				//write the fn to the fn collation
-				for (int i = 0; i < size; i++) {
+				for (size_t i = 0; i < size; i++) {
 					emitByte(&fnCollation, &fnCapacity, &fnCount, bytes[i]);
 				}
 
@@ -1296,6 +1299,6 @@ static unsigned char* collateCompilerHeaderOpt(Toy_Compiler* compiler, int* size
 }
 
 //the whole point of the compiler is to alter bytecode, so leave it as non-const
-unsigned char* Toy_collateCompiler(Toy_Compiler* compiler, int* size) {
+unsigned char* Toy_collateCompiler(Toy_Compiler* compiler, size_t* size) {
 	return collateCompilerHeaderOpt(compiler, size, true);
 }

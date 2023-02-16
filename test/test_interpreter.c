@@ -87,7 +87,7 @@ int main() {
 		Toy_writeCompiler(&compiler, node);
 
 		//collate
-		int size = 0;
+		size_t size = 0;
 		const unsigned char* bytecode = Toy_collateCompiler(&compiler, &size);
 
 		//NOTE: suppress print output for testing

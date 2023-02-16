@@ -75,7 +75,7 @@ void repl(const char* initialInput) {
 
 		if (!error) {
 			//get the bytecode dump
-			int size = 0;
+			size_t size = 0;
 			unsigned char* tb = Toy_collateCompiler(&compiler, &size);
 
 			//run the bytecode

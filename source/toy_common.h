@@ -43,6 +43,7 @@ typedef struct {
 	bool verbose;
 } Toy_CommandLine;
 
+//these are intended for the repl only, despite using the api prefix
 TOY_API Toy_CommandLine Toy_commandLine;
 
 TOY_API void Toy_initCommandLine(int argc, const char* argv[]);

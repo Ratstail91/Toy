@@ -15,10 +15,10 @@ int main() {
 		Toy_initLexer(&lexer, source);
 
 		//get each token
-		Toy_Token print = Toy_scanLexer(&lexer);
-		Toy_Token null = Toy_scanLexer(&lexer);
-		Toy_Token semi = Toy_scanLexer(&lexer);
-		Toy_Token eof = Toy_scanLexer(&lexer);
+		Toy_Token print = Toy_private_scanLexer(&lexer);
+		Toy_Token null = Toy_private_scanLexer(&lexer);
+		Toy_Token semi = Toy_private_scanLexer(&lexer);
+		Toy_Token eof = Toy_private_scanLexer(&lexer);
 
 		//test each token is correct
 		if (strncmp(print.lexeme, "print", print.length)) {

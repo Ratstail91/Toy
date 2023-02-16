@@ -32,7 +32,7 @@ static void error(Toy_Parser* parser, Toy_Token token, const char* message) {
 
 static void advance(Toy_Parser* parser) {
 	parser->previous = parser->current;
-	parser->current = Toy_scanLexer(parser->lexer);
+	parser->current = Toy_private_scanLexer(parser->lexer);
 
 	if (parser->current.type == TOY_TOKEN_ERROR) {
 		error(parser, parser->current, "Toy_Lexer error");
