@@ -41,24 +41,35 @@ print tally(); //3
 
 # Getting Started
 
-* [Quick Start Guide](quick-start-guide)
-* [Types](types)
-* [About Library](about-library)
-* [Standard Library](standard-library)
-* [Runner Library](runner-library)
-* [Game Engine](game-engine)
-
-# Full C API
-
-* Coming Soon! (check out the [Embedding Toy](embedding-toy) page for a brief description for now)
+* [Quick Start Guide](geting-started/quick-start-guide)
+* [Types](geting-started/types)
+* [About Library](geting-started/about-library)
+* [Standard Library](geting-started/standard-library)
+* [Runner Library](geting-started/runner-library)
+* [Game Engine](geting-started/game-engine)
 
 # Deep Dive
 
-* [Theorizing Toy](theorizing-toy)
-* [Building Toy](building-toy)
-* [Embedding Toy](embedding-toy)
-* [Compiling Toy](compiling-toy)
-* [Developing Toy](developing-toy)
-* [Testing Toy](testing-toy)
-* [Roadmap](roadmap)
+* [Theorizing Toy](deep-dive/theorizing-toy)
+* [Building Toy](deep-dive/building-toy)
+* [Embedding Toy](deep-dive/embedding-toy)
+* [Compiling Toy](deep-dive/compiling-toy)
+* [Developing Toy](deep-dive/developing-toy)
+* [Testing Toy](deep-dive/testing-toy)
+* [Roadmap](deep-dive/roadmap)
+
+# Full C API
+
+* [toy_ast_node.h]
+* [toy_common.h]
+* [toy_compiler.h]
+* [toy_interpreter.h]
+* [toy_lexer.h]
+* [toy_literal_array.h]
+* [toy_literal_dictionary.h]
+* [toy_literal.h]
+* [toy_memory.h]
+* [toy_parser.h]
+* [toy_refstring.h]
+* [toy_scope.h]
 

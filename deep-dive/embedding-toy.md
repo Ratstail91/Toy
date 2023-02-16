@@ -1,6 +1,6 @@
 # Embedding Toy
 
-This tutorial assumes that you've managed to embed Toy into your program by following the tutorial [Building Toy](building-toy).
+This tutorial assumes that you've managed to embed Toy into your program by following the tutorial [Building Toy](deep-dive/building-toy).
 
 Here, we'll look at some ways in which you can utilize Toy's C API within your host program.
 
