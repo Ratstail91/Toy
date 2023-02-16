@@ -41,12 +41,12 @@ print tally(); //3
 
 # Getting Started
 
-* [Quick Start Guide](geting-started/quick-start-guide)
-* [Types](geting-started/types)
-* [About Library](geting-started/about-library)
-* [Standard Library](geting-started/standard-library)
-* [Runner Library](geting-started/runner-library)
-* [Game Engine](geting-started/game-engine)
+* [Quick Start Guide](getting-started/quick-start-guide)
+* [Types](getting-started/types)
+* [About Library](getting-started/about-library)
+* [Standard Library](getting-started/standard-library)
+* [Runner Library](getting-started/runner-library)
+* [Game Engine](getting-started/game-engine)
 
 # Deep Dive
 
