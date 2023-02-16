@@ -61,7 +61,7 @@ print tally(); //3
 # Full C API
 
 * [toy_ast_node.h]
-* [toy_common.h]
+* [toy_common.h](c-api/toy_common_h.md)
 * [toy_compiler.h]
 * [toy_interpreter.h]
 * [toy_lexer.h]
