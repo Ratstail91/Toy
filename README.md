@@ -50,13 +50,13 @@ print tally(); //3
 
 # Full C API
 
-* Coming Soon! (check out the [Using Toy](using-toy) page for a brief description for now)
+* Coming Soon! (check out the [Embedding Toy](embedding-toy) page for a brief description for now)
 
 # Deep Dive
 
 * [Theorizing Toy](theorizing-toy)
+* [Building Toy](building-toy)
 * [Embedding Toy](embedding-toy)
-* [Using Toy](using-toy)
 * [Compiling Toy](compiling-toy)
 * [Developing Toy](developing-toy)
 * [Testing Toy](testing-toy)
