@@ -1,6 +1,6 @@
 # toy_parser.h
 
-This header defines the structure `Toy_Parser` which, after being initialized with a `Toy_Lexer` produces a series of abstract syntax trees to be passed to the `Toy_Compiler`. The following is a utility function provided by [repl_tools.h](c-api/repl_tools_h.md), demonstrating how to use the parser.
+This header defines the structure `Toy_Parser` which, after being initialized with a `Toy_Lexer` produces a series of abstract syntax trees to be passed to the `Toy_Compiler`. The following is a utility function provided by [repl_tools.h](repl_tools_h.md), demonstrating how to use the parser.
 
 ```c
 //generate bytecode from a given string
@@ -48,7 +48,7 @@ const unsigned char* Toy_compileString(const char* source, size_t* size) {
 }
 ```
 
-This header also includes [toy_ast_node.h](c-api/toy_ast_node_h.md), so the `Toy_freeASTNode` function can also be used.
+This header also includes [toy_ast_node.h](toy_ast_node_h.md), so the `Toy_freeASTNode` function can also be used.
 
 ## Defined Functions
 

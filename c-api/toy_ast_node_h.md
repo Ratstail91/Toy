@@ -2,7 +2,7 @@
 
 This header defines the structure of the nodes used in the Abstract Syntax Tree, known as `Toy_ASTNode`. Most of what is defined here is intended for internal use, so is not documented here.
 
-This header doesn't need to be included directly, as it is included in [toy_parser.h](c-api/toy_parser_h.md).
+This header doesn't need to be included directly, as it is included in [toy_parser.h](toy_parser_h.md).
 
 ## Defined Functions
 

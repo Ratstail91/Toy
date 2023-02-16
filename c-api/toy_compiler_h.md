@@ -6,7 +6,7 @@ There are two steps to generating intermediate bytecode - the writing step, and 
 
 During the writing step, the core of the program is generated, along with a series of literals representing the values within the program; these values are compressed and flattened into semi-unrecognizable forms. If the same literal is used multiple times in a program, such as a variable name, the name itself is replaced by a reference to the flattened literals within the cache.
 
-During the collation step, everything from the core program's execution instructions, the flattened literals, the functions (which have their own sections and protocols within the bytecode) and version information (such as the macros defined in [toy_common.h](c-api/toy_common_h.md)) are all combined into a single buffer of bytes, known as bytecode. This bytecode can then be safely saved to a file or immediately executed.
+During the collation step, everything from the core program's execution instructions, the flattened literals, the functions (which have their own sections and protocols within the bytecode) and version information (such as the macros defined in [toy_common.h](toy_common_h.md)) are all combined into a single buffer of bytes, known as bytecode. This bytecode can then be safely saved to a file or immediately executed.
 
 Executing these functions out-of-order causes undefiend behaviour.
 
