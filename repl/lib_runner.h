@@ -1,13 +1,14 @@
 #pragma once
 
+#include "toy_common.h"
 #include "toy_interpreter.h"
 
 int Toy_hookRunner(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Literal alias);
 
 //file system API - these need to be set by the host
-void Toy_initDriveDictionary();
-void Toy_freeDriveDictionary();
-Toy_LiteralDictionary* Toy_getDriveDictionary();
+TOY_API void Toy_initDriveDictionary();
+TOY_API void Toy_freeDriveDictionary();
+TOY_API Toy_LiteralDictionary* Toy_getDriveDictionary();
 
 #define TOY_OPAQUE_TAG_RUNNER 100
 
