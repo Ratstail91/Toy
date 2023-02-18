@@ -48,8 +48,6 @@ const unsigned char* Toy_compileString(const char* source, size_t* size) {
 }
 ```
 
-This header also includes [toy_ast_node.h](toy_ast_node_h.md), so the `Toy_freeASTNode` function can also be used.
-
 ## Defined Functions
 
 ### void Toy_initParser(Toy_Parser* parser, Toy_Lexer* lexer)
@@ -65,4 +63,10 @@ This function frees a `Toy_Parser` once its task is completed.
 This function returns an abstract syntax tree representing part of the program, or an error node. The abstract syntax tree must be passed to `Toy_writeCompiler` and/or `Toy_freeASTNode`.
 
 This function should be called repeatedly until it returns `NULL`, indicating the end of the program.
+
+### void Toy_freeASTNode(Toy_ASTNode* node)
+
+This function cleans up any valid instance of `Toy_ASTNode` pointer passed to it. It is most commonly used to clean up the values returned by `Toy_scanParser`, after they have been passsed to `Toy_writeCompiler`, or when the node is an error node.
+
+Note: this function is *actually* defined in toy_ast_node.h, but documented here, because this is where it matters most.
 

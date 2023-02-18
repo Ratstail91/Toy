@@ -8,9 +8,29 @@ Another useful customisation feature is the ability to redicrect output from the
 
 ## Defined Interfaces
 
+Note: These interfaces are *actually* defined in [toy_literal.h](toy_literal_h.md) but are documented here, because this is where it matters most.
+
 ### typedef void (*Toy_PrintFn)(const char*)
 
 This is the interface used by "print functions" - that is, functions used to print messages from the `print` and `assert` keywords, as well as internal interpreter errors.
+
+### typedef int (*Toy_NativeFn)(struct Toy_Interpreter* interpreter, struct Toy_LiteralArray* arguments)
+
+This is the interface used by "native functions" - that is, functions written in C which can be called directly by Toy scripts.
+
+The arguments to the function are passed in as a `Toy_LiteralArray`.
+
+### typedef int (*Toy_HookFn)(struct Toy_Interpreter* interpreter, struct Toy_Literal identifier, struct Toy_Literal alias)
+
+This is the interface used by "hook functions" - that is, functions written in C whihc are invoked by using the `import` keyword, and are intended to inject other native functions into the current scope. While hook functions are capable of doing other things, this is greatly discouraged.
+
+The identifier of the library (its name) is passed in as a `Toy_Literal`, as is any given alias; if no alias is given, then `alias` will be a null literal. Here, the identifier is `standard`, while the alias is `std`.
+
+```
+import standard as std;
+```
+
+Conventionally, when an alias is given, all of the functions should instead be inserted into a `Toy_LiteralDictionary` which is then inserted into the scope with the alias as its identifier.
 
 ## Defined Functions
 
