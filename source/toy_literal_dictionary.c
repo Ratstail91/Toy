@@ -141,7 +141,7 @@ void Toy_setLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Literal key
 	}
 
 	//BUGFIX: Can't hash a function
-	if (TOY_IS_FUNCTION(key) || TOY_IS_FUNCTION_NATIVE(key)) {
+	if (TOY_IS_FUNCTION(key) || TOY_IS_FUNCTION_NATIVE(key) || TOY_IS_FUNCTION_HOOK(key)) {
 		fprintf(stderr, TOY_CC_ERROR "Dictionaries can't have function keys (set)\n" TOY_CC_RESET);
 		return;
 	}
@@ -166,7 +166,7 @@ Toy_Literal Toy_getLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Lite
 	}
 
 	//BUGFIX: Can't hash a function
-	if (TOY_IS_FUNCTION(key) || TOY_IS_FUNCTION_NATIVE(key)) {
+	if (TOY_IS_FUNCTION(key) || TOY_IS_FUNCTION_NATIVE(key) || TOY_IS_FUNCTION_HOOK(key)) {
 		fprintf(stderr, TOY_CC_ERROR "Dictionaries can't have function keys (get)\n" TOY_CC_RESET);
 		return TOY_TO_NULL_LITERAL;
 	}
@@ -193,7 +193,7 @@ void Toy_removeLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Literal 
 	}
 
 	//BUGFIX: Can't hash a function
-	if (TOY_IS_FUNCTION(key) || TOY_IS_FUNCTION_NATIVE(key)) {
+	if (TOY_IS_FUNCTION(key) || TOY_IS_FUNCTION_NATIVE(key) || TOY_IS_FUNCTION_HOOK(key)) {
 		fprintf(stderr, TOY_CC_ERROR "Dictionaries can't have function keys (remove)\n" TOY_CC_RESET);
 		return;
 	}

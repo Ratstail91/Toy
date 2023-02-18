@@ -105,7 +105,7 @@ int main() {
 
 			//compile the source
 			size_t size = 0;
-			const char* source = Toy_readFile(fname, &size);
+			const char* source = (const char*)Toy_readFile(fname, &size);
 			if (!source) {
 				printf(TOY_CC_ERROR "Failed to load file: %s\n" TOY_CC_RESET, fname);
 				failedAsserts++;
@@ -140,7 +140,7 @@ int main() {
 
 			//compile the source
 			size_t size = 0;
-			const char* source = Toy_readFile(fname, &size);
+			const char* source = (const char*)Toy_readFile(fname, &size);
 			if (!source) {
 				printf(TOY_CC_ERROR "Failed to load file: %s\n" TOY_CC_RESET, fname);
 				failedAsserts++;

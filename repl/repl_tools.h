@@ -2,7 +2,7 @@
 
 #include "toy_common.h"
 
-const char* Toy_readFile(const char* path, size_t* fileSize);
+const unsigned char* Toy_readFile(const char* path, size_t* fileSize);
 int Toy_writeFile(const char* path, const unsigned char* bytes, size_t size);
 
 const unsigned char* Toy_compileString(const char* source, size_t* size);

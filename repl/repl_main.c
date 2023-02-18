@@ -180,7 +180,7 @@ int main(int argc, const char* argv[]) {
 
 		//compile and save
 		size_t size = 0;
-		const char* source = Toy_readFile(Toy_commandLine.compilefile, &size);
+		const char* source = (const char*)Toy_readFile(Toy_commandLine.compilefile, &size);
 		if (!source) {
 			return 1;
 		}
@@ -220,7 +220,7 @@ int main(int argc, const char* argv[]) {
 		}
 
 		size_t size;
-		initialSource = Toy_readFile(Toy_commandLine.initialfile, &size);
+		initialSource = (const char*)Toy_readFile(Toy_commandLine.initialfile, &size);
 	}
 
 	repl(initialSource);

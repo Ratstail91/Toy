@@ -27,7 +27,7 @@ void error(char* msg) {
 int main() {
 	{
 		size_t size = 0;
-		const char* source = Toy_readFile("scripts/call-from-host.toy", &size);
+		const char* source = (const char*)Toy_readFile("scripts/call-from-host.toy", &size);
 		const unsigned char* tb = Toy_compileString(source, &size);
 		free((void*)source);
 

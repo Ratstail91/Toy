@@ -84,7 +84,7 @@ void runSourceCustom(const char* source) {
 
 void runSourceFileCustom(const char* fname) {
 	size_t size = 0; //not used
-	const char* source = Toy_readFile(fname, &size);
+	const char* source = (const char*)Toy_readFile(fname, &size);
 	runSourceCustom(source);
 	free((void*)source);
 }

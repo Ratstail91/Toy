@@ -58,7 +58,7 @@ int main() {
 	{
 		//get the source file
 		size_t size = 0;
-		const char* source = Toy_readFile("scripts/parser_sample_code.toy", &size);
+		const char* source = (const char*)Toy_readFile("scripts/parser_sample_code.toy", &size);
 
 		//test parsing a chunk of junk (valgrind will find leaks)
 		Toy_Lexer lexer;

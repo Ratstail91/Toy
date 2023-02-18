@@ -14,7 +14,7 @@
 #include <stdlib.h>
 
 //IO functions
-const char* Toy_readFile(const char* path, size_t* fileSize) {
+const unsigned char* Toy_readFile(const char* path, size_t* fileSize) {
 	FILE* file = fopen(path, "rb");
 
 	if (file == NULL) {
@@ -26,14 +26,14 @@ const char* Toy_readFile(const char* path, size_t* fileSize) {
 	*fileSize = ftell(file);
 	rewind(file);
 
-	char* buffer = (char*)malloc(*fileSize + 1);
+	unsigned char* buffer = (unsigned char*)malloc(*fileSize + 1);
 
 	if (buffer == NULL) {
 		fprintf(stderr, TOY_CC_ERROR "Not enough memory to read \"%s\"\n" TOY_CC_RESET, path);
 		return NULL;
 	}
 
-	size_t bytesRead = fread(buffer, sizeof(char), *fileSize, file);
+	size_t bytesRead = fread(buffer, sizeof(unsigned char), *fileSize, file);
 
 	buffer[*fileSize] = '\0'; //NOTE: fread doesn't append this
 
@@ -120,7 +120,7 @@ void Toy_runBinary(const unsigned char* tb, size_t size) {
 
 void Toy_runBinaryFile(const char* fname) {
 	size_t size = 0; //not used
-	const unsigned char* tb = (const unsigned char*)Toy_readFile(fname, &size);
+	const unsigned char* tb = Toy_readFile(fname, &size);
 	if (!tb) {
 		return;
 	}
@@ -140,7 +140,7 @@ void Toy_runSource(const char* source) {
 
 void Toy_runSourceFile(const char* fname) {
 	size_t size = 0; //not used
-	const char* source = Toy_readFile(fname, &size);
+	const char* source = (const char*)Toy_readFile(fname, &size);
 	if (!source) {
 		return;
 	}
