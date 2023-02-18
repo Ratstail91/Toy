@@ -7,7 +7,7 @@
 
 //memory allocation hook
 typedef void* (*Toy_RefStringAllocatorFn)(void* pointer, size_t oldSize, size_t newSize);
-void Toy_setRefStringAllocatorFn(Toy_RefStringAllocatorFn);
+TOY_API void Toy_setRefStringAllocatorFn(Toy_RefStringAllocatorFn);
 
 //the RefString structure
 typedef struct Toy_RefString {
@@ -27,3 +27,6 @@ TOY_API Toy_RefString* Toy_deepCopyRefString(Toy_RefString* refString);
 TOY_API const char* Toy_toCString(Toy_RefString* refString);
 TOY_API bool Toy_equalsRefString(Toy_RefString* lhs, Toy_RefString* rhs);
 TOY_API bool Toy_equalsRefStringCString(Toy_RefString* lhs, char* cstring);
+
+//TODO: merge refstring memory
+

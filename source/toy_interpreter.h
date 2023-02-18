@@ -6,8 +6,6 @@
 #include "toy_literal_dictionary.h"
 #include "toy_scope.h"
 
-typedef void (*Toy_PrintFn)(const char*);
-
 //the interpreter acts depending on the bytecode instructions
 typedef struct Toy_Interpreter {
 	//input

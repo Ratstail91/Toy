@@ -10,6 +10,7 @@ struct Toy_Interpreter;
 struct Toy_LiteralArray;
 typedef int (*Toy_NativeFn)(struct Toy_Interpreter* interpreter, struct Toy_LiteralArray* arguments);
 typedef int (*Toy_HookFn)(struct Toy_Interpreter* interpreter, struct Toy_Literal identifier, struct Toy_Literal alias);
+typedef void (*Toy_PrintFn)(const char*);
 
 #include <string.h>
 
@@ -151,5 +152,6 @@ TOY_API Toy_Literal Toy_copyLiteral(Toy_Literal original);
 TOY_API bool Toy_literalsAreEqual(Toy_Literal lhs, Toy_Literal rhs);
 TOY_API int Toy_hashLiteral(Toy_Literal lit);
 
+//not thread-safe
 TOY_API void Toy_printLiteral(Toy_Literal literal);
-TOY_API void Toy_printLiteralCustom(Toy_Literal literal, void (printFn)(const char*));
+TOY_API void Toy_printLiteralCustom(Toy_Literal literal, Toy_PrintFn);

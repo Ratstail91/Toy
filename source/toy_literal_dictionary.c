@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 //util functions
-static void setEntryValues(Toy_private_entry* entry, Toy_Literal key, Toy_Literal value) {
+static void setEntryValues(Toy_private_dictionary_entry* entry, Toy_Literal key, Toy_Literal value) {
 	//much simpler now
 	Toy_freeLiteral(entry->key);
 	entry->key = Toy_copyLiteral(key);
@@ -16,7 +16,7 @@ static void setEntryValues(Toy_private_entry* entry, Toy_Literal key, Toy_Litera
 	entry->value = Toy_copyLiteral(value);
 }
 
-static Toy_private_entry* getEntryArray(Toy_private_entry* array, int capacity, Toy_Literal key, unsigned int hash, bool mustExist) {
+static Toy_private_dictionary_entry* getEntryArray(Toy_private_dictionary_entry* array, int capacity, Toy_Literal key, unsigned int hash, bool mustExist) {
 	//find "key", starting at index
 	unsigned int index = hash % capacity;
 	unsigned int start = index;
@@ -26,7 +26,7 @@ static Toy_private_entry* getEntryArray(Toy_private_entry* array, int capacity, 
 
 	//literal probing and collision checking
 	while (index != start) { //WARNING: this is the only function allowed to retrieve an entry from the array
-		Toy_private_entry* entry = &array[index];
+		Toy_private_dictionary_entry* entry = &array[index];
 
 		if (TOY_IS_NULL(entry->key)) { //if key is empty, it's either empty or tombstone
 			if (TOY_IS_NULL(entry->value) && !mustExist) {
@@ -46,9 +46,9 @@ static Toy_private_entry* getEntryArray(Toy_private_entry* array, int capacity, 
 	return NULL;
 }
 
-static void adjustEntryCapacity(Toy_private_entry** dictionaryHandle, int oldCapacity, int capacity) {
+static void adjustEntryCapacity(Toy_private_dictionary_entry** dictionaryHandle, int oldCapacity, int capacity) {
 	//new entry space
-	Toy_private_entry* newEntries = TOY_ALLOCATE(Toy_private_entry, capacity);
+	Toy_private_dictionary_entry* newEntries = TOY_ALLOCATE(Toy_private_dictionary_entry, capacity);
 
 	for (int i = 0; i < capacity; i++) {
 		newEntries[i].key = TOY_TO_NULL_LITERAL;
@@ -62,19 +62,19 @@ static void adjustEntryCapacity(Toy_private_entry** dictionaryHandle, int oldCap
 		}
 
 		//place the key and value in the new array (reusing string memory)
-		Toy_private_entry* entry = getEntryArray(newEntries, capacity, TOY_TO_NULL_LITERAL, Toy_hashLiteral((*dictionaryHandle)[i].key), false);
+		Toy_private_dictionary_entry* entry = getEntryArray(newEntries, capacity, TOY_TO_NULL_LITERAL, Toy_hashLiteral((*dictionaryHandle)[i].key), false);
 
 		entry->key = (*dictionaryHandle)[i].key;
 		entry->value = (*dictionaryHandle)[i].value;
 	}
 
 	//clear the old array
-	TOY_FREE_ARRAY(Toy_private_entry, *dictionaryHandle, oldCapacity);
+	TOY_FREE_ARRAY(Toy_private_dictionary_entry, *dictionaryHandle, oldCapacity);
 
 	*dictionaryHandle = newEntries;
 }
 
-static bool setEntryArray(Toy_private_entry** dictionaryHandle, int* capacityPtr, int contains, Toy_Literal key, Toy_Literal value, int hash) {
+static bool setEntryArray(Toy_private_dictionary_entry** dictionaryHandle, int* capacityPtr, int contains, Toy_Literal key, Toy_Literal value, int hash) {
 	//expand array if needed
 	if (contains + 1 > *capacityPtr * TOY_DICTIONARY_MAX_LOAD) {
 		int oldCapacity = *capacityPtr;
@@ -82,7 +82,7 @@ static bool setEntryArray(Toy_private_entry** dictionaryHandle, int* capacityPtr
 		adjustEntryCapacity(dictionaryHandle, oldCapacity, *capacityPtr); //custom rather than automatic reallocation
 	}
 
-	Toy_private_entry* entry = getEntryArray(*dictionaryHandle, *capacityPtr, key, hash, false);
+	Toy_private_dictionary_entry* entry = getEntryArray(*dictionaryHandle, *capacityPtr, key, hash, false);
 
 	//true = contains increase
 	if (TOY_IS_NULL(entry->key)) {
@@ -97,14 +97,14 @@ static bool setEntryArray(Toy_private_entry** dictionaryHandle, int* capacityPtr
 	return false;
 }
 
-static void freeEntry(Toy_private_entry* entry) {
+static void freeEntry(Toy_private_dictionary_entry* entry) {
 	Toy_freeLiteral(entry->key);
 	Toy_freeLiteral(entry->value);
 	entry->key = TOY_TO_NULL_LITERAL;
 	entry->value = TOY_TO_NULL_LITERAL;
 }
 
-static void freeEntryArray(Toy_private_entry* array, int capacity) {
+static void freeEntryArray(Toy_private_dictionary_entry* array, int capacity) {
 	if (array == NULL) {
 		return;
 	}
@@ -115,7 +115,7 @@ static void freeEntryArray(Toy_private_entry* array, int capacity) {
 		}
 	}
 
-	TOY_FREE_ARRAY(Toy_private_entry, array, capacity);
+	TOY_FREE_ARRAY(Toy_private_dictionary_entry, array, capacity);
 }
 
 //exposed functions
@@ -176,7 +176,7 @@ Toy_Literal Toy_getLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Lite
 		return TOY_TO_NULL_LITERAL;
 	}
 
-	Toy_private_entry* entry = getEntryArray(dictionary->entries, dictionary->capacity, key, Toy_hashLiteral(key), true);
+	Toy_private_dictionary_entry* entry = getEntryArray(dictionary->entries, dictionary->capacity, key, Toy_hashLiteral(key), true);
 
 	if (entry != NULL) {
 		return Toy_copyLiteral(entry->value);
@@ -203,7 +203,7 @@ void Toy_removeLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Literal 
 		return;
 	}
 
-	Toy_private_entry* entry = getEntryArray(dictionary->entries, dictionary->capacity, key, Toy_hashLiteral(key), true);
+	Toy_private_dictionary_entry* entry = getEntryArray(dictionary->entries, dictionary->capacity, key, Toy_hashLiteral(key), true);
 
 	if (entry != NULL) {
 		freeEntry(entry);
@@ -214,6 +214,6 @@ void Toy_removeLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Literal 
 
 bool Toy_existsLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Literal key) {
 	//null & not tombstoned
-	Toy_private_entry* entry = getEntryArray(dictionary->entries, dictionary->capacity, key, Toy_hashLiteral(key), false);
+	Toy_private_dictionary_entry* entry = getEntryArray(dictionary->entries, dictionary->capacity, key, Toy_hashLiteral(key), false);
 	return !(TOY_IS_NULL(entry->key) && TOY_IS_NULL(entry->value));
 }

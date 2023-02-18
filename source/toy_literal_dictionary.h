@@ -7,13 +7,13 @@
 //TODO: benchmark this
 #define TOY_DICTIONARY_MAX_LOAD 0.75
 
-typedef struct Toy_private_entry {
+typedef struct Toy_private_dictionary_entry {
 	Toy_Literal key;
 	Toy_Literal value;
-} Toy_private_entry;
+} Toy_private_dictionary_entry;
 
 typedef struct Toy_LiteralDictionary {
-	Toy_private_entry* entries;
+	Toy_private_dictionary_entry* entries;
 	int capacity;
 	int count;
 	int contains; //count + tombstones, for internal use

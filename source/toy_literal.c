@@ -155,7 +155,8 @@ Toy_Literal Toy_copyLiteral(Toy_Literal original) {
 		}
 
 		case TOY_LITERAL_IDENTIFIER: {
-			 return TOY_TO_IDENTIFIER_LITERAL(Toy_copyRefString(TOY_AS_IDENTIFIER(original)));
+			//NOTE: could optimise this by copying the hash manually, but it's a very small increase in performance
+			return TOY_TO_IDENTIFIER_LITERAL(Toy_copyRefString(TOY_AS_IDENTIFIER(original)));
 		}
 
 		case TOY_LITERAL_TYPE: {
@@ -404,13 +405,13 @@ int Toy_hashLiteral(Toy_Literal lit) {
 		case TOY_LITERAL_FUNCTION:
 		case TOY_LITERAL_FUNCTION_NATIVE:
 		case TOY_LITERAL_FUNCTION_HOOK:
-			return 0; //can't hash these
+			return -1; //can't hash these
 
 		case TOY_LITERAL_IDENTIFIER:
 			return TOY_HASH_I(lit); //pre-computed
 
 		case TOY_LITERAL_TYPE:
-			return TOY_AS_TYPE(lit).typeOf; //nothing else I can do
+			return -1; //not much i can really do
 
 		case TOY_LITERAL_OPAQUE:
 		case TOY_LITERAL_ANY:
@@ -453,7 +454,7 @@ void Toy_printLiteral(Toy_Literal literal) {
 	Toy_printLiteralCustom(literal, stdoutWrapper);
 }
 
-void Toy_printLiteralCustom(Toy_Literal literal, void (printFn)(const char*)) {
+void Toy_printLiteralCustom(Toy_Literal literal, Toy_PrintFn printFn) {
 	switch(literal.type) {
 		case TOY_LITERAL_NULL:
 			printFn("null");

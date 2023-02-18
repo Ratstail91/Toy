@@ -15,15 +15,14 @@ void* Toy_private_defaultMemoryAllocator(void* pointer, size_t oldSize, size_t n
 
 	if (newSize == 0) {
 		free(pointer);
-
 		return NULL;
 	}
 
 	void* mem = realloc(pointer, newSize);
 
 	if (mem == NULL) {
-		fprintf(stderr, TOY_CC_ERROR "[internal] Memory allocation error (requested %d, replacing %d)\n" TOY_CC_RESET, (int)newSize, (int)oldSize);
-		exit(-1);
+		fprintf(stderr, TOY_CC_ERROR "[internal] Memory allocation error (requested %zu, replacing %zu)\n" TOY_CC_RESET, newSize, oldSize);
+		return NULL;
 	}
 
 	return mem;

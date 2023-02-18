@@ -126,7 +126,7 @@ static bool checkType(Toy_Literal typeLiteral, Toy_Literal original, Toy_Literal
 			}
 
 			//find the internal child of original that matches this child of value
-			Toy_private_entry* ptr = NULL;
+			Toy_private_dictionary_entry* ptr = NULL;
 
 			for (int j = 0; j < TOY_AS_DICTIONARY(original)->capacity; j++) {
 				if (Toy_literalsAreEqual(TOY_AS_DICTIONARY(original)->entries[j].key, TOY_AS_DICTIONARY(value)->entries[i].key)) {
