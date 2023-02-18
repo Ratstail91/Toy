@@ -1,6 +1,6 @@
 # toy_refstring.h
 
-This header defines the `Toy_RefString` structure, as well as all of the related utilities.
+This header defines the structure `Toy_RefString`, as well as all of the related utilities.
 
 [refstring](https://github.com/Ratstail91/refstring) is a stand-alone utility written to reduce the amount of memory manipulation used within Toy. It was independantly written and tested, before being incorporated into Toy proper. As such it has it's own memory management API, which by default is tied into Toy's [core memory API](toy_memory_h.md).
 
