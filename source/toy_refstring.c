@@ -1,7 +1,5 @@
 #include "toy_refstring.h"
 
-#include <string.h>
-
 //memory allocation
 extern void* Toy_private_defaultMemoryAllocator(void* pointer, size_t oldSize, size_t newSize);
 static Toy_RefStringAllocatorFn allocate = Toy_private_defaultMemoryAllocator;

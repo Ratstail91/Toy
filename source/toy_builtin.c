@@ -4,6 +4,7 @@
 #include "toy_literal.h"
 
 #include <stdio.h>
+#include <string.h>
 
 //static math utils, copied from the interpreter
 static Toy_Literal addition(Toy_Interpreter* interpreter, Toy_Literal lhs, Toy_Literal rhs) {

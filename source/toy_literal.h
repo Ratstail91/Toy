@@ -12,8 +12,6 @@ typedef int (*Toy_NativeFn)(struct Toy_Interpreter* interpreter, struct Toy_Lite
 typedef int (*Toy_HookFn)(struct Toy_Interpreter* interpreter, struct Toy_Literal identifier, struct Toy_Literal alias);
 typedef void (*Toy_PrintFn)(const char*);
 
-#include <string.h>
-
 typedef enum {
 	TOY_LITERAL_NULL,
 	TOY_LITERAL_BOOLEAN,

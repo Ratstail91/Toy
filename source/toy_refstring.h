@@ -1,9 +1,8 @@
 #pragma once
 
-#include <stdbool.h>
-#include <stddef.h>
-
 #include "toy_common.h"
+
+#include <string.h>
 
 //memory allocation hook
 typedef void* (*Toy_RefStringAllocatorFn)(void* pointer, size_t oldSize, size_t newSize);

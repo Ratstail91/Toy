@@ -9,6 +9,7 @@
 #include "toy_console_colors.h"
 
 #include <stdio.h>
+#include <string.h>
 
 void Toy_initCompiler(Toy_Compiler* compiler) {
 	Toy_initLiteralArray(&compiler->literalCache);

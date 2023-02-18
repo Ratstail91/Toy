@@ -8,6 +8,7 @@
 #include "toy_console_colors.h"
 
 #include <stdio.h>
+#include <string.h>
 
 //hash util functions
 static unsigned int hashString(const char* string, int length) {

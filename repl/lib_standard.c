@@ -2,9 +2,10 @@
 
 #include "toy_memory.h"
 
-#include <ctype.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
+#include <ctype.h>
 
 static int nativeClock(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
