@@ -69,7 +69,7 @@ print tally(); //3
 * [toy_literal_array.h]
 * [toy_literal_dictionary.h]
 * [toy_literal.h]
-* [toy_memory.h]
+* [toy_memory.h](c-api/toy_memory_h.md)
 * [toy_parser.h](c-api/toy_parser_h.md)
 * [toy_refstring.h]
 * [toy_scope.h]
