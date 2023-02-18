@@ -65,3 +65,6 @@ This function wraps a call to the internal assigned memory allocator.
 ### void Toy_setMemoryAllocator(Toy_MemoryAllocatorFn)
 
 This function sets the memory allocator, replacing the default memory allocator.
+
+This function also overwrites any given refstring memory allocator, see [toy_refstring.h](toy_refstring_h.md).
+
