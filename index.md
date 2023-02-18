@@ -1,6 +1,6 @@
-<p align="center">
+<div align="center">
   <image src="toylogo.png" />
-</p>
+</div>
 
 [![Running Comprehensive Tests](https://github.com/Ratstail91/Toy/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/Ratstail91/Toy/actions/workflows/c-cpp.yml)
 
@@ -30,6 +30,8 @@ print tally(); //3
 
 # Nifty Features
 
+<hr />
+
 * Simple C-like syntax
 * Bytecode intermediate compilation
 * Optional, but robust type system (including `opaque` for arbitrary data)
@@ -41,6 +43,8 @@ print tally(); //3
 
 # Getting Started
 
+<hr />
+
 * [Quick Start Guide](getting-started/quick-start-guide)
 * [Types](getting-started/types)
 * [About Library](getting-started/about-library)
@@ -49,6 +53,8 @@ print tally(); //3
 * [Game Engine](getting-started/game-engine)
 
 # Deep Dive
+
+<hr />
 
 * [Theorizing Toy](deep-dive/theorizing-toy)
 * [Building Toy](deep-dive/building-toy)
@@ -59,6 +65,8 @@ print tally(); //3
 * [Roadmap](deep-dive/roadmap)
 
 # Public C API
+
+<hr />
 
 * [repl_tools.h]
 * [toy_ast_node.h](c-api/toy_ast_node_h.md)
