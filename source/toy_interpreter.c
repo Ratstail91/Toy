@@ -2316,7 +2316,6 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 
 			//change the type to normal
 			interpreter->literalCache.literals[i] = TOY_TO_FUNCTION_LITERAL(bytes, size);
-			TOY_AS_FUNCTION(interpreter->literalCache.literals[i]).scope = NULL;
 		}
 	}
 

@@ -159,6 +159,10 @@ static bool checkType(Toy_Literal typeLiteral, Toy_Literal original, Toy_Literal
 		return false;
 	}
 
+	if (TOY_AS_TYPE(typeLiteral).typeOf == TOY_LITERAL_OPAQUE && !TOY_IS_OPAQUE(value)) {
+		return false;
+	}
+
 	return true;
 }
 
@@ -185,7 +189,7 @@ Toy_Scope* Toy_popScope(Toy_Scope* scope) {
 
 	Toy_Scope* ret = scope->ancestor;
 
-	//BUGFIX: when freeing a scope, free the function's scopes manually
+	//BUGFIX: when freeing a scope, free the functions' scopes manually - I *think* this is related to the closure hack-in
 	for (int i = 0; i < scope->variables.capacity; i++) {
 		//handle keys, just in case
 		if (TOY_IS_FUNCTION(scope->variables.entries[i].key)) {
@@ -286,7 +290,7 @@ bool Toy_setScopeVariable(Toy_Scope* scope, Toy_Literal key, Toy_Literal value, 
 	}
 
 	//actually assign
-	Toy_setLiteralDictionary(&scope->variables, key, value);
+	Toy_setLiteralDictionary(&scope->variables, key, value); //key & value are copied here
 
 	Toy_freeLiteral(typeLiteral);
 	Toy_freeLiteral(original);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "toy_literal.h"
 #include "toy_literal_array.h"
 #include "toy_literal_dictionary.h"
 
