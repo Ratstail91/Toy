@@ -68,13 +68,13 @@ print tally(); //3
 
 <hr />
 
-* [repl_tools.h]
+* [repl_tools.h](c-api/repl_tools_h.md)
 * [toy_common.h](c-api/toy_common_h.md)
 * [toy_compiler.h](c-api/toy_compiler_h.md)
 * [toy_interpreter.h](c-api/toy_interpreter_h.md)
 * [toy_lexer.h](c-api/toy_lexer_h.md)
-* [toy_literal_array.h]
-* [toy_literal_dictionary.h]
+* [toy_literal_array.h](c-api/toy_literal_array_h.md)
+* [toy_literal_dictionary.h](c-api/toy_literal_dictionary_h.md)
 * [toy_literal.h](c-api/toy_literal_h.md)
 * [toy_memory.h](c-api/toy_memory_h.md)
 * [toy_parser.h](c-api/toy_parser_h.md)
