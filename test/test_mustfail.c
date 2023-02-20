@@ -101,6 +101,7 @@ int main() {
 			"declare-types-array.toy",
 			"declare-types-dictionary-key.toy",
 			"declare-types-dictionary-value.toy",
+			"index-access-bugfix.toy",
 			"index-arrays-non-integer.toy",
 			"string-concat.toy",
 			"unary-inverted-nothing.toy",

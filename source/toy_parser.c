@@ -810,13 +810,20 @@ static Toy_Opcode indexAccess(Toy_Parser* parser, Toy_ASTNode** nodeHandle) { //
 	//eat the first
 	if (!match(parser, TOY_TOKEN_COLON)) {
 		Toy_freeASTNode(first);
+		first = NULL;
 		parsePrecedence(parser, &first, PREC_TERNARY);
 		match(parser, TOY_TOKEN_COLON);
 		readFirst = true;
 	}
 
-	if (match(parser, TOY_TOKEN_BRACKET_RIGHT)) {
+	if (!first) {
+		Toy_freeASTNode(first);
+		Toy_freeASTNode(second);
+		Toy_freeASTNode(third);
+		return TOY_OP_EOF;
+	}
 
+	if (match(parser, TOY_TOKEN_BRACKET_RIGHT)) {
 		if (readFirst) {
 			Toy_freeASTNode(second);
 			second = NULL;
@@ -832,8 +839,16 @@ static Toy_Opcode indexAccess(Toy_Parser* parser, Toy_ASTNode** nodeHandle) { //
 	//eat the second
 	if (!match(parser, TOY_TOKEN_COLON)) {
 		Toy_freeASTNode(second);
+		second = NULL;
 		parsePrecedence(parser, &second, PREC_TERNARY);
 		match(parser, TOY_TOKEN_COLON);
+	}
+
+	if (!second) {
+		Toy_freeASTNode(first);
+		Toy_freeASTNode(second);
+		Toy_freeASTNode(third);
+		return TOY_OP_EOF;
 	}
 
 	if (match(parser, TOY_TOKEN_BRACKET_RIGHT)) {
@@ -845,7 +860,16 @@ static Toy_Opcode indexAccess(Toy_Parser* parser, Toy_ASTNode** nodeHandle) { //
 
 	//eat the third
 	Toy_freeASTNode(third);
+	third = NULL;
 	parsePrecedence(parser, &third, PREC_TERNARY);
+
+	if (!third) {
+		Toy_freeASTNode(first);
+		Toy_freeASTNode(second);
+		Toy_freeASTNode(third);
+		return TOY_OP_EOF;
+	}
+
 	Toy_emitASTNodeIndex(nodeHandle, first, second, third);
 
 	consume(parser, TOY_TOKEN_BRACKET_RIGHT, "Expected ']' in index notation");

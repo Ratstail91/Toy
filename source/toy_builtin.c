@@ -1064,7 +1064,7 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 int Toy_private_set(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//if wrong number of arguments, fail
 	if (arguments->count != 3) {
-		interpreter->errorOutput("Incorrect number of arguments to _set\n");
+		interpreter->errorOutput("Incorrect number of arguments to set\n");
 		return -1;
 	}
 
@@ -1074,7 +1074,7 @@ int Toy_private_set(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	Toy_Literal val = arguments->literals[2];
 
 	if (!TOY_IS_IDENTIFIER(idn)) {
-		interpreter->errorOutput("Expected identifier in _set\n");
+		interpreter->errorOutput("Expected identifier in set\n");
 		return -1;
 	}
 
@@ -1100,18 +1100,18 @@ int Toy_private_set(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 				Toy_Literal subtypeLiteral = ((Toy_Literal*)(TOY_AS_TYPE(typeLiteral).subtypes))[0];
 
 				if (TOY_AS_TYPE(subtypeLiteral).typeOf != TOY_LITERAL_ANY && TOY_AS_TYPE(subtypeLiteral).typeOf != val.type) {
-					interpreter->errorOutput("Bad argument type in _set\n");
+					interpreter->errorOutput("Bad argument type in set\n");
 					return -1;
 				}
 			}
 
 			if (!TOY_IS_INTEGER(key)) {
-				interpreter->errorOutput("Expected integer index in _set\n");
+				interpreter->errorOutput("Expected integer index in set\n");
 				return -1;
 			}
 
 			if (TOY_AS_ARRAY(obj)->count <= TOY_AS_INTEGER(key) || TOY_AS_INTEGER(key) < 0) {
-				interpreter->errorOutput("Index out of bounds in _set\n");
+				interpreter->errorOutput("Index out of bounds in set\n");
 				return -1;
 			}
 
@@ -1120,7 +1120,7 @@ int Toy_private_set(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 			TOY_AS_ARRAY(obj)->literals[TOY_AS_INTEGER(key)] = Toy_copyLiteral(val);
 
 			if (!Toy_setScopeVariable(interpreter->scope, idn, obj, true)) {
-				interpreter->errorOutput("Incorrect type assigned to array in _set: \"");
+				interpreter->errorOutput("Incorrect type assigned to array in set: \"");
 				Toy_printLiteralCustom(val, interpreter->errorOutput);
 				interpreter->errorOutput("\"\n");
 				return -1;
@@ -1137,12 +1137,12 @@ int Toy_private_set(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 				Toy_Literal valSubtypeLiteral = ((Toy_Literal*)(TOY_AS_TYPE(typeLiteral).subtypes))[1];
 
 				if (TOY_AS_TYPE(keySubtypeLiteral).typeOf != TOY_LITERAL_ANY && TOY_AS_TYPE(keySubtypeLiteral).typeOf != key.type) {
-					interpreter->printOutput("bad argument type in _set\n");
+					interpreter->printOutput("bad argument type in set\n");
 					return -1;
 				}
 
 				if (TOY_AS_TYPE(valSubtypeLiteral).typeOf != TOY_LITERAL_ANY && TOY_AS_TYPE(valSubtypeLiteral).typeOf != val.type) {
-					interpreter->printOutput("bad argument type in _set\n");
+					interpreter->printOutput("bad argument type in set\n");
 					return -1;
 				}
 			}
@@ -1150,7 +1150,7 @@ int Toy_private_set(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 			Toy_setLiteralDictionary(TOY_AS_DICTIONARY(obj), key, val);
 
 			if (!Toy_setScopeVariable(interpreter->scope, idn, obj, true)) {
-				interpreter->errorOutput("Incorrect type assigned to dictionary in _set: \"");
+				interpreter->errorOutput("Incorrect type assigned to dictionary in set: \"");
 				Toy_printLiteralCustom(val, interpreter->errorOutput);
 				interpreter->errorOutput("\"\n");
 				return -1;
@@ -1160,7 +1160,7 @@ int Toy_private_set(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 		}
 
 		default:
-			interpreter->errorOutput("Incorrect compound type in _set: ");
+			interpreter->errorOutput("Incorrect compound type in set: ");
 			Toy_printLiteralCustom(obj, interpreter->errorOutput);
 			interpreter->errorOutput("\"\n");
 			return -1;
@@ -1182,7 +1182,7 @@ int Toy_private_set(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 int Toy_private_get(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//if wrong number of arguments, fail
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _get");
+		interpreter->errorOutput("Incorrect number of arguments to get");
 		return -1;
 	}
 
@@ -1204,12 +1204,12 @@ int Toy_private_get(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	switch(obj.type) {
 		case TOY_LITERAL_ARRAY: {
 			if (!TOY_IS_INTEGER(key)) {
-				interpreter->errorOutput("Expected integer index in _get\n");
+				interpreter->errorOutput("Expected integer index in get\n");
 				return -1;
 			}
 
 			if (TOY_AS_ARRAY(obj)->count <= TOY_AS_INTEGER(key) || TOY_AS_INTEGER(key) < 0) {
-				interpreter->errorOutput("Index out of bounds in _get\n");
+				interpreter->errorOutput("Index out of bounds in get\n");
 				return -1;
 			}
 
@@ -1243,7 +1243,7 @@ int Toy_private_get(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 		}
 
 		default:
-			interpreter->errorOutput("Incorrect compound type in _get \"");
+			interpreter->errorOutput("Incorrect compound type in get \"");
 			Toy_printLiteralCustom(obj, interpreter->errorOutput);
 			interpreter->errorOutput("\"\n");
 			return -1;
@@ -1253,7 +1253,7 @@ int Toy_private_get(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 int Toy_private_push(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//if wrong number of arguments, fail
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _push\n");
+		interpreter->errorOutput("Incorrect number of arguments to push\n");
 		return -1;
 	}
 
@@ -1262,7 +1262,7 @@ int Toy_private_push(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 	Toy_Literal val = arguments->literals[1];
 
 	if (!TOY_IS_IDENTIFIER(idn)) {
-		interpreter->errorOutput("Expected identifier in _push\n");
+		interpreter->errorOutput("Expected identifier in push\n");
 		return -1;
 	}
 
@@ -1282,7 +1282,7 @@ int Toy_private_push(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 				Toy_Literal subtypeLiteral = ((Toy_Literal*)(TOY_AS_TYPE(typeLiteral).subtypes))[0];
 
 				if (TOY_AS_TYPE(subtypeLiteral).typeOf != TOY_LITERAL_ANY && TOY_AS_TYPE(subtypeLiteral).typeOf != val.type) {
-					interpreter->errorOutput("Bad argument type in _push");
+					interpreter->errorOutput("Bad argument type in push");
 					return -1;
 				}
 			}
@@ -1290,7 +1290,7 @@ int Toy_private_push(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 			Toy_pushLiteralArray(TOY_AS_ARRAY(obj), val);
 
 			if (!Toy_setScopeVariable(interpreter->scope, idn, obj, true)) { //TODO: could definitely be more efficient than overwriting the whole original object
-				interpreter->errorOutput("Incorrect type assigned to array in _push: \"");
+				interpreter->errorOutput("Incorrect type assigned to array in push: \"");
 				Toy_printLiteralCustom(val, interpreter->errorOutput);
 				interpreter->errorOutput("\"\n");
 				return -1;
@@ -1306,7 +1306,7 @@ int Toy_private_push(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 		}
 
 		default:
-			interpreter->errorOutput("Incorrect compound type in _push: ");
+			interpreter->errorOutput("Incorrect compound type in push: ");
 			Toy_printLiteralCustom(obj, interpreter->errorOutput);
 			interpreter->errorOutput("\n");
 			return -1;
@@ -1316,7 +1316,7 @@ int Toy_private_push(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 int Toy_private_pop(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//if wrong number of arguments, fail
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _pop\n");
+		interpreter->errorOutput("Incorrect number of arguments to pop\n");
 		return -1;
 	}
 
@@ -1324,7 +1324,7 @@ int Toy_private_pop(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	Toy_Literal obj = arguments->literals[0];
 
 	if (!TOY_IS_IDENTIFIER(idn)) {
-		interpreter->errorOutput("Expected identifier in _pop\n");
+		interpreter->errorOutput("Expected identifier in pop\n");
 		return -1;
 	}
 
@@ -1337,7 +1337,7 @@ int Toy_private_pop(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 			Toy_freeLiteral(lit);
 
 			if (!Toy_setScopeVariable(interpreter->scope, idn, obj, true)) { //TODO: could definitely be more efficient than overwriting the whole original object
-				interpreter->errorOutput("Incorrect type assigned to array in _pop: ");
+				interpreter->errorOutput("Incorrect type assigned to array in pop: ");
 				Toy_printLiteralCustom(obj, interpreter->errorOutput);
 				interpreter->errorOutput("\n");
 				return -1;
@@ -1349,7 +1349,7 @@ int Toy_private_pop(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 		}
 
 		default:
-			interpreter->errorOutput("Incorrect compound type in _pop: ");
+			interpreter->errorOutput("Incorrect compound type in pop: ");
 			Toy_printLiteralCustom(obj, interpreter->errorOutput);
 			interpreter->errorOutput("\n");
 			return -1;
@@ -1359,7 +1359,7 @@ int Toy_private_pop(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 int Toy_private_length(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//if wrong number of arguments, fail
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _length\n");
+		interpreter->errorOutput("Incorrect number of arguments to length\n");
 		return -1;
 	}
 
@@ -1394,7 +1394,7 @@ int Toy_private_length(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 		}
 
 		default:
-			interpreter->errorOutput("Incorrect compound type in _length: ");
+			interpreter->errorOutput("Incorrect compound type in length: ");
 			Toy_printLiteralCustom(obj, interpreter->errorOutput);
 			interpreter->errorOutput("\n");
 			return -1;
@@ -1410,7 +1410,7 @@ int Toy_private_length(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 int Toy_private_clear(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//if wrong number of arguments, fail
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _clear\n");
+		interpreter->errorOutput("Incorrect number of arguments to clear\n");
 		return -1;
 	}
 
@@ -1418,7 +1418,7 @@ int Toy_private_clear(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	Toy_Literal obj = arguments->literals[0];
 
 	if (!TOY_IS_IDENTIFIER(idn)) {
-		interpreter->errorOutput("expected identifier in _clear\n");
+		interpreter->errorOutput("expected identifier in clear\n");
 		return -1;
 	}
 
@@ -1434,7 +1434,7 @@ int Toy_private_clear(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			Toy_Literal obj = TOY_TO_ARRAY_LITERAL(array);
 
 			if (!Toy_setScopeVariable(interpreter->scope, idn, obj, true)) {
-				interpreter->errorOutput("Incorrect type assigned to array in _clear: ");
+				interpreter->errorOutput("Incorrect type assigned to array in clear: ");
 				Toy_printLiteralCustom(obj, interpreter->errorOutput);
 				interpreter->errorOutput("\n");
 				return -1;
@@ -1452,7 +1452,7 @@ int Toy_private_clear(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			Toy_Literal obj = TOY_TO_DICTIONARY_LITERAL(dictionary);
 
 			if (!Toy_setScopeVariable(interpreter->scope, idn, obj, true)) {
-				interpreter->errorOutput("Incorrect type assigned to dictionary in _clear: ");
+				interpreter->errorOutput("Incorrect type assigned to dictionary in clear: ");
 				Toy_printLiteralCustom(obj, interpreter->errorOutput);
 				interpreter->errorOutput("\n");
 				return -1;
@@ -1464,7 +1464,7 @@ int Toy_private_clear(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 		}
 
 		default:
-			interpreter->errorOutput("Incorrect compound type in _clear: ");
+			interpreter->errorOutput("Incorrect compound type in clear: ");
 			Toy_printLiteralCustom(obj, interpreter->errorOutput);
 			interpreter->errorOutput("\n");
 			return -1;

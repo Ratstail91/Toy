@@ -265,7 +265,9 @@ static bool execPrint(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(idn);
 	}
 
-	Toy_printLiteralCustom(lit, interpreter->printOutput);
+	if (!TOY_IS_IDENTIFIER(lit)) {
+		Toy_printLiteralCustom(lit, interpreter->printOutput);
+	}
 
 	Toy_freeLiteral(lit);
 
