@@ -231,6 +231,12 @@ static bool execAssert(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(lhsIdn);
 	}
 
+	if (TOY_IS_IDENTIFIER(lhs)) {
+		Toy_freeLiteral(lhs);
+		Toy_freeLiteral(rhs);
+		return false;
+	}
+
 	if (!TOY_IS_STRING(rhs)) {
 		interpreter->errorOutput("The assert keyword needs a string as the second argument, received: ");
 		Toy_printLiteralCustom(rhs, interpreter->errorOutput);
@@ -265,9 +271,12 @@ static bool execPrint(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(idn);
 	}
 
-	if (!TOY_IS_IDENTIFIER(lit)) {
-		Toy_printLiteralCustom(lit, interpreter->printOutput);
+	if (TOY_IS_IDENTIFIER(lit)) {
+		Toy_freeLiteral(lit);
+		return false;
 	}
+
+	Toy_printLiteralCustom(lit, interpreter->printOutput);
 
 	Toy_freeLiteral(lit);
 
@@ -299,6 +308,11 @@ static bool rawLiteral(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(idn);
 	}
 
+	if (TOY_IS_IDENTIFIER(lit)) {
+		Toy_freeLiteral(lit);
+		return false;
+	}
+
 	Toy_pushLiteralArray(&interpreter->stack, lit);
 	Toy_freeLiteral(lit);
 
@@ -312,6 +326,11 @@ static bool execNegate(Toy_Interpreter* interpreter) {
 	Toy_Literal idn = lit;
 	if (TOY_IS_IDENTIFIER(lit) && Toy_parseIdentifierToValue(interpreter, &lit)) {
 		Toy_freeLiteral(idn);
+	}
+
+	if (TOY_IS_IDENTIFIER(lit)) {
+		Toy_freeLiteral(lit);
+		return false;
 	}
 
 	if (TOY_IS_INTEGER(lit)) {
@@ -345,6 +364,11 @@ static bool execInvert(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(idn);
 	}
 
+	if (TOY_IS_IDENTIFIER(lit)) {
+		Toy_freeLiteral(lit);
+		return false;
+	}
+
 	if (TOY_IS_BOOLEAN(lit)) {
 		lit = TOY_TO_BOOLEAN_LITERAL(!TOY_AS_BOOLEAN(lit));
 	}
@@ -376,6 +400,12 @@ static bool execArithmetic(Toy_Interpreter* interpreter, Toy_Opcode opcode) {
 	Toy_Literal lhsIdn = lhs;
 	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
 		Toy_freeLiteral(lhsIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(lhs) || TOY_IS_IDENTIFIER(rhs)) {
+		Toy_freeLiteral(lhs);
+		Toy_freeLiteral(rhs);
+		return false;
 	}
 
 	//special case for string concatenation ONLY
@@ -510,6 +540,10 @@ static Toy_Literal parseTypeToValue(Toy_Interpreter* interpreter, Toy_Literal ty
 		Toy_freeLiteral(typeIdn);
 	}
 
+	if (TOY_IS_IDENTIFIER(type)) {
+		return TOY_TO_NULL_LITERAL;
+	}
+
 	//if this is an array or dictionary, continue to the subtypes
 	if (TOY_IS_TYPE(type) && (TOY_AS_TYPE(type).typeOf == TOY_LITERAL_ARRAY || TOY_AS_TYPE(type).typeOf == TOY_LITERAL_DICTIONARY)) {
 		for (int i = 0; i < TOY_AS_TYPE(type).count; i++) {
@@ -550,6 +584,12 @@ static bool execVarDecl(Toy_Interpreter* interpreter, bool lng) {
 		Toy_freeLiteral(typeIdn);
 	}
 
+	if (TOY_IS_IDENTIFIER(type)) {
+		Toy_freeLiteral(identifier);
+		Toy_freeLiteral(type);
+		return false;
+	}
+
 	//BUGFIX: because identifiers are getting embedded in type definitions
 	type = parseTypeToValue(interpreter, type);
 
@@ -565,6 +605,13 @@ static bool execVarDecl(Toy_Interpreter* interpreter, bool lng) {
 	Toy_Literal valIdn = val;
 	if (TOY_IS_IDENTIFIER(val) && Toy_parseIdentifierToValue(interpreter, &val)) {
 		Toy_freeLiteral(valIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(val)) {
+		Toy_freeLiteral(identifier);
+		Toy_freeLiteral(type);
+		Toy_freeLiteral(val);
+		return false;
 	}
 
 	if (TOY_IS_ARRAY(val) || TOY_IS_DICTIONARY(val)) {
@@ -647,6 +694,12 @@ static bool execVarAssign(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(rhsIdn);
 	}
 
+	if (TOY_IS_IDENTIFIER(rhs)) {
+		Toy_freeLiteral(lhs);
+		Toy_freeLiteral(rhs);
+		return false;
+	}
+
 	if (TOY_IS_ARRAY(rhs) || TOY_IS_DICTIONARY(rhs)) {
 		Toy_parseCompoundToPureValues(interpreter, &rhs);
 	}
@@ -714,6 +767,12 @@ static bool execValCast(Toy_Interpreter* interpreter) {
 	Toy_Literal valueIdn = value;
 	if (TOY_IS_IDENTIFIER(value) && Toy_parseIdentifierToValue(interpreter, &value)) {
 		Toy_freeLiteral(valueIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(value)) {
+		Toy_freeLiteral(type);
+		Toy_freeLiteral(value);
+		return false;
 	}
 
 	Toy_Literal result = TOY_TO_NULL_LITERAL;
@@ -850,6 +909,12 @@ static bool execCompareEqual(Toy_Interpreter* interpreter, bool invert) {
 		Toy_freeLiteral(lhsIdn);
 	}
 
+	if (TOY_IS_IDENTIFIER(lhs) || TOY_IS_IDENTIFIER(rhs)) {
+		Toy_freeLiteral(lhs);
+		Toy_freeLiteral(rhs);
+		return false;
+	}
+
 	bool result = Toy_literalsAreEqual(lhs, rhs);
 
 	if (invert) {
@@ -876,6 +941,12 @@ static bool execCompareLess(Toy_Interpreter* interpreter, bool invert) {
 	Toy_Literal lhsIdn = lhs;
 	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
 		Toy_freeLiteral(lhsIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(lhs) || TOY_IS_IDENTIFIER(rhs)) {
+		Toy_freeLiteral(lhs);
+		Toy_freeLiteral(rhs);
+		return false;
 	}
 
 	//not a number, return falure
@@ -936,6 +1007,12 @@ static bool execCompareLessEqual(Toy_Interpreter* interpreter, bool invert) {
 	Toy_Literal lhsIdn = lhs;
 	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
 		Toy_freeLiteral(lhsIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(lhs) || TOY_IS_IDENTIFIER(rhs)) {
+		Toy_freeLiteral(lhs);
+		Toy_freeLiteral(rhs);
+		return false;
 	}
 
 	//not a number, return falure
@@ -999,6 +1076,12 @@ static bool execAnd(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(lhsIdn);
 	}
 
+	if (TOY_IS_IDENTIFIER(lhs) || TOY_IS_IDENTIFIER(rhs)) {
+		Toy_freeLiteral(lhs);
+		Toy_freeLiteral(rhs);
+		return false;
+	}
+
 	if (TOY_IS_TRUTHY(lhs) && TOY_IS_TRUTHY(rhs)) {
 		Toy_pushLiteralArray(&interpreter->stack, TOY_TO_BOOLEAN_LITERAL(true));
 	}
@@ -1024,6 +1107,12 @@ static bool execOr(Toy_Interpreter* interpreter) {
 	Toy_Literal lhsIdn = lhs;
 	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
 		Toy_freeLiteral(lhsIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(lhs) || TOY_IS_IDENTIFIER(rhs)) {
+		Toy_freeLiteral(lhs);
+		Toy_freeLiteral(rhs);
+		return false;
 	}
 
 	if (TOY_IS_TRUTHY(lhs) || TOY_IS_TRUTHY(rhs)) {
@@ -1067,6 +1156,11 @@ static bool execFalseJump(Toy_Interpreter* interpreter) {
 	Toy_Literal litIdn = lit;
 	if (TOY_IS_IDENTIFIER(lit) && Toy_parseIdentifierToValue(interpreter, &lit)) {
 		Toy_freeLiteral(litIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(lit)) {
+		Toy_freeLiteral(lit);
+		return false;
 	}
 
 	if (TOY_IS_NULL(lit)) {
@@ -1185,7 +1279,7 @@ bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_Liter
 		int returnsCount = TOY_AS_FUNCTION_NATIVE(func)(interpreter, arguments);
 
 		if (returnsCount < 0) {
-			interpreter->errorOutput("Unknown error from native function\n");
+			// interpreter->errorOutput("Unknown error from native function\n");
 			return false;
 		}
 
@@ -1287,6 +1381,17 @@ bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_Liter
 		Toy_Literal argIdn = arg;
 		if (TOY_IS_IDENTIFIER(arg) && Toy_parseIdentifierToValue(interpreter, &arg)) {
 			Toy_freeLiteral(argIdn);
+		}
+
+		if (TOY_IS_IDENTIFIER(arg)) {
+			//free, and skip out
+			Toy_freeLiteral(arg);
+			Toy_popScope(inner.scope);
+
+			Toy_freeLiteralArray(&inner.stack);
+			Toy_freeLiteralArray(&inner.literalCache);
+
+			return false;
 		}
 
 		if (!Toy_setScopeVariable(inner.scope, paramArray->literals[i], arg, false)) {
@@ -1457,6 +1562,12 @@ static bool execFnReturn(Toy_Interpreter* interpreter) {
 			Toy_freeLiteral(litIdn);
 		}
 
+		if (TOY_IS_IDENTIFIER(lit)) {
+			Toy_freeLiteralArray(&returns);
+			Toy_freeLiteral(lit);
+			return false;
+		}
+
 		if (TOY_IS_ARRAY(lit) || TOY_IS_DICTIONARY(lit)) {
 			Toy_parseCompoundToPureValues(interpreter, &lit);
 		}
@@ -1526,6 +1637,17 @@ static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 	bool freeIdn = false;
 	if (TOY_IS_IDENTIFIER(compound) && Toy_parseIdentifierToValue(interpreter, &compound)) {
 		freeIdn = true;
+	}
+
+	if (TOY_IS_IDENTIFIER(compound)) {
+		Toy_freeLiteral(third);
+		Toy_freeLiteral(second);
+		Toy_freeLiteral(first);
+		Toy_freeLiteral(compound);
+		if (freeIdn) {
+			Toy_freeLiteral(compoundIdn);
+		}
+		return true;
 	}
 
 	if (!TOY_IS_ARRAY(compound) && !TOY_IS_DICTIONARY(compound) && !TOY_IS_STRING(compound)) {
@@ -1612,10 +1734,31 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(assignIdn);
 	}
 
+	if (TOY_IS_IDENTIFIER(assign)) {
+		Toy_freeLiteral(compound);
+		Toy_freeLiteral(first);
+		Toy_freeLiteral(second);
+		Toy_freeLiteral(third);
+		Toy_freeLiteral(assign);
+		return false;
+	}
+
 	Toy_Literal compoundIdn = compound;
 	bool freeIdn = false;
 	if (TOY_IS_IDENTIFIER(compound) && Toy_parseIdentifierToValue(interpreter, &compound)) {
 		freeIdn = true;
+	}
+
+	if (TOY_IS_IDENTIFIER(compound)) {
+		Toy_freeLiteral(compound);
+		Toy_freeLiteral(first);
+		Toy_freeLiteral(second);
+		Toy_freeLiteral(third);
+		Toy_freeLiteral(assign);
+		if (freeIdn) {
+			Toy_freeLiteral(compoundIdn);
+		}
+		return false;
 	}
 
 	if (!TOY_IS_ARRAY(compound) && !TOY_IS_DICTIONARY(compound) && !TOY_IS_STRING(compound)) {

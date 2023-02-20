@@ -279,6 +279,17 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			Toy_freeLiteral(idn);
 		}
 
+		if (TOY_IS_IDENTIFIER(first) || TOY_IS_IDENTIFIER(second) || TOY_IS_IDENTIFIER(third)) {
+			Toy_freeLiteral(op);
+			Toy_freeLiteral(assign);
+			Toy_freeLiteral(third);
+			Toy_freeLiteral(second);
+			Toy_freeLiteral(first);
+			Toy_freeLiteral(compound);
+
+			return -1;
+		}
+
 		//second and third are bad args to dictionaries
 		if (!TOY_IS_NULL(second) || !TOY_IS_NULL(third)) {
 			interpreter->errorOutput("Index slicing not allowed for dictionaries\n");
@@ -399,6 +410,17 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				Toy_Literal idn = third;
 				Toy_parseIdentifierToValue(interpreter, &third);
 				Toy_freeLiteral(idn);
+			}
+
+			if (TOY_IS_IDENTIFIER(first) || TOY_IS_IDENTIFIER(second) || TOY_IS_IDENTIFIER(third)) {
+				Toy_freeLiteral(op);
+				Toy_freeLiteral(assign);
+				Toy_freeLiteral(third);
+				Toy_freeLiteral(second);
+				Toy_freeLiteral(first);
+				Toy_freeLiteral(compound);
+
+				return -1;
 			}
 
 			//handle each error case
@@ -541,6 +563,17 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				Toy_Literal idn = third;
 				Toy_parseIdentifierToValue(interpreter, &third);
 				Toy_freeLiteral(idn);
+			}
+
+			if (TOY_IS_IDENTIFIER(first) || TOY_IS_IDENTIFIER(second) || TOY_IS_IDENTIFIER(third)) {
+				Toy_freeLiteral(op);
+				Toy_freeLiteral(assign);
+				Toy_freeLiteral(third);
+				Toy_freeLiteral(second);
+				Toy_freeLiteral(first);
+				Toy_freeLiteral(compound);
+
+				return -1;
 			}
 
 			//handle each error case
@@ -705,6 +738,17 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			Toy_freeLiteral(idn);
 		}
 
+		if (TOY_IS_IDENTIFIER(first)) {
+			Toy_freeLiteral(op);
+			Toy_freeLiteral(assign);
+			Toy_freeLiteral(third);
+			Toy_freeLiteral(second);
+			Toy_freeLiteral(first);
+			Toy_freeLiteral(compound);
+
+			return -1;
+		}
+
 		Toy_Literal value = Toy_getLiteralArray(TOY_AS_ARRAY(compound), first);
 
 		if (TOY_IS_STRING(op) && Toy_equalsRefStringCString(TOY_AS_STRING(op), "+=")) {
@@ -791,6 +835,17 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				Toy_Literal idn = third;
 				Toy_parseIdentifierToValue(interpreter, &third);
 				Toy_freeLiteral(idn);
+			}
+
+			if (TOY_IS_IDENTIFIER(first) || TOY_IS_IDENTIFIER(second) || TOY_IS_IDENTIFIER(third)) {
+				Toy_freeLiteral(op);
+				Toy_freeLiteral(assign);
+				Toy_freeLiteral(third);
+				Toy_freeLiteral(second);
+				Toy_freeLiteral(first);
+				Toy_freeLiteral(compound);
+
+				return -1;
 			}
 
 			//handle each error case
@@ -937,6 +992,17 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				Toy_freeLiteral(idn);
 			}
 
+			if (TOY_IS_IDENTIFIER(first) || TOY_IS_IDENTIFIER(second) || TOY_IS_IDENTIFIER(third)) {
+				Toy_freeLiteral(op);
+				Toy_freeLiteral(assign);
+				Toy_freeLiteral(third);
+				Toy_freeLiteral(second);
+				Toy_freeLiteral(first);
+				Toy_freeLiteral(compound);
+
+				return -1;
+			}
+
 			//handle each error case
 			if (!TOY_IS_INTEGER(first) || TOY_AS_INTEGER(first) < 0 || TOY_AS_INTEGER(first) >= (int)Toy_lengthRefString(TOY_AS_STRING(compound))) {
 				interpreter->errorOutput("Bad first indexing in string assignment\n");
@@ -1080,6 +1146,10 @@ int Toy_private_set(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 
 	Toy_parseIdentifierToValue(interpreter, &obj);
 
+	if (TOY_IS_IDENTIFIER(obj)) {
+		return -1;
+	}
+
 	bool freeKey = false;
 	if (TOY_IS_IDENTIFIER(key)) {
 		Toy_parseIdentifierToValue(interpreter, &key);
@@ -1090,6 +1160,16 @@ int Toy_private_set(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (TOY_IS_IDENTIFIER(val)) {
 		Toy_parseIdentifierToValue(interpreter, &val);
 		freeVal = true;
+	}
+
+	if (TOY_IS_IDENTIFIER(key) || TOY_IS_IDENTIFIER(val)) {
+		if (freeKey) {
+			Toy_freeLiteral(key);
+		}
+		if (freeVal) {
+			Toy_freeLiteral(val);
+		}
+		return -1;
 	}
 
 	switch(obj.type) {
@@ -1201,6 +1281,16 @@ int Toy_private_get(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 		freeKey = true;
 	}
 
+	if (TOY_IS_IDENTIFIER(obj) || TOY_IS_IDENTIFIER(key)) {
+		if (freeObj) {
+			Toy_freeLiteral(obj);
+		}
+		if (freeKey) {
+			Toy_freeLiteral(key);
+		}
+		return -1;
+	}
+
 	switch(obj.type) {
 		case TOY_LITERAL_ARRAY: {
 			if (!TOY_IS_INTEGER(key)) {
@@ -1268,10 +1358,18 @@ int Toy_private_push(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 
 	Toy_parseIdentifierToValue(interpreter, &obj);
 
+	if (TOY_IS_IDENTIFIER(obj)) {
+		return -1;
+	}
+
 	bool freeVal = false;
 	if (TOY_IS_IDENTIFIER(val)) {
 		Toy_parseIdentifierToValue(interpreter, &val);
 		freeVal = true;
+	}
+
+	if (TOY_IS_IDENTIFIER(val)) {
+		return -1;
 	}
 
 	switch(obj.type) {
@@ -1330,6 +1428,10 @@ int Toy_private_pop(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 
 	Toy_parseIdentifierToValue(interpreter, &obj);
 
+	if (TOY_IS_IDENTIFIER(obj)) {
+		return -1;
+	}
+
 	switch(obj.type) {
 		case TOY_LITERAL_ARRAY: {
 			Toy_Literal lit = Toy_popLiteralArray(TOY_AS_ARRAY(obj));
@@ -1369,6 +1471,10 @@ int Toy_private_length(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	if (TOY_IS_IDENTIFIER(obj)) {
 		Toy_parseIdentifierToValue(interpreter, &obj);
 		freeObj = true;
+	}
+
+	if (TOY_IS_IDENTIFIER(obj)) {
+		return -1;
 	}
 
 	switch(obj.type) {
@@ -1423,6 +1529,10 @@ int Toy_private_clear(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	}
 
 	Toy_parseIdentifierToValue(interpreter, &obj);
+
+	if (TOY_IS_IDENTIFIER(obj)) {
+		return -1;
+	}
 
 	//NOTE: just pass in new compounds
 
