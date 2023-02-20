@@ -1174,23 +1174,27 @@ int Toy_private_set(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 
 	switch(obj.type) {
 		case TOY_LITERAL_ARRAY: {
-			Toy_Literal typeLiteral = Toy_getScopeType(interpreter->scope, key);
+			//check the subtype of the array, if there is one, against the given argument
+			Toy_Literal typeLiteral = Toy_getScopeType(interpreter->scope, idn);
 
 			if (TOY_AS_TYPE(typeLiteral).typeOf == TOY_LITERAL_ARRAY) {
 				Toy_Literal subtypeLiteral = ((Toy_Literal*)(TOY_AS_TYPE(typeLiteral).subtypes))[0];
 
 				if (TOY_AS_TYPE(subtypeLiteral).typeOf != TOY_LITERAL_ANY && TOY_AS_TYPE(subtypeLiteral).typeOf != val.type) {
 					interpreter->errorOutput("Bad argument type in set\n");
+					Toy_freeLiteral(typeLiteral);
 					return -1;
 				}
 			}
+
+			Toy_freeLiteral(typeLiteral);
 
 			if (!TOY_IS_INTEGER(key)) {
 				interpreter->errorOutput("Expected integer index in set\n");
 				return -1;
 			}
 
-			if (TOY_AS_ARRAY(obj)->count <= TOY_AS_INTEGER(key) || TOY_AS_INTEGER(key) < 0) {
+			if (TOY_AS_INTEGER(key) >= TOY_AS_ARRAY(obj)->count || TOY_AS_INTEGER(key) < 0) {
 				interpreter->errorOutput("Index out of bounds in set\n");
 				return -1;
 			}
@@ -1298,7 +1302,7 @@ int Toy_private_get(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 				return -1;
 			}
 
-			if (TOY_AS_ARRAY(obj)->count <= TOY_AS_INTEGER(key) || TOY_AS_INTEGER(key) < 0) {
+			if (TOY_AS_INTEGER(key) >= TOY_AS_ARRAY(obj)->count || TOY_AS_INTEGER(key) < 0) {
 				interpreter->errorOutput("Index out of bounds in get\n");
 				return -1;
 			}
@@ -1374,16 +1378,20 @@ int Toy_private_push(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 
 	switch(obj.type) {
 		case TOY_LITERAL_ARRAY: {
-			Toy_Literal typeLiteral = Toy_getScopeType(interpreter->scope, val);
+			//check the subtype of the array, if there is one, against the given argument
+			Toy_Literal typeLiteral = Toy_getScopeType(interpreter->scope, idn);
 
 			if (TOY_AS_TYPE(typeLiteral).typeOf == TOY_LITERAL_ARRAY) {
 				Toy_Literal subtypeLiteral = ((Toy_Literal*)(TOY_AS_TYPE(typeLiteral).subtypes))[0];
 
 				if (TOY_AS_TYPE(subtypeLiteral).typeOf != TOY_LITERAL_ANY && TOY_AS_TYPE(subtypeLiteral).typeOf != val.type) {
 					interpreter->errorOutput("Bad argument type in push");
+					Toy_freeLiteral(typeLiteral);
 					return -1;
 				}
 			}
+
+			Toy_freeLiteral(typeLiteral);
 
 			Toy_pushLiteralArray(TOY_AS_ARRAY(obj), val);
 
