@@ -114,16 +114,15 @@ void Toy_usageCommandLine(int argc, const char* argv[]) {
 void Toy_helpCommandLine(int argc, const char* argv[]) {
 	Toy_usageCommandLine(argc, argv);
 
-	printf("<file.tb>\t\t\tBinary input file in tb format, must be version %d.%d.%d.\n\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH);
-	printf("-h\t| --help\t\tShow this help then exit.\n\n");
-	printf("-v\t| --version\t\tShow version and copyright information then exit.\n\n");
-	printf("-d\t| --debug\t\tBe verbose when operating.\n\n");
-	printf("-f\t| --file filename\tParse, compile and execute the source file.\n\n");
-	printf("-i\t| --input source\tParse, compile and execute this given string of source code.\n\n");
-	printf("-c\t| --compile filename\tParse and compile the specified source file into an output file.\n\n");
-	printf("-o\t| --output outfile\tName of the output file built with --compile (default: out.tb).\n\n");
-	printf("-t\t| --initial filename\tStart the repl as normal, after first running the given file.\n\n");
-	printf("-n\t|\t\t\tDisable the newline character at the end of the print statement.\n\n");
+	printf("  -h, --help\t\t\tShow this help then exit.\n");
+	printf("  -v, --version\t\t\tShow version and copyright information then exit.\n");
+	printf("  -d, --debug\t\t\tBe verbose when operating.\n");
+	printf("  -f, --file filename\t\tParse, compile and execute the source file.\n");
+	printf("  -i, --input source\t\tParse, compile and execute this given string of source code.\n");
+	printf("  -c, --compile filename\tParse and compile the specified source file into an output file.\n");
+	printf("  -o, --output outfile\t\tName of the output file built with --compile (default: out.tb).\n");
+	printf("  -t, --initial filename\tStart the repl as normal, after first running the given file.\n");
+	printf("  -n\t\t\t\tDisable the newline character at the end of the print statement.\n");
 }
 
 void Toy_copyrightCommandLine(int argc, const char* argv[]) {
