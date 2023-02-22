@@ -113,7 +113,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)out\$(Configuration)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\kayne\Desktop\Toy\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
