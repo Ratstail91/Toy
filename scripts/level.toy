@@ -34,8 +34,8 @@ var tiles: [[int]] const = [
 ];
 
 var tileset: [int: string] const = [
-	0: "   ",
-	1: " X "
+	0: "  ",
+	1: "X "
 ];
 
 //variables
@@ -48,7 +48,7 @@ fn draw() {
 		for (var i: int = 0; i < WIDTH; i++) {
 			//draw the player pos
 			if (i == posX && j == posY) {
-				print " O ";
+				print "O ";
 				continue;
 			}
 
