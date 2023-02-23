@@ -8,6 +8,10 @@ The standard library can usually be accessed with the `import` keyword:
 import standard;
 ```
 
+## abs(self)
+
+This function returns the absolute value of any integer or float passed in.
+
 ## clock()
 
 This function returns a string representation of the current timestamp.
@@ -50,11 +54,24 @@ This function takes either an array or a dictionary as the `self` argument, and 
 
 ## getKeys(self: dictionary)
 
-This returns an array of all non-null keys stored within the dictionary. The order is undefined.
+This function returns an array of all non-null keys stored within the dictionary. The order is undefined.
 
 ## getValues(self: dictionary)
 
-This returns an array of all values with non-null keys stored within the dictionary. The order is undefined.
+This function returns an array of all values with non-null keys stored within the dictionary. The order is undefined.
+
+## hash(self)
+
+This function returns a hashed value of `self`.
+
+This function uses the internal literal hashing algorithms. As such, the following can't be hashed:
+
+* functions
+* types
+* opaques
+* `null`
+
+Any attempt to hash these will return -1, except `null` which returns 0.
 
 ## indexOf(self: array, value)
 
@@ -139,9 +156,9 @@ These characters used because they are the only control characters currently sup
 
 ## trimBegin(self: string, trimChars: string = " \t\n\r")
 
-This is identical to `_trim(self, trimChars)`, except it is only applied to the beginning of the first argument.
+This function is identical to `trim(self, trimChars)`, except it is only applied to the beginning of the first argument.
 
 ## trimEnd(self: string, trimChars: string = " \t\n\r")
 
-This is identical to `_trim(self, trimChars)`, except it is only applied to the end of the first argument.
+This function is identical to `trim(self, trimChars)`, except it is only applied to the end of the first argument.
 

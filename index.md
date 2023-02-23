@@ -49,6 +49,7 @@ print tally(); //3
 * [Types](getting-started/types)
 * [About Library](getting-started/about-library)
 * [Standard Library](getting-started/standard-library)
+* [Random Library](getting-started/random-library)
 * [Runner Library](getting-started/runner-library)
 * [Game Engine](getting-started/game-engine)
 
