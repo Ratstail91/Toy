@@ -1,5 +1,18 @@
 import standard;
 
+//test abs
+{
+	assert abs(-5) == 5, "abs(-integer) failed";
+	assert abs(-5.5) == 5.5, "abs(-float) failed";
+	assert abs(5) == 5, "abs(+integer) failed";
+	assert abs(5.5) == 5.5, "abs(+float) failed";
+
+	var x = -5;
+
+	assert x.abs() == 5, "var.abs() failed";
+}
+
+
 //test clock
 {
 	//this depends on external factors, so only check the length
@@ -159,6 +172,13 @@ import standard;
 
 	//NOTE: dependant on hash algorithm
 	assert a == [2, 1], "_getValues() result failed";
+}
+
+
+//test hash
+{
+	assert typeof "Hello world".hash() == int, "typeof \"Hello world\".hash() failed";
+	assert "Hello world".hash() == 994097935, "\"Hello world\".hash() failed"; //NOTE: specific value based on algorithm
 }
 
 
