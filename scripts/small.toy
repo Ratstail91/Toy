@@ -1,0 +1,12 @@
+import standard;
+import random;
+
+for (var i: int = 0; i < 1_000_000; i++) {
+	var generator: opaque = createRandomGenerator(clock().hash());
+
+	print generator.generateRandomNumber();
+	print generator.generateRandomNumber();
+	print generator.generateRandomNumber();
+
+	generator.freeRandomGenerator();
+}

@@ -14,6 +14,7 @@
 #include "../repl/repl_tools.h"
 
 #include "../repl/lib_about.h"
+#include "../repl/lib_random.h"
 #include "../repl/lib_runner.h"
 #include "../repl/lib_standard.h"
 
@@ -45,25 +46,10 @@ void runBinaryWithLibrary(const unsigned char* tb, size_t size, const char* libr
 	Toy_setInterpreterError(&interpreter, errorWrapper);
 
 	//inject the standard libraries into this interpreter
+	if (hook != Toy_hookStandard) {
+		Toy_injectNativeHook(&interpreter, "standard", Toy_hookStandard);
+	}
 	Toy_injectNativeHook(&interpreter, library, hook);
-
-	Toy_runInterpreter(&interpreter, tb, size);
-	Toy_freeInterpreter(&interpreter);
-}
-
-void runBinaryQuietly(const unsigned char* tb, size_t size) {
-	Toy_Interpreter interpreter;
-	Toy_initInterpreter(&interpreter);
-
-	//NOTE: supress print output for testing
-	Toy_setInterpreterPrint(&interpreter, noPrintFn);
-	Toy_setInterpreterAssert(&interpreter, assertWrapper);
-	Toy_setInterpreterError(&interpreter, errorWrapper);
-
-	//inject the libs
-	Toy_injectNativeHook(&interpreter, "about", Toy_hookAbout);
-	Toy_injectNativeHook(&interpreter, "standard", Toy_hookStandard);
-	Toy_injectNativeHook(&interpreter, "runner", Toy_hookRunner);
 
 	Toy_runInterpreter(&interpreter, tb, size);
 	Toy_freeInterpreter(&interpreter);
@@ -94,6 +80,7 @@ int main() {
 			{"about.toy", "about", Toy_hookAbout},
 			{"standard.toy", "standard", Toy_hookStandard},
 			{"runner.toy", "runner", Toy_hookRunner},
+			{"random.toy", "random", Toy_hookRandom},
 			{NULL, NULL, NULL}
 		};
 
@@ -122,41 +109,6 @@ int main() {
 			}
 
 			runBinaryWithLibrary(tb, size, payloads[i].libname, payloads[i].hook);
-		}
-	}
-
-	{
-		//run whatever, testing stuff together to check for memory leaks
-		char* whatever[] = {
-			"random-stuff.toy",
-			NULL
-		};
-
-		for (int i = 0; whatever[i]; i++) {
-			printf("Running %s\n", whatever[i]);
-
-			char fname[128];
-			snprintf(fname, 128, "scripts/lib/%s", whatever[i]);
-
-			//compile the source
-			size_t size = 0;
-			const char* source = (const char*)Toy_readFile(fname, &size);
-			if (!source) {
-				printf(TOY_CC_ERROR "Failed to load file: %s\n" TOY_CC_RESET, fname);
-				failedAsserts++;
-				continue;
-			}
-
-			const unsigned char* tb = Toy_compileString(source, &size);
-			free((void*)source);
-
-			if (!tb) {
-				printf(TOY_CC_ERROR "Failed to compile file: %s\n" TOY_CC_RESET, fname);
-				failedAsserts++;
-				continue;
-			}
-
-			runBinaryQuietly(tb, size);
 		}
 	}
 

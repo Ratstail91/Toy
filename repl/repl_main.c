@@ -1,6 +1,7 @@
 #include "repl_tools.h"
 #include "lib_about.h"
 #include "lib_standard.h"
+#include "lib_random.h"
 #include "lib_runner.h"
 
 #include "toy_console_colors.h"
@@ -29,6 +30,7 @@ void repl(const char* initialInput) {
 	//inject the libs
 	Toy_injectNativeHook(&interpreter, "about", Toy_hookAbout);
 	Toy_injectNativeHook(&interpreter, "standard", Toy_hookStandard);
+	Toy_injectNativeHook(&interpreter, "random", Toy_hookRandom);
 	Toy_injectNativeHook(&interpreter, "runner", Toy_hookRunner);
 
 	for(;;) {
