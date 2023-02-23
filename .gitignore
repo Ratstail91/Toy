@@ -19,6 +19,8 @@ bin/
 *.db
 *.o
 *.a
+*.so
+*.dll
 *.exe
 *.meta
 *.log
