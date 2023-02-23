@@ -1,0 +1,36 @@
+/*
+
+Since this is a pseudo-random generator, and there's no internal state to the algorithm other
+than the generator opaque, there needs to be a "call counter" (current depth) to shuffle the
+initial seeds, otherwise generators created from other generators will resemble their parents,
+but one call greater.
+
+*/
+
+import standard;
+import random;
+
+var DEPTH: int const = 20;
+var levels = [];
+
+//generate the level seeds
+var generator: opaque = createRandomGenerator(clock().hash());
+
+for (var i: int = 0; i < DEPTH; i++) {
+	levels.push(generator.generateRandomNumber());
+}
+
+generator.freeRandomGenerator();
+
+//generate "levels" of a roguelike
+for (var i = 0; i < DEPTH; i++) {
+	var rng: opaque = createRandomGenerator(levels[i] + i);
+
+	print "---";
+	print levels[i];
+	print rng.generateRandomNumber();
+	print rng.generateRandomNumber();
+	print rng.generateRandomNumber();
+
+	rng.freeRandomGenerator();
+}
