@@ -8,6 +8,7 @@
 struct Toy_Literal;
 struct Toy_Interpreter;
 struct Toy_LiteralArray;
+struct Toy_Scope;
 typedef int (*Toy_NativeFn)(struct Toy_Interpreter* interpreter, struct Toy_LiteralArray* arguments);
 typedef int (*Toy_HookFn)(struct Toy_Interpreter* interpreter, struct Toy_Literal identifier, struct Toy_Literal alias);
 typedef void (*Toy_PrintFn)(const char*);
@@ -57,7 +58,7 @@ typedef struct Toy_Literal {
 				Toy_NativeFn native; //8
 				Toy_HookFn hook; //8
 			} inner;  //8
-			void* scope; //8
+			struct Toy_Scope* scope; //8
 		} function; //16
 
 		struct { //for variable names

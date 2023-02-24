@@ -17,6 +17,10 @@ static void setEntryValues(Toy_private_dictionary_entry* entry, Toy_Literal key,
 }
 
 static Toy_private_dictionary_entry* getEntryArray(Toy_private_dictionary_entry* array, int capacity, Toy_Literal key, unsigned int hash, bool mustExist) {
+	if (!capacity) {
+		return NULL;
+	}
+
 	//find "key", starting at index
 	unsigned int index = hash % capacity;
 	unsigned int start = index;
@@ -122,10 +126,10 @@ static void freeEntryArray(Toy_private_dictionary_entry* array, int capacity) {
 void Toy_initLiteralDictionary(Toy_LiteralDictionary* dictionary) {
 	//HACK: because modulo by 0 is undefined, set the capacity to a non-zero value (and allocate the arrays)
 	dictionary->entries = NULL;
-	dictionary->capacity = TOY_GROW_CAPACITY(0);
+	dictionary->capacity = 0;
 	dictionary->contains = 0;
 	dictionary->count = 0;
-	adjustEntryCapacity(&dictionary->entries, 0, dictionary->capacity);
+	dictionary->capacity = 0;
 }
 
 void Toy_freeLiteralDictionary(Toy_LiteralDictionary* dictionary) {
@@ -215,5 +219,5 @@ void Toy_removeLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Literal 
 bool Toy_existsLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Literal key) {
 	//null & not tombstoned
 	Toy_private_dictionary_entry* entry = getEntryArray(dictionary->entries, dictionary->capacity, key, Toy_hashLiteral(key), false);
-	return !(TOY_IS_NULL(entry->key) && TOY_IS_NULL(entry->value));
+	return entry != NULL && !(TOY_IS_NULL(entry->key) && TOY_IS_NULL(entry->value));
 }

@@ -209,6 +209,10 @@ Toy_Scope* Toy_popScope(Toy_Scope* scope) {
 }
 
 Toy_Scope* Toy_copyScope(Toy_Scope* original) {
+	if (original == NULL) {
+		return NULL;
+	}
+
 	Toy_Scope* scope = TOY_ALLOCATE(Toy_Scope, 1);
 	scope->ancestor = original->ancestor;
 	Toy_initLiteralDictionary(&scope->variables);
