@@ -7,6 +7,49 @@
 #include <time.h>
 #include <ctype.h>
 
+static int nativeAbs(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to abs\n");
+		return -1;
+	}
+
+	//get the self
+	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	//parse to value if needed
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(selfLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		return -1;
+	}
+
+	if (!(TOY_IS_INTEGER(selfLiteral) || TOY_IS_FLOAT(selfLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to abs\n");
+		Toy_freeLiteral(selfLiteral);
+		return -1;
+	}
+
+	Toy_Literal result;
+
+	if (TOY_IS_INTEGER(selfLiteral)) {
+		result = TOY_TO_INTEGER_LITERAL( TOY_AS_INTEGER(selfLiteral) > 0 ? TOY_AS_INTEGER(selfLiteral) : -TOY_AS_INTEGER(selfLiteral) );
+	}
+	if (TOY_IS_FLOAT(selfLiteral)) {
+		result = TOY_TO_FLOAT_LITERAL( TOY_AS_FLOAT(selfLiteral) > 0 ? TOY_AS_FLOAT(selfLiteral) : -TOY_AS_FLOAT(selfLiteral) );
+	}
+
+	Toy_pushLiteralArray(&interpreter->stack, result);
+
+	Toy_freeLiteral(result);
+	Toy_freeLiteral(selfLiteral);
+
+	return 1;
+}
+
 static int nativeClock(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 0) {
@@ -697,6 +740,36 @@ static int nativeGetValues(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 	//clean up
 	Toy_freeLiteralArray(resultPtr);
 	TOY_FREE(Toy_LiteralArray, resultPtr);
+	Toy_freeLiteral(selfLiteral);
+
+	return 1;
+}
+
+static int nativeHash(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to hash\n");
+		return -1;
+	}
+
+	//get the self
+	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	//parse to value if needed
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(selfLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		return -1;
+	}
+
+	Toy_Literal result = TOY_TO_INTEGER_LITERAL(Toy_hashLiteral(selfLiteral));
+
+	Toy_pushLiteralArray(&interpreter->stack, result);
+
+	Toy_freeLiteral(result);
 	Toy_freeLiteral(selfLiteral);
 
 	return 1;
@@ -1667,6 +1740,7 @@ typedef struct Natives {
 int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Literal alias) {
 	//build the natives list
 	Natives natives[] = {
+		{"abs", nativeAbs},
 		{"clock", nativeClock},
 		{"concat", nativeConcat}, //array, dictionary, string
 		{"containsKey", nativeContainsKey}, //dictionary
@@ -1676,6 +1750,7 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		{"forEach", nativeForEach}, //array, dictionary
 		{"getKeys", nativeGetKeys}, //dictionary
 		{"getValues", nativeGetValues}, //dictionary
+		{"hash", nativeHash},
 		{"indexOf", nativeIndexOf}, //array
 		{"map", nativeMap}, //array, dictionary
 		{"reduce", nativeReduce}, //array, dictionary

@@ -1,0 +1,17 @@
+import standard;
+import random;
+
+var generator: opaque = createRandomGenerator(clock().hash()); //create a new generator object, from a non-determinant source
+
+var a: int = generator.generateRandomNumber();
+var b: int = generator.generateRandomNumber();
+var c: int = generator.generateRandomNumber();
+
+generator.freeRandomGenerator();
+
+assert a != b, "random a != random b failed";
+assert a != c, "random a != random c failed";
+assert b != c, "random b != random c failed";
+
+
+print "All good";
