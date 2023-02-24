@@ -124,7 +124,7 @@
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\kayne\Desktop\Toy\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)out\$(Configuration)</AdditionalLibraryDirectories>
@@ -133,6 +133,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="repl\lib_about.c" />
+    <ClCompile Include="repl\lib_random.c" />
     <ClCompile Include="repl\lib_runner.c" />
     <ClCompile Include="repl\lib_standard.c" />
     <ClCompile Include="repl\repl_main.c" />
@@ -140,9 +141,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="repl\lib_about.h" />
+    <ClInclude Include="repl\lib_random.h" />
     <ClInclude Include="repl\lib_runner.h" />
     <ClInclude Include="repl\lib_standard.h" />
     <ClInclude Include="repl\repl_tools.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Toy.vcxproj">
+      <Project>{26360002-cc2a-469a-9b28-ba0c1af41657}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
