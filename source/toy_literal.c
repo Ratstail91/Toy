@@ -241,10 +241,10 @@ bool Toy_literalsAreEqual(Toy_Literal lhs, Toy_Literal rhs) {
 		// ints and floats are compatible
 		if ((TOY_IS_INTEGER(lhs) || TOY_IS_FLOAT(lhs)) && (TOY_IS_INTEGER(rhs) || TOY_IS_FLOAT(rhs))) {
 			if (TOY_IS_INTEGER(lhs)) {
-				return TOY_AS_INTEGER(lhs) + TOY_AS_FLOAT(rhs);
+				return TOY_AS_INTEGER(lhs) == TOY_AS_FLOAT(rhs);
 			}
 			else {
-				return TOY_AS_FLOAT(lhs) + TOY_AS_INTEGER(rhs);
+				return TOY_AS_FLOAT(lhs) == TOY_AS_INTEGER(rhs);
 			}
 		}
 
