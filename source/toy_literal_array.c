@@ -18,8 +18,10 @@ void Toy_freeLiteralArray(Toy_LiteralArray* array) {
 		Toy_freeLiteral(array->literals[i]);
 	}
 
-	TOY_FREE_ARRAY(Toy_Literal, array->literals, array->capacity);
-	Toy_initLiteralArray(array);
+	if (array->capacity > 0) {
+		TOY_FREE_ARRAY(Toy_Literal, array->literals, array->capacity);
+		Toy_initLiteralArray(array);
+	}
 }
 
 int Toy_pushLiteralArray(Toy_LiteralArray* array, Toy_Literal literal) {

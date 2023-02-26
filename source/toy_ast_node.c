@@ -40,17 +40,21 @@ static void freeASTNodeCustom(Toy_ASTNode* node, bool freeSelf) {
 		break;
 
 		case TOY_AST_NODE_BLOCK:
-			for (int i = 0; i < node->block.count; i++) {
-				freeASTNodeCustom(node->block.nodes + i, false);
+			if (node->block.capacity > 0) {
+				for (int i = 0; i < node->block.count; i++) {
+					freeASTNodeCustom(node->block.nodes + i, false);
+				}
+				TOY_FREE_ARRAY(Toy_ASTNode, node->block.nodes, node->block.capacity);
 			}
-			TOY_FREE_ARRAY(Toy_ASTNode, node->block.nodes, node->block.capacity);
 		break;
 
 		case TOY_AST_NODE_COMPOUND:
-			for (int i = 0; i < node->compound.count; i++) {
-				freeASTNodeCustom(node->compound.nodes + i, false);
+			if (node->compound.capacity > 0) {
+				for (int i = 0; i < node->compound.count; i++) {
+					freeASTNodeCustom(node->compound.nodes + i, false);
+				}
+				TOY_FREE_ARRAY(Toy_ASTNode, node->compound.nodes, node->compound.capacity);
 			}
-			TOY_FREE_ARRAY(Toy_ASTNode, node->compound.nodes, node->compound.capacity);
 		break;
 
 		case TOY_AST_NODE_PAIR:
@@ -71,10 +75,12 @@ static void freeASTNodeCustom(Toy_ASTNode* node, bool freeSelf) {
 		break;
 
 		case TOY_AST_NODE_FN_COLLECTION:
-			for (int i = 0; i < node->fnCollection.count; i++) {
-				freeASTNodeCustom(node->fnCollection.nodes + i, false);
+			if (node->fnCollection.capacity > 0) {
+				for (int i = 0; i < node->fnCollection.count; i++) {
+					freeASTNodeCustom(node->fnCollection.nodes + i, false);
+				}
+				TOY_FREE_ARRAY(Toy_ASTNode, node->fnCollection.nodes, node->fnCollection.capacity);
 			}
-			TOY_FREE_ARRAY(Toy_ASTNode, node->fnCollection.nodes, node->fnCollection.capacity);
 		break;
 
 		case TOY_AST_NODE_FN_DECL:

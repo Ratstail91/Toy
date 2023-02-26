@@ -62,7 +62,7 @@ void Toy_freeLiteral(Toy_Literal literal) {
 		TOY_FREE_ARRAY(unsigned char, TOY_AS_FUNCTION(literal).inner.bytecode, TOY_AS_FUNCTION_BYTECODE_LENGTH(literal));
 	}
 
-	if (TOY_IS_TYPE(literal)) {
+	if (TOY_IS_TYPE(literal) && TOY_AS_TYPE(literal).capacity > 0) {
 		for (int i = 0; i < TOY_AS_TYPE(literal).count; i++) {
 			Toy_freeLiteral(((Toy_Literal*)(TOY_AS_TYPE(literal).subtypes))[i]);
 		}

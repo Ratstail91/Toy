@@ -73,7 +73,9 @@ static void adjustEntryCapacity(Toy_private_dictionary_entry** dictionaryHandle,
 	}
 
 	//clear the old array
-	TOY_FREE_ARRAY(Toy_private_dictionary_entry, *dictionaryHandle, oldCapacity);
+	if (oldCapacity > 0) {
+		TOY_FREE_ARRAY(Toy_private_dictionary_entry, *dictionaryHandle, oldCapacity);
+	}
 
 	*dictionaryHandle = newEntries;
 }
@@ -133,9 +135,11 @@ void Toy_initLiteralDictionary(Toy_LiteralDictionary* dictionary) {
 }
 
 void Toy_freeLiteralDictionary(Toy_LiteralDictionary* dictionary) {
-	freeEntryArray(dictionary->entries, dictionary->capacity);
-	dictionary->capacity = 0;
-	dictionary->contains = 0;
+	if (dictionary->capacity > 0) {
+		freeEntryArray(dictionary->entries, dictionary->capacity);
+		dictionary->capacity = 0;
+		dictionary->contains = 0;
+	}
 }
 
 void Toy_setLiteralDictionary(Toy_LiteralDictionary* dictionary, Toy_Literal key, Toy_Literal value) {
