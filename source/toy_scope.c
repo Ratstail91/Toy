@@ -4,21 +4,19 @@
 
 //run up the ancestor chain, freeing anything with 0 references left
 static void freeAncestorChain(Toy_Scope* scope) {
-	scope->references--;
+	while (scope != NULL) {
+		Toy_Scope* next = scope->ancestor;
 
-	//free scope chain
-	if (scope->ancestor != NULL) {
-		freeAncestorChain(scope->ancestor);
+		scope->references--;
+
+		if (scope->references <= 0) {
+			Toy_freeLiteralDictionary(&scope->variables);
+			Toy_freeLiteralDictionary(&scope->types);
+			TOY_FREE(Toy_Scope, scope);
+		}
+
+		scope = next;
 	}
-
-	if (scope->references > 0) {
-		return;
-	}
-
-	Toy_freeLiteralDictionary(&scope->variables);
-	Toy_freeLiteralDictionary(&scope->types);
-
-	TOY_FREE(Toy_Scope, scope);
 }
 
 //return false if invalid type
@@ -259,74 +257,70 @@ bool Toy_declareScopeVariable(Toy_Scope* scope, Toy_Literal key, Toy_Literal typ
 }
 
 bool Toy_isDelcaredScopeVariable(Toy_Scope* scope, Toy_Literal key) {
-	if (scope == NULL) {
-		return false;
+	while (scope != NULL) {
+		if (Toy_existsLiteralDictionary(&scope->variables, key)) {
+			return true;
+		}
+
+		scope = scope->ancestor;
 	}
 
-	//if it's not in this scope, keep searching up the chain
-	if (!Toy_existsLiteralDictionary(&scope->variables, key)) {
-		return Toy_isDelcaredScopeVariable(scope->ancestor, key);
-	}
-
-	return true;
+	return false;
 }
 
 //return false if undefined, or can't be assigned
 bool Toy_setScopeVariable(Toy_Scope* scope, Toy_Literal key, Toy_Literal value, bool constCheck) {
-	//dead end
-	if (scope == NULL) {
-		return false;
-	}
+	while (scope != NULL) {
+		//if it's not in this scope, keep searching up the chain
+		if (!Toy_existsLiteralDictionary(&scope->variables, key)) {
+			scope = scope->ancestor;
+			continue;
+		}
 
-	//if it's not in this scope, keep searching up the chain
-	if (!Toy_existsLiteralDictionary(&scope->variables, key)) {
-		return Toy_setScopeVariable(scope->ancestor, key, value, constCheck);
-	}
+		//type checking
+		Toy_Literal typeLiteral = Toy_getLiteralDictionary(&scope->types, key);
+		Toy_Literal original = Toy_getLiteralDictionary(&scope->variables, key);
 
-	//type checking
-	Toy_Literal typeLiteral = Toy_getLiteralDictionary(&scope->types, key);
-	Toy_Literal original = Toy_getLiteralDictionary(&scope->variables, key);
+		if (!checkType(typeLiteral, original, value, constCheck)) {
+			Toy_freeLiteral(typeLiteral);
+			Toy_freeLiteral(original);
+			return false;
+		}
 
-	if (!checkType(typeLiteral, original, value, constCheck)) {
+		//actually assign
+		Toy_setLiteralDictionary(&scope->variables, key, value); //key & value are copied here
+
 		Toy_freeLiteral(typeLiteral);
 		Toy_freeLiteral(original);
-		return false;
+
+		return true;
 	}
 
-	//actually assign
-	Toy_setLiteralDictionary(&scope->variables, key, value); //key & value are copied here
-
-	Toy_freeLiteral(typeLiteral);
-	Toy_freeLiteral(original);
-
-	return true;
+	return false;
 }
 
 bool Toy_getScopeVariable(Toy_Scope* scope, Toy_Literal key, Toy_Literal* valueHandle) {
-	//dead end
-	if (scope == NULL) {
-		return false;
+	//optimized to reduce call stack
+	while (scope != NULL) {
+		if (Toy_existsLiteralDictionary(&scope->variables, key)) {
+			*valueHandle = Toy_getLiteralDictionary(&scope->variables, key);
+			return true;
+		}
+
+		scope = scope->ancestor;
 	}
 
-	//if it's not in this scope, keep searching up the chain
-	if (!Toy_existsLiteralDictionary(&scope->variables, key)) {
-		return Toy_getScopeVariable(scope->ancestor, key, valueHandle);
-	}
-
-	*valueHandle = Toy_getLiteralDictionary(&scope->variables, key);
-	return true;
+	return false;
 }
 
 Toy_Literal Toy_getScopeType(Toy_Scope* scope, Toy_Literal key) {
-	//dead end
-	if (scope == NULL) {
-		return TOY_TO_NULL_LITERAL;
+	while (scope != NULL) {
+		if (Toy_existsLiteralDictionary(&scope->types, key)) {
+			return Toy_getLiteralDictionary(&scope->types, key);
+		}
+
+		scope = scope->ancestor;
 	}
 
-	//if it's not in this scope, keep searching up the chain
-	if (!Toy_existsLiteralDictionary(&scope->types, key)) {
-		return Toy_getScopeType(scope->ancestor, key);
-	}
-
-	return Toy_getLiteralDictionary(&scope->types, key);
+	return TOY_TO_NULL_LITERAL;
 }
