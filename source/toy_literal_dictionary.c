@@ -22,11 +22,13 @@ static Toy_private_dictionary_entry* getEntryArray(Toy_private_dictionary_entry*
 	}
 
 	//find "key", starting at index
-	unsigned int index = hash % capacity;
-	unsigned int start = index;
+	int index = hash % capacity;
+	int start = index;
 
 	//increment once, so it can't equal start
-	index = (index + 1) % capacity;
+	if (++index >= capacity) {
+		index = 0;
+	}
 
 	//literal probing and collision checking
 	while (index != start) { //WARNING: this is the only function allowed to retrieve an entry from the array
@@ -44,7 +46,10 @@ static Toy_private_dictionary_entry* getEntryArray(Toy_private_dictionary_entry*
 			}
 		}
 
-		index = (index + 1) % capacity;
+		if (++index >= capacity) {
+			index = 0;
+		}
+		//index = (index + 1) % capacity;
 	}
 
 	return NULL;
