@@ -1,5 +1,19 @@
 import standard;
 
+//test clock
+{
+	//this depends on external factors, so only check the length
+	assert clock().length() == 24, "clock().length() failed";
+}
+
+
+//test hash
+{
+	assert typeof "Hello world".hash() == int, "typeof \"Hello world\".hash() failed";
+	assert "Hello world".hash() == 994097935, "\"Hello world\".hash() failed"; //NOTE: specific value based on algorithm
+}
+
+
 //test abs
 {
 	assert abs(-5) == 5, "abs(-integer) failed";
@@ -13,10 +27,69 @@ import standard;
 }
 
 
-//test clock
+//test ceil
 {
-	//this depends on external factors, so only check the length
-	assert clock().length() == 24, "clock().length() failed";
+	assert ceil(4) == 4, "ceil(int) failed";
+	assert ceil(4.0) == 4, "ceil(float) failed";
+	assert ceil(4.1) == 5, "ceil() failed";
+
+	var x = 4.1;
+
+	assert x.ceil() == 5, "var.ceil() failed";
+}
+
+
+//test floor
+{
+	assert floor(4) == 4, "floor(int) failed";
+	assert floor(4.0) == 4, "floor(float) failed";
+	assert floor(4.1) == 4, "floor() failed";
+
+	var x = 4.1;
+
+	assert x.floor() == 4, "var.floor() failed";
+}
+
+
+//test max
+{
+	assert max(1, 2, 3) == 3, "max() failed";
+
+	var a = 1;
+	var b = 2;
+	var c = 3;
+
+	assert max(a, b, c) == 3, "var.max() failed";
+
+	assert max(1, 2, 3, 4, 5, 6, 7, 8, 9, 0) == 9, "max() with many args failed";
+}
+
+
+//test min
+{
+	assert min(1, 2, 3) == 1, "min() failed";
+
+	var a = 1;
+	var b = 2;
+	var c = 3;
+
+	assert min(a, b, c) == 1, "var.min() failed";
+
+	assert min(1, 2, 3, 4, 5, 6, 7, 8, 9, 0) == 0, "min() with many args failed";
+}
+
+
+//test round
+{
+	assert round(4) == 4, "round(int) failed";
+	assert round(4.0) == 4, "round(float) failed";
+	assert round(4.1) == 4, "round(less than half) failed";
+	assert round(4.9) == 5, "round(greater than half) failed";
+	assert round(4.5) == 5, "round(exactly half) failed";
+
+	var x = 4.1;
+
+	assert x.round() == 4, "var.round() failed";
 }
 
 
@@ -172,13 +245,6 @@ import standard;
 
 	//NOTE: dependant on hash algorithm
 	assert a == [2, 1], "_getValues() result failed";
-}
-
-
-//test hash
-{
-	assert typeof "Hello world".hash() == int, "typeof \"Hello world\".hash() failed";
-	assert "Hello world".hash() == 994097935, "\"Hello world\".hash() failed"; //NOTE: specific value based on algorithm
 }
 
 
