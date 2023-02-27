@@ -140,7 +140,7 @@ static Toy_Opcode asType(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 
 static Toy_Opcode typeOf(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	Toy_ASTNode* rhs = NULL;
-	parsePrecedence(parser, &rhs, PREC_TERNARY);
+	parsePrecedence(parser, &rhs, PREC_CALL);
 	Toy_emitASTNodeUnary(nodeHandle, TOY_OP_TYPE_OF, rhs);
 	return TOY_OP_EOF;
 }
