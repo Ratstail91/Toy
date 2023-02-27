@@ -349,8 +349,8 @@ static int nativeRound(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	}
 	if (TOY_IS_FLOAT(selfLiteral)) {
 		//catch the already-rounded case
-		if (TOY_AS_FLOAT(selfLiteral) == 0) {
-			result = selfLiteral;
+		if (TOY_AS_FLOAT(selfLiteral) == (int)TOY_AS_FLOAT(selfLiteral)) {
+			result = TOY_TO_INTEGER_LITERAL((int)TOY_AS_FLOAT(selfLiteral));
 		}
 		else {
 			result = TOY_TO_INTEGER_LITERAL( TOY_AS_FLOAT(selfLiteral) - (int)TOY_AS_FLOAT(selfLiteral) < 0.5 ? (int)TOY_AS_FLOAT(selfLiteral) : (int)TOY_AS_FLOAT(selfLiteral) + 1 );

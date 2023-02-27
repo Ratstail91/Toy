@@ -96,6 +96,8 @@ import standard;
 	var x = 4.1;
 
 	assert x.round() == 4, "var.round() failed";
+
+	assert typeof round(1.0) == int, "typeof round() == int failed";
 }
 
 
