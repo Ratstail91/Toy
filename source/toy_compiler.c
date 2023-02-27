@@ -1015,9 +1015,17 @@ static void Toy_emitShort(unsigned char** collationPtr, int* capacityPtr, int* c
 	emitByte(collationPtr, capacityPtr, countPtr, *ptr);
 }
 
-static void emitInt(unsigned char** collationPtr, int* capacityPtr, int* countPtr, int bytes) {
+static void emitInt(unsigned char** collationPtr, int* capacityPtr, int* countPtr, int64_t bytes) {
 	char* ptr = (char*)&bytes;
 
+	emitByte(collationPtr, capacityPtr, countPtr, *ptr);
+	ptr++;
+	emitByte(collationPtr, capacityPtr, countPtr, *ptr);
+	ptr++;
+	emitByte(collationPtr, capacityPtr, countPtr, *ptr);
+	ptr++;
+	emitByte(collationPtr, capacityPtr, countPtr, *ptr);
+	ptr++;
 	emitByte(collationPtr, capacityPtr, countPtr, *ptr);
 	ptr++;
 	emitByte(collationPtr, capacityPtr, countPtr, *ptr);

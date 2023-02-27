@@ -467,7 +467,7 @@ void Toy_printLiteralCustom(Toy_Literal literal, Toy_PrintFn printFn) {
 
 		case TOY_LITERAL_INTEGER: {
 			char buffer[256];
-			snprintf(buffer, 256, "%d", TOY_AS_INTEGER(literal));
+			snprintf(buffer, 256, "%lld", TOY_AS_INTEGER(literal));
 			printFn(buffer);
 		}
 		break;

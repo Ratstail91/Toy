@@ -8,6 +8,8 @@
 
 #include <stdio.h>
 
+#include <stdint.h>
+
 //utility functions
 static void error(Toy_Parser* parser, Toy_Token token, const char* message) {
 	//keep going while panicing
@@ -539,9 +541,9 @@ static Toy_Opcode atomic(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 			return TOY_OP_EOF;
 
 		case TOY_TOKEN_LITERAL_INTEGER: {
-			int value = 0;
+			int64_t value = 0;
 			const char* lexeme = removeChar(parser->previous.lexeme, parser->previous.length, '_');
-			sscanf(lexeme, "%d", &value);
+			sscanf(lexeme, "%lld", &value);
 			TOY_FREE_ARRAY(char, lexeme, parser->previous.length + 1);
 			Toy_emitASTNodeLiteral(nodeHandle, TOY_TO_INTEGER_LITERAL(value));
 			return TOY_OP_EOF;

@@ -126,8 +126,24 @@ void Toy_helpCommandLine(int argc, const char* argv[]) {
 }
 
 void Toy_copyrightCommandLine(int argc, const char* argv[]) {
-	printf("Toy Programming Language Interpreter Version %d.%d.%d (built on %s)\n\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, TOY_VERSION_BUILD);
-	printf("Copyright (c) 2020-2023 Kayne Ruse, KR Game Studios\n\n");
+	printf("Toy64 Programming Language Interpreter Version %d.%d.%d (built on %s)\n\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, TOY_VERSION_BUILD);
+	
+	printf("Copyright (c) 2023 Shirobon\n");
+	printf("This program is free software: you can redistribute it and/or modify\n"
+		   "it under the terms of the GNU Affero General Public License as published by\n"
+		   "the Free Software Foundation, either version 3 of the License, or\n"
+		   "(at your option) any later version.\n\n"
+		   "This program is distributed in the hope that it will be useful,\n"
+		   "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+		   "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+		   "GNU Affero General Public License for more details.\n\n"
+		   "You should have received a copy of the GNU Affero General Public License\n"
+		   "along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\n");
+
+	printf("============================================================================\n");
+	printf("============================================================================\n\n");
+	printf("Toy Programming Language Interpreter Version 1.1.1\n\n");
+	printf("Copyright (c) 2020-2023 Kayne Ruse, KR Game Studios\n");
 	printf("This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.\n\n");
 	printf("Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:\n\n");
 	printf("1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.\n\n");

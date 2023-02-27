@@ -4,6 +4,8 @@
 
 #include "toy_refstring.h"
 
+#include <stdint.h>
+
 //forward delcare stuff
 struct Toy_Literal;
 struct Toy_Interpreter;
@@ -41,7 +43,7 @@ typedef enum {
 typedef struct Toy_Literal {
 	union {
 		bool boolean; //1
-		int integer; //4
+		int64_t integer; //4
 		float number;//4
 
 		struct {

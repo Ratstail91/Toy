@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 static void printWrapper(const char* output) {
 	if (Toy_commandLine.enablePrintNewline) {
@@ -183,10 +184,10 @@ static unsigned short readShort(const unsigned char* tb, int* count) {
 	return ret;
 }
 
-static int readInt(const unsigned char* tb, int* count) {
-	int ret = 0;
-	memcpy(&ret, tb + *count, 4);
-	*count += 4;
+static int64_t readInt(const unsigned char* tb, int* count) {
+	int64_t ret = 0;
+	memcpy(&ret, tb + *count, 8);
+	*count += 8;
 	return ret;
 }
 
@@ -842,7 +843,7 @@ static bool execValCast(Toy_Interpreter* interpreter) {
 
 			if (TOY_IS_INTEGER(value)) {
 				char buffer[128];
-				snprintf(buffer, 128, "%d", TOY_AS_INTEGER(value));
+				snprintf(buffer, 128, "%lld", TOY_AS_INTEGER(value));
 				int length = strlen(buffer);
 				result = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(buffer, length));
 			}
@@ -2223,14 +2224,14 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 			break;
 
 			case TOY_LITERAL_INTEGER: {
-				const int d = readInt(interpreter->bytecode, &interpreter->count);
+				const int64_t d = readInt(interpreter->bytecode, &interpreter->count);
 				Toy_Literal literal = TOY_TO_INTEGER_LITERAL(d);
 				Toy_pushLiteralArray(&interpreter->literalCache, literal);
 				Toy_freeLiteral(literal);
 
 #ifndef TOY_EXPORT
 				if (Toy_commandLine.verbose) {
-					printf("(integer %d)\n", d);
+					printf("(integer %lld)\n", d);
 				}
 #endif
 			}
