@@ -8,13 +8,55 @@ The standard library can usually be accessed with the `import` keyword:
 import standard;
 ```
 
-## abs(self)
-
-This function returns the absolute value of any integer or float passed in.
+# Misc. Utilities
+<hr />
 
 ## clock()
 
 This function returns a string representation of the current timestamp.
+
+## hash(self)
+
+This function returns a hashed value of `self`.
+
+This function uses the internal literal hashing algorithms. As such, the following can't be hashed:
+
+* functions
+* types
+* opaques
+* `null`
+
+Any attempt to hash these will return -1, except `null` which returns 0.
+
+# Maths Utilities
+<hr />
+
+## abs(self)
+
+This function returns the absolute value of any integer or float passed in.
+
+## ceil(self): int
+
+This function returns the value of any integer or float passed in, rounded up.
+
+## floor(self): int
+
+This function returns the value of any integer or float passed in, rounded down.
+
+## max(...)
+
+This function returns the value of the highest integer or float passed in. It can take any number of arguments.
+
+## min(...)
+
+This function returns the value of the lowest integer or float passed in. It can take any number of arguments.
+
+## round(self): int
+
+This function returns the value of any integer or float passed in, rounded to the nearest whole number.
+
+# Compound Utilities
+<hr />
 
 ## concat(self, other)
 
@@ -59,19 +101,6 @@ This function returns an array of all non-null keys stored within the dictionary
 ## getValues(self: dictionary)
 
 This function returns an array of all values with non-null keys stored within the dictionary. The order is undefined.
-
-## hash(self)
-
-This function returns a hashed value of `self`.
-
-This function uses the internal literal hashing algorithms. As such, the following can't be hashed:
-
-* functions
-* types
-* opaques
-* `null`
-
-Any attempt to hash these will return -1, except `null` which returns 0.
 
 ## indexOf(self: array, value)
 
