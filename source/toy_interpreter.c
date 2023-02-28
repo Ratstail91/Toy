@@ -1767,8 +1767,9 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 			assign = Toy_popLiteralArray(&interpreter->stack);
 		}
 		else {
-			compound = result; //no free
-
+			compound = result;
+			Toy_freeLiteral(result);
+		
 			//suppress the extra assign value
 			Toy_Literal tmp = Toy_popLiteralArray(&interpreter->stack);
 			Toy_freeLiteral(tmp);
@@ -1780,6 +1781,10 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 		compound = Toy_popLiteralArray(&interpreter->stack);
 
 		if (TOY_IS_IDENTIFIER(compound)) {
+			if (freeIdn) {
+				Toy_freeLiteral(compoundIdn);
+			}
+
 			compoundIdn = compound;
 			Toy_parseIdentifierToValue(interpreter, &compound);
 			freeIdn = true;
