@@ -621,7 +621,7 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 			//simple indexing assignment if second is null
 			if (TOY_IS_NULL(second)) {
-				bool ret = -1;
+				int ret = -1;
 
 				if (!Toy_setLiteralArray(TOY_AS_ARRAY(compound), first, assign)) {
 					interpreter->errorOutput("Array index out of bounds in assignment");
@@ -629,6 +629,7 @@ int Toy_private_index(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 				}
 				else {
 					Toy_pushLiteralArray(&interpreter->stack, compound); //leave the array on the stack
+					//...
 					ret = 1;
 				}
 

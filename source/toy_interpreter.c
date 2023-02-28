@@ -1689,7 +1689,7 @@ static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 		Toy_pushLiteralArray(&interpreter->stack, third);
 	}
 
-	//call the _index function
+	//call the index function
 	if (Toy_private_index(interpreter, &arguments) < 0) {
 		interpreter->errorOutput("Something went wrong while indexing (simple index): ");
 		Toy_printLiteralCustom(compoundIdn, interpreter->errorOutput);
@@ -1723,82 +1723,98 @@ static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 static bool execIndexAssign(Toy_Interpreter* interpreter) {
 	//assume -> compound, first, second, third, assign are all on the stack
 
-	Toy_Literal assign = Toy_popLiteralArray(&interpreter->stack);
-	Toy_Literal third = Toy_popLiteralArray(&interpreter->stack);
-	Toy_Literal second = Toy_popLiteralArray(&interpreter->stack);
-	Toy_Literal first = Toy_popLiteralArray(&interpreter->stack);
-	Toy_Literal compound = Toy_popLiteralArray(&interpreter->stack);
-
-	Toy_Literal assignIdn = assign;
-	if (TOY_IS_IDENTIFIER(assign) && Toy_parseIdentifierToValue(interpreter, &assign)) {
-		Toy_freeLiteral(assignIdn);
-	}
-
-	if (TOY_IS_IDENTIFIER(assign)) {
-		Toy_freeLiteral(compound);
-		Toy_freeLiteral(first);
-		Toy_freeLiteral(second);
-		Toy_freeLiteral(third);
-		Toy_freeLiteral(assign);
-		return false;
-	}
-
-	Toy_Literal compoundIdn = compound;
+	Toy_Literal assign = TOY_TO_NULL_LITERAL, third = TOY_TO_NULL_LITERAL, second = TOY_TO_NULL_LITERAL, first = TOY_TO_NULL_LITERAL, compound = TOY_TO_NULL_LITERAL, result = TOY_TO_NULL_LITERAL;
+	Toy_Literal compoundIdn = TOY_TO_NULL_LITERAL;
 	bool freeIdn = false;
-	if (TOY_IS_IDENTIFIER(compound) && Toy_parseIdentifierToValue(interpreter, &compound)) {
-		freeIdn = true;
-	}
-
-	if (TOY_IS_IDENTIFIER(compound)) {
-		Toy_freeLiteral(compound);
-		Toy_freeLiteral(first);
-		Toy_freeLiteral(second);
-		Toy_freeLiteral(third);
-		Toy_freeLiteral(assign);
-		if (freeIdn) {
-			Toy_freeLiteral(compoundIdn);
-		}
-		return false;
-	}
-
-	if (!TOY_IS_ARRAY(compound) && !TOY_IS_DICTIONARY(compound) && !TOY_IS_STRING(compound)) {
-		interpreter->errorOutput("Unknown compound found in index assigning notation\n");
-		Toy_freeLiteral(assign);
-		Toy_freeLiteral(third);
-		Toy_freeLiteral(second);
-		Toy_freeLiteral(first);
-		Toy_freeLiteral(compound);
-		if (freeIdn) {
-			Toy_freeLiteral(compoundIdn);
-		}
-		return false;
-	}
 
 	//build the opcode
 	unsigned char opcode = readByte(interpreter->bytecode, &interpreter->count);
 	char* opStr = "";
-	switch(opcode) {
-		case TOY_OP_VAR_ASSIGN:
-			opStr = "=";
+	switch (opcode) {
+	case TOY_OP_VAR_ASSIGN:
+		opStr = "=";
 		break;
-		case TOY_OP_VAR_ADDITION_ASSIGN:
-			opStr = "+=";
+	case TOY_OP_VAR_ADDITION_ASSIGN:
+		opStr = "+=";
 		break;
-		case TOY_OP_VAR_SUBTRACTION_ASSIGN:
-			opStr = "-=";
+	case TOY_OP_VAR_SUBTRACTION_ASSIGN:
+		opStr = "-=";
 		break;
-		case TOY_OP_VAR_MULTIPLICATION_ASSIGN:
-			opStr = "*=";
+	case TOY_OP_VAR_MULTIPLICATION_ASSIGN:
+		opStr = "*=";
 		break;
-		case TOY_OP_VAR_DIVISION_ASSIGN:
-			opStr = "/=";
+	case TOY_OP_VAR_DIVISION_ASSIGN:
+		opStr = "/=";
 		break;
-		case TOY_OP_VAR_MODULO_ASSIGN:
-			opStr = "%=";
+	case TOY_OP_VAR_MODULO_ASSIGN:
+		opStr = "%=";
 		break;
 
-		default:
-			interpreter->errorOutput("bad opcode in index assigning notation\n");
+	default:
+		interpreter->errorOutput("bad opcode in index assigning notation\n");
+		return false;
+	}
+
+	//iterate...
+	while(interpreter->stack.count > 1) {
+		Toy_freeLiteral(assign);
+		Toy_freeLiteral(third);
+		Toy_freeLiteral(second);
+		Toy_freeLiteral(first);
+		Toy_freeLiteral(compound);
+
+		if (TOY_IS_NULL(result)) {
+			assign = Toy_popLiteralArray(&interpreter->stack);
+		}
+		else {
+			compound = result; //no free
+
+			//suppress the extra assign value
+			Toy_Literal tmp = Toy_popLiteralArray(&interpreter->stack);
+			Toy_freeLiteral(tmp);
+		}
+
+		third = Toy_popLiteralArray(&interpreter->stack);
+		second = Toy_popLiteralArray(&interpreter->stack);
+		first = Toy_popLiteralArray(&interpreter->stack);
+		compound = Toy_popLiteralArray(&interpreter->stack);
+
+		if (TOY_IS_IDENTIFIER(compound)) {
+			compoundIdn = compound;
+			Toy_parseIdentifierToValue(interpreter, &compound);
+			freeIdn = true;
+		}
+
+		if (TOY_IS_IDENTIFIER(compound)) {
+			Toy_freeLiteral(compound);
+			Toy_freeLiteral(first);
+			Toy_freeLiteral(second);
+			Toy_freeLiteral(third);
+			Toy_freeLiteral(assign);
+			if (freeIdn) {
+				Toy_freeLiteral(compoundIdn);
+			}
+			return false;
+		}
+
+		Toy_Literal assignIdn = assign;
+		if (TOY_IS_IDENTIFIER(assign) && Toy_parseIdentifierToValue(interpreter, &assign)) {
+			Toy_freeLiteral(assignIdn);
+		}
+
+		if (TOY_IS_IDENTIFIER(assign)) {
+			Toy_freeLiteral(compound);
+			Toy_freeLiteral(first);
+			Toy_freeLiteral(second);
+			Toy_freeLiteral(third);
+			Toy_freeLiteral(assign);
+			return false;
+		}
+
+		if (!TOY_IS_ARRAY(compound) && !TOY_IS_DICTIONARY(compound) && !TOY_IS_STRING(compound)) {
+			interpreter->errorOutput("Unknown compound found in index assigning notation: ");
+			Toy_printLiteralCustom(compound, interpreter->errorOutput);
+			interpreter->errorOutput("\n");
 			Toy_freeLiteral(assign);
 			Toy_freeLiteral(third);
 			Toy_freeLiteral(second);
@@ -1808,103 +1824,51 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 				Toy_freeLiteral(compoundIdn);
 			}
 			return false;
-	}
-
-	int opLength = strlen(opStr);
-	Toy_Literal op = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(opStr, opLength)); //TODO: static reference optimisation?
-
-	//build the argument list
-	Toy_LiteralArray arguments;
-	Toy_initLiteralArray(&arguments);
-
-	Toy_pushLiteralArray(&arguments, compound);
-	Toy_pushLiteralArray(&arguments, first);
-	Toy_pushLiteralArray(&arguments, second);
-	Toy_pushLiteralArray(&arguments, third);
-	Toy_pushLiteralArray(&arguments, assign); //it expects an assignment command
-	Toy_pushLiteralArray(&arguments, op); //it expects an assignment "opcode"
-
-	//call the _index function
-	if (Toy_private_index(interpreter, &arguments) < 0) {
-		//clean up
-		Toy_freeLiteral(assign);
-		Toy_freeLiteral(third);
-		Toy_freeLiteral(second);
-		Toy_freeLiteral(first);
-		Toy_freeLiteral(compound);
-		if (freeIdn) {
-			Toy_freeLiteral(compoundIdn);
 		}
-		Toy_freeLiteral(op);
-		Toy_freeLiteralArray(&arguments);
 
-		return false;
-	}
+		int opLength = strlen(opStr);
+		Toy_Literal op = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(opStr, opLength)); //TODO: static reference optimisation?
 
-	//save the result (assume top of the interpreter stack is the new compound value)
-	Toy_Literal result = Toy_popLiteralArray(&interpreter->stack);
+		//build the argument list
+		Toy_LiteralArray arguments;
+		Toy_initLiteralArray(&arguments);
 
-	//deep
-	if (!freeIdn) {
-		while (interpreter->stack.count > 1) {
-			//read the new values
-			Toy_freeLiteral(compound);
+		Toy_pushLiteralArray(&arguments, compound);
+		Toy_pushLiteralArray(&arguments, first);
+		Toy_pushLiteralArray(&arguments, second);
+		Toy_pushLiteralArray(&arguments, third);
+		Toy_pushLiteralArray(&arguments, assign); //it expects an assignment command
+		Toy_pushLiteralArray(&arguments, op); //it expects an assignment "opcode"
+
+		//call the index function
+		if (Toy_private_index(interpreter, &arguments) < 0) {
+			//clean up
+			Toy_freeLiteral(assign);
 			Toy_freeLiteral(third);
 			Toy_freeLiteral(second);
 			Toy_freeLiteral(first);
-			Toy_freeLiteralArray(&arguments);
-			Toy_initLiteralArray(&arguments);
-			Toy_freeLiteral(op);
-
-			//reuse these like an idiot
-			third = Toy_popLiteralArray(&interpreter->stack);
-			second = Toy_popLiteralArray(&interpreter->stack);
-			first = Toy_popLiteralArray(&interpreter->stack);
-			compound = Toy_popLiteralArray(&interpreter->stack);
-
-			char* opStr = "="; //shadow, but force assignment
-			int opLength = strlen(opStr);
-			op = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(opStr, opLength)); //TODO: static reference optimisation?
-
-			//assign to the idn / compound - with _index
-			Toy_pushLiteralArray(&arguments, compound); //
-			Toy_pushLiteralArray(&arguments, first);
-			Toy_pushLiteralArray(&arguments, second);
-			Toy_pushLiteralArray(&arguments, third);
-			Toy_pushLiteralArray(&arguments, result);
-			Toy_pushLiteralArray(&arguments, op);
-
-			if (Toy_private_index(interpreter, &arguments) < 0) {
-				interpreter->errorOutput("Something went wrong while indexing (index assign): ");
-				Toy_printLiteralCustom(compound, interpreter->errorOutput);
-				interpreter->errorOutput("\n");
-
-				//clean up
-				Toy_freeLiteral(assign);
-				Toy_freeLiteral(third);
-				Toy_freeLiteral(second);
-				Toy_freeLiteral(first);
-				if (freeIdn) {
-					Toy_freeLiteral(compoundIdn);
-				}
-				Toy_freeLiteral(op);
-				Toy_freeLiteralArray(&arguments);
-				return false;
+			Toy_freeLiteral(compound);
+			if (freeIdn) {
+				Toy_freeLiteral(compoundIdn);
 			}
+			Toy_freeLiteral(op);
+			Toy_freeLiteralArray(&arguments);
 
-			Toy_freeLiteral(result);
-			result = Toy_popLiteralArray(&interpreter->stack);
+			return false;
 		}
 
-		Toy_freeLiteral(compound);
-		compound = Toy_popLiteralArray(&interpreter->stack);
-		compoundIdn = compound;
-		freeIdn = false;
+		//save the result (assume top of the interpreter stack is the new compound value)
+		result = Toy_popLiteralArray(&interpreter->stack);
+
+		Toy_freeLiteral(op);
+		Toy_freeLiteralArray(&arguments);
 	}
 
 	if (TOY_IS_IDENTIFIER(compoundIdn) && !Toy_setScopeVariable(interpreter->scope, compoundIdn, result, true)) {
 		interpreter->errorOutput("Incorrect type assigned to compound member ");
 		Toy_printLiteralCustom(compoundIdn, interpreter->errorOutput);
+		interpreter->errorOutput(", value: ");
+		Toy_printLiteralCustom(result, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
 
 		//clean up
@@ -1916,8 +1880,6 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 		if (freeIdn) {
 			Toy_freeLiteral(compoundIdn);
 		}
-		Toy_freeLiteral(op);
-		Toy_freeLiteralArray(&arguments);
 		Toy_freeLiteral(result);
 		return false;
 	}
@@ -1931,8 +1893,6 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 	if (freeIdn) {
 		Toy_freeLiteral(compoundIdn);
 	}
-	Toy_freeLiteral(op);
-	Toy_freeLiteralArray(&arguments);
 	Toy_freeLiteral(result);
 
 	return true;
