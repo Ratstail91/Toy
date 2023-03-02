@@ -70,6 +70,7 @@ The rules of execution for scripts and functions is as follows:
 
 The following functions, which are defined within the node scripts, are invoked at specific times within the game loop. Note that if you want code to execute *during* node creation, place it within the script's root scope. Variables that you want to persist between calls should also be placed in the script's root.
 
+* `onLoad(node: opaque)`
 * `onInit(node: opaque)`
 * `onStep(node: opaque)`
 * `onFree(node: opaque)`
@@ -82,6 +83,8 @@ The following functions, which are defined within the node scripts, are invoked 
 * `onMouseWheel(node: opaque, xrel: int, yrel: int)`
 
 These may change or expand as more input devices are added, and the engine matures.
+
+NOTE: `onLoad()` is invoke every time a node is added to the node tree - but `onInit()` is only invoked once by the engine. After that single invocation, `initNode()` must be called manually on any node children that are loaded later.
 
 # Engine Libraries
 
