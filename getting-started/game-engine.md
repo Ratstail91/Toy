@@ -84,7 +84,7 @@ The following functions, which are defined within the node scripts, are invoked 
 
 These may change or expand as more input devices are added, and the engine matures.
 
-NOTE: `onLoad()` is invoke every time a node is added to the node tree - but `onInit()` is only invoked once by the engine. After that single invocation, `initNode()` must be called manually on any node children that are loaded later.
+NOTE: `onLoad()` is invoked every time a node is loaded - but `onInit()` is only invoked once by the engine. After that, `initNode()` must be called manually on any node children that are loaded later.
 
 # Engine Libraries
 
