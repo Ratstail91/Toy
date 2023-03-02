@@ -87,9 +87,21 @@ These may change or expand as more input devices are added, and the engine matur
 
 A series of libraries are provided to allow Toy to interface and control the engine. In addition, the libraries stored within Toy's `repl/` directory are also available (see the main page for the list).
 
+During startup, the script named `init.toy` in the root of the scripts directory is executed. This file can be used to configure input mappings, as well as initializing the window and node tree.
+
 # Engine API
 
 The engine API is for controlling the core of the engine directly.
+
+## initWindow(caption: string, width: int, height: int, fullscreen: bool)
+
+This function initializes the game's window, as well as specifying it's dimensions and properties. There is only one window - calling this multiple times is a fatal error. Also, the game's loop will simply not run if the window hasn't been initialized.
+
+## loadRootNode(fname: string)
+
+TODO
+
+## getRootNode(): opaque
 
 TODO
 
