@@ -1756,7 +1756,7 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 	}
 
 	//iterate...
-	while(interpreter->stack.count > 1) {
+	while(interpreter->stack.count >= 4) {
 		Toy_freeLiteral(assign);
 		Toy_freeLiteral(third);
 		Toy_freeLiteral(second);
