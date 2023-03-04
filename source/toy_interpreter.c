@@ -1862,6 +1862,9 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 
 		Toy_freeLiteral(op);
 		Toy_freeLiteralArray(&arguments);
+
+		//if we loop, then we need to be assigning
+		opStr = "=";
 	}
 
 	//BUGFIX: make sure the compound name can be assigned

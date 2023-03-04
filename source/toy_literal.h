@@ -8,6 +8,7 @@
 struct Toy_Literal;
 struct Toy_Interpreter;
 struct Toy_LiteralArray;
+struct Toy_LiteralDictionary;
 struct Toy_Scope;
 typedef int (*Toy_NativeFn)(struct Toy_Interpreter* interpreter, struct Toy_LiteralArray* arguments);
 typedef int (*Toy_HookFn)(struct Toy_Interpreter* interpreter, struct Toy_Literal identifier, struct Toy_Literal alias);
@@ -49,8 +50,8 @@ typedef struct Toy_Literal {
 			//string hash?
 		} string; //8
 
-		void* array; //8
-		void* dictionary; //8
+		struct Toy_LiteralArray* array; //8
+		struct Toy_LiteralDictionary* dictionary; //8
 
 		struct {
 			union {
@@ -67,7 +68,8 @@ typedef struct Toy_Literal {
         } identifier; //16
 
 		struct {
-			void* subtypes; //8
+			
+			struct Toy_Literal* subtypes; //8
 			Toy_LiteralType typeOf;  //4
 			unsigned char capacity; //1
 			unsigned char count; //1

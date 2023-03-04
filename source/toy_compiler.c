@@ -130,7 +130,7 @@ static int writeNodeCompoundToCache(Toy_Compiler* compiler, Toy_ASTNode* node) {
 		}
 
 		//push the store to the cache, with instructions about how pack it
-		Toy_Literal literal = TOY_TO_DICTIONARY_LITERAL(store);
+		Toy_Literal literal = TOY_TO_DICTIONARY_LITERAL((Toy_LiteralDictionary*)store); //cast from array to dict, because it's intermediate
 		literal.type = TOY_LITERAL_DICTIONARY_INTERMEDIATE; //god damn it - nested in a dictionary
 		index = Toy_pushLiteralArray(&compiler->literalCache, literal);
 		Toy_freeLiteral(literal);
