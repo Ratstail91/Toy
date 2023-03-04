@@ -1651,7 +1651,7 @@ static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 	}
 
 	if (!TOY_IS_ARRAY(compound) && !TOY_IS_DICTIONARY(compound) && !TOY_IS_STRING(compound)) {
-		interpreter->errorOutput("Unknown compound found in indexing notation: ");
+		interpreter->errorOutput("Unknown compound found in index notation: ");
 		Toy_printLiteralCustom(compound, interpreter->errorOutput);
 		interpreter->errorOutput("\n");
 
@@ -1720,7 +1720,7 @@ static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 	return true;
 }
 
-static bool execIndexAssign(Toy_Interpreter* interpreter) {
+static bool execIndexAssign(Toy_Interpreter* interpreter, int assignDepth) {
 	//assume -> compound, first, second, third, assign are all on the stack
 
 	Toy_Literal assign = TOY_TO_NULL_LITERAL, third = TOY_TO_NULL_LITERAL, second = TOY_TO_NULL_LITERAL, first = TOY_TO_NULL_LITERAL, compound = TOY_TO_NULL_LITERAL, result = TOY_TO_NULL_LITERAL;
@@ -1756,7 +1756,7 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 	}
 
 	//iterate...
-	while(interpreter->stack.count >= 4) {
+	while(assignDepth-- >= 0) {
 		Toy_freeLiteral(assign);
 		Toy_freeLiteral(third);
 		Toy_freeLiteral(second);
@@ -1913,6 +1913,9 @@ static void execInterpreter(Toy_Interpreter* interpreter) {
 	if (interpreter->codeStart == -1) {
 		interpreter->codeStart = interpreter->count;
 	}
+
+	//BUGFIX
+	int intermediateAssignDepth = 0;
 
 	unsigned char opcode = readByte(interpreter->bytecode, &interpreter->count);
 
@@ -2128,12 +2131,14 @@ static void execInterpreter(Toy_Interpreter* interpreter) {
 				if (!execIndex(interpreter, true)) {
 					return;
 				}
+				intermediateAssignDepth++;
 			break;
 
 			case TOY_OP_INDEX_ASSIGN:
-				if (!execIndexAssign(interpreter)) {
+				if (!execIndexAssign(interpreter, intermediateAssignDepth)) {
 					return;
 				}
+				intermediateAssignDepth = 0;
 			break;
 
 			case TOY_OP_POP_STACK:
