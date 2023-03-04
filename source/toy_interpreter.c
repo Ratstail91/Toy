@@ -1767,12 +1767,7 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 			assign = Toy_popLiteralArray(&interpreter->stack);
 		}
 		else {
-			compound = result;
-			Toy_freeLiteral(result);
-		
-			//suppress the extra assign value
-			Toy_Literal tmp = Toy_popLiteralArray(&interpreter->stack);
-			Toy_freeLiteral(tmp);
+			assign = result;
 		}
 
 		third = Toy_popLiteralArray(&interpreter->stack);
@@ -1867,6 +1862,12 @@ static bool execIndexAssign(Toy_Interpreter* interpreter) {
 
 		Toy_freeLiteral(op);
 		Toy_freeLiteralArray(&arguments);
+	}
+
+	//BUGFIX: make sure the compound name can be assigned
+	if (TOY_IS_NULL(compoundIdn)) {
+		compoundIdn = Toy_popLiteralArray(&interpreter->stack);
+		freeIdn = true;
 	}
 
 	if (TOY_IS_IDENTIFIER(compoundIdn) && !Toy_setScopeVariable(interpreter->scope, compoundIdn, result, true)) {
