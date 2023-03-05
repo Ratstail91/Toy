@@ -1386,7 +1386,7 @@ int Toy_private_push(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 				Toy_Literal subtypeLiteral = ((Toy_Literal*)(TOY_AS_TYPE(typeLiteral).subtypes))[0];
 
 				if (TOY_AS_TYPE(subtypeLiteral).typeOf != TOY_LITERAL_ANY && TOY_AS_TYPE(subtypeLiteral).typeOf != val.type) {
-					interpreter->errorOutput("Bad argument type in push");
+					interpreter->errorOutput("Bad argument type in push\n");
 					Toy_freeLiteral(typeLiteral);
 					return -1;
 				}
