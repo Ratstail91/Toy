@@ -341,27 +341,27 @@ static Toy_Opcode binary(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	switch(parser->previous.type) {
 		//arithmetic
 		case TOY_TOKEN_PLUS: {
-			parsePrecedence(parser, nodeHandle, PREC_TERM);
+			parsePrecedence(parser, nodeHandle, PREC_TERM + 1);
 			return TOY_OP_ADDITION;
 		}
 
 		case TOY_TOKEN_MINUS: {
-			parsePrecedence(parser, nodeHandle, PREC_TERM);
+			parsePrecedence(parser, nodeHandle, PREC_TERM + 1);
 			return TOY_OP_SUBTRACTION;
 		}
 
 		case TOY_TOKEN_MULTIPLY: {
-			parsePrecedence(parser, nodeHandle, PREC_FACTOR);
+			parsePrecedence(parser, nodeHandle, PREC_FACTOR + 1);
 			return TOY_OP_MULTIPLICATION;
 		}
 
 		case TOY_TOKEN_DIVIDE: {
-			parsePrecedence(parser, nodeHandle, PREC_FACTOR);
+			parsePrecedence(parser, nodeHandle, PREC_FACTOR + 1);
 			return TOY_OP_DIVISION;
 		}
 
 		case TOY_TOKEN_MODULO: {
-			parsePrecedence(parser, nodeHandle, PREC_FACTOR);
+			parsePrecedence(parser, nodeHandle, PREC_FACTOR + 1);
 			return TOY_OP_MODULO;
 		}
 

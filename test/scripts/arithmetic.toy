@@ -38,5 +38,12 @@ s += "bar";
 
 assert s == "foobar", "string addition failed (wasn't sticky enough)";
 
+//check order of operations
+assert 30 / 3 * 2 == 20, "Order of operations failed (raw numbers)";
+var x = 30;
+var y = 3;
+var z = 2;
+assert x / y * z == 20, "Order of operations failed (variables)";
+
 
 print "All good";
