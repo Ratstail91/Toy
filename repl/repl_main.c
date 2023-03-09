@@ -6,10 +6,7 @@
 
 #include "toy_console_colors.h"
 
-#include "toy_lexer.h"
-#include "toy_parser.h"
-#include "toy_compiler.h"
-#include "toy_interpreter.h"
+#include "toy.h"
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -78,10 +78,10 @@ const unsigned char* Toy_compileString(const char* source, size_t* size) {
 	Toy_initParser(&parser, &lexer);
 	Toy_initCompiler(&compiler);
 
-	//run the parser until the end of the source
+	//step 1 - run the parser until the end of the source
 	Toy_ASTNode* node = Toy_scanParser(&parser);
 	while(node != NULL) {
-		//pack up and leave
+		//on error, pack up and leave
 		if (node->type == TOY_AST_NODE_ERROR) {
 			Toy_freeASTNode(node);
 			Toy_freeCompiler(&compiler);
@@ -94,7 +94,7 @@ const unsigned char* Toy_compileString(const char* source, size_t* size) {
 		node = Toy_scanParser(&parser);
 	}
 
-	//get the bytecode dump
+	//step 2 - get the bytecode dump
 	const unsigned char* tb = Toy_collateCompiler(&compiler, size);
 
 	//cleanup
