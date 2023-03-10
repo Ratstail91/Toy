@@ -70,6 +70,7 @@ print tally(); //3
 <hr />
 
 * [repl_tools.h](c-api/repl_tools_h.md)
+* [toy.h](c-api/toy_h.md)
 * [toy_common.h](c-api/toy_common_h.md)
 * [toy_compiler.h](c-api/toy_compiler_h.md)
 * [toy_interpreter.h](c-api/toy_interpreter_h.md)
