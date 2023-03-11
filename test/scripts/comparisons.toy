@@ -23,5 +23,8 @@ assert !false, "!false";
 var c = false;
 assert !c, "!c";
 
+//test multiple comparisons
+assert 1 == 2 == false, "Left-accociative equality failed";
+
 
 print "All good";

@@ -1082,11 +1082,12 @@ static bool execAnd(Toy_Interpreter* interpreter) {
 		return false;
 	}
 
-	if (TOY_IS_TRUTHY(lhs) && TOY_IS_TRUTHY(rhs)) {
-		Toy_pushLiteralArray(&interpreter->stack, TOY_TO_BOOLEAN_LITERAL(true));
+	//short-circuit support
+	if (!TOY_IS_TRUTHY(lhs)) {
+		Toy_pushLiteralArray(&interpreter->stack, lhs);
 	}
 	else {
-		Toy_pushLiteralArray(&interpreter->stack, TOY_TO_BOOLEAN_LITERAL(false));
+		Toy_pushLiteralArray(&interpreter->stack, rhs);
 	}
 
 	Toy_freeLiteral(lhs);
@@ -1115,11 +1116,12 @@ static bool execOr(Toy_Interpreter* interpreter) {
 		return false;
 	}
 
-	if (TOY_IS_TRUTHY(lhs) || TOY_IS_TRUTHY(rhs)) {
-		Toy_pushLiteralArray(&interpreter->stack, TOY_TO_BOOLEAN_LITERAL(true));
+	//short-circuit support
+	if (TOY_IS_TRUTHY(lhs)) {
+		Toy_pushLiteralArray(&interpreter->stack, lhs);
 	}
 	else {
-		Toy_pushLiteralArray(&interpreter->stack, TOY_TO_BOOLEAN_LITERAL(false));
+		Toy_pushLiteralArray(&interpreter->stack, rhs);
 	}
 
 	Toy_freeLiteral(lhs);

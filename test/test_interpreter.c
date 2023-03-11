@@ -132,6 +132,7 @@ int main() {
 			"panic-within-functions.toy",
 			"polyfill-insert.toy",
 			"polyfill-remove.toy",
+			"short-circuiting-support.toy",
 			"ternary-expressions.toy",
 			"types.toy",
 			NULL

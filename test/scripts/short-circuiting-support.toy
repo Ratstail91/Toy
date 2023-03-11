@@ -1,0 +1,9 @@
+//explicitly support && and || short circuits
+
+assert 1 && 2 == 2, "&& short-circuit failed";
+
+assert 1 || 2 == 1, "|| short-circuit failed";
+
+
+print "All good";
+
