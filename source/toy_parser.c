@@ -367,73 +367,73 @@ static Toy_Opcode binary(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 
 		//assignment
 		case TOY_TOKEN_ASSIGN: {
-			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
+			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT + 1);
 			return TOY_OP_VAR_ASSIGN;
 		}
 
 		case TOY_TOKEN_PLUS_ASSIGN: {
-			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
+			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT + 1);
 			return TOY_OP_VAR_ADDITION_ASSIGN;
 		}
 
 		case TOY_TOKEN_MINUS_ASSIGN: {
-			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
+			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT + 1);
 			return TOY_OP_VAR_SUBTRACTION_ASSIGN;
 		}
 
 		case TOY_TOKEN_MULTIPLY_ASSIGN: {
-			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
+			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT + 1);
 			return TOY_OP_VAR_MULTIPLICATION_ASSIGN;
 		}
 
 		case TOY_TOKEN_DIVIDE_ASSIGN: {
-			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
+			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT + 1);
 			return TOY_OP_VAR_DIVISION_ASSIGN;
 		}
 
 		case TOY_TOKEN_MODULO_ASSIGN: {
-			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT);
+			parsePrecedence(parser, nodeHandle, PREC_ASSIGNMENT + 1);
 			return TOY_OP_VAR_MODULO_ASSIGN;
 		}
 
 		//comparison
 		case TOY_TOKEN_EQUAL: {
-			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
+			parsePrecedence(parser, nodeHandle, PREC_COMPARISON + 1);
 			return TOY_OP_COMPARE_EQUAL;
 		}
 
 		case TOY_TOKEN_NOT_EQUAL: {
-			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
+			parsePrecedence(parser, nodeHandle, PREC_COMPARISON + 1);
 			return TOY_OP_COMPARE_NOT_EQUAL;
 		}
 
 		case TOY_TOKEN_LESS: {
-			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
+			parsePrecedence(parser, nodeHandle, PREC_COMPARISON + 1);
 			return TOY_OP_COMPARE_LESS;
 		}
 
 		case TOY_TOKEN_LESS_EQUAL: {
-			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
+			parsePrecedence(parser, nodeHandle, PREC_COMPARISON + 1);
 			return TOY_OP_COMPARE_LESS_EQUAL;
 		}
 
 		case TOY_TOKEN_GREATER: {
-			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
+			parsePrecedence(parser, nodeHandle, PREC_COMPARISON + 1);
 			return TOY_OP_COMPARE_GREATER;
 		}
 
 		case TOY_TOKEN_GREATER_EQUAL: {
-			parsePrecedence(parser, nodeHandle, PREC_COMPARISON);
+			parsePrecedence(parser, nodeHandle, PREC_COMPARISON + 1);
 			return TOY_OP_COMPARE_GREATER_EQUAL;
 		}
 
 		case TOY_TOKEN_AND: {
-			parsePrecedence(parser, nodeHandle, PREC_AND);
+			parsePrecedence(parser, nodeHandle, PREC_AND + 1);
 			return TOY_OP_AND;
 		}
 
 		case TOY_TOKEN_OR: {
-			parsePrecedence(parser, nodeHandle, PREC_OR);
+			parsePrecedence(parser, nodeHandle, PREC_OR + 1);
 			return TOY_OP_OR;
 		}
 
