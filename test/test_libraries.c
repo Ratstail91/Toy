@@ -6,6 +6,7 @@
 #include "toy_console_colors.h"
 
 #include "toy_memory.h"
+#include "toy_drive_system.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -63,15 +64,9 @@ typedef struct Payload {
 
 int main() {
 	//setup the runner filesystem (hacky)
-	Toy_initDriveDictionary();
+	Toy_initDriveSystem();
 
-	Toy_Literal driveLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("scripts"));
-	Toy_Literal pathLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("scripts"));
-
-	Toy_setLiteralDictionary(Toy_getDriveDictionary(), driveLiteral, pathLiteral);
-
-	Toy_freeLiteral(driveLiteral);
-	Toy_freeLiteral(pathLiteral);
+	Toy_setDrivePath("scripts", "scripts");
 
 	{
 		//run each file in test/scripts
@@ -113,7 +108,7 @@ int main() {
 	}
 
 	//lib cleanup
-	Toy_freeDriveDictionary();
+	Toy_freeDriveSystem();
 
 	if (!failedAsserts) {
 		printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);

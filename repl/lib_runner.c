@@ -1,13 +1,12 @@
 #include "lib_runner.h"
 
 #include "toy_memory.h"
+#include "toy_drive_system.h"
 #include "toy_interpreter.h"
 
 #include "repl_tools.h"
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 typedef struct Toy_Runner {
 	Toy_Interpreter interpreter;
@@ -38,7 +37,7 @@ static int nativeLoadScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 		return -1;
 	}
 
-	Toy_Literal filePathLiteral = Toy_getFilePathLiteral(interpreter, &drivePathLiteral);
+	Toy_Literal filePathLiteral = Toy_getDrivePathLiteral(interpreter, &drivePathLiteral);
 
 	if (TOY_IS_NULL(filePathLiteral)) {
 		Toy_freeLiteral(filePathLiteral);
@@ -113,70 +112,19 @@ static int nativeLoadScriptBytecode(Toy_Interpreter* interpreter, Toy_LiteralArr
 		return -1;
 	}
 
-	Toy_RefString* drivePath = Toy_copyRefString(TOY_AS_STRING(drivePathLiteral));
+	Toy_Literal filePathLiteral = Toy_getDrivePathLiteral(interpreter, &drivePathLiteral);
 
-	//get the drive and path as a string (can't trust that pesky strtok - custom split) TODO: move this to refstring library
-	size_t driveLength = 0;
-	while (Toy_toCString(drivePath)[driveLength] != ':') {
-		if (driveLength >= Toy_lengthRefString(drivePath)) {
-			interpreter->errorOutput("Incorrect drive path format given to loadScriptBytecode\n");
-			Toy_deleteRefString(drivePath);
-			Toy_freeLiteral(drivePathLiteral);
-			return -1;
-		}
-
-		driveLength++;
-	}
-
-	Toy_RefString* drive = Toy_createRefStringLength(Toy_toCString(drivePath), driveLength);
-	Toy_RefString* path = Toy_createRefStringLength( &Toy_toCString(drivePath)[driveLength + 1], Toy_lengthRefString(drivePath) - driveLength );
-
-	//get the real drive file path
-	Toy_Literal driveLiteral = TOY_TO_STRING_LITERAL(drive); //NOTE: driveLiteral takes ownership of the refString
-	Toy_Literal realDriveLiteral = Toy_getLiteralDictionary(Toy_getDriveDictionary(), driveLiteral);
-
-	if (!TOY_IS_STRING(realDriveLiteral)) {
-		interpreter->errorOutput("Incorrect literal type found for drive: ");
-		Toy_printLiteralCustom(realDriveLiteral, interpreter->errorOutput);
-		interpreter->errorOutput("\n");
-		Toy_freeLiteral(realDriveLiteral);
-		Toy_freeLiteral(driveLiteral);
-		Toy_deleteRefString(path);
-		Toy_deleteRefString(drivePath);
+	if (TOY_IS_NULL(filePathLiteral)) {
+		Toy_freeLiteral(filePathLiteral);
 		Toy_freeLiteral(drivePathLiteral);
 		return -1;
 	}
 
-	//get the final real file path (concat) TODO: move this concat to refstring library
-	Toy_RefString* realDrive = Toy_copyRefString(TOY_AS_STRING(realDriveLiteral));
-	size_t realLength = Toy_lengthRefString(realDrive) + Toy_lengthRefString(path);
-
-	char* filePath = TOY_ALLOCATE(char, realLength + 1); //+1 for null
-	snprintf(filePath, realLength, "%s%s", Toy_toCString(realDrive), Toy_toCString(path));
-
-	//clean up the drivepath stuff
-	Toy_deleteRefString(realDrive);
-	Toy_freeLiteral(realDriveLiteral);
-	Toy_freeLiteral(driveLiteral);
-	Toy_deleteRefString(path);
-	Toy_deleteRefString(drivePath);
 	Toy_freeLiteral(drivePathLiteral);
 
-	//check for file extensions
-	if (!(filePath[realLength - 4] == '.' && filePath[realLength - 3] == 't' && filePath[realLength - 2] == 'b')) {
-		interpreter->errorOutput("Bad binary file extension (expected .tb)\n");
-		TOY_FREE_ARRAY(char, filePath, realLength);
-		return -1;
-	}
-
-	//check for break-out attempts
-	for (size_t i = 0; i < realLength - 1; i++) {
-		if (filePath[i] == '.' && filePath[i + 1] == '.') {
-			interpreter->errorOutput("Parent directory access not allowed\n");
-			TOY_FREE_ARRAY(char, filePath, realLength);
-			return -1;
-		}
-	}
+	//use raw types - easier
+	const char* filePath = Toy_toCString(TOY_AS_STRING(filePathLiteral));
+	size_t filePathLength = Toy_lengthRefString(TOY_AS_STRING(filePathLiteral));
 
 	//load the bytecode
 	size_t fileSize = 0;
@@ -203,7 +151,8 @@ static int nativeLoadScriptBytecode(Toy_Interpreter* interpreter, Toy_LiteralArr
 	Toy_Literal runnerLiteral = TOY_TO_OPAQUE_LITERAL(runner, TOY_OPAQUE_TAG_RUNNER);
 	Toy_pushLiteralArray(&interpreter->stack, runnerLiteral);
 
-	TOY_FREE_ARRAY(char, filePath, realLength);
+	//free the drive path
+	Toy_freeLiteral(filePathLiteral);
 
 	return 1;
 }
@@ -602,87 +551,3 @@ int Toy_hookRunner(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Lit
 	return 0;
 }
 
-//file system API
-static Toy_LiteralDictionary Toy_driveDictionary;
-
-void Toy_initDriveDictionary() {
-	Toy_initLiteralDictionary(&Toy_driveDictionary);
-}
-
-void Toy_freeDriveDictionary() {
-	Toy_freeLiteralDictionary(&Toy_driveDictionary);
-}
-
-Toy_LiteralDictionary* Toy_getDriveDictionary() {
-	return &Toy_driveDictionary;
-}
-
-Toy_Literal Toy_getFilePathLiteral(Toy_Interpreter* interpreter, Toy_Literal* drivePathLiteral) {
-	//check argument types
-	if (!TOY_IS_STRING(*drivePathLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to Toy_getFilePathLiteral\n");
-		return TOY_TO_NULL_LITERAL;
-	}
-
-	Toy_RefString* drivePath = Toy_copyRefString(TOY_AS_STRING(*drivePathLiteral));
-
-	//get the drive and path as a string (can't trust that pesky strtok - custom split) TODO: move this to refstring library
-	size_t driveLength = 0;
-	while (Toy_toCString(drivePath)[driveLength] != ':') {
-		if (driveLength >= Toy_lengthRefString(drivePath)) {
-			interpreter->errorOutput("Incorrect drive path format given to Toy_getFilePathLiteral\n");
-
-			return TOY_TO_NULL_LITERAL;
-		}
-
-		driveLength++;
-	}
-
-	Toy_RefString* drive = Toy_createRefStringLength(Toy_toCString(drivePath), driveLength);
-	Toy_RefString* path = Toy_createRefStringLength( &Toy_toCString(drivePath)[driveLength + 1], Toy_lengthRefString(drivePath) - driveLength );
-
-	//get the real drive file path
-	Toy_Literal driveLiteral = TOY_TO_STRING_LITERAL(drive); //NOTE: driveLiteral takes ownership of the refString
-	Toy_Literal realDriveLiteral = Toy_getLiteralDictionary(Toy_getDriveDictionary(), driveLiteral);
-
-	if (!TOY_IS_STRING(realDriveLiteral)) {
-		interpreter->errorOutput("Incorrect literal type found for drive: ");
-		Toy_printLiteralCustom(realDriveLiteral, interpreter->errorOutput);
-		interpreter->errorOutput("\n");
-		Toy_freeLiteral(realDriveLiteral);
-		Toy_freeLiteral(driveLiteral);
-		Toy_deleteRefString(path);
-		Toy_deleteRefString(drivePath);
-
-		return TOY_TO_NULL_LITERAL;
-	}
-
-	//get the final real file path (concat) TODO: move this concat to refstring library
-	Toy_RefString* realDrive = Toy_copyRefString(TOY_AS_STRING(realDriveLiteral));
-	size_t realLength = Toy_lengthRefString(realDrive) + Toy_lengthRefString(path);
-
-	char* filePath = TOY_ALLOCATE(char, realLength + 1); //+1 for null
-	snprintf(filePath, realLength, "%s%s", Toy_toCString(realDrive), Toy_toCString(path));
-
-	//clean up the drivepath stuff
-	Toy_deleteRefString(realDrive);
-	Toy_freeLiteral(realDriveLiteral);
-	Toy_freeLiteral(driveLiteral);
-	Toy_deleteRefString(path);
-	Toy_deleteRefString(drivePath);
-
-	//check for break-out attempts
-	for (size_t i = 0; i < realLength - 1; i++) {
-		if (filePath[i] == '.' && filePath[i + 1] == '.') {
-			interpreter->errorOutput("Parent directory access not allowed\n");
-			TOY_FREE_ARRAY(char, filePath, realLength + 1);
-			return TOY_TO_NULL_LITERAL;
-		}
-	}
-
-	Toy_Literal result = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(filePath, realLength));
-
-	TOY_FREE_ARRAY(char, filePath, realLength + 1);
-
-	return result;
-}

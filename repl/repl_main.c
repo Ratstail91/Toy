@@ -103,16 +103,9 @@ void repl(const char* initialInput) {
 int main(int argc, const char* argv[]) {
 	Toy_initCommandLine(argc, argv);
 
-	//lib setup (hacky - only really for this program)
-	Toy_initDriveDictionary();
-
-	Toy_Literal driveLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("scripts"));
-	Toy_Literal pathLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("scripts"));
-
-	Toy_setLiteralDictionary(Toy_getDriveDictionary(), driveLiteral, pathLiteral);
-
-	Toy_freeLiteral(driveLiteral);
-	Toy_freeLiteral(pathLiteral);
+	//setup the drive system (for filesystem access)
+	Toy_initDriveSystem();
+	Toy_setDrivePath("scripts", "scripts");
 
 	//command line specific actions
 	if (Toy_commandLine.error) {
@@ -148,7 +141,7 @@ int main(int argc, const char* argv[]) {
 		Toy_runSourceFile(Toy_commandLine.sourcefile);
 
 		//lib cleanup
-		Toy_freeDriveDictionary();
+		Toy_freeDriveSystem();
 
 		return 0;
 	}
@@ -158,7 +151,7 @@ int main(int argc, const char* argv[]) {
 		Toy_runSource(Toy_commandLine.source);
 
 		//lib cleanup
-		Toy_freeDriveDictionary();
+		Toy_freeDriveSystem();
 
 		return 0;
 	}
@@ -204,7 +197,7 @@ int main(int argc, const char* argv[]) {
 		Toy_runBinaryFile(Toy_commandLine.binaryfile);
 
 		//lib cleanup
-		Toy_freeDriveDictionary();
+		Toy_freeDriveSystem();
 
 		return 0;
 	}
@@ -225,7 +218,7 @@ int main(int argc, const char* argv[]) {
 	repl(initialSource);
 
 	//lib cleanup
-	Toy_freeDriveDictionary();
+	Toy_freeDriveSystem();
 
 	return 0;
 }
