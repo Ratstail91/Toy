@@ -73,7 +73,7 @@ Toy_Literal Toy_getDrivePathLiteral(Toy_Interpreter* interpreter, Toy_Literal* d
 	size_t fileLength = Toy_lengthRefString(path) + Toy_lengthRefString(filePath);
 
 	char* file = TOY_ALLOCATE(char, fileLength + 1); //+1 for null
-	snprintf(file, fileLength, "%s%s", Toy_toCString(drive), Toy_toCString(filePath));
+	snprintf(file, fileLength, "%s%s", Toy_toCString(path), Toy_toCString(filePath));
 
 	//clean up the drive/path stuff
     Toy_deleteRefString(drivePath);
