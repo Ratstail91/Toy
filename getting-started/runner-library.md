@@ -4,35 +4,6 @@ The runner library is used to execute one script from inside another. It also ha
 
 The runner library has a concept called a "dirty" script - dirty scripts are those which have already been run, and whose variables can be accessed. Dirty scripts must be reset before it is run again.
 
-When using this library, you must first initialize the "drives" that are available. A drive is a simple way to ensure that the user and any modders don't have access to the entire hard drive. To set up the drives, you must designate a name for each folder you wish to enable access to, like so:
-
-```c
-//it's a good idea to place this early in the program's execution, where it will only be run once
-int main(int argc, const char* argv[]) {
-    //the drive system uses a LiteralDictionary, which must be initialized with this
-    Toy_initDriveDictionary();
-
-    //create a pair of literals, the first for the drive name, the second for the path
-    Toy_Literal driveLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("scripts"));
-    Toy_Literal pathLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("C:/path/to/scripts"));
-
-    //set these within the drive dictionary
-    Toy_setLiteralDictionary(Toy_getDriveDictionary(), driveLiteral, pathLiteral);
-
-    //these literals are no longer needed
-    Toy_freeLiteral(driveLiteral);
-    Toy_freeLiteral(pathLiteral);
-
-    //run the rest of your program
-    repl();
-
-    //clean up the drive dictionary when you're done
-    Toy_freeDriveDictionary();
-
-    return 0;
-}
-```
-
 The runner library can usually be accessed with the `import` keyword:
 
 ```toy
@@ -82,4 +53,8 @@ This function resets the script so that it is no longer in a "dirty" state, and 
 ## freeScript(self: opaque)
 
 This function frees a script's resources, cleaning up any memory that is no longer needed. Failing to call this will result in a memory leak.
+
+## checkScriptDirty(self: opaque)
+
+This function returns true of the script is "dirty", otherwise it returns false.
 

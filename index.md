@@ -73,6 +73,7 @@ print tally(); //3
 * [toy.h](c-api/toy_h.md)
 * [toy_common.h](c-api/toy_common_h.md)
 * [toy_compiler.h](c-api/toy_compiler_h.md)
+* [toy_drive_system.h](c-api/toy_drive_system_h.md)
 * [toy_interpreter.h](c-api/toy_interpreter_h.md)
 * [toy_lexer.h](c-api/toy_lexer_h.md)
 * [toy_literal_array.h](c-api/toy_literal_array_h.md)
