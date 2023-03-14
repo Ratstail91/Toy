@@ -28,7 +28,9 @@
 
 #endif
 
-//for processing the command line arguments
+#ifndef TOY_EXPORT
+
+//for processing the command line arguments in the repl
 typedef struct {
 	bool error;
 	bool help;
@@ -51,3 +53,5 @@ TOY_API void Toy_initCommandLine(int argc, const char* argv[]);
 TOY_API void Toy_usageCommandLine(int argc, const char* argv[]);
 TOY_API void Toy_helpCommandLine(int argc, const char* argv[]);
 TOY_API void Toy_copyrightCommandLine(int argc, const char* argv[]);
+
+#endif

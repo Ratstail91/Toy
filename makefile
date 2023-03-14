@@ -28,10 +28,10 @@ library: $(TOY_OUTDIR)
 static: $(TOY_OUTDIR)
 	$(MAKE) -j8 -C source static
 
-library-release: $(TOY_OUTDIR)
+library-release: clean $(TOY_OUTDIR)
 	$(MAKE) -j8 -C source library-release
 
-static-release: $(TOY_OUTDIR)
+static-release: clean $(TOY_OUTDIR)
 	$(MAKE) -j8 -C source static-release
 
 #utils

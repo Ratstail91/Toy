@@ -12,12 +12,17 @@
 #include <string.h>
 
 static void printWrapper(const char* output) {
+	//allow for disabling of newlines in the repl
+#ifndef TOY_EXPORT
 	if (Toy_commandLine.enablePrintNewline) {
 		printf("%s\n", output);
 	}
 	else {
 		printf("%s", output);
 	}
+#else
+	printf("%s\n", output);
+#endif
 }
 
 static void assertWrapper(const char* output) {
