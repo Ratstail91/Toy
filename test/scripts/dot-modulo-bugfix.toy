@@ -1,0 +1,23 @@
+var days = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday"
+];
+
+var rng = 10; //for chosen at random
+
+
+var index = rng % days.length();
+
+assert index == 3, "dot modulo bugfix failed";
+
+rng %= days.length();
+
+assert rng == 3, "dot modulo assign bugfix failed";
+
+
+print "All good";

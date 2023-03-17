@@ -114,6 +114,7 @@ int main() {
 			"dot-and-matrix.toy",
 			"dot-assignments-bugfix.toy",
 			"dot-chaining.toy",
+			"dot-modulo-bugfix.toy",
 			"dottify-bugfix.toy",
 			"functions.toy",
 			"index-arrays.toy",

@@ -331,9 +331,37 @@ static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode
 				return node->binary.opcode;
 			}
 
-			if (ret != TOY_OP_EOF && (node->binary.opcode == TOY_OP_VAR_ASSIGN || node->binary.opcode == TOY_OP_AND || node->binary.opcode == TOY_OP_OR || (node->binary.opcode >= TOY_OP_COMPARE_EQUAL && node->binary.opcode <= TOY_OP_INVERT))) {
-				compiler->bytecode[compiler->count++] = (unsigned char)ret; //1 byte
-				ret = TOY_OP_EOF; //untangle in this case
+			//untangle in these cases - (WTF, are you serious?)
+			if (ret != TOY_OP_EOF) {
+				switch(node->binary.opcode) {
+					case TOY_OP_NEGATE:
+					case TOY_OP_ADDITION:
+					case TOY_OP_SUBTRACTION:
+					case TOY_OP_MULTIPLICATION:
+					case TOY_OP_DIVISION:
+					case TOY_OP_MODULO:
+					case TOY_OP_VAR_ASSIGN:
+					case TOY_OP_VAR_ADDITION_ASSIGN:
+					case TOY_OP_VAR_SUBTRACTION_ASSIGN:
+					case TOY_OP_VAR_MULTIPLICATION_ASSIGN:
+					case TOY_OP_VAR_DIVISION_ASSIGN:
+					case TOY_OP_VAR_MODULO_ASSIGN:
+					case TOY_OP_COMPARE_EQUAL:
+					case TOY_OP_COMPARE_NOT_EQUAL:
+					case TOY_OP_COMPARE_LESS:
+					case TOY_OP_COMPARE_LESS_EQUAL:
+					case TOY_OP_COMPARE_GREATER:
+					case TOY_OP_COMPARE_GREATER_EQUAL:
+					case TOY_OP_INVERT:
+					case TOY_OP_AND:
+					case TOY_OP_OR:
+						//place the rhs result before the outer instruction
+						compiler->bytecode[compiler->count++] = (unsigned char)ret; //1 byte
+						ret = TOY_OP_EOF;
+
+					default:
+						break;
+				}
 			}
 
 			compiler->bytecode[compiler->count++] = (unsigned char)node->binary.opcode; //1 byte

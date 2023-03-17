@@ -1,0 +1,27 @@
+var colors = [
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "blue",
+    "violet",
+    "indigo"
+];
+
+fn getRainbowColor(index) {
+    return colors[index];
+}
+
+
+import standard;
+import random;
+
+var rng: opaque = createRandomGenerator(hash(clock()));
+
+
+
+print getRainbowColor(rng.generateRandomNumber() % colors.length());
+print getRainbowColor(rng.generateRandomNumber() % colors.length());
+print getRainbowColor(rng.generateRandomNumber() % colors.length());
+print getRainbowColor(rng.generateRandomNumber() % colors.length());
+print getRainbowColor(rng.generateRandomNumber() % colors.length());
