@@ -108,6 +108,7 @@ int main() {
 		//run each file in tests/scripts/
 		const char* filenames[] = {
 			"arithmetic.toy",
+			"casting-parentheses-bugfix.toy",
 			"casting.toy",
 			"coercions.toy",
 			"comparisons.toy",

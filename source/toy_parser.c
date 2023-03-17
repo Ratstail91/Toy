@@ -739,6 +739,27 @@ static Toy_Opcode decrementInfix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 }
 
 static Toy_Opcode fnCall(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
+	//wait - is the previous token a type? this should be casting instead
+	if (parser->previous.type >= TOY_TOKEN_NULL && parser->previous.type <= TOY_TOKEN_ANY) {
+		//casting type
+		Toy_ASTNode* lhsNode = NULL;
+		castingPrefix(parser, &lhsNode);
+		advance(parser);
+
+		//casting value
+		Toy_ASTNode* rhsNode = NULL;
+		grouping(parser, &rhsNode);
+
+		//emit the cast node
+
+		Toy_emitASTNodeBinary(&lhsNode, rhsNode, TOY_OP_TYPE_CAST);
+
+		//pass it off to the caller
+		*nodeHandle = lhsNode;
+
+		return TOY_OP_GROUPING_BEGIN; //dummy value
+	}
+
 	advance(parser); //skip the left paren
 
 	//binary() is an infix rule - so only get the RHS of the operator

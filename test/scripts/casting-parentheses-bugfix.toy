@@ -1,0 +1,7 @@
+var s = "42";
+var t = "69";
+
+assert int (s + t) - 1 == 4268, "casting parentheses failed";
+
+
+print "All good";
