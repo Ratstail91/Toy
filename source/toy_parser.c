@@ -658,7 +658,7 @@ static Toy_Opcode castingInfix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 		break;
 
 		case TOY_TOKEN_LITERAL_STRING:
-			atomic(parser, nodeHandle);
+			string(parser, nodeHandle);
 		break;
 
 		default:
