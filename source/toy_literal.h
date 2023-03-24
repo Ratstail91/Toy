@@ -63,12 +63,11 @@ typedef struct Toy_Literal {
 		} function; //16
 
 		struct { //for variable names
-            Toy_RefString* ptr;  //8
+			Toy_RefString* ptr;  //8
 			int hash; //4
-        } identifier; //16
+		} identifier; //16
 
 		struct {
-			
 			struct Toy_Literal* subtypes; //8
 			Toy_LiteralType typeOf;  //4
 			unsigned char capacity; //1
