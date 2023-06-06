@@ -28,7 +28,7 @@
 
 #endif
 
-#ifndef TOY_EXPORT
+#ifndef TOY_DISABLE_REPL
 
 //for processing the command line arguments in the repl
 typedef struct {

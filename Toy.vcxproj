@@ -132,6 +132,7 @@
     <ClCompile Include="source\toy_literal_dictionary.c" />
     <ClCompile Include="source\toy_memory.c" />
     <ClCompile Include="source\toy_parser.c" />
+    <ClCompile Include="source\toy_reffunction.c" />
     <ClCompile Include="source\toy_refstring.c" />
     <ClCompile Include="source\toy_scope.c" />
   </ItemGroup>
@@ -152,6 +153,7 @@
     <ClInclude Include="source\toy_memory.h" />
     <ClInclude Include="source\toy_opcodes.h" />
     <ClInclude Include="source\toy_parser.h" />
+    <ClInclude Include="source\toy_reffunction.h" />
     <ClInclude Include="source\toy_refstring.h" />
     <ClInclude Include="source\toy_scope.h" />
     <ClInclude Include="source\toy_token_types.h" />

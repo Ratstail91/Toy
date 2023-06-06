@@ -15,7 +15,7 @@ STATIC_ASSERT(sizeof(unsigned char) == 1);
 STATIC_ASSERT(sizeof(unsigned short) == 2);
 STATIC_ASSERT(sizeof(unsigned int) == 4);
 
-#ifndef TOY_EXPORT
+#ifndef TOY_DISABLE_REPL
 
 //declare the singleton with default values
 Toy_CommandLine Toy_commandLine = {
