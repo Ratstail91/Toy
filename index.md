@@ -81,5 +81,6 @@ print tally(); //3
 * [toy_literal.h](c-api/toy_literal_h.md)
 * [toy_memory.h](c-api/toy_memory_h.md)
 * [toy_parser.h](c-api/toy_parser_h.md)
+* toy_reffunction.h (docs coming soon)
 * [toy_refstring.h](c-api/toy_refstring_h.md)
 * [toy_scope.h](c-api/toy_scope_h.md)
