@@ -1,6 +1,16 @@
 #pragma once
 
-//NOTE: you need both font AND background for these to work
+/* toy_console_colors.h - console utility
+
+This file provides a number of macros that can set the color of text in a console
+window. These are used for convenience only. They are supposed to be dropped into
+a printf()'s first argument, like so:
+
+    printf(TOY_CC_NOTICE "Hello world" TOY_CC_RESET);
+
+NOTE: you need both font AND background for these to work
+
+*/
 
 //platform/compiler-specific instructions
 #if defined(__linux__) || defined(__MINGW32__) || defined(__GNUC__)

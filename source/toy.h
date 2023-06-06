@@ -61,8 +61,10 @@ to the same string to save memory, and you can just create a new one of these va
 rather than copying entirely for a speed boost. This module has it's own memory allocator system that is
 plugged into the main memory allocator.
 
+`Toy_RefFunction` acts similarly to `Toy_RefString`, but instead operates on function bytecode.
+
 */
 
 #include "toy_scope.h"
 #include "toy_refstring.h"
-
+#include "toy_reffunction.h"

@@ -1,5 +1,6 @@
 #include "toy_memory.h"
 #include "toy_refstring.h"
+#include "toy_reffunction.h"
 
 #include "toy_console_colors.h"
 
@@ -49,4 +50,5 @@ void Toy_setMemoryAllocator(Toy_MemoryAllocatorFn fn) {
 
 	allocator = fn;
 	Toy_setRefStringAllocatorFn(fn);
+	Toy_setRefFunctionAllocatorFn(fn);
 }
