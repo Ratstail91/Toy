@@ -1193,7 +1193,7 @@ static void readInterpreterSections(Toy_Interpreter* interpreter);
 //also supports identifier & arg1 to be other way around (looseFirstArgument)
 static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 	//BUGFIX: depth check - don't drown!
-	if (interpreter->depth >= 200) {
+	if (interpreter->depth >= 1000 * 10) {
 		interpreter->errorOutput("Infinite recursion detected - panicking\n");
 		interpreter->panic = true;
 		return false;
