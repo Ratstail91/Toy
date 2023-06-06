@@ -1323,8 +1323,8 @@ bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_Liter
 	//init the inner interpreter manually
 	Toy_initLiteralArray(&inner.literalCache);
 	inner.scope = Toy_pushScope(func.as.function.scope);
-	inner.bytecode = TOY_AS_FUNCTION(func).inner.bytecode;
-	inner.length = TOY_AS_FUNCTION_BYTECODE_LENGTH(func);
+	inner.bytecode = ((Toy_RefFunction*)(TOY_AS_FUNCTION(func).inner.ptr))->data;
+	inner.length = ((Toy_RefFunction*)(TOY_AS_FUNCTION(func).inner.ptr))->length;
 	inner.count = 0;
 	inner.codeStart = -1;
 	inner.depth = interpreter->depth + 1;
@@ -2428,20 +2428,16 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 			//get the size of the function
 			size_t size = (size_t)readShort(interpreter->bytecode, &interpreter->count);
 
-			//read the function code (literal cache and all)
-			unsigned char* bytes = TOY_ALLOCATE(unsigned char, size);
-			memcpy(bytes, interpreter->bytecode + interpreter->count, size); //TODO: -1 for the ending mark
-			interpreter->count += size;
-
 			//assert that the last memory slot is function end
-			if (bytes[size - 1] != TOY_OP_FN_END) {
+			if (interpreter->bytecode[interpreter->count + size - 1] != TOY_OP_FN_END) {
 				interpreter->errorOutput("[internal] Failed to find function end");
-				TOY_FREE_ARRAY(unsigned char, bytes, size);
 				return;
 			}
 
-			//change the type to normal
-			interpreter->literalCache.literals[i] = TOY_TO_FUNCTION_LITERAL(bytes, size);
+			//copies internally, since functions can exist independant of literalCache
+			interpreter->literalCache.literals[i] = TOY_TO_FUNCTION_LITERAL(Toy_createRefFunction(interpreter->bytecode + interpreter->count, size));
+
+			interpreter->count += size;
 		}
 	}
 

@@ -3,6 +3,7 @@
 #include "toy_common.h"
 
 #include "toy_refstring.h"
+#include "toy_reffunction.h"
 
 //forward delcare stuff
 struct Toy_Literal;
@@ -55,7 +56,7 @@ typedef struct Toy_Literal {
 
 		struct {
 			union {
-				void* bytecode;  //8
+				Toy_RefFunction* ptr;  //8
 				Toy_NativeFn native; //8
 				Toy_HookFn hook; //8
 			} inner;  //8
@@ -79,10 +80,13 @@ typedef struct Toy_Literal {
 			void* ptr; //8
 			int tag; //4
 		} opaque; //16
+
+		void* generic; //8
 	} as; //16
 
 	Toy_LiteralType type; //4
-	int bytecodeLength; //4 - shenanigans with byte alignment reduces the size of Toy_Literal
+	//4 - unused
+	//shenanigans with byte alignment reduces the size of Toy_Literal
 } Toy_Literal;
 
 #define TOY_IS_NULL(value)						((value).type == TOY_LITERAL_NULL)
@@ -112,29 +116,29 @@ typedef struct Toy_Literal {
 #define TOY_AS_TYPE(value)						((value).as.type)
 #define TOY_AS_OPAQUE(value)					((value).as.opaque.ptr)
 
-#define TOY_TO_NULL_LITERAL						((Toy_Literal){{ .integer = 0 }, TOY_LITERAL_NULL, 0})
-#define TOY_TO_BOOLEAN_LITERAL(value)			((Toy_Literal){{ .boolean = value }, TOY_LITERAL_BOOLEAN, 0})
-#define TOY_TO_INTEGER_LITERAL(value)			((Toy_Literal){{ .integer = value }, TOY_LITERAL_INTEGER, 0})
-#define TOY_TO_FLOAT_LITERAL(value)				((Toy_Literal){{ .number = value }, TOY_LITERAL_FLOAT, 0})
-#define TOY_TO_STRING_LITERAL(value)			Toy_private_toStringLiteral(value)
-#define TOY_TO_ARRAY_LITERAL(value)				((Toy_Literal){{ .array = value }, TOY_LITERAL_ARRAY, 0})
-#define TOY_TO_DICTIONARY_LITERAL(value)		((Toy_Literal){{ .dictionary = value }, TOY_LITERAL_DICTIONARY, 0})
-#define TOY_TO_FUNCTION_LITERAL(value, l)		((Toy_Literal){{ .function = { .inner = { .bytecode = value }, .scope = NULL }}, TOY_LITERAL_FUNCTION, l})
-#define TOY_TO_FUNCTION_NATIVE_LITERAL(value)	((Toy_Literal){{ .function = { .inner = { .native = value }, .scope = NULL }}, TOY_LITERAL_FUNCTION_NATIVE, 0})
-#define TOY_TO_FUNCTION_HOOK_LITERAL(value)		((Toy_Literal){{ .function = { .inner = { .hook = value }, .scope = NULL }}, TOY_LITERAL_FUNCTION_HOOK, 0})
+#define TOY_TO_NULL_LITERAL						((Toy_Literal){{ .integer = 0 }, TOY_LITERAL_NULL})
+#define TOY_TO_BOOLEAN_LITERAL(value)			((Toy_Literal){{ .boolean = value }, TOY_LITERAL_BOOLEAN})
+#define TOY_TO_INTEGER_LITERAL(value)			((Toy_Literal){{ .integer = value }, TOY_LITERAL_INTEGER})
+#define TOY_TO_FLOAT_LITERAL(value)				((Toy_Literal){{ .number = value }, TOY_LITERAL_FLOAT})
+#define TOY_TO_STRING_LITERAL(value)			((Toy_Literal){{ .string = { .ptr = value }},TOY_LITERAL_STRING})
+#define TOY_TO_ARRAY_LITERAL(value)				((Toy_Literal){{ .array = value }, TOY_LITERAL_ARRAY})
+#define TOY_TO_DICTIONARY_LITERAL(value)		((Toy_Literal){{ .dictionary = value }, TOY_LITERAL_DICTIONARY})
+#define TOY_TO_FUNCTION_LITERAL(value)			((Toy_Literal){{ .function = { .inner = { .ptr = value }, .scope = NULL }}, TOY_LITERAL_FUNCTION})
+#define TOY_TO_FUNCTION_NATIVE_LITERAL(value)	((Toy_Literal){{ .function = { .inner = { .native = value }, .scope = NULL }}, TOY_LITERAL_FUNCTION_NATIVE})
+#define TOY_TO_FUNCTION_HOOK_LITERAL(value)		((Toy_Literal){{ .function = { .inner = { .hook = value }, .scope = NULL }}, TOY_LITERAL_FUNCTION_HOOK})
 #define TOY_TO_IDENTIFIER_LITERAL(value)		Toy_private_toIdentifierLiteral(value)
-#define TOY_TO_TYPE_LITERAL(value, c)			((Toy_Literal){{ .type = { .typeOf = value, .constant = c, .subtypes = NULL, .capacity = 0, .count = 0 }}, TOY_LITERAL_TYPE, 0})
-#define TOY_TO_OPAQUE_LITERAL(value, t)			((Toy_Literal){{ .opaque = { .ptr = value, .tag = t }}, TOY_LITERAL_OPAQUE, 0})
+#define TOY_TO_TYPE_LITERAL(value, c)			((Toy_Literal){{ .type = { .typeOf = value, .constant = c, .subtypes = NULL, .capacity = 0, .count = 0 }}, TOY_LITERAL_TYPE})
+#define TOY_TO_OPAQUE_LITERAL(value, t)			((Toy_Literal){{ .opaque = { .ptr = value, .tag = t }}, TOY_LITERAL_OPAQUE})
 
 //BUGFIX: For blank indexing
 #define TOY_IS_INDEX_BLANK(value)				((value).type == TOY_LITERAL_INDEX_BLANK)
-#define TOY_TO_INDEX_BLANK_LITERAL				((Toy_Literal){{ .integer = 0 }, TOY_LITERAL_INDEX_BLANK, 0})
+#define TOY_TO_INDEX_BLANK_LITERAL				((Toy_Literal){{ .integer = 0 }, TOY_LITERAL_INDEX_BLANK})
 
 TOY_API void Toy_freeLiteral(Toy_Literal literal);
 
 #define TOY_IS_TRUTHY(x) Toy_private_isTruthy(x)
 
-#define TOY_AS_FUNCTION_BYTECODE_LENGTH(lit)	((lit).bytecodeLength)
+#define TOY_AS_FUNCTION_BYTECODE_LENGTH(lit)	(Toy_lengthRefFunction((lit).inner.ptr))
 
 #define TOY_MAX_STRING_LENGTH					4096
 #define TOY_HASH_I(lit)							((lit).as.identifier.hash)
@@ -143,7 +147,6 @@ TOY_API void Toy_freeLiteral(Toy_Literal literal);
 
 //BUGFIX: macros are not functions
 TOY_API bool Toy_private_isTruthy(Toy_Literal x);
-TOY_API Toy_Literal Toy_private_toStringLiteral(Toy_RefString* ptr);
 TOY_API Toy_Literal Toy_private_toIdentifierLiteral(Toy_RefString* ptr);
 TOY_API Toy_Literal* Toy_private_typePushSubtype(Toy_Literal* lit, Toy_Literal subtype);
 

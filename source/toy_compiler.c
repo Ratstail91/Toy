@@ -518,8 +518,7 @@ static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode
 			}
 
 			//create the function in the literal cache (by storing the compiler object)
-			Toy_Literal fnLiteral = TOY_TO_FUNCTION_LITERAL(fnCompiler, 0);
-			fnLiteral.type = TOY_LITERAL_FUNCTION_INTERMEDIATE; //NOTE: changing type
+			Toy_Literal fnLiteral = ((Toy_Literal){ .as = { .generic = fnCompiler }, .type = TOY_LITERAL_FUNCTION_INTERMEDIATE});
 
 			//push the name
 			int identifierIndex = Toy_findLiteralIndex(&compiler->literalCache, node->fnDecl.identifier);
@@ -1210,7 +1209,7 @@ static unsigned char* collateCompilerHeaderOpt(Toy_Compiler* compiler, size_t* s
 			case TOY_LITERAL_FUNCTION_INTERMEDIATE: {
 				//extract the compiler
 				Toy_Literal fn = compiler->literalCache.literals[i];
-				void* fnCompiler = TOY_AS_FUNCTION(fn).inner.bytecode; //store the compiler here for now
+				void* fnCompiler = fn.as.generic; //store the compiler here for now
 
 				//collate the function into bytecode (without header)
 				size_t size = 0;
