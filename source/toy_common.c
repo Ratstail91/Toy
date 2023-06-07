@@ -15,6 +15,12 @@ STATIC_ASSERT(sizeof(unsigned char) == 1);
 STATIC_ASSERT(sizeof(unsigned short) == 2);
 STATIC_ASSERT(sizeof(unsigned int) == 4);
 
+static const char* build = __DATE__ " " __TIME__;
+
+const char* Toy_private_version_build() {
+	return build;
+}
+
 #ifndef TOY_DISABLE_REPL
 
 //declare the singleton with default values
@@ -29,6 +35,7 @@ Toy_CommandLine Toy_commandLine = {
 	.source = NULL,
 	.initialfile = NULL,
 	.enablePrintNewline = true,
+	.parseBytecodeHeader = false,
 	.verbose = false
 };
 
@@ -89,6 +96,16 @@ void Toy_initCommandLine(int argc, const char* argv[]) {
 			continue;
 		}
 
+		if (!strcmp(argv[i], "-p")) {
+			Toy_commandLine.parseBytecodeHeader = true;
+
+			if (Toy_commandLine.binaryfile) {
+				Toy_commandLine.error = false;
+			}
+
+			continue;
+		}
+
 		if (!strcmp(argv[i], "-n")) {
 			Toy_commandLine.enablePrintNewline = false;
 			Toy_commandLine.error = false;
@@ -124,6 +141,7 @@ void Toy_helpCommandLine(int argc, const char* argv[]) {
 	printf("  -c, --compile filename\tParse and compile the specified source file into an output file.\n");
 	printf("  -o, --output outfile\t\tName of the output file built with --compile (default: out.tb).\n");
 	printf("  -t, --initial filename\tStart the repl as normal, after first running the given file.\n");
+	printf("  -p\t\t\t\tParse the given bytecode's header, then exit (requires file.tb).\n");
 	printf("  -n\t\t\t\tDisable the newline character at the end of the print statement.\n");
 }
 

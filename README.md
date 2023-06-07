@@ -4,9 +4,11 @@
 
 # Toy
 
-This is the Toy programming language interpreter, written in C.
+The Toy programming language is an imperative bytecode-intermediate embedded scripting language. It isn't intended to operate on its own, but rather as part of another program, the "host". This process is intended to allow a decent amount of easy customisation by the host's end user, by exposing logic in script files. Alternatively, binary files in a custom format can be used as well.
 
-Special thanks to http://craftinginterpreters.com/ for their fantastic book that set me on this path.
+The host will provide all of the extensions needed on a case-by-case basis. Script files have the `.toy` file extension, while binary files have the `.tb` file extension.
+
+This is the Toy programming language interpreter, written in C.
 
 # Nifty Features
 
@@ -14,7 +16,7 @@ Special thanks to http://craftinginterpreters.com/ for their fantastic book that
 * Bytecode intermediate compilation
 * Optional, but robust type system (including `opaque` for arbitrary data)
 * Functions and types are first-class citizens
-* Import external libraries
+* Import native libraries from the host
 * Fancy slice notation for strings, arrays and dictionaries
 * Can re-direct output, error and assertion failure messages
 * Open source under the zlib license
@@ -71,3 +73,4 @@ This source code is covered by the zlib license (see [LICENSE.md](LICENSE.md)).
 
 * Seth A. Robinson
 
+Special thanks to http://craftinginterpreters.com/ for their fantastic book that set me on this path.

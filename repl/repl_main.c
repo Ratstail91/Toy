@@ -193,8 +193,14 @@ int main(int argc, const char* argv[]) {
 			return -1;
 		}
 
-		//run the binary file
-		Toy_runBinaryFile(Toy_commandLine.binaryfile);
+		if (Toy_commandLine.parseBytecodeHeader) {
+			//only parse the bytecode header
+			Toy_parseBinaryFileHeader(Toy_commandLine.binaryfile);
+		}
+		else {
+			//run the binary file
+			Toy_runBinaryFile(Toy_commandLine.binaryfile);
+		}
 
 		//lib cleanup
 		Toy_freeDriveSystem();

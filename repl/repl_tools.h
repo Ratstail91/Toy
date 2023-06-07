@@ -12,3 +12,4 @@ void Toy_runBinaryFile(const char* fname);
 void Toy_runSource(const char* source);
 void Toy_runSourceFile(const char* fname);
 
+void Toy_parseBinaryFileHeader(const char* fname);

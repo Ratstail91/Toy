@@ -149,3 +149,59 @@ void Toy_runSourceFile(const char* fname) {
 	Toy_runSource(source);
 	free((void*)source);
 }
+
+//utils for debugging the header
+static unsigned char readByte(const unsigned char* tb, int* count) {
+	unsigned char ret = *(unsigned char*)(tb + *count);
+	*count += 1;
+	return ret;
+}
+
+static const char* readString(const unsigned char* tb, int* count) {
+	const unsigned char* ret = tb + *count;
+	*count += strlen((char*)ret) + 1; //+1 for null character
+	return (const char*)ret;
+}
+
+void Toy_parseBinaryFileHeader(const char* fname) {
+	size_t size = 0; //not used
+	const unsigned char* tb = Toy_readFile(fname, &size);
+	if (!tb || size < 4) {
+		return;
+	}
+
+	int count = 0;
+
+	//header section
+	const unsigned char major = readByte(tb, &count);
+	const unsigned char minor = readByte(tb, &count);
+	const unsigned char patch = readByte(tb, &count);
+
+	const char* build = readString(tb, &count);
+
+	printf("Toy Programming Language Interpreter Version %d.%d.%d (interpreter built on %s)\n\n", TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, TOY_VERSION_BUILD);
+
+	printf("Toy Programming Language Bytecode Version ");
+
+	//print the output
+	if (major == TOY_VERSION_MAJOR && minor == TOY_VERSION_MINOR && patch == TOY_VERSION_PATCH) {
+		printf("%d.%d.%d", major, minor, patch);
+	}
+	else {
+		printf(TOY_CC_FONT_YELLOW TOY_CC_BACK_BLACK "%d.%d.%d" TOY_CC_RESET, major, minor, patch);
+	}
+
+	printf(" (interpreter built on ");
+
+	if (strncmp(build, TOY_VERSION_BUILD, strlen(TOY_VERSION_BUILD)) == 0) {
+		printf("%s", build);
+	}
+	else {
+		printf(TOY_CC_FONT_YELLOW TOY_CC_BACK_BLACK "%s" TOY_CC_RESET, build);
+	}
+
+	printf(")\n");
+
+	//cleanup
+	free((void*)tb);
+}
