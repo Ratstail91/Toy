@@ -119,6 +119,7 @@ ParseRule parseRules[];
 static void declaration(Toy_Parser* parser, Toy_ASTNode** nodeHandle);
 static void parsePrecedence(Toy_Parser* parser, Toy_ASTNode** nodeHandle, PrecedenceRule rule);
 static Toy_Literal readTypeToLiteral(Toy_Parser* parser);
+static void varDecl(Toy_Parser* parser, Toy_ASTNode** nodeHandle);
 
 //TODO: resolve the messy order of these
 //the expression rules
@@ -1397,7 +1398,13 @@ static void forStmt(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 
 	//check the pre-clause
 	if (parser->current.type != TOY_TOKEN_SEMICOLON) {
-		declaration(parser, &preClause); //allow defining variables in the pre-clause
+		//allow defining variables in the pre-clause
+		if (match(parser, TOY_TOKEN_VAR)) {
+			varDecl(parser, &preClause);
+		}
+		else {
+			parsePrecedence(parser, &preClause, PREC_ASSIGNMENT);
+		}
 	}
 	else {
 		consume(parser, TOY_TOKEN_SEMICOLON, "Expected ';' after empty declaration of for clause");
