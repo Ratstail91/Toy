@@ -36,7 +36,7 @@ print tally(); //3
 * Bytecode intermediate compilation
 * Optional, but robust type system (including `opaque` for arbitrary data)
 * Functions and types are first-class citizens
-* Import external libraries
+* Import native libraries from the host
 * Fancy slice notation for strings, arrays and dictionaries
 * Can re-direct output, error and assertion failure messages
 * Open source under the zlib license
