@@ -372,8 +372,10 @@ int Toy_hashLiteral(Toy_Literal lit) {
 		case TOY_LITERAL_INTEGER:
 			return hashUInt((unsigned int)TOY_AS_INTEGER(lit));
 
-		case TOY_LITERAL_FLOAT:
-			return hashUInt(*(unsigned int*)(&TOY_AS_FLOAT(lit)));
+		case TOY_LITERAL_FLOAT: {
+			unsigned int* ptr = (unsigned int*)(&TOY_AS_FLOAT(lit));
+			return hashUInt(*ptr);
+		}
 
 		case TOY_LITERAL_STRING:
 			return hashString(Toy_toCString(TOY_AS_STRING(lit)), Toy_lengthRefString(TOY_AS_STRING(lit)));
@@ -440,7 +442,7 @@ static void printToBuffer(const char* str) {
 		globalPrintBuffer = TOY_GROW_ARRAY(char, globalPrintBuffer, oldCapacity, globalPrintCapacity);
 	}
 
-	snprintf(globalPrintBuffer + globalPrintCount, strlen(str) + 1, "%s", str);
+	snprintf(globalPrintBuffer + globalPrintCount, strlen(str) + 1, "%s", str ? str : "\0");
 	globalPrintCount += strlen(str);
 }
 

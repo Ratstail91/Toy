@@ -1,7 +1,3 @@
-# Optimisation Options
-# export CFLAGS+=-O2 -mtune=native -march=native
-# export CFLAGS+=-fsanitize=address,undefined
-
 export CFLAGS+=-std=c18 -pedantic -Werror
 
 export TOY_OUTDIR = out
@@ -33,6 +29,10 @@ library-release: clean $(TOY_OUTDIR)
 
 static-release: clean $(TOY_OUTDIR)
 	$(MAKE) -j8 -C source static-release
+
+#distribution
+dist: export CFLAGS+=-O2 -mtune=native -march=native
+dist: repl-release
 
 #utils
 test: clean $(TOY_OUTDIR)
