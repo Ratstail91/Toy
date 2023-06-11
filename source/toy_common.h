@@ -9,8 +9,6 @@
 #define TOY_VERSION_PATCH 5
 #define TOY_VERSION_BUILD Toy_private_version_build()
 
-const char* Toy_private_version_build();
-
 //platform/compiler-specific instructions
 #if defined(__linux__) || defined(__MINGW32__) || defined(__GNUC__)
 
@@ -29,6 +27,8 @@ const char* Toy_private_version_build();
 #define TOY_API extern
 
 #endif
+
+TOY_API const char* Toy_private_version_build();
 
 #ifndef TOY_DISABLE_REPL
 
