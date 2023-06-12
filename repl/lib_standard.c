@@ -1516,8 +1516,34 @@ static int nativeSort(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 		return -1;
 	}
 
+	//BUGFIX: check if the array is already sorted
+	bool sorted = true;
+	for (int checker = 0; checker < TOY_AS_ARRAY(selfLiteral)->count - 1 && sorted; checker++) {
+		Toy_LiteralArray arguments;
+		Toy_LiteralArray returns;
+
+		Toy_initLiteralArray(&arguments);
+		Toy_initLiteralArray(&returns);
+
+		Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[checker]);
+		Toy_pushLiteralArray(&arguments, TOY_AS_ARRAY(selfLiteral)->literals[checker + 1]);
+
+		Toy_callLiteralFn(interpreter, fnLiteral, &arguments, &returns);
+
+		Toy_Literal lessThan = Toy_popLiteralArray(&returns);
+
+		Toy_freeLiteralArray(&arguments);
+		Toy_freeLiteralArray(&returns);
+
+		if (!TOY_IS_TRUTHY(lessThan)) {
+			sorted = false;
+		}
+
+		Toy_freeLiteral(lessThan);
+	}
+
 	//call the quicksort util
-	if (TOY_IS_ARRAY(selfLiteral)) {
+	if (!sorted) {
 		recursiveLiteralQuicksortUtil(interpreter, TOY_AS_ARRAY(selfLiteral)->literals, TOY_AS_ARRAY(selfLiteral)->count, fnLiteral);
 	}
 
