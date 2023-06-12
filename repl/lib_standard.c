@@ -1471,8 +1471,13 @@ static void recursiveLiteralQuicksortUtil(Toy_Interpreter* interpreter, Toy_Lite
 	swapLiteralsUtil(&ptr[runner], &ptr[literalCount - 1]);
 
 	//recurse on each end
-	recursiveLiteralQuicksortUtil(interpreter, &ptr[0], runner, fnCompareLiteral);
-	recursiveLiteralQuicksortUtil(interpreter, &ptr[runner + 1], literalCount - runner - 1, fnCompareLiteral);
+	if (runner > 0) {
+		recursiveLiteralQuicksortUtil(interpreter, &ptr[0], runner, fnCompareLiteral);
+	}
+
+	if (runner < literalCount) {
+		recursiveLiteralQuicksortUtil(interpreter, &ptr[runner + 1], literalCount - runner - 1, fnCompareLiteral);
+	}
 }
 
 static int nativeSort(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
