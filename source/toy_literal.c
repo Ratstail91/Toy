@@ -119,6 +119,10 @@ Toy_Literal Toy_copyLiteral(Toy_Literal original) {
 			Toy_LiteralArray* array = TOY_ALLOCATE(Toy_LiteralArray, 1);
 			Toy_initLiteralArray(array);
 
+			//preallocate enough space
+			array->capacity = TOY_AS_ARRAY(original)->capacity;
+			array->literals = TOY_GROW_ARRAY(Toy_Literal, array->literals, 0, array->capacity);
+
 			//copy each element
 			for (int i = 0; i < TOY_AS_ARRAY(original)->count; i++) {
 				Toy_pushLiteralArray(array, TOY_AS_ARRAY(original)->literals[i]);
@@ -130,6 +134,15 @@ Toy_Literal Toy_copyLiteral(Toy_Literal original) {
 		case TOY_LITERAL_DICTIONARY: {
 			Toy_LiteralDictionary* dictionary = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
 			Toy_initLiteralDictionary(dictionary);
+
+			//preallocate enough space
+			dictionary->capacity = TOY_AS_DICTIONARY(original)->capacity;
+			dictionary->entries = TOY_ALLOCATE(Toy_private_dictionary_entry, dictionary->capacity);
+
+			for (int i = 0; i < dictionary->capacity; i++) {
+				dictionary->entries[i].key = TOY_TO_NULL_LITERAL;
+				dictionary->entries[i].value = TOY_TO_NULL_LITERAL;
+			}
 
 			//copy each entry
 			for (int i = 0; i < TOY_AS_DICTIONARY(original)->capacity; i++) {
@@ -168,7 +181,7 @@ Toy_Literal Toy_copyLiteral(Toy_Literal original) {
 			return original; //literally a shallow copy
 		}
 
-		case TOY_LITERAL_ARRAY_INTERMEDIATE: {
+		case TOY_LITERAL_ARRAY_INTERMEDIATE: { //TODO: efficient preallocation?
 			Toy_LiteralArray* array = TOY_ALLOCATE(Toy_LiteralArray, 1);
 			Toy_initLiteralArray(array);
 
@@ -184,7 +197,7 @@ Toy_Literal Toy_copyLiteral(Toy_Literal original) {
 			return ret;
 		}
 
-		case TOY_LITERAL_DICTIONARY_INTERMEDIATE: {
+		case TOY_LITERAL_DICTIONARY_INTERMEDIATE: { //TODO: efficient preallocation?
 			Toy_LiteralArray* array = TOY_ALLOCATE(Toy_LiteralArray, 1);
 			Toy_initLiteralArray(array);
 
@@ -200,7 +213,7 @@ Toy_Literal Toy_copyLiteral(Toy_Literal original) {
 			return ret;
 		}
 
-		case TOY_LITERAL_TYPE_INTERMEDIATE: {
+		case TOY_LITERAL_TYPE_INTERMEDIATE: { //TODO: efficient preallocation?
 			Toy_LiteralArray* array = TOY_ALLOCATE(Toy_LiteralArray, 1);
 			Toy_initLiteralArray(array);
 

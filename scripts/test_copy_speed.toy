@@ -1,0 +1,16 @@
+
+
+fn identity(x) {
+    return x;
+}
+
+
+var dict: [int:int] = [:];
+
+for (var i: int = 0; i < 1000; i++) {
+    dict[i] = i;
+}
+
+for (var i: int = 0; i < 100_000; i++) {
+    var x = identity(dict);
+}
