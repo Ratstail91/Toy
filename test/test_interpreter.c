@@ -117,6 +117,7 @@ int main() {
 			"dot-chaining.toy",
 			"dot-modulo-bugfix.toy",
 			"dottify-bugfix.toy",
+			"function-within-function-bugfix.toy",
 			"functions.toy",
 			"index-arrays.toy",
 			"index-assignment-both-bugfix.toy",

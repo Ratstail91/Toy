@@ -1,0 +1,30 @@
+{
+	fn a() {
+		fn b() {
+			return 42;
+		}
+
+		return b;
+	}
+
+	assert a()() == 42, "function within function failed";
+}
+
+{
+	fn a() {
+		fn b() {
+			fn c() {
+				return 42;
+			}
+
+			return c;
+		}
+
+		return b;
+	}
+
+	assert a()()() == 42, "function within function within function failed";
+}
+
+
+print "All good";

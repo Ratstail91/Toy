@@ -1229,12 +1229,8 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 
 	//get the function literal
 	Toy_Literal func = identifier;
-
-	if (!Toy_parseIdentifierToValue(interpreter, &func)) {
-		Toy_freeLiteralArray(&arguments);
-		Toy_freeLiteral(stackSize);
+	if (!TOY_IS_FUNCTION(func) && Toy_parseIdentifierToValue(interpreter, &func)) {
 		Toy_freeLiteral(identifier);
-		return false;
 	}
 
 	if (!TOY_IS_FUNCTION(func) && !TOY_IS_FUNCTION_NATIVE(func)) {
@@ -1271,7 +1267,6 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 	Toy_freeLiteralArray(&arguments);
 	Toy_freeLiteral(func);
 	Toy_freeLiteral(stackSize);
-	Toy_freeLiteral(identifier);
 
 	return ret;
 }
