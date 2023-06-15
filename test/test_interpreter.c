@@ -121,6 +121,7 @@ int main() {
 			"functions.toy",
 			"index-arrays.toy",
 			"index-assignment-both-bugfix.toy",
+			"index-assignment-intermediate-bugfix.toy",
 			"index-assignment-left-bugfix.toy",
 			"index-dictionaries.toy",
 			"index-strings.toy",

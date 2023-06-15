@@ -259,6 +259,81 @@ static int writeLiteralToCompiler(Toy_Compiler* compiler, Toy_Literal literal) {
 	return index;
 }
 
+//BUGFIX: check to see if this node lies within this tree
+bool checkNodeInTree(Toy_ASTNode* tree, Toy_ASTNode* node) {
+	if (tree == node) {
+		return true;
+	}
+
+	if (tree == NULL) {
+		return false;
+	}
+
+	switch(tree->type) {
+		case TOY_AST_NODE_UNARY:
+			return checkNodeInTree(tree->unary.child, node);
+
+		case TOY_AST_NODE_BINARY:
+			return checkNodeInTree(tree->binary.left, node) || checkNodeInTree(tree->binary.right, node);
+
+		case TOY_AST_NODE_TERNARY:
+			return checkNodeInTree(tree->ternary.condition, node) || checkNodeInTree(tree->ternary.thenPath, node) || checkNodeInTree(tree->ternary.elsePath, node);
+
+		case TOY_AST_NODE_GROUPING:
+			return checkNodeInTree(tree->grouping.child, node);
+
+		case TOY_AST_NODE_BLOCK:
+			return checkNodeInTree(tree->block.nodes, node);
+
+		case TOY_AST_NODE_COMPOUND:
+			return checkNodeInTree(tree->compound.nodes, node);
+
+		case TOY_AST_NODE_PAIR:
+			return checkNodeInTree(tree->pair.left, node) || checkNodeInTree(tree->pair.right, node);
+
+		case TOY_AST_NODE_INDEX:
+			return checkNodeInTree(tree->index.first, node) || checkNodeInTree(tree->index.second, node) || checkNodeInTree(tree->index.third, node);
+
+		case TOY_AST_NODE_VAR_DECL:
+			return checkNodeInTree(tree->varDecl.expression, node);
+
+		case TOY_AST_NODE_FN_COLLECTION:
+			return checkNodeInTree(tree->fnCollection.nodes, node);
+
+		case TOY_AST_NODE_FN_DECL:
+			return checkNodeInTree(tree->fnDecl.arguments, node) || checkNodeInTree(tree->fnDecl.returns, node) || checkNodeInTree(tree->fnDecl.block, node);
+
+		case TOY_AST_NODE_FN_CALL:
+			return checkNodeInTree(tree->fnCall.arguments, node);
+
+		case TOY_AST_NODE_FN_RETURN:
+			return checkNodeInTree(tree->returns.returns, node);
+
+		case TOY_AST_NODE_IF:
+			return checkNodeInTree(tree->pathIf.condition, node) || checkNodeInTree(tree->pathIf.thenPath, node) || checkNodeInTree(tree->pathIf.elsePath, node);
+
+		case TOY_AST_NODE_WHILE:
+			return checkNodeInTree(tree->pathWhile.condition, node) || checkNodeInTree(tree->pathWhile.thenPath, node);
+
+		case TOY_AST_NODE_FOR:
+			return checkNodeInTree(tree->pathFor.preClause, node) || checkNodeInTree(tree->pathFor.condition, node) || checkNodeInTree(tree->pathFor.postClause, node) || checkNodeInTree(tree->pathFor.thenPath, node);
+
+		case TOY_AST_NODE_ERROR:
+		case TOY_AST_NODE_LITERAL:
+		case TOY_AST_NODE_BREAK:
+		case TOY_AST_NODE_CONTINUE:
+		case TOY_AST_NODE_PREFIX_INCREMENT:
+		case TOY_AST_NODE_PREFIX_DECREMENT:
+		case TOY_AST_NODE_POSTFIX_INCREMENT:
+		case TOY_AST_NODE_POSTFIX_DECREMENT:
+		case TOY_AST_NODE_IMPORT:
+		case TOY_AST_NODE_PASS:
+			return false;
+	}
+
+	return false;
+}
+
 //NOTE: jumpOfsets are included, because function arg and return indexes are embedded in the code body i.e. need to include their sizes in the jump
 //NOTE: rootNode should NOT include groupings and blocks
 static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode* node, void* breakAddressesPtr, void* continueAddressesPtr, int jumpOffsets, Toy_ASTNode* rootNode) {
@@ -322,7 +397,8 @@ static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode
 			//return this if...
 			Toy_Opcode ret = Toy_writeCompilerWithJumps(compiler, node->binary.right, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
 
-			if (node->binary.opcode == TOY_OP_INDEX && rootNode->type == TOY_AST_NODE_BINARY && (rootNode->binary.opcode >= TOY_OP_VAR_ASSIGN && rootNode->binary.opcode <= TOY_OP_VAR_MODULO_ASSIGN) && rootNode->binary.right != node) { //range-based check for assignment type; make sure the index is on the left of the assignment symbol
+			//range-based check for assignment type; make sure the index is on the left of the assignment symbol
+			if (node->binary.opcode == TOY_OP_INDEX && rootNode->type == TOY_AST_NODE_BINARY && (rootNode->binary.opcode >= TOY_OP_VAR_ASSIGN && rootNode->binary.opcode <= TOY_OP_VAR_MODULO_ASSIGN) && !checkNodeInTree(rootNode->binary.right, node)) {
 				return TOY_OP_INDEX_ASSIGN_INTERMEDIATE;
 			}
 

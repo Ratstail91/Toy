@@ -1,0 +1,10 @@
+
+var result; //result must exist to ensure assingment, rather than declaration is invoked by the comparison below
+
+var lhs = [0];
+var rhs = [0];
+
+result = lhs[0] < rhs[0]; //make sure this doesn't invoke TOY_OP_INDEX_ASSIGN_INTERMEDIATE
+
+
+print "All good";
