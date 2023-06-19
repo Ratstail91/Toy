@@ -628,6 +628,14 @@ static Toy_Opcode castingPrefix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 		}
 		break;
 
+		//BUGFIX: handle this here, and not in castingPrefix, so "any" can be recognized as a type properly
+		case TOY_TOKEN_ANY: {
+			Toy_Literal literal = TOY_TO_TYPE_LITERAL(TOY_LITERAL_ANY, false);
+			Toy_emitASTNodeLiteral(nodeHandle, literal);
+			Toy_freeLiteral(literal);
+		}
+		break;
+
 		default:
 			error(parser, parser->previous, "Unexpected token passed to casting precedence rule");
 			return TOY_OP_EOF;
@@ -940,7 +948,7 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, NULL, PREC_NONE},// TOKEN_DICTIONARY,
 	{NULL, NULL, PREC_NONE},// TOKEN_FUNCTION,
 	{NULL, NULL, PREC_NONE},// TOKEN_OPAQUE,
-	{NULL, NULL, PREC_NONE},// TOKEN_ANY,
+	{castingPrefix, NULL, PREC_CALL},// TOKEN_ANY,
 
 	//keywords and reserved words
 	{NULL, NULL, PREC_NONE},// TOKEN_AS,

@@ -22,4 +22,9 @@ var dict: complex = [
 	"third array": [7, 8, 9]
 ];
 
+
+//check the any type is recognized as a type within an array
+var a: [type] = [int, bool, any];
+
+
 print "All good";
