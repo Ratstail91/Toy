@@ -1,0 +1,15 @@
+var a = 0;
+
+if (a++ >= 1) {
+	assert false, "increment postfix bugfix failed (first check)";
+}
+
+
+if (a++ >= 1) {
+	
+}
+
+assert a == 2, "increment postfix bugfix failed (second check)";
+
+
+print "All good";

@@ -119,6 +119,7 @@ int main() {
 			"dottify-bugfix.toy",
 			"function-within-function-bugfix.toy",
 			"functions.toy",
+			"increment-postfix-bugfix.toy",
 			"index-arrays.toy",
 			"index-assignment-both-bugfix.toy",
 			"index-assignment-intermediate-bugfix.toy",

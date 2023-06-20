@@ -6,7 +6,7 @@
 
 #define TOY_VERSION_MAJOR 1
 #define TOY_VERSION_MINOR 1
-#define TOY_VERSION_PATCH 5
+#define TOY_VERSION_PATCH 6
 #define TOY_VERSION_BUILD Toy_private_version_build()
 
 //platform/compiler-specific instructions

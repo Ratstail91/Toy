@@ -86,5 +86,9 @@ typedef enum Toy_Opcode {
 	TOY_OP_FN_END, //different from SECTION_END
 	TOY_OP_SECTION_END = 255,
 	//TODO: add more
+
+	//prefix & postfix signals (used internally)
+	TOY_OP_PREFIX,
+	TOY_OP_POSTFIX,
 } Toy_Opcode;
 

@@ -693,7 +693,7 @@ static Toy_Opcode incrementPrefix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) 
 
 	Toy_freeASTNode(tmpNode);
 
-	return TOY_OP_EOF;
+	return TOY_OP_PREFIX;
 }
 
 static Toy_Opcode incrementInfix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
@@ -710,7 +710,7 @@ static Toy_Opcode incrementInfix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 
 	Toy_freeASTNode(tmpNode);
 
-	return TOY_OP_EOF;
+	return TOY_OP_POSTFIX;
 }
 
 static Toy_Opcode decrementPrefix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
@@ -727,7 +727,7 @@ static Toy_Opcode decrementPrefix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) 
 
 	Toy_freeASTNode(tmpNode);
 
-	return TOY_OP_EOF;
+	return TOY_OP_PREFIX;
 }
 
 static Toy_Opcode decrementInfix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
@@ -744,7 +744,7 @@ static Toy_Opcode decrementInfix(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 
 	Toy_freeASTNode(tmpNode);
 
-	return TOY_OP_EOF;
+	return TOY_OP_POSTFIX;
 }
 
 static Toy_Opcode fnCall(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
@@ -1283,6 +1283,13 @@ static void parsePrecedence(Toy_Parser* parser, Toy_ASTNode** nodeHandle, Preced
 		//BUGFIX: ternary shorthand
 		if (opcode == TOY_OP_TERNARY) {
 			rhsNode->ternary.condition = *nodeHandle;
+			*nodeHandle = rhsNode;
+			continue;
+		}
+
+		//BUGFIX: keep going, don't skip out on a postfix
+		if (opcode == TOY_OP_PREFIX || opcode == TOY_OP_POSTFIX) {
+			Toy_freeASTNode(*nodeHandle);
 			*nodeHandle = rhsNode;
 			continue;
 		}
