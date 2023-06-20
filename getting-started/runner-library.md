@@ -16,7 +16,7 @@ This is used to load an external script into an opaque variable.
 
 This function does a lot of work:
 
-* It validates the file path using the drive syntax (see above)
+* It validates the file path using the drive syntax
 * It reads in the source code of the script file
 * It compiles the source script into bytecode
 * It constructs and intializes an Interpreter
