@@ -28,7 +28,7 @@ This is used to load an external bytecode file into an opaque variable.
 
 This function does a lot of work:
 
-* It validates the file path using the drive syntax (see above)
+* It validates the file path using the drive syntax
 * It constructs and intializes an Interpreter
 * It packages it all into an opaque variable and returns it
 
