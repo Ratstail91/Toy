@@ -92,4 +92,14 @@
 }
 
 
+//test deep-combine example
+{
+	fn combine(a, b, c, d) {
+		return [[a, b], [c, d]];
+	}
+
+	assert combine(1, 2, 3, 4) == [[1, 2], [3, 4]], "deep-combine example failed";
+}
+
+
 print "All good";

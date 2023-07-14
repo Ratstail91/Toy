@@ -85,55 +85,93 @@ bool Toy_injectNativeHook(Toy_Interpreter* interpreter, const char* name, Toy_Ho
 }
 
 void Toy_parseCompoundToPureValues(Toy_Interpreter* interpreter, Toy_Literal* literalPtr) {
-	if (TOY_IS_IDENTIFIER(*literalPtr)) {
-		Toy_parseIdentifierToValue(interpreter, literalPtr);
-	}
-
 	//parse out an array
 	if (TOY_IS_ARRAY(*literalPtr)) {
 		for (int i = 0; i < TOY_AS_ARRAY(*literalPtr)->count; i++) {
-			Toy_Literal index = TOY_TO_INTEGER_LITERAL(i);
-			Toy_Literal entry = Toy_getLiteralArray(TOY_AS_ARRAY(*literalPtr), index);
+			//check each individual element for an identifier
+			if (TOY_IS_IDENTIFIER( TOY_AS_ARRAY(*literalPtr)->literals[i] )) {
+				Toy_Literal index = TOY_TO_INTEGER_LITERAL(i);
+				Toy_Literal entry = Toy_getLiteralArray(TOY_AS_ARRAY(*literalPtr), index);
 
-			if (TOY_IS_IDENTIFIER( entry )) {
 				Toy_Literal idn = entry;
-				Toy_parseCompoundToPureValues(interpreter, &entry);
+				Toy_parseIdentifierToValue(interpreter, &entry);
 
 				Toy_setLiteralArray(TOY_AS_ARRAY(*literalPtr), index, entry);
 
 				Toy_freeLiteral(idn);
+				Toy_freeLiteral(index);
+				Toy_freeLiteral(entry);
 			}
 
-			Toy_freeLiteral(index);
-			Toy_freeLiteral(entry);
+			//recurse on sub-compounds
+			if (TOY_IS_ARRAY(TOY_AS_ARRAY(*literalPtr)->literals[i]) || TOY_IS_DICTIONARY(TOY_AS_ARRAY(*literalPtr)->literals[i])) {
+				Toy_parseCompoundToPureValues(interpreter, &TOY_AS_ARRAY(*literalPtr)->literals[i]);
+			}
 		}
 	}
 
 	//parse out a dictionary
-	if (TOY_IS_DICTIONARY(*literalPtr)) {
+	else if (TOY_IS_DICTIONARY(*literalPtr)) {
+		//check for any identifiers
+		bool idnFound = false;
+		for (int i = 0; i < TOY_AS_DICTIONARY(*literalPtr)->capacity; i++) {
+			if (TOY_IS_IDENTIFIER( TOY_AS_DICTIONARY(*literalPtr)->entries[i].key ) || TOY_IS_IDENTIFIER(TOY_AS_DICTIONARY(*literalPtr)->entries[i].value)) {
+				idnFound = true;
+				break;
+			}
+
+			//recurse on sub-compounds
+			if (TOY_IS_ARRAY(TOY_AS_DICTIONARY(*literalPtr)->entries[i].key) || TOY_IS_DICTIONARY(TOY_AS_DICTIONARY(*literalPtr)->entries[i].key)) {
+				Toy_parseCompoundToPureValues(interpreter, &TOY_AS_DICTIONARY(*literalPtr)->entries[i].key);
+			}
+
+			if (TOY_IS_ARRAY(TOY_AS_DICTIONARY(*literalPtr)->entries[i].value) || TOY_IS_DICTIONARY(TOY_AS_DICTIONARY(*literalPtr)->entries[i].value)) {
+				Toy_parseCompoundToPureValues(interpreter, &TOY_AS_DICTIONARY(*literalPtr)->entries[i].value);
+			}
+		}
+
+		if (!idnFound) {
+			return;
+		}
+
 		Toy_LiteralDictionary* ret = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
 		Toy_initLiteralDictionary(ret);
+
+		//this basically copies the dict, so preallocate it manually
+		ret->capacity = TOY_AS_DICTIONARY(*literalPtr)->capacity;
+		ret->entries = TOY_ALLOCATE(Toy_private_dictionary_entry, ret->capacity);
+
+		for (int i = 0; i < ret->capacity; i++) {
+			ret->entries[i].key = TOY_TO_NULL_LITERAL;
+			ret->entries[i].value = TOY_TO_NULL_LITERAL;
+		}
 
 		for (int i = 0; i < TOY_AS_DICTIONARY(*literalPtr)->capacity; i++) {
 			if ( TOY_IS_NULL(TOY_AS_DICTIONARY(*literalPtr)->entries[i].key) ) {
 				continue;
 			}
 
-			Toy_Literal key = TOY_TO_NULL_LITERAL;
-			Toy_Literal value = TOY_TO_NULL_LITERAL;
+			Toy_Literal key = Toy_copyLiteral(TOY_AS_DICTIONARY(*literalPtr)->entries[i].key);
+			Toy_Literal value = Toy_copyLiteral(TOY_AS_DICTIONARY(*literalPtr)->entries[i].value);
 
-			key = Toy_copyLiteral(TOY_AS_DICTIONARY(*literalPtr)->entries[i].key);
-			value = Toy_copyLiteral(TOY_AS_DICTIONARY(*literalPtr)->entries[i].value);
-
-			//
-			if (TOY_IS_IDENTIFIER( key ) || TOY_IS_IDENTIFIER(value)) {
+			//check each key/value pair, and sub-compounds
+			if (TOY_IS_IDENTIFIER( key )) {
+				Toy_parseIdentifierToValue(interpreter, &key);
+			}
+			if (TOY_IS_ARRAY(key) || TOY_IS_DICTIONARY(key)) {
 				Toy_parseCompoundToPureValues(interpreter, &key);
+			}
+
+			if (TOY_IS_IDENTIFIER(value)) {
+				Toy_parseIdentifierToValue(interpreter, &value);
+			}
+			if (TOY_IS_ARRAY(value) || TOY_IS_DICTIONARY(value)) {
 				Toy_parseCompoundToPureValues(interpreter, &value);
 			}
 
 			Toy_setLiteralDictionary(ret, key, value);
 
-			//
+			//cleanup
 			Toy_freeLiteral(key);
 			Toy_freeLiteral(value);
 		}
@@ -154,9 +192,9 @@ bool Toy_parseIdentifierToValue(Toy_Interpreter* interpreter, Toy_Literal* liter
 		}
 	}
 
-	if (TOY_IS_ARRAY(*literalPtr) || TOY_IS_DICTIONARY(*literalPtr)) {
-		Toy_parseCompoundToPureValues(interpreter, literalPtr);
-	}
+	// if (TOY_IS_ARRAY(*literalPtr) || TOY_IS_DICTIONARY(*literalPtr)) {
+	// 	Toy_parseCompoundToPureValues(interpreter, literalPtr);
+	// }
 
 	return true;
 }
@@ -236,12 +274,6 @@ static bool execAssert(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(lhsIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(lhs)) {
-		Toy_freeLiteral(lhs);
-		Toy_freeLiteral(rhs);
-		return false;
-	}
-
 	if (!TOY_IS_STRING(rhs)) {
 		interpreter->errorOutput("The assert keyword needs a string as the second argument, received: ");
 		Toy_printLiteralCustom(rhs, interpreter->errorOutput);
@@ -276,11 +308,6 @@ static bool execPrint(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(idn);
 	}
 
-	if (TOY_IS_IDENTIFIER(lit)) {
-		Toy_freeLiteral(lit);
-		return false;
-	}
-
 	Toy_printLiteralCustom(lit, interpreter->printOutput);
 
 	Toy_freeLiteral(lit);
@@ -313,11 +340,6 @@ static bool rawLiteral(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(idn);
 	}
 
-	if (TOY_IS_IDENTIFIER(lit)) {
-		Toy_freeLiteral(lit);
-		return false;
-	}
-
 	Toy_pushLiteralArray(&interpreter->stack, lit);
 	Toy_freeLiteral(lit);
 
@@ -331,11 +353,6 @@ static bool execNegate(Toy_Interpreter* interpreter) {
 	Toy_Literal idn = lit;
 	if (TOY_IS_IDENTIFIER(lit) && Toy_parseIdentifierToValue(interpreter, &lit)) {
 		Toy_freeLiteral(idn);
-	}
-
-	if (TOY_IS_IDENTIFIER(lit)) {
-		Toy_freeLiteral(lit);
-		return false;
 	}
 
 	if (TOY_IS_INTEGER(lit)) {
@@ -369,11 +386,6 @@ static bool execInvert(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(idn);
 	}
 
-	if (TOY_IS_IDENTIFIER(lit)) {
-		Toy_freeLiteral(lit);
-		return false;
-	}
-
 	if (TOY_IS_BOOLEAN(lit)) {
 		lit = TOY_TO_BOOLEAN_LITERAL(!TOY_AS_BOOLEAN(lit));
 	}
@@ -405,12 +417,6 @@ static bool execArithmetic(Toy_Interpreter* interpreter, Toy_Opcode opcode) {
 	Toy_Literal lhsIdn = lhs;
 	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
 		Toy_freeLiteral(lhsIdn);
-	}
-
-	if (TOY_IS_IDENTIFIER(lhs) || TOY_IS_IDENTIFIER(rhs)) {
-		Toy_freeLiteral(lhs);
-		Toy_freeLiteral(rhs);
-		return false;
 	}
 
 	//special case for string concatenation ONLY
@@ -545,10 +551,6 @@ static Toy_Literal parseTypeToValue(Toy_Interpreter* interpreter, Toy_Literal ty
 		Toy_freeLiteral(typeIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(type)) {
-		return TOY_TO_NULL_LITERAL;
-	}
-
 	//if this is an array or dictionary, continue to the subtypes
 	if (TOY_IS_TYPE(type) && (TOY_AS_TYPE(type).typeOf == TOY_LITERAL_ARRAY || TOY_AS_TYPE(type).typeOf == TOY_LITERAL_DICTIONARY)) {
 		for (int i = 0; i < TOY_AS_TYPE(type).count; i++) {
@@ -589,12 +591,6 @@ static bool execVarDecl(Toy_Interpreter* interpreter, bool lng) {
 		Toy_freeLiteral(typeIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(type)) {
-		Toy_freeLiteral(identifier);
-		Toy_freeLiteral(type);
-		return false;
-	}
-
 	//BUGFIX: because identifiers are getting embedded in type definitions
 	type = parseTypeToValue(interpreter, type);
 
@@ -610,13 +606,6 @@ static bool execVarDecl(Toy_Interpreter* interpreter, bool lng) {
 	Toy_Literal valIdn = val;
 	if (TOY_IS_IDENTIFIER(val) && Toy_parseIdentifierToValue(interpreter, &val)) {
 		Toy_freeLiteral(valIdn);
-	}
-
-	if (TOY_IS_IDENTIFIER(val)) {
-		Toy_freeLiteral(identifier);
-		Toy_freeLiteral(type);
-		Toy_freeLiteral(val);
-		return false;
 	}
 
 	if (TOY_IS_ARRAY(val) || TOY_IS_DICTIONARY(val)) {
@@ -699,12 +688,6 @@ static bool execVarAssign(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(rhsIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(rhs)) {
-		Toy_freeLiteral(lhs);
-		Toy_freeLiteral(rhs);
-		return false;
-	}
-
 	if (TOY_IS_ARRAY(rhs) || TOY_IS_DICTIONARY(rhs)) {
 		Toy_parseCompoundToPureValues(interpreter, &rhs);
 	}
@@ -772,12 +755,6 @@ static bool execValCast(Toy_Interpreter* interpreter) {
 	Toy_Literal valueIdn = value;
 	if (TOY_IS_IDENTIFIER(value) && Toy_parseIdentifierToValue(interpreter, &value)) {
 		Toy_freeLiteral(valueIdn);
-	}
-
-	if (TOY_IS_IDENTIFIER(value)) {
-		Toy_freeLiteral(type);
-		Toy_freeLiteral(value);
-		return false;
 	}
 
 	Toy_Literal result = TOY_TO_NULL_LITERAL;
@@ -914,12 +891,6 @@ static bool execCompareEqual(Toy_Interpreter* interpreter, bool invert) {
 		Toy_freeLiteral(lhsIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(lhs) || TOY_IS_IDENTIFIER(rhs)) {
-		Toy_freeLiteral(lhs);
-		Toy_freeLiteral(rhs);
-		return false;
-	}
-
 	bool result = Toy_literalsAreEqual(lhs, rhs);
 
 	if (invert) {
@@ -946,12 +917,6 @@ static bool execCompareLess(Toy_Interpreter* interpreter, bool invert) {
 	Toy_Literal lhsIdn = lhs;
 	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
 		Toy_freeLiteral(lhsIdn);
-	}
-
-	if (TOY_IS_IDENTIFIER(lhs) || TOY_IS_IDENTIFIER(rhs)) {
-		Toy_freeLiteral(lhs);
-		Toy_freeLiteral(rhs);
-		return false;
 	}
 
 	//not a number, return falure
@@ -1012,12 +977,6 @@ static bool execCompareLessEqual(Toy_Interpreter* interpreter, bool invert) {
 	Toy_Literal lhsIdn = lhs;
 	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
 		Toy_freeLiteral(lhsIdn);
-	}
-
-	if (TOY_IS_IDENTIFIER(lhs) || TOY_IS_IDENTIFIER(rhs)) {
-		Toy_freeLiteral(lhs);
-		Toy_freeLiteral(rhs);
-		return false;
 	}
 
 	//not a number, return falure
@@ -1081,12 +1040,6 @@ static bool execAnd(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(lhsIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(lhs) || TOY_IS_IDENTIFIER(rhs)) {
-		Toy_freeLiteral(lhs);
-		Toy_freeLiteral(rhs);
-		return false;
-	}
-
 	//short-circuit support
 	if (!TOY_IS_TRUTHY(lhs)) {
 		Toy_pushLiteralArray(&interpreter->stack, lhs);
@@ -1113,12 +1066,6 @@ static bool execOr(Toy_Interpreter* interpreter) {
 	Toy_Literal lhsIdn = lhs;
 	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
 		Toy_freeLiteral(lhsIdn);
-	}
-
-	if (TOY_IS_IDENTIFIER(lhs) || TOY_IS_IDENTIFIER(rhs)) {
-		Toy_freeLiteral(lhs);
-		Toy_freeLiteral(rhs);
-		return false;
 	}
 
 	//short-circuit support
@@ -1163,11 +1110,6 @@ static bool execFalseJump(Toy_Interpreter* interpreter) {
 	Toy_Literal litIdn = lit;
 	if (TOY_IS_IDENTIFIER(lit) && Toy_parseIdentifierToValue(interpreter, &lit)) {
 		Toy_freeLiteral(litIdn);
-	}
-
-	if (TOY_IS_IDENTIFIER(lit)) {
-		Toy_freeLiteral(lit);
-		return false;
 	}
 
 	if (TOY_IS_NULL(lit)) {
@@ -1385,17 +1327,6 @@ bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_Liter
 			Toy_freeLiteral(argIdn);
 		}
 
-		if (TOY_IS_IDENTIFIER(arg)) {
-			//free, and skip out
-			Toy_freeLiteral(arg);
-			Toy_popScope(inner.scope);
-
-			Toy_freeLiteralArray(&inner.stack);
-			Toy_freeLiteralArray(&inner.literalCache);
-
-			return false;
-		}
-
 		if (!Toy_setScopeVariable(inner.scope, paramArray->literals[i], arg, false)) {
 			interpreter->errorOutput("[internal] Could not define parameter (bad type?)\n");
 
@@ -1564,12 +1495,6 @@ static bool execFnReturn(Toy_Interpreter* interpreter) {
 			Toy_freeLiteral(litIdn);
 		}
 
-		if (TOY_IS_IDENTIFIER(lit)) {
-			Toy_freeLiteralArray(&returns);
-			Toy_freeLiteral(lit);
-			return false;
-		}
-
 		if (TOY_IS_ARRAY(lit) || TOY_IS_DICTIONARY(lit)) {
 			Toy_parseCompoundToPureValues(interpreter, &lit);
 		}
@@ -1636,20 +1561,9 @@ static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 	Toy_Literal compound = Toy_popLiteralArray(&interpreter->stack);
 
 	Toy_Literal compoundIdn = compound;
-	bool freeIdn = false;
+	bool freeIdn = false; //wtf?
 	if (TOY_IS_IDENTIFIER(compound) && Toy_parseIdentifierToValue(interpreter, &compound)) {
 		freeIdn = true;
-	}
-
-	if (TOY_IS_IDENTIFIER(compound)) {
-		Toy_freeLiteral(third);
-		Toy_freeLiteral(second);
-		Toy_freeLiteral(first);
-		Toy_freeLiteral(compound);
-		if (freeIdn) {
-			Toy_freeLiteral(compoundIdn);
-		}
-		return true;
 	}
 
 	if (!TOY_IS_ARRAY(compound) && !TOY_IS_DICTIONARY(compound) && !TOY_IS_STRING(compound)) {
@@ -1787,30 +1701,9 @@ static bool execIndexAssign(Toy_Interpreter* interpreter, int assignDepth) {
 			freeIdn = true;
 		}
 
-		if (TOY_IS_IDENTIFIER(compound)) {
-			Toy_freeLiteral(compound);
-			Toy_freeLiteral(first);
-			Toy_freeLiteral(second);
-			Toy_freeLiteral(third);
-			Toy_freeLiteral(assign);
-			if (freeIdn) {
-				Toy_freeLiteral(compoundIdn);
-			}
-			return false;
-		}
-
 		Toy_Literal assignIdn = assign;
 		if (TOY_IS_IDENTIFIER(assign) && Toy_parseIdentifierToValue(interpreter, &assign)) {
 			Toy_freeLiteral(assignIdn);
-		}
-
-		if (TOY_IS_IDENTIFIER(assign)) {
-			Toy_freeLiteral(compound);
-			Toy_freeLiteral(first);
-			Toy_freeLiteral(second);
-			Toy_freeLiteral(third);
-			Toy_freeLiteral(assign);
-			return false;
 		}
 
 		if (!TOY_IS_ARRAY(compound) && !TOY_IS_DICTIONARY(compound) && !TOY_IS_STRING(compound)) {
