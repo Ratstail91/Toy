@@ -1502,12 +1502,6 @@ static int nativeSort(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 		Toy_freeLiteral(fnLiteralIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(selfLiteral) || TOY_IS_IDENTIFIER(fnLiteral)) {
-		Toy_freeLiteral(selfLiteral);
-		Toy_freeLiteral(fnLiteral);
-		return -1;
-	}
-
 	//check type
 	if (!TOY_IS_ARRAY(selfLiteral) || !( TOY_IS_FUNCTION(fnLiteral) || TOY_IS_FUNCTION_NATIVE(fnLiteral) )) {
 		interpreter->errorOutput("Incorrect argument type passed to sort\n");
@@ -1568,11 +1562,6 @@ static int nativeToLower(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 	Toy_Literal selfLiteralIdn = selfLiteral;
 	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
 		Toy_freeLiteral(selfLiteralIdn);
-	}
-
-	if (TOY_IS_IDENTIFIER(selfLiteral)) {
-		Toy_freeLiteral(selfLiteral);
-		return -1;
 	}
 
 	if (!TOY_IS_STRING(selfLiteral)) {
@@ -1636,17 +1625,6 @@ static int nativeToString(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 		Toy_freeLiteral(selfLiteralIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(selfLiteral)) {
-		Toy_freeLiteral(selfLiteral);
-		return -1;
-	}
-
-	//BUGFIX: probably an undefined variable
-	if (TOY_IS_IDENTIFIER(selfLiteral)) {
-		Toy_freeLiteral(selfLiteral);
-		return -1;
-	}
-
 	//print it to a custom function
 	Toy_printLiteralCustom(selfLiteral, toStringUtil);
 
@@ -1678,11 +1656,6 @@ static int nativeToUpper(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 	Toy_Literal selfLiteralIdn = selfLiteral;
 	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
 		Toy_freeLiteral(selfLiteralIdn);
-	}
-
-	if (TOY_IS_IDENTIFIER(selfLiteral)) {
-		Toy_freeLiteral(selfLiteral);
-		return -1;
 	}
 
 	if (!TOY_IS_STRING(selfLiteral)) {
@@ -1743,12 +1716,6 @@ static int nativeTrim(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	Toy_Literal selfLiteralIdn = selfLiteral;
 	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
 		Toy_freeLiteral(selfLiteralIdn);
-	}
-
-	if (TOY_IS_IDENTIFIER(selfLiteral) || TOY_IS_IDENTIFIER(trimCharsLiteral)) {
-		Toy_freeLiteral(selfLiteral);
-		Toy_freeLiteral(trimCharsLiteral);
-		return -1;
 	}
 
 	if (!TOY_IS_STRING(selfLiteral) || !TOY_IS_STRING(trimCharsLiteral)) {
@@ -1862,12 +1829,6 @@ static int nativeTrimBegin(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 		Toy_freeLiteral(selfLiteralIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(selfLiteral) || TOY_IS_IDENTIFIER(trimCharsLiteral)) {
-		Toy_freeLiteral(selfLiteral);
-		Toy_freeLiteral(trimCharsLiteral);
-		return -1;
-	}
-
 	if (!TOY_IS_STRING(selfLiteral) || !TOY_IS_STRING(trimCharsLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to trimBegin\n");
 		Toy_freeLiteral(trimCharsLiteral);
@@ -1954,12 +1915,6 @@ static int nativeTrimEnd(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 	Toy_Literal selfLiteralIdn = selfLiteral;
 	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
 		Toy_freeLiteral(selfLiteralIdn);
-	}
-
-	if (TOY_IS_IDENTIFIER(selfLiteral) || TOY_IS_IDENTIFIER(trimCharsLiteral)) {
-		Toy_freeLiteral(selfLiteral);
-		Toy_freeLiteral(trimCharsLiteral);
-		return -1;
 	}
 
 	if (!TOY_IS_STRING(selfLiteral) || !TOY_IS_STRING(trimCharsLiteral)) {

@@ -32,11 +32,6 @@ static int nativeLoadScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 		Toy_freeLiteral(drivePathLiteralIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(drivePathLiteral)) {
-		Toy_freeLiteral(drivePathLiteral);
-		return -1;
-	}
-
 	Toy_Literal filePathLiteral = Toy_getDrivePathLiteral(interpreter, &drivePathLiteral);
 
 	if (TOY_IS_NULL(filePathLiteral)) {
@@ -107,11 +102,6 @@ static int nativeLoadScriptBytecode(Toy_Interpreter* interpreter, Toy_LiteralArr
 		Toy_freeLiteral(drivePathLiteralIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(drivePathLiteral)) {
-		Toy_freeLiteral(drivePathLiteral);
-		return -1;
-	}
-
 	Toy_Literal filePathLiteral = Toy_getDrivePathLiteral(interpreter, &drivePathLiteral);
 
 	if (TOY_IS_NULL(filePathLiteral)) {
@@ -172,11 +162,6 @@ static int nativeRunScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 		Toy_freeLiteral(runnerIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(runnerLiteral)) {
-		Toy_freeLiteral(runnerLiteral);
-		return -1;
-	}
-
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
 		interpreter->errorOutput("Unrecognized opaque literal in runScript\n");
 		return -1;
@@ -222,12 +207,6 @@ static int nativeGetScriptVar(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	Toy_Literal runnerIdn = runnerLiteral;
 	if (TOY_IS_IDENTIFIER(runnerLiteral) && Toy_parseIdentifierToValue(interpreter, &runnerLiteral)) {
 		Toy_freeLiteral(runnerIdn);
-	}
-
-	if (TOY_IS_IDENTIFIER(varName) || TOY_IS_IDENTIFIER(runnerLiteral)) {
-		Toy_freeLiteral(varName);
-		Toy_freeLiteral(runnerLiteral);
-		return -1;
 	}
 
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
@@ -302,12 +281,6 @@ static int nativeCallScriptFn(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 		Toy_freeLiteral(runnerIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(varName) || TOY_IS_IDENTIFIER(runnerLiteral)) {
-		Toy_freeLiteral(varName);
-		Toy_freeLiteral(runnerLiteral);
-		return -1;
-	}
-
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
 		interpreter->errorOutput("Unrecognized opaque literal in callScriptFn\n");
 		return -1;
@@ -377,11 +350,6 @@ static int nativeResetScript(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 		Toy_freeLiteral(runnerIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(runnerLiteral)) {
-		Toy_freeLiteral(runnerLiteral);
-		return -1;
-	}
-
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
 		interpreter->errorOutput("Unrecognized opaque literal in resetScript\n");
 		return -1;
@@ -418,11 +386,6 @@ static int nativeFreeScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 		Toy_freeLiteral(runnerIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(runnerLiteral)) {
-		Toy_freeLiteral(runnerLiteral);
-		return -1;
-	}
-
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
 		interpreter->errorOutput("Unrecognized opaque literal in freeScript\n");
 		return -1;
@@ -455,11 +418,6 @@ static int nativeCheckScriptDirty(Toy_Interpreter* interpreter, Toy_LiteralArray
 	Toy_Literal runnerIdn = runnerLiteral;
 	if (TOY_IS_IDENTIFIER(runnerLiteral) && Toy_parseIdentifierToValue(interpreter, &runnerLiteral)) {
 		Toy_freeLiteral(runnerIdn);
-	}
-
-	if (TOY_IS_IDENTIFIER(runnerLiteral)) {
-		Toy_freeLiteral(runnerLiteral);
-		return -1;
 	}
 
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {

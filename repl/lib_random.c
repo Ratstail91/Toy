@@ -30,11 +30,6 @@ static int nativeCreateRandomGenerator(Toy_Interpreter* interpreter, Toy_Literal
 		Toy_freeLiteral(seedLiteralIdn);
 	}
 
-	if (TOY_IS_IDENTIFIER(seedLiteral)) {
-		Toy_freeLiteral(seedLiteral);
-		return -1;
-	}
-
 	if (!TOY_IS_INTEGER(seedLiteral)) {
 		interpreter->errorOutput("Incorrect literal type passed to createRandomGenerator");
 		Toy_freeLiteral(seedLiteral);
@@ -68,11 +63,6 @@ static int nativeGenerateRandomNumber(Toy_Interpreter* interpreter, Toy_LiteralA
 	Toy_Literal generatorLiteralIdn = generatorLiteral;
 	if (TOY_IS_IDENTIFIER(generatorLiteral) && Toy_parseIdentifierToValue(interpreter, &generatorLiteral)) {
 		Toy_freeLiteral(generatorLiteralIdn);
-	}
-
-	if (TOY_IS_IDENTIFIER(generatorLiteral)) {
-		Toy_freeLiteral(generatorLiteral);
-		return -1;
 	}
 
 	if (TOY_GET_OPAQUE_TAG(generatorLiteral) != TOY_OPAQUE_TAG_RANDOM) {
@@ -109,11 +99,6 @@ static int nativeFreeRandomGenerator(Toy_Interpreter* interpreter, Toy_LiteralAr
 	Toy_Literal generatorLiteralIdn = generatorLiteral;
 	if (TOY_IS_IDENTIFIER(generatorLiteral) && Toy_parseIdentifierToValue(interpreter, &generatorLiteral)) {
 		Toy_freeLiteral(generatorLiteralIdn);
-	}
-
-	if (TOY_IS_IDENTIFIER(generatorLiteral)) {
-		Toy_freeLiteral(generatorLiteral);
-		return -1;
 	}
 
 	if (TOY_GET_OPAQUE_TAG(generatorLiteral) != TOY_OPAQUE_TAG_RANDOM) {
