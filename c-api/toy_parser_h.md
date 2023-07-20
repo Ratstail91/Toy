@@ -6,17 +6,17 @@ This header defines the parser structure which, after being initialized with a l
 ```c
 //generate bytecode from a given string
 const unsigned char* Toy_compileString(const char* source, size_t* size) {
-    //declare the relevant instances
+	//declare the relevant instances
 	Toy_Lexer lexer;
 	Toy_Parser parser;
 	Toy_Compiler compiler;
 
-    //initialize each of them
+	//initialize each of them
 	Toy_initLexer(&lexer, source);
 	Toy_initParser(&parser, &lexer);
 	Toy_initCompiler(&compiler);
 
-    //when the parser returns NULL, it is finished
+	//when the parser returns NULL, it is finished
 	Toy_ASTNode* node = Toy_scanParser(&parser);
 	while(node != NULL) {
 		//if the parser returns an error node, clean up and exit gracefully
@@ -24,15 +24,15 @@ const unsigned char* Toy_compileString(const char* source, size_t* size) {
 			Toy_freeASTNode(node);
 			Toy_freeCompiler(&compiler);
 			Toy_freeParser(&parser);
-            //no need to clean the lexer
+			//no need to clean the lexer
 			return NULL;
 		}
 
-        //write the node to the compiler
+		//write the node to the compiler
 		Toy_writeCompiler(&compiler, node);
 		Toy_freeASTNode(node);
 
-        //grab the next node
+		//grab the next node
 		node = Toy_scanParser(&parser);
 	}
 
