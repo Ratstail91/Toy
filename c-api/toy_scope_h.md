@@ -1,8 +1,11 @@
+
 # toy_scope.h
 
-This header defines the `Toy_Scope` structure, which stores all of the variables used within a given block of code.
+This header defines the scope structure, which stores all of the variables used within a given block of code.
 
 Scopes are arranged into a linked list of ancestors, each of which is reference counted. When a scope is popped off the end of the chain, every ancestor scope has it's reference counter reduced by 1 and, if any reach 0, they are freed.
+
+This is also where Toy's type system lives.
 
 ## Defined Functions
 
@@ -17,6 +20,8 @@ This function frees the given `scope`, and returns it's ancestor.
 ### Toy_Scope* Toy_copyScope(Toy_Scope* original)
 
 This function copies an existing scope, and returns the copy.
+
+This copies the internal dictionaries, so it can be memory intensive.
 
 ### bool Toy_declareScopeVariable(Toy_Scope* scope, Toy_Literal key, Toy_Literal type)
 
@@ -43,4 +48,3 @@ This function returns true on success, otherwise it returns false.
 ### Toy_Literal Toy_getScopeType(Toy_Scope* scope, Toy_Literal key)
 
 This function returns a new `Toy_Literal` representing the type of the variable named `key`.
-

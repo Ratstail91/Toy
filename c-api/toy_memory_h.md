@@ -1,3 +1,4 @@
+
 # toy_memory.h
 
 This header defines all of the memory management utilities. Any and all heap-based memory management goes through these utilities.
@@ -14,29 +15,23 @@ This macro calculates, in place, what size of memory should be allocated based o
 
 This macro calculates, in place, what size of memory should be allocated based on the previous size. It grows faster than `TOY_GROW_CAPACITY`.
 
-### TOY_ALLOCATE(type, count)
-
-This macro wraps `Toy_reallocate`, which itself calls the allocator function. `type` is the type that will be allocated, and `count` is the number which will be needed (usually calculated with `TOY_GROW_CAPACITY`).
-
-This returns a pointer of `type`.
-
 ### TOY_FREE(type, pointer)
 
-This macro wraps `Toy_reallocate`, which itself calls the allocator function. `type` is the type that will be freed, and `pointer` is to what is being freed. This should only be used when a single element has been allocated, as opposed to an array.
+This macro wraps `Toy_reallocate()`, which itself calls the allocator function. `type` is the type that will be freed, and `pointer` is to what is being freed. This should only be used when a single element has been allocated, as opposed to an array.
 
 ### TOY_FREE_ARRAY(type, pointer, oldCount)
 
-This macro wraps `Toy_reallocate`, which itself calls the allocator function. `type` is the type that will be freed, `pointer` is a reference to what is being freed, and `oldCount` is the size of the array being freed. This should only be used when an array has been allocated, as opposed to a single element.
+This macro wraps `Toy_reallocate()`, which itself calls the allocator function. `type` is the type that will be freed, `pointer` is a reference to what is being freed, and `oldCount` is the size of the array being freed. This should only be used when an array has been allocated, as opposed to a single element.
 
 ### TOY_GROW_ARRAY(type, pointer, oldCount, count)
 
-This macro wraps `Toy_reallocate`, which itself calls the allocator function. `type` is the type that is being operated on, `pointer` is what is being resized, `oldCount` is the previous size of the array and `count` is the new size of the array (usually calculated with `TOY_GROW_CAPACITY`).
+This macro wraps `Toy_reallocate()`, which itself calls the allocator function. `type` is the type that is being operated on, `pointer` is what is being resized, `oldCount` is the previous size of the array and `count` is the new size of the array (usually calculated with `TOY_GROW_CAPACITY`).
 
 This returns a pointer of `type`.
 
 ### TOY_SHRINK_ARRAY(type, pointer, oldCount, count)
 
-This macro wraps `Toy_reallocate`, which itself calls the allocator function. `type` is the type that is being operated on, `pointer` is what is being resized, `oldCount` is the previous size of the array and `count` is the new size of the array.
+This macro wraps `Toy_reallocate()`, which itself calls the allocator function. `type` is the type that is being operated on, `pointer` is what is being resized, `oldCount` is the previous size of the array and `count` is the new size of the array.
 
 This returns a pointer of `type`.
 
@@ -66,5 +61,4 @@ This function wraps a call to the internal assigned memory allocator.
 
 This function sets the memory allocator, replacing the default memory allocator.
 
-This function also overwrites any given refstring memory allocator, see [toy_refstring.h](toy_refstring_h.md).
-
+This function also overwrites any given refstring and reffunction memory allocators, see [toy_refstring.h](toy_refstring_h.md).

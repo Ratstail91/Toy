@@ -1,6 +1,7 @@
+
 # toy_parser.h
 
-This header defines the structure `Toy_Parser` which, after being initialized with a `Toy_Lexer` produces a series of abstract syntax trees to be passed to the `Toy_Compiler`. The following is a utility function provided by [repl_tools.h](repl_tools_h.md), demonstrating how to use the parser.
+This header defines the parser structure which, after being initialized with a lexer produces a series of abstract syntax trees to be passed to the compiler. The following is a utility function provided by [repl_tools.h](repl_tools_h.md), demonstrating how to use the parser.
 
 ```c
 //generate bytecode from a given string
@@ -60,7 +61,7 @@ This function frees a `Toy_Parser` once its task is completed.
 
 ### Toy_ASTNode* Toy_scanParser(Toy_Parser* parser)
 
-This function returns an abstract syntax tree representing part of the program, or an error node. The abstract syntax tree must be passed to `Toy_writeCompiler` and/or `Toy_freeASTNode`.
+This function returns an abstract syntax tree representing part of the program, or an error node. The abstract syntax tree must be passed to `Toy_writeCompiler()` and/or `Toy_freeASTNode()`.
 
 This function should be called repeatedly until it returns `NULL`, indicating the end of the program.
 
@@ -69,4 +70,3 @@ This function should be called repeatedly until it returns `NULL`, indicating th
 This function cleans up any valid instance of `Toy_ASTNode` pointer passed to it. It is most commonly used to clean up the values returned by `Toy_scanParser`, after they have been passsed to `Toy_writeCompiler`, or when the node is an error node.
 
 Note: this function is *actually* defined in toy_ast_node.h, but documented here, because this is where it matters most.
-

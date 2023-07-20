@@ -1,6 +1,7 @@
+
 # toy_common.h
 
-This file is generally included in most header files within Toy, as it is where the `TOY_API` macro is defined. It also has some utilities intended for use only by the repl; as such, they won't be documented here.
+This file is generally included in most header files within Toy, as it is where the TOY_API macro is defined. It also has some utilities intended for use only by the repl.
 
 ## Defined Macros
 
@@ -10,7 +11,7 @@ This definition of this macro is platform-dependant, and used to enable cross-pl
 
 ### TOY_VERSION_MAJOR
 
-The current major version of Toy. This value is embedded into the bytecode, and the interpreter will refuse to run bytecode with a major version that does not match it's own version.
+The current major version of Toy. This value is embedded into the bytecode, and the interpreter will refuse to run bytecode with a major version that does not match it’s own version.
 
 This value MUST fit into an unsigned char.
 
@@ -30,7 +31,6 @@ This value MUST fit into an unsigned char.
 
 The current build version of Toy. This value is embedded into the bytecode.
 
-This value is a string, which contains build information such as compilation date and time of the interpreter. When in verbose mode, the compiler will display a warning if the build version of the bytecode does not match the build version of the interpreter.
+This evaluates to a c-string, which contains build information such as compilation date and time of the interpreter. When in verbose mode, the compiler will display a warning if the build version of the bytecode does not match the build version of the interpreter.
 
-This macro may also be used to store information about forks of the Toy codebase.
-
+This macro may also be used to store additonal information about forks of the Toy codebase.

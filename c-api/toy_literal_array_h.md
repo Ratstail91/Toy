@@ -1,18 +1,15 @@
+
 # literal_array.h
 
-This header defines the structure `Toy_LiteralArray`, which manages a series of `Toy_Literal` instances in sequential memory. The array does not take ownership of given literals, instead it makes an internal copy.
+This header defines the array structure, which manages a series of `Toy_Literal` instances in sequential memory. The array does not take ownership of given literals, instead it makes an internal copy.
 
 The array type is one of two fundemental data structures used throughout Toy - the other is the dictionary.
 
 ## Defined Functions
 
-### void Toy_initLiteralArray(Toy_LiteralArray* array)
-
-This function initializes a `Toy_LiteralArray` pointed to by `array`.
-
 ### void Toy_freeLiteralArray(Toy_LiteralArray* array)
 
-This function frees a `Toy_LiteralArray` pointed to by `array`. Every literal within is passed to `Toy_freeLiteral` before its memory is released.
+This function frees a `Toy_LiteralArray` pointed to by `array`. Every literal within is passed to `Toy_freeLiteral()` before its memory is released.
 
 ### int Toy_pushLiteralArray(Toy_LiteralArray* array, Toy_Literal literal)
 
@@ -36,3 +33,8 @@ This function returns the literal at the position represented by the integer lit
 
 If `index` is not an integer literal or is out of bounds, this function returns a null literal.
 
+### int Toy_private_findLiteralIndex(Toy_LiteralArray* array, Toy_Literal literal)
+
+This function scans through the array, and returns the index of the first element that matches the given `literal`, otherwise it returns -1.
+
+Private functions are not intended for general use.

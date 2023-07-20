@@ -1,6 +1,7 @@
+
 # toy_literal.h
 
-This header defines the structure `Toy_Literal`, which is used extensively throughout Toy to represent values of some kind.
+This header defines the literal structure, which is used extensively throughout Toy to represent values of some kind.
 
 The main way of interacting with literals is to use a macro of some kind, as the exact implementation of `Toy_Literal` has and will change based on the needs of Toy.
 
@@ -25,7 +26,9 @@ User data can be passed around within Toy as an opaque type - use the tag value 
 * `TOY_LITERAL_OPAQUE`
 * `TOY_LITERAL_ANY`
 
-These are the main possible values of `Toy_LiteralType`, each of which represents a potential state of the `Toy_Literal` structure. Do not interact with a literal without determining its type with the `IS_*` macros first.
+These are the main values of `Toy_LiteralType`, each of which represents a potential state of the `Toy_Literal` structure. Do not interact with a literal without determining its type with the `IS_*` macros first.
+
+Other type values are possible, but are only used internally.
 
 ## Defined Macros
 
@@ -45,7 +48,7 @@ The following macros are used to determine if a given literal, passed in as `val
 * `TOY_IS_TYPE(value)`
 * `TOY_IS_OPAQUE(value)`
 
-The following macros are used to cast a literal to a specific type to be used.
+The following macros are used to cast a literal to a specific C type to be used.
 
 * `TOY_AS_BOOLEAN(value)`
 * `TOY_AS_INTEGER(value)`
@@ -98,13 +101,13 @@ The maximum length of a string in Toy, which is 4096 bytes by default. This can 
 
 ### TOY_HASH_I(lit)
 
-Identifiers are the names of of values within Toy; to speed up execution, their "hash value" is computed at compile time and stored within them. Use this to access it, if needed.
+Identifiers are the names of values within Toy; to speed up execution, their "hash value" is computed at compile time and stored within them. Use this to access it, if needed.
 
 This macro is only valid on `TOY_LITERAL_IDENTIFIER`.
 
 ### TOY_TYPE_PUSH_SUBTYPE(lit, subtype)
 
-When building a complex type, such as the type of an array or dictionary, you may need to specify inner types. Use this to push a `subtype`. calling `Toy_freeLiteral` on the outermost type should clean up all inner types, as expected.
+When building a complex type, such as the type of an array or dictionary, you may need to specify inner types. Use this to push a `subtype`. calling `Toy_freeLiteral()` on the outermost type should clean up all inner types, as expected.
 
 This macro returns the index of the newly pushed value within it's parent.
 
@@ -134,7 +137,7 @@ This checks to see if two given literals are equal.
 
 When an integer and a float are compared, the integer is cooerced into a float for the duration of the call.
 
-Arrays and dictionaries are equal only if their keys and values all equal. Likewise, types only equal if all subtypes are equal, in order.
+Arrays or dictionaries are equal only if their keys and values all equal. Likewise, types only equal if all subtypes are equal, in order.
 
 Functions and opaques are never equal to anything, while values with the type `TOY_LITERAL_ANY` are always equal.
 
@@ -161,3 +164,20 @@ This function passes the string representation of `literal` to `printFn`.
 
 This function is not thread safe - due to the loopy and recursive nature of printing compound values, this function uses some globally persistent variables.
 
+### bool Toy_private_isTruthy(Toy_Literal x)
+
+Utilized by the `TOY_IS_TRUTHY` macro.
+
+Private functions are not intended for general use.
+
+### bool Toy_private_toIdentifierLiteral(Toy_RefString* ptr)
+
+Utilized by the `TOY_TO_IDENTIFIER_LITERAL` macro.
+
+Private functions are not intended for general use.
+
+### bool Toy_private_typePushSubtype(Toy_Literal* lit, Toy_Literal subtype)
+
+Utilized by the `TOY_TYPE_PUSH_SUBTYPE` macro.
+
+Private functions are not intended for general use.

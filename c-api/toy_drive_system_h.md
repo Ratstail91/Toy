@@ -1,6 +1,7 @@
+
 # toy_drive_system.h
 
-When accessing the file system through toy (such as with lib runner), it's best practice to utilize Toy's built-in drive system - this system (tries to) prevent malicious accessing of files outside of the designated folders. It does this by causing an error when a script tries to access a parent directory.
+When accessing the file system through toy (such as with the runner library), it's best practice to utilize Toy's built-in drive system - this system (tries to) prevent malicious accessing of files outside of the designated folders. It does this by causing an error when a script tries to access a parent directory.
 
 To use the drive system, first you must designate specific folders which can be accessed, like so:
 
@@ -26,6 +27,10 @@ int main(int argc, char* argv[]) {
 
 This utility is intended mainly for libraries to use - as such, the core of Toy does not utilize it.
 
+### Implementation Details
+
+The drive system uses a Toy's Dictionary structure to store the mappings between keys and values - this dictionary object is a static global which persists for the lifetime of the program.
+
 ## Defined Functions
 
 ### void Toy_initDriveSystem()
@@ -44,7 +49,6 @@ This function sets a key-value pair in the drive system. It uses C strings, sinc
 
 This function, when given a string literal of the correct format, will return a new string literal containing the relative filepath to a specified file.
 
-The correct format is `drive:/path/to/filename`, where `drive` is a drive given to `Toy_setDrivePath()`.
+The correct format is `drive:/path/to/filename`, where `drive` is a drive that was specified with `Toy_setDrivePath()`.
 
 On failure, this function returns a null literal.
-
