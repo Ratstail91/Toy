@@ -52,7 +52,7 @@ Toy_Literal Toy_popLiteralArray(Toy_LiteralArray* array) {
 }
 
 //find a literal in the array that matches the "literal" argument
-int Toy_findLiteralIndex(Toy_LiteralArray* array, Toy_Literal literal) {
+int Toy_private_findLiteralIndex(Toy_LiteralArray* array, Toy_Literal literal) {
 	for (int i = 0; i < array->count; i++) {
 		//not the same type
 		if (array->literals[i].type != literal.type) {

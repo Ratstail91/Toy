@@ -270,4 +270,5 @@ union Toy_private_node {
 	Toy_NodeImport import;
 };
 
+//see toy_parser.h for more documentation on this function
 TOY_API void Toy_freeASTNode(Toy_ASTNode* node);

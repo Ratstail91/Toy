@@ -81,6 +81,10 @@ int main(int argc, char** argv) {
 		//finally
 		is.close();
 
+		if (buffer.length() == 0) {
+			continue;
+		}
+
 		std::ofstream os;
 		std::string ofname = argv[fileCounter];
 

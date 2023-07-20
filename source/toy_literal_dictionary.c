@@ -131,7 +131,6 @@ static void freeEntryArray(Toy_private_dictionary_entry* array, int capacity) {
 
 //exposed functions
 void Toy_initLiteralDictionary(Toy_LiteralDictionary* dictionary) {
-	//HACK: because modulo by 0 is undefined, set the capacity to a non-zero value (and allocate the arrays)
 	dictionary->entries = NULL;
 	dictionary->capacity = 0;
 	dictionary->contains = 0;

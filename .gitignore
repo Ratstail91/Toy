@@ -28,6 +28,7 @@ bin/
 *.stackdump
 *.tb
 *.filters
+[Dd]ocs/
 
 #Shell files
 *.bat

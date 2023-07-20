@@ -51,6 +51,23 @@ $(TOY_OUTDIR):
 install-tools:
 	cp -rf tools/toylang.vscode-highlighting ~/.vscode/extensions
 
+#utils
+build-mecha: $(TOY_OUTDIR)
+	g++ -o $(TOY_OUTDIR)/mecha tools/mecha.cpp
+
+build-docs: build-mecha
+	$(TOY_OUTDIR)/mecha $(wildcard source/*.h)
+
+docs:
+	mkdir docs
+
+move-docs: docs
+	mv -u $(wildcard source/*.md) docs
+
+documentation:
+	$(MAKE) build-docs
+	$(MAKE) move-docs
+
 .PHONY: clean
 
 clean:
