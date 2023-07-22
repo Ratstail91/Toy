@@ -11,6 +11,10 @@ This is not a core part of Toy or a library, and as such `repl_tools.h` and `rep
 #include "toy_common.h"
 
 /*!
+## Defined Functions
+!*/
+
+/*!
 ### const char* Toy_readFile(const char* path, size_t* fileSize)
 
 This function reads in a file, and returns it as a constant buffer. It also sets the variable pointed to by `fileSize` to the size of the given buffer.
