@@ -57,12 +57,14 @@ build-mecha: $(TOY_OUTDIR)
 
 build-docs: build-mecha
 	$(TOY_OUTDIR)/mecha $(wildcard source/*.h)
+	$(TOY_OUTDIR)/mecha $(wildcard repl/*.h)
 
 docs:
 	mkdir docs
 
 move-docs: docs
 	mv -u $(wildcard source/*.md) docs
+	mv -u $(wildcard repl/*.md) docs
 
 documentation:
 	$(MAKE) build-docs
