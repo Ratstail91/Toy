@@ -30,9 +30,7 @@ print tally(); //2
 print tally(); //3
 ```
 
-# Nifty Features
-
-<hr />
+## Nifty Features
 
 * Simple C-like syntax
 * Bytecode intermediate compilation
@@ -43,9 +41,7 @@ print tally(); //3
 * Can re-direct output, error and assertion failure messages
 * Open source under the zlib license
 
-# Getting Started
-
-<hr />
+## Getting Started
 
 * [Quick Start Guide](getting-started/quick-start-guide)
 * [Types](getting-started/types)
@@ -53,11 +49,8 @@ print tally(); //3
 * [Standard Library](getting-started/standard-library)
 * [Random Library](getting-started/random-library)
 * [Runner Library](getting-started/runner-library)
-* [Game Engine](getting-started/game-engine)
 
-# Deep Dive
-
-<hr />
+## Deep Dive
 
 * [Theorizing Toy](deep-dive/theorizing-toy)
 * [Building Toy](deep-dive/building-toy)
@@ -67,9 +60,7 @@ print tally(); //3
 * [Testing Toy](deep-dive/testing-toy)
 * [Roadmap](deep-dive/roadmap)
 
-# Public C API
-
-<hr />
+## Public C API
 
 * [repl_tools.h](c-api/repl_tools_h.md)
 * [toy.h](c-api/toy_h.md)
@@ -86,3 +77,9 @@ print tally(); //3
 * [toy_reffunction.h](c-api/toy_reffunction_h.md)
 * [toy_refstring.h](c-api/toy_refstring_h.md)
 * [toy_scope.h](c-api/toy_scope_h.md)
+
+## Game Engine
+
+Note: This section is incomplete.
+
+* [Game Engine](game-engine/game-engine.md)

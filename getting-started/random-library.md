@@ -13,19 +13,22 @@ var generator: opaque = createRandomGenerator(clock().hash());
 
 The current implementation is minimal in nature, and will be expanded or replaced in future.
 
-## createRandomGenerator(seed: int)
+## Defined Functions
+
+### createRandomGenerator(seed: int): opaque
 
 This function creates a new generator opaque based on the given seed. The same seed will produce the same sequence of pseudorandom outputs from different generators using `generateRandomNumber`.
 
 Every generator must also be freed with `freeRandomGenerator`.
 
-## generateRandomNumber(self: opaque)
+### generateRandomNumber(self: opaque): int
 
 This function takes in a generator opaque, and returns a pseudorandom integer value.
 
 This function also mutates the generator's internal state.
 
-## freeRandomGenerator(self: opaque)
+### freeRandomGenerator(self: opaque)
 
 This function frees an existing generator opaque.
 
+This function must be called on all generators before the program ends.

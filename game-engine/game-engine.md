@@ -1,3 +1,7 @@
+# Preface
+
+The game engine is incomplete and still evolving, as such this page should be considered outdated at all times...
+
 # Game Engine
 
 The Toy programming langauge was designed from the beginning as an embedded scripting language for some kind of game engine. Different iterations have existed with different implementations, some of which could charitably be said to function. The current version, and the most stable and feature complete so far, has reached a point where it needs some kind of concrete engine to improve any further.

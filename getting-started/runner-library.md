@@ -10,7 +10,9 @@ The runner library can usually be accessed with the `import` keyword:
 import runner;
 ```
 
-## loadScript(path: string)
+## Defined Functions
+
+### loadScript(path: string): opaque
 
 This is used to load an external script into an opaque variable.
 
@@ -22,7 +24,7 @@ This function does a lot of work:
 * It constructs and intializes an Interpreter
 * It packages it all into an opaque variable and returns it
 
-## loadScriptBytecode(path: string)
+### loadScriptBytecode(path: string): opaque
 
 This is used to load an external bytecode file into an opaque variable.
 
@@ -34,11 +36,11 @@ This function does a lot of work:
 
 Note: This function resembles `loadScript()`, but skips the compilation step.
 
-## runScript(self: opaque)
+### runScript(self: opaque)
 
 This function executes an external script, which must first be loaded into an opaque variable with either `loadScript()` or `loadScriptBytecode()`.
 
-## getScriptVar(self: opaque, name: string)
+### getScriptVar(self: opaque, name: string): any
 
 This function retrieves a variable from the top level of a script's environment.
 
@@ -46,15 +48,14 @@ This function retrieves a variable from the top level of a script's environment.
 
 This function retrieves a function from the top level of a script's environment, and calls it with `rest` as the argument list.
 
-## resetScript(self: opaque)
+### resetScript(self: opaque)
 
 This function resets the script so that it is no longer in a "dirty" state, and can be re-run using `runScript()`.
 
-## freeScript(self: opaque)
+### freeScript(self: opaque)
 
 This function frees a script's resources, cleaning up any memory that is no longer needed. Failing to call this will result in a memory leak.
 
-## checkScriptDirty(self: opaque)
+### checkScriptDirty(self: opaque): bool
 
 This function returns true of the script is "dirty", otherwise it returns false.
-
