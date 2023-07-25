@@ -1,14 +1,14 @@
 #pragma once
 
 /*!
-# toy_drive_system.h
+# drive_system.h
 
-When accessing the file system through toy (such as with the runner library), it's best practice to utilize Toy's built-in drive system - this system (tries to) prevent malicious accessing of files outside of the designated folders. It does this by causing an error when a script tries to access a parent directory.
+When accessing the file system through Toy (such as with the runner library), it's best practice to utilize the drive system - this system (tries to) prevent malicious accessing of files outside of the designated folders. It does this by causing an error when a script tries to access a parent directory.
 
 To use the drive system, first you must designate specific folders which can be accessed, like so:
 
 ```c
-#include "toy_drive_system.h"
+#include "drive_system.h"
 
 int main(int argc, char* argv[]) {
 	//the drive system uses a LiteralDictionary, which must be initialized with this
