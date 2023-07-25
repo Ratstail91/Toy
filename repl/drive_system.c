@@ -18,7 +18,7 @@ void Toy_freeDriveSystem() {
 	Toy_freeLiteralDictionary(&driveDictionary);
 }
 
-TOY_API void Toy_setDrivePath(char* drive, char* path) {
+void Toy_setDrivePath(char* drive, char* path) {
 	Toy_Literal driveLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString(drive));
 	Toy_Literal pathLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString(path));
 

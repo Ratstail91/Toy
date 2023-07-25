@@ -147,7 +147,6 @@ del "$(OutDir)$(ProjectName).pdb"
     <ClCompile Include="source\toy_builtin.c" />
     <ClCompile Include="source\toy_common.c" />
     <ClCompile Include="source\toy_compiler.c" />
-    <ClCompile Include="source\toy_drive_system.c" />
     <ClCompile Include="source\toy_interpreter.c" />
     <ClCompile Include="source\toy_keyword_types.c" />
     <ClCompile Include="source\toy_lexer.c" />
@@ -167,7 +166,6 @@ del "$(OutDir)$(ProjectName).pdb"
     <ClInclude Include="source\toy_common.h" />
     <ClInclude Include="source\toy_compiler.h" />
     <ClInclude Include="source\toy_console_colors.h" />
-    <ClInclude Include="source\toy_drive_system.h" />
     <ClInclude Include="source\toy_interpreter.h" />
     <ClInclude Include="source\toy_keyword_types.h" />
     <ClInclude Include="source\toy_lexer.h" />
