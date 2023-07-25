@@ -80,6 +80,12 @@ print tally(); //3
 
 ## Game Engine
 
-Note: This section is incomplete.
+Note: This section is WIP.
 
 * [Game Engine](game-engine/game-engine.md)
+* Engine Library
+* Node Library
+* Input Library
+* Music Library
+* Sound Library
+
