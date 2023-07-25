@@ -27,7 +27,7 @@ int Toy_hookAbout(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Lite
 	//store as an aliased dictionary
 	if (!TOY_IS_NULL(alias)) {
 		//make sure the name isn't taken
-		if (Toy_isDelcaredScopeVariable(interpreter->scope, alias)) {
+		if (Toy_isDeclaredScopeVariable(interpreter->scope, alias)) {
 			interpreter->errorOutput("Can't override an existing variable\n");
 			Toy_freeLiteral(alias);
 
@@ -83,11 +83,11 @@ int Toy_hookAbout(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Lite
 	//store globally
 	else {
 		//make sure the names aren't taken
-		if (Toy_isDelcaredScopeVariable(interpreter->scope, majorKeyLiteral) ||
-			Toy_isDelcaredScopeVariable(interpreter->scope, minorKeyLiteral) ||
-			Toy_isDelcaredScopeVariable(interpreter->scope, patchKeyLiteral) ||
-			Toy_isDelcaredScopeVariable(interpreter->scope, buildKeyLiteral) ||
-			Toy_isDelcaredScopeVariable(interpreter->scope, authorKeyLiteral)) {
+		if (Toy_isDeclaredScopeVariable(interpreter->scope, majorKeyLiteral) ||
+			Toy_isDeclaredScopeVariable(interpreter->scope, minorKeyLiteral) ||
+			Toy_isDeclaredScopeVariable(interpreter->scope, patchKeyLiteral) ||
+			Toy_isDeclaredScopeVariable(interpreter->scope, buildKeyLiteral) ||
+			Toy_isDeclaredScopeVariable(interpreter->scope, authorKeyLiteral)) {
 			interpreter->errorOutput("Can't override an existing variable\n");
 			Toy_freeLiteral(alias);
 

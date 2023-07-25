@@ -699,7 +699,7 @@ static bool execVarAssign(Toy_Interpreter* interpreter) {
 		return false;
 	}
 
-	if (!Toy_isDelcaredScopeVariable(interpreter->scope, lhs)) {
+	if (!Toy_isDeclaredScopeVariable(interpreter->scope, lhs)) {
 		interpreter->errorOutput("Undeclared variable \"");
 		Toy_printLiteralCustom(lhs, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
@@ -1467,7 +1467,7 @@ bool Toy_callFn(Toy_Interpreter* interpreter, const char* name, Toy_LiteralArray
 	Toy_Literal key = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(name, strlen(name)));
 	Toy_Literal val = TOY_TO_NULL_LITERAL;
 	
-	if (!Toy_isDelcaredScopeVariable(interpreter->scope, key)) {
+	if (!Toy_isDeclaredScopeVariable(interpreter->scope, key)) {
 		interpreter->errorOutput("No function with that name\n");
 		return false;
 	}

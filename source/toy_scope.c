@@ -256,7 +256,7 @@ bool Toy_declareScopeVariable(Toy_Scope* scope, Toy_Literal key, Toy_Literal typ
 	return true;
 }
 
-bool Toy_isDelcaredScopeVariable(Toy_Scope* scope, Toy_Literal key) {
+bool Toy_isDeclaredScopeVariable(Toy_Scope* scope, Toy_Literal key) {
 	while (scope != NULL) {
 		if (Toy_existsLiteralDictionary(&scope->variables, key)) {
 			return true;

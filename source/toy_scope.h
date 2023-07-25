@@ -58,11 +58,11 @@ This function returns true on success, otherwise it returns failure (such as if 
 TOY_API bool Toy_declareScopeVariable(Toy_Scope* scope, Toy_Literal key, Toy_Literal type);
 
 /*!
-### bool Toy_isDelcaredScopeVariable(Toy_Scope* scope, Toy_Literal key)
+### bool Toy_isDeclaredScopeVariable(Toy_Scope* scope, Toy_Literal key)
 
 This function checks to see if a given variable with the name `key` has been previously declared.
 !*/
-TOY_API bool Toy_isDelcaredScopeVariable(Toy_Scope* scope, Toy_Literal key);
+TOY_API bool Toy_isDeclaredScopeVariable(Toy_Scope* scope, Toy_Literal key);
 
 /*!
 ### bool Toy_setScopeVariable(Toy_Scope* scope, Toy_Literal key, Toy_Literal value, bool constCheck)
