@@ -6,13 +6,13 @@
 #include "toy_console_colors.h"
 
 #include "toy_memory.h"
-#include "toy_drive_system.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "../repl/repl_tools.h"
+#include "../repl/drive_system.h"
 
 #include "../repl/lib_about.h"
 #include "../repl/lib_random.h"
