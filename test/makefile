@@ -4,7 +4,7 @@ IDIR +=. ../source ../repl
 CFLAGS +=$(addprefix -I,$(IDIR)) -g -Wall -W -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
 LIBS +=
 ODIR = obj
-TARGETS = $(wildcard ../source/*.c) $(wildcard ../repl/lib_*.c) ../repl/repl_tools.c
+TARGETS = $(wildcard ../source/*.c) $(wildcard ../repl/lib_*.c) ../repl/repl_tools.c ../repl/toy_drive_system.c
 TESTS = $(wildcard test_*.c)
 OBJ = $(addprefix $(ODIR)/,$(TARGETS:../source/%.c=%.o)) $(addprefix $(ODIR)/,$(TESTS:.c=.o))
 
