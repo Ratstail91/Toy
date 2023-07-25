@@ -11,14 +11,14 @@ OBJ = $(addprefix $(ODIR)/,$(SRC:.c=.o))
 OUTNAME=toy
 
 ifeq ($(findstring CYGWIN, $(shell uname)),CYGWIN)
-	LIBLINE =-Wl,--out-implib=../$(TOY_OUTDIR)/lib$(OUTNAME).dll.a -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--whole-archive $(OBJ) -Wl,--no-whole-archive
+	LIBLINE=-Wl,-rpath,. -Wl,--out-implib=../$(TOY_OUTDIR)/lib$(OUTNAME).dll.a -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--whole-archive $(OBJ) -Wl,--no-whole-archive
 	OUT=../$(TOY_OUTDIR)/$(OUTNAME).dll
 else ifeq ($(shell uname),Linux)
-	LIBLINE=-Wl,--out-implib=../$(TOY_OUTDIR)/lib$(OUTNAME).a -Wl,--whole-archive $(OBJ) -Wl,--no-whole-archive
+	LIBLINE=-Wl,-rpath,. -Wl,--out-implib=../$(TOY_OUTDIR)/lib$(OUTNAME).a -Wl,--whole-archive $(OBJ) -Wl,--no-whole-archive
 	OUT=../$(TOY_OUTDIR)/lib$(OUTNAME).so
 	CFLAGS += -fPIC
 else ifeq ($(OS),Windows_NT)
-	LIBLINE =-Wl,--out-implib=../$(TOY_OUTDIR)/lib$(OUTNAME).dll.a -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--whole-archive $(OBJ) -Wl,--no-whole-archive
+	LIBLINE=-Wl,-rpath,. -Wl,--out-implib=../$(TOY_OUTDIR)/lib$(OUTNAME).dll.a -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--whole-archive $(OBJ) -Wl,--no-whole-archive
 	OUT=../$(TOY_OUTDIR)/$(OUTNAME).dll
 else ifeq ($(shell uname),Darwin)
 	LIBLINE = $(OBJ)
