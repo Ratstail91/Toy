@@ -8,17 +8,17 @@ Be aware that when you create a new Literal object, you must call `Toy_freeLiter
 
 ## Embedded API Macros
 
-The functions intended for usage by the API are prepended with the C macro `TOY_API`. The exact value of this macro can vary by platform, or even be empty. In addition, the macros defined in [literal.h](https://github.com/Ratstail91/Toy/blob/0.6.0/source/literal.h) are available for use when manipulating literals. These include:
+The functions intended for usage by the API are prepended with the C macro `TOY_API`. The exact value of this macro can vary by platform, or even be empty. In addition, the macros defined in [literal.h](https://github.com/Ratstail91/Toy/blob/main/source/toy_literal.h) are available for use when manipulating literals. These include:
 
 * `TOY_IS_*` - check if a literal is a specific type
 * `TOY_AS_*` - cast the literal to a specific type
-* `TOY_TO_*` - create a literal of a specific type
+* `TOY_TO_*_LITERAL` - create a literal of a specific type
 * `TOY_IS_TRUTHY` - check if a literal is truthy
 * `TOY_MAX_STRING_LENGTH` - the maximum length of a string in Toy (can be altered if needed)
 
 ## Structures Used Throughout Toy
 
-The main unit of data within Toy's internals is `Toy_Literal`, which can contain any value that can exist within the Toy langauge. The exact implementation of `Toy_Literal` may change or evolve as time goes on, so it's recommended that you only interact with literals directly by using the macros and functions outlined [above](#embedded-api-macros). See the [types](types) page for information on what datatypes exist in Toy.
+The main unit of data within Toy's internals is `Toy_Literal`, which can contain any value that can exist within the Toy langauge - even identifiers. The exact implementation of `Toy_Literal` may change or evolve as time goes on, so it's recommended that you only interact with literals directly by using the macros and functions outlined [above](#embedded-api-macros). See the [types](types) page for information on exactly what datatypes exist in Toy.
 
 There are two main "compound structures" used within Toy's internals - the `Toy_LiteralArray` and `Toy_LiteralDictionary`. The former is an array of `Toy_Literal` instances stored sequentially in memory for fast lookups, while the latter is a key-value hashmap designed for efficient lookups based on a `Toy_Literal` key. These are both accessible via the language as well.
 
@@ -26,7 +26,7 @@ These compound structures hold **copies** of literals given to them, rather than
 
 ## Compiling Toy Scripts
 
-Please see [Compiling Toy](compiling-toy) for more information on the process of turning scripts into bytecode.
+Please see [Compiling Toy](deep-dive/compiling-toy) for more information on the process of turning scripts into bytecode.
 
 ## Interpreting Toy
 
@@ -40,7 +40,7 @@ Toy_Interpreter interpreter;
 
 Toy_initInterpreter(&interpreter);
 Toy_runInterpreter(&interpreter, tb, size);
-Toy_resetInterpreter(&interpreter); //You usually want to reset between runs
+Toy_resetInterpreter(&interpreter); //You usually want to reset between runs with the same interpreter
 Toy_freeInterpreter(&interpreter);
 ```
 

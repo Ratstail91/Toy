@@ -50,7 +50,7 @@ print tally(); //3
 * [Random Library](getting-started/random-library)
 * [Runner Library](getting-started/runner-library)
 
-## Deep Dive
+## Deep Dive Document
 
 * [Theorizing Toy](deep-dive/theorizing-toy)
 * [Building Toy](deep-dive/building-toy)
@@ -58,7 +58,7 @@ print tally(); //3
 * [Compiling Toy](deep-dive/compiling-toy)
 * [Developing Toy](deep-dive/developing-toy)
 * [Testing Toy](deep-dive/testing-toy)
-* [Roadmap](deep-dive/roadmap)
+* [Roadmapping Toy](deep-dive/roadmapping-toy)
 
 ## Public C API
 
