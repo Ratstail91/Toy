@@ -83,9 +83,9 @@ Opcodes within the bytecode are 1 byte in length, and specify a single action to
 The interpeter is stack-based; most, if not all of the actions are preformed on literals within a specially designated array called `stack`. for example:
 
 ```c
-    case TOY_OP_PRINT:
-	    if (!execPrint(interpreter)) {
-		    return;
+	case TOY_OP_PRINT:
+		if (!execPrint(interpreter)) {
+			return;
 		}
 	break;
 ```
@@ -97,19 +97,19 @@ static bool execPrint(Toy_Interpreter* interpreter) {
 	//get the top literal
 	Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
 
-    //if the top literal is an identifier, get it's value
+	//if the top literal is an identifier, get it's value
 	Toy_Literal idn = lit;
 	if (TOY_IS_IDENTIFIER(lit) && Toy_parseIdentifierToValue(interpreter, &lit)) {
 		Toy_freeLiteral(idn);
 	}
 
-    //print as a string to the current print method
+	//print as a string to the current print method
 	Toy_printLiteralCustom(lit, interpreter->printOutput);
 
-    //free the literal
+	//free the literal
 	Toy_freeLiteral(lit);
 
-    //continue the loop
+	//continue the loop
 	return true;
 }
 ```
