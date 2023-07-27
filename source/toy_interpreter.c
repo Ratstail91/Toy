@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 
+//printing utilities
 static void printWrapper(const char* output) {
 	//allow for disabling of newlines in the repl
 #ifndef TOY_EXPORT
@@ -33,6 +34,19 @@ static void errorWrapper(const char* output) {
 	fprintf(stderr, TOY_CC_ERROR "%s" TOY_CC_RESET, output); //no newline
 }
 
+void Toy_setInterpreterPrint(Toy_Interpreter* interpreter, Toy_PrintFn printOutput) {
+	interpreter->printOutput = printOutput;
+}
+
+void Toy_setInterpreterAssert(Toy_Interpreter* interpreter, Toy_PrintFn assertOutput) {
+	interpreter->assertOutput = assertOutput;
+}
+
+void Toy_setInterpreterError(Toy_Interpreter* interpreter, Toy_PrintFn errorOutput) {
+	interpreter->errorOutput = errorOutput;
+}
+
+//injection utilities
 bool Toy_injectNativeFn(Toy_Interpreter* interpreter, const char* name, Toy_NativeFn func) {
 	//reject reserved words
 	if (Toy_findTypeByKeyword(name) != TOY_TOKEN_EOF) {
@@ -42,19 +56,21 @@ bool Toy_injectNativeFn(Toy_Interpreter* interpreter, const char* name, Toy_Nati
 
 	Toy_Literal identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString(name));
 
-	//make sure the name isn't taken
+	//make sure the name isn't taken (manually to skip the scope chain)
 	if (Toy_existsLiteralDictionary(&interpreter->scope->variables, identifier)) {
 		interpreter->errorOutput("Can't override an existing variable\n");
+		Toy_freeLiteral(identifier);
 		return false;
 	}
 
 	Toy_Literal fn = TOY_TO_FUNCTION_NATIVE_LITERAL(func);
 	Toy_Literal type = TOY_TO_TYPE_LITERAL(fn.type, true);
 
-	Toy_setLiteralDictionary(&interpreter->scope->variables, identifier, fn);
-	Toy_setLiteralDictionary(&interpreter->scope->types, identifier, type);
+	Toy_declareScopeVariable(interpreter->scope, identifier, type);
+	Toy_setScopeVariable(interpreter->scope, identifier, fn, false);
 
 	Toy_freeLiteral(identifier);
+	Toy_freeLiteral(fn);
 	Toy_freeLiteral(type);
 
 	return true;
@@ -67,12 +83,12 @@ bool Toy_injectNativeHook(Toy_Interpreter* interpreter, const char* name, Toy_Ho
 		return false;
 	}
 
-	int identifierLength = strlen(name);
-	Toy_Literal identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(name, identifierLength));
+	Toy_Literal identifier = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString(name));
 
 	//make sure the name isn't taken
 	if (Toy_existsLiteralDictionary(interpreter->hooks, identifier)) {
 		interpreter->errorOutput("Can't override an existing hook\n");
+		Toy_freeLiteral(identifier);
 		return false;
 	}
 
@@ -80,11 +96,27 @@ bool Toy_injectNativeHook(Toy_Interpreter* interpreter, const char* name, Toy_Ho
 	Toy_setLiteralDictionary(interpreter->hooks, identifier, fn);
 
 	Toy_freeLiteral(identifier);
+	Toy_freeLiteral(fn);
 
 	return true;
 }
 
-void Toy_parseCompoundToPureValues(Toy_Interpreter* interpreter, Toy_Literal* literalPtr) {
+//parsing to value utilities
+bool Toy_parseIdentifierToValue(Toy_Interpreter* interpreter, Toy_Literal* literalPtr) {
+	//this converts identifiers to values
+	if (TOY_IS_IDENTIFIER(*literalPtr)) {
+		if (!Toy_getScopeVariable(interpreter->scope, *literalPtr, literalPtr)) {
+			interpreter->errorOutput("Undeclared variable ");
+			Toy_printLiteralCustom(*literalPtr, interpreter->errorOutput);
+			interpreter->errorOutput("\n");
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void Toy_parseCompoundToValue(Toy_Interpreter* interpreter, Toy_Literal* literalPtr) {
 	//parse out an array
 	if (TOY_IS_ARRAY(*literalPtr)) {
 		for (int i = 0; i < TOY_AS_ARRAY(*literalPtr)->count; i++) {
@@ -105,7 +137,7 @@ void Toy_parseCompoundToPureValues(Toy_Interpreter* interpreter, Toy_Literal* li
 
 			//recurse on sub-compounds
 			if (TOY_IS_ARRAY(TOY_AS_ARRAY(*literalPtr)->literals[i]) || TOY_IS_DICTIONARY(TOY_AS_ARRAY(*literalPtr)->literals[i])) {
-				Toy_parseCompoundToPureValues(interpreter, &TOY_AS_ARRAY(*literalPtr)->literals[i]);
+				Toy_parseCompoundToValue(interpreter, &TOY_AS_ARRAY(*literalPtr)->literals[i]);
 			}
 		}
 	}
@@ -122,11 +154,11 @@ void Toy_parseCompoundToPureValues(Toy_Interpreter* interpreter, Toy_Literal* li
 
 			//recurse on sub-compounds
 			if (TOY_IS_ARRAY(TOY_AS_DICTIONARY(*literalPtr)->entries[i].key) || TOY_IS_DICTIONARY(TOY_AS_DICTIONARY(*literalPtr)->entries[i].key)) {
-				Toy_parseCompoundToPureValues(interpreter, &TOY_AS_DICTIONARY(*literalPtr)->entries[i].key);
+				Toy_parseCompoundToValue(interpreter, &TOY_AS_DICTIONARY(*literalPtr)->entries[i].key);
 			}
 
 			if (TOY_IS_ARRAY(TOY_AS_DICTIONARY(*literalPtr)->entries[i].value) || TOY_IS_DICTIONARY(TOY_AS_DICTIONARY(*literalPtr)->entries[i].value)) {
-				Toy_parseCompoundToPureValues(interpreter, &TOY_AS_DICTIONARY(*literalPtr)->entries[i].value);
+				Toy_parseCompoundToValue(interpreter, &TOY_AS_DICTIONARY(*literalPtr)->entries[i].value);
 			}
 		}
 
@@ -159,14 +191,14 @@ void Toy_parseCompoundToPureValues(Toy_Interpreter* interpreter, Toy_Literal* li
 				Toy_parseIdentifierToValue(interpreter, &key);
 			}
 			if (TOY_IS_ARRAY(key) || TOY_IS_DICTIONARY(key)) {
-				Toy_parseCompoundToPureValues(interpreter, &key);
+				Toy_parseCompoundToValue(interpreter, &key);
 			}
 
 			if (TOY_IS_IDENTIFIER(value)) {
 				Toy_parseIdentifierToValue(interpreter, &value);
 			}
 			if (TOY_IS_ARRAY(value) || TOY_IS_DICTIONARY(value)) {
-				Toy_parseCompoundToPureValues(interpreter, &value);
+				Toy_parseCompoundToValue(interpreter, &value);
 			}
 
 			Toy_setLiteralDictionary(ret, key, value);
@@ -181,38 +213,29 @@ void Toy_parseCompoundToPureValues(Toy_Interpreter* interpreter, Toy_Literal* li
 	}
 }
 
-bool Toy_parseIdentifierToValue(Toy_Interpreter* interpreter, Toy_Literal* literalPtr) {
-	//this converts identifiers to values
-	if (TOY_IS_IDENTIFIER(*literalPtr)) {
-		if (!Toy_getScopeVariable(interpreter->scope, *literalPtr, literalPtr)) {
-			interpreter->errorOutput("Undeclared variable ");
-			Toy_printLiteralCustom(*literalPtr, interpreter->errorOutput);
-			interpreter->errorOutput("\n");
-			return false;
+void parseTypeToValue(Toy_Interpreter* interpreter, Toy_Literal* literalPtr) {
+	//if an identifier is embedded in the type, figure out what it is
+	Toy_Literal idn = *literalPtr;
+	if (TOY_IS_IDENTIFIER(*literalPtr) && Toy_parseIdentifierToValue(interpreter, literalPtr)) {
+		Toy_freeLiteral(idn);
+	}
+
+	//if this is an array or dictionary, continue to the subtypes
+	if (TOY_IS_TYPE(*literalPtr) && (TOY_AS_TYPE(*literalPtr).typeOf == TOY_LITERAL_ARRAY || TOY_AS_TYPE(*literalPtr).typeOf == TOY_LITERAL_DICTIONARY)) {
+		for (int i = 0; i < TOY_AS_TYPE(*literalPtr).count; i++) {
+			parseTypeToValue(interpreter, &((Toy_Literal*)(TOY_AS_TYPE(*literalPtr).subtypes))[i]);
 		}
 	}
 
-	// if (TOY_IS_ARRAY(*literalPtr) || TOY_IS_DICTIONARY(*literalPtr)) {
-	// 	Toy_parseCompoundToPureValues(interpreter, literalPtr);
-	// }
-
-	return true;
+	//BUGFIX: make sure it actually is a type
+	if (!TOY_IS_TYPE(*literalPtr)) {
+		interpreter->errorOutput("Bad type encountered: ");
+		Toy_printLiteralCustom(*literalPtr, interpreter->errorOutput);
+		interpreter->errorOutput("\n");
+	}
 }
 
-//utilities for the host program
-void Toy_setInterpreterPrint(Toy_Interpreter* interpreter, Toy_PrintFn printOutput) {
-	interpreter->printOutput = printOutput;
-}
-
-void Toy_setInterpreterAssert(Toy_Interpreter* interpreter, Toy_PrintFn assertOutput) {
-	interpreter->assertOutput = assertOutput;
-}
-
-void Toy_setInterpreterError(Toy_Interpreter* interpreter, Toy_PrintFn errorOutput) {
-	interpreter->errorOutput = errorOutput;
-}
-
-//utils
+//reading utils
 static unsigned char readByte(const unsigned char* tb, int* count) {
 	unsigned char ret = *(unsigned char*)(tb + *count);
 	*count += 1;
@@ -332,7 +355,8 @@ static bool execPushLiteral(Toy_Interpreter* interpreter, bool lng) {
 	return true;
 }
 
-static bool rawLiteral(Toy_Interpreter* interpreter) {
+static bool execRawLiteral(Toy_Interpreter* interpreter) {
+	//this seems to be only used by increments and decrements
 	Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
 
 	Toy_Literal idn = lit;
@@ -544,31 +568,6 @@ static bool execArithmetic(Toy_Interpreter* interpreter, Toy_Opcode opcode) {
 	return false;
 }
 
-static Toy_Literal parseTypeToValue(Toy_Interpreter* interpreter, Toy_Literal type) {
-	//if an identifier is embedded in the type, figure out what it iss
-	Toy_Literal typeIdn = type;
-	if (TOY_IS_IDENTIFIER(type) && Toy_parseIdentifierToValue(interpreter, &type)) {
-		Toy_freeLiteral(typeIdn);
-	}
-
-	//if this is an array or dictionary, continue to the subtypes
-	if (TOY_IS_TYPE(type) && (TOY_AS_TYPE(type).typeOf == TOY_LITERAL_ARRAY || TOY_AS_TYPE(type).typeOf == TOY_LITERAL_DICTIONARY)) {
-		for (int i = 0; i < TOY_AS_TYPE(type).count; i++) {
-			((Toy_Literal*)(TOY_AS_TYPE(type).subtypes))[i] = parseTypeToValue(interpreter, ((Toy_Literal*)(TOY_AS_TYPE(type).subtypes))[i]);
-		}
-	}
-
-	//BUGFIX: make sure it actually is a type
-	if (!TOY_IS_TYPE(type)) {
-		interpreter->errorOutput("Bad type encountered: ");
-		Toy_printLiteralCustom(type, interpreter->errorOutput);
-		interpreter->errorOutput("\n");
-		//TODO: would be better to return an int here...
-	}
-
-	return type;
-}
-
 static bool execVarDecl(Toy_Interpreter* interpreter, bool lng) {
 	//read the index in the cache
 	int identifierIndex = 0;
@@ -592,7 +591,7 @@ static bool execVarDecl(Toy_Interpreter* interpreter, bool lng) {
 	}
 
 	//BUGFIX: because identifiers are getting embedded in type definitions
-	type = parseTypeToValue(interpreter, type);
+	parseTypeToValue(interpreter, &type);
 
 	if (!Toy_declareScopeVariable(interpreter->scope, identifier, type)) {
 		interpreter->errorOutput("Can't redefine the variable \"");
@@ -609,7 +608,7 @@ static bool execVarDecl(Toy_Interpreter* interpreter, bool lng) {
 	}
 
 	if (TOY_IS_ARRAY(val) || TOY_IS_DICTIONARY(val)) {
-		Toy_parseCompoundToPureValues(interpreter, &val);
+		Toy_parseCompoundToValue(interpreter, &val);
 	}
 
 	//TODO: could restrict opaque data to only opaque variables
@@ -689,7 +688,7 @@ static bool execVarAssign(Toy_Interpreter* interpreter) {
 	}
 
 	if (TOY_IS_ARRAY(rhs) || TOY_IS_DICTIONARY(rhs)) {
-		Toy_parseCompoundToPureValues(interpreter, &rhs);
+		Toy_parseCompoundToValue(interpreter, &rhs);
 	}
 
 	if (!TOY_IS_IDENTIFIER(lhs)) {
@@ -733,11 +732,11 @@ static bool execVarAssign(Toy_Interpreter* interpreter) {
 	return true;
 }
 
-static bool execVarArithmeticAssign(Toy_Interpreter* interpreter) {
+static bool execVarArithmeticAssignInterjection(Toy_Interpreter* interpreter) {
 	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
 	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
 
-	//duplicate the name
+	//duplicate the (presumably) identifier
 	Toy_pushLiteralArray(&interpreter->stack, lhs);
 	Toy_pushLiteralArray(&interpreter->stack, lhs);
 	Toy_pushLiteralArray(&interpreter->stack, rhs);
@@ -757,7 +756,10 @@ static bool execValCast(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(valueIdn);
 	}
 
-	Toy_Literal result = TOY_TO_NULL_LITERAL;
+	Toy_Literal typeIdn = type;
+	if (TOY_IS_IDENTIFIER(type) && Toy_parseIdentifierToValue(interpreter, &type)) {
+		Toy_freeLiteral(typeIdn);
+	}
 
 	if (TOY_IS_NULL(value)) {
 		interpreter->errorOutput("Can't cast a null value\n");
@@ -767,6 +769,8 @@ static bool execValCast(Toy_Interpreter* interpreter) {
 
 		return false;
 	}
+
+	Toy_Literal result = TOY_TO_NULL_LITERAL;
 
 	//cast the rhs to the type represented by lhs
 	switch(TOY_AS_TYPE(type).typeOf) {
@@ -845,6 +849,11 @@ static bool execValCast(Toy_Interpreter* interpreter) {
 			interpreter->errorOutput("Unknown cast type found: ");
 			Toy_printLiteralCustom(type, interpreter->errorOutput);
 			interpreter->errorOutput("\n");
+
+			Toy_freeLiteral(result);
+			Toy_freeLiteral(value);
+			Toy_freeLiteral(type);
+
 			return false;
 	}
 
@@ -891,14 +900,16 @@ static bool execCompareEqual(Toy_Interpreter* interpreter, bool invert) {
 		Toy_freeLiteral(lhsIdn);
 	}
 
-	bool result = Toy_literalsAreEqual(lhs, rhs);
+	bool equal = Toy_literalsAreEqual(lhs, rhs);
 
 	if (invert) {
-		result = !result;
+		equal = !equal;
 	}
 
-	Toy_pushLiteralArray(&interpreter->stack, TOY_TO_BOOLEAN_LITERAL(result));
+	Toy_Literal result = TOY_TO_BOOLEAN_LITERAL(equal);
+	Toy_pushLiteralArray(&interpreter->stack, result);
 
+	Toy_freeLiteral(result);
 	Toy_freeLiteral(lhs);
 	Toy_freeLiteral(rhs);
 
@@ -948,17 +959,19 @@ static bool execCompareLess(Toy_Interpreter* interpreter, bool invert) {
 		rhs = TOY_TO_FLOAT_LITERAL(TOY_AS_INTEGER(rhs));
 	}
 
-	bool result;
+	bool less;
 
 	if (!invert) {
-		result = (TOY_AS_FLOAT(lhs) < TOY_AS_FLOAT(rhs));
+		less = (TOY_AS_FLOAT(lhs) < TOY_AS_FLOAT(rhs));
 	}
 	else {
-		result = (TOY_AS_FLOAT(lhs) > TOY_AS_FLOAT(rhs));
+		less = (TOY_AS_FLOAT(lhs) > TOY_AS_FLOAT(rhs));
 	}
 
-	Toy_pushLiteralArray(&interpreter->stack, TOY_TO_BOOLEAN_LITERAL(result));
+	Toy_Literal result = TOY_TO_BOOLEAN_LITERAL(less);
+	Toy_pushLiteralArray(&interpreter->stack, result);
 
+	Toy_freeLiteral(result);
 	Toy_freeLiteral(lhs);
 	Toy_freeLiteral(rhs);
 
@@ -1009,17 +1022,19 @@ static bool execCompareLessEqual(Toy_Interpreter* interpreter, bool invert) {
 		rhs = TOY_TO_FLOAT_LITERAL(TOY_AS_INTEGER(rhs));
 	}
 
-	bool result;
+	bool lessEqual;
 
 	if (!invert) {
-		result = (TOY_AS_FLOAT(lhs) < TOY_AS_FLOAT(rhs)) || Toy_literalsAreEqual(lhs, rhs);
+		lessEqual = (TOY_AS_FLOAT(lhs) < TOY_AS_FLOAT(rhs)) || Toy_literalsAreEqual(lhs, rhs);
 	}
 	else {
-		result = (TOY_AS_FLOAT(lhs) > TOY_AS_FLOAT(rhs)) || Toy_literalsAreEqual(lhs, rhs);
+		lessEqual = (TOY_AS_FLOAT(lhs) > TOY_AS_FLOAT(rhs)) || Toy_literalsAreEqual(lhs, rhs);
 	}
 
-	Toy_pushLiteralArray(&interpreter->stack, TOY_TO_BOOLEAN_LITERAL(result));
+	Toy_Literal result = TOY_TO_BOOLEAN_LITERAL(lessEqual);
+	Toy_pushLiteralArray(&interpreter->stack, result);
 
+	Toy_freeLiteral(result);
 	Toy_freeLiteral(lhs);
 	Toy_freeLiteral(rhs);
 
@@ -1040,7 +1055,7 @@ static bool execAnd(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(lhsIdn);
 	}
 
-	//short-circuit support
+	//short-circuit - broken, see issue #73
 	if (!TOY_IS_TRUTHY(lhs)) {
 		Toy_pushLiteralArray(&interpreter->stack, lhs);
 	}
@@ -1068,7 +1083,7 @@ static bool execOr(Toy_Interpreter* interpreter) {
 		Toy_freeLiteral(lhsIdn);
 	}
 
-	//short-circuit support
+	//short-circuit - broken, see issue #73
 	if (TOY_IS_TRUTHY(lhs)) {
 		Toy_pushLiteralArray(&interpreter->stack, lhs);
 	}
@@ -1096,7 +1111,7 @@ static bool execJump(Toy_Interpreter* interpreter) {
 	return true;
 }
 
-static bool execFalseJump(Toy_Interpreter* interpreter) {
+static bool execJumpIfFalse(Toy_Interpreter* interpreter) {
 	int target = (int)readShort(interpreter->bytecode, &interpreter->count);
 
 	if (target + interpreter->codeStart > interpreter->length) {
@@ -1126,10 +1141,6 @@ static bool execFalseJump(Toy_Interpreter* interpreter) {
 
 	return true;
 }
-
-//forward declare
-static void execInterpreter(Toy_Interpreter*);
-static void readInterpreterSections(Toy_Interpreter* interpreter);
 
 //expect stack: identifier, arg1, arg2, arg3..., stackSize
 //also supports identifier & arg1 to be other way around (looseFirstArgument)
@@ -1213,275 +1224,6 @@ static bool execFnCall(Toy_Interpreter* interpreter, bool looseFirstArgument) {
 	return ret;
 }
 
-//expects arguments in correct order
-bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_LiteralArray* arguments, Toy_LiteralArray* returns) {
-	//check for side-loaded native functions
-	if (TOY_IS_FUNCTION_NATIVE(func)) {
-		//TODO: parse out identifier values, see issue #64
-
-		//call the native function
-		int returnsCount = TOY_AS_FUNCTION_NATIVE(func)(interpreter, arguments);
-
-		if (returnsCount < 0) {
-			// interpreter->errorOutput("Unknown error from native function\n");
-			return false;
-		}
-
-		//get the results
-		Toy_LiteralArray returnsFromInner;
-		Toy_initLiteralArray(&returnsFromInner);
-
-		for (int i = 0; i < (returnsCount || 1); i++) {
-			Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
-			Toy_pushLiteralArray(&returnsFromInner, lit); //NOTE: also reverses the order
-			Toy_freeLiteral(lit);
-		}
-
-		//flip them around and pass to returns
-		while (returnsFromInner.count > 0) {
-			Toy_Literal lit = Toy_popLiteralArray(&returnsFromInner);
-			Toy_pushLiteralArray(returns, lit);
-			Toy_freeLiteral(lit);
-		}
-
-		Toy_freeLiteralArray(&returnsFromInner);
-		return true;
-	}
-
-	//normal Toy function
-	if (!TOY_IS_FUNCTION(func)) {
-		interpreter->errorOutput("Function literal required in Toy_callLiteralFn()\n");
-		return false;
-	}
-
-	//set up a new interpreter
-	Toy_Interpreter inner;
-
-	//init the inner interpreter manually
-	Toy_initLiteralArray(&inner.literalCache);
-	inner.scope = Toy_pushScope(func.as.function.scope);
-	inner.bytecode = ((Toy_RefFunction*)(TOY_AS_FUNCTION(func).inner.ptr))->data;
-	inner.length = ((Toy_RefFunction*)(TOY_AS_FUNCTION(func).inner.ptr))->length;
-	inner.count = 0;
-	inner.codeStart = -1;
-	inner.depth = interpreter->depth + 1;
-	inner.panic = false;
-	Toy_initLiteralArray(&inner.stack);
-	inner.hooks = interpreter->hooks;
-	Toy_setInterpreterPrint(&inner, interpreter->printOutput);
-	Toy_setInterpreterAssert(&inner, interpreter->assertOutput);
-	Toy_setInterpreterError(&inner, interpreter->errorOutput);
-
-	//prep the sections
-	readInterpreterSections(&inner);
-
-	//prep the arguments
-	Toy_LiteralArray* paramArray = TOY_AS_ARRAY(inner.literalCache.literals[ readShort(inner.bytecode, &inner.count) ]);
-	Toy_LiteralArray* returnArray = TOY_AS_ARRAY(inner.literalCache.literals[ readShort(inner.bytecode, &inner.count) ]);
-
-	//get the rest param, if it exists
-	Toy_Literal restParam = TOY_TO_NULL_LITERAL;
-	if (paramArray->count >= 2 && TOY_AS_TYPE(paramArray->literals[ paramArray->count -1 ]).typeOf == TOY_LITERAL_FUNCTION_ARG_REST) {
-		restParam = paramArray->literals[ paramArray->count -2 ];
-	}
-
-	//check the param total is correct
-	if ((TOY_IS_NULL(restParam) && paramArray->count != arguments->count * 2) || (!TOY_IS_NULL(restParam) && paramArray->count -2 > arguments->count * 2)) {
-		interpreter->errorOutput("Incorrect number of arguments passed to a function\n");
-
-		//free, and skip out
-		Toy_popScope(inner.scope);
-
-		Toy_freeLiteralArray(&inner.stack);
-		Toy_freeLiteralArray(&inner.literalCache);
-
-		return false;
-	}
-
-	//BUGFIX: access the arguments from the beginning
-	int argumentIndex = 0;
-
-	//contents is the indexes of identifier & type
-	for (int i = 0; i < paramArray->count - (TOY_IS_NULL(restParam) ? 0 : 2); i += 2) { //don't count the rest parameter, if present
-		//declare and define each entry in the scope
-		if (!Toy_declareScopeVariable(inner.scope, paramArray->literals[i], paramArray->literals[i + 1])) {
-			interpreter->errorOutput("[internal] Could not re-declare parameter\n");
-
-			//free, and skip out
-			Toy_popScope(inner.scope);
-
-			Toy_freeLiteralArray(&inner.stack);
-			Toy_freeLiteralArray(&inner.literalCache);
-
-			return false;
-		}
-
-		//access the arguments in order
-		Toy_Literal arg = TOY_TO_NULL_LITERAL;
-		if (argumentIndex < arguments->count) {
-			arg = Toy_copyLiteral(arguments->literals[argumentIndex++]);
-		}
-
-		Toy_Literal argIdn = arg;
-		if (TOY_IS_IDENTIFIER(arg) && Toy_parseIdentifierToValue(interpreter, &arg)) {
-			Toy_freeLiteral(argIdn);
-		}
-
-		if (!Toy_setScopeVariable(inner.scope, paramArray->literals[i], arg, false)) {
-			interpreter->errorOutput("[internal] Could not define parameter (bad type?)\n");
-
-			//free, and skip out
-			Toy_freeLiteral(arg);
-			Toy_popScope(inner.scope);
-
-			Toy_freeLiteralArray(&inner.stack);
-			Toy_freeLiteralArray(&inner.literalCache);
-
-			return false;
-		}
-		Toy_freeLiteral(arg);
-	}
-
-	//if using rest, pack the optional extra arguments into the rest parameter (array)
-	if (!TOY_IS_NULL(restParam)) {
-		Toy_LiteralArray rest;
-		Toy_initLiteralArray(&rest);
-
-		//access the arguments in order
-		while (argumentIndex < arguments->count) {
-			Toy_Literal lit = Toy_copyLiteral(arguments->literals[argumentIndex++]);
-			Toy_pushLiteralArray(&rest, lit);
-			Toy_freeLiteral(lit);
-		}
-
-		Toy_Literal restType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_ARRAY, true);
-		Toy_Literal any = TOY_TO_TYPE_LITERAL(TOY_LITERAL_ANY, false);
-		TOY_TYPE_PUSH_SUBTYPE(&restType, any);
-
-		//declare & define the rest parameter
-		if (!Toy_declareScopeVariable(inner.scope, restParam, restType)) {
-			interpreter->errorOutput("[internal] Could not declare rest parameter\n");
-
-			//free, and skip out
-			Toy_freeLiteral(restType);
-			Toy_freeLiteralArray(&rest);
-			Toy_popScope(inner.scope);
-
-			Toy_freeLiteralArray(&inner.stack);
-			Toy_freeLiteralArray(&inner.literalCache);
-
-			return false;
-		}
-
-		Toy_Literal lit = TOY_TO_ARRAY_LITERAL(&rest);
-		if (!Toy_setScopeVariable(inner.scope, restParam, lit, false)) {
-			interpreter->errorOutput("[internal] Could not define rest parameter\n");
-
-			//free, and skip out
-			Toy_freeLiteral(restType);
-			Toy_freeLiteral(lit);
-			Toy_popScope(inner.scope);
-
-			Toy_freeLiteralArray(&inner.stack);
-			Toy_freeLiteralArray(&inner.literalCache);
-
-			return false;
-		}
-
-		Toy_freeLiteral(restType);
-		Toy_freeLiteralArray(&rest);
-	}
-
-	//execute the interpreter
-	execInterpreter(&inner);
-
-	//adopt the panic state
-	interpreter->panic = inner.panic;
-
-	//accept the stack as the results
-	Toy_LiteralArray returnsFromInner;
-	Toy_initLiteralArray(&returnsFromInner);
-
-	//unpack the results
-	for (int i = 0; i < (returnArray->count || 1); i++) {
-		Toy_Literal lit = Toy_popLiteralArray(&inner.stack);
-		Toy_pushLiteralArray(&returnsFromInner, lit); //NOTE: also reverses the order
-		Toy_freeLiteral(lit);
-	}
-
-	bool returnValue = true;
-
-	//TODO: remove this when multiple assignment is enabled - note the BUGFIX that balances the stack
-	if (returnsFromInner.count > 1) {
-		interpreter->errorOutput("Too many values returned (multiple returns not yet supported)\n");
-
-		returnValue = false;
-	}
-
-	for (int i = 0; i < returnsFromInner.count && returnValue; i++) {
-		Toy_Literal ret = Toy_popLiteralArray(&returnsFromInner);
-
-		//check the return types
-		if (returnArray->count > 0 && TOY_AS_TYPE(returnArray->literals[i]).typeOf != ret.type) {
-			interpreter->errorOutput("Bad type found in return value\n");
-
-			//free, and skip out
-			returnValue = false;
-			break;
-		}
-
-		Toy_pushLiteralArray(returns, ret); //NOTE: reverses again
-		Toy_freeLiteral(ret);
-	}
-
-	//manual free
-	//BUGFIX: handle scopes of functions, which refer to the parent scope (leaking memory)
-	while(inner.scope != TOY_AS_FUNCTION(func).scope) {
-		for (int i = 0; i < inner.scope->variables.capacity; i++) {
-			//handle keys, just in case
-			if (TOY_IS_FUNCTION(inner.scope->variables.entries[i].key)) {
-				Toy_popScope(TOY_AS_FUNCTION(inner.scope->variables.entries[i].key).scope);
-				TOY_AS_FUNCTION(inner.scope->variables.entries[i].key).scope = NULL;
-			}
-
-			if (TOY_IS_FUNCTION(inner.scope->variables.entries[i].value)) {
-				Toy_popScope(TOY_AS_FUNCTION(inner.scope->variables.entries[i].value).scope);
-				TOY_AS_FUNCTION(inner.scope->variables.entries[i].value).scope = NULL;
-			}
-		}
-
-		inner.scope = Toy_popScope(inner.scope);
-	}
-	Toy_freeLiteralArray(&returnsFromInner);
-	Toy_freeLiteralArray(&inner.stack);
-	Toy_freeLiteralArray(&inner.literalCache);
-
-	//BUGFIX: this function needs to eat the arguments
-	Toy_freeLiteralArray(arguments);
-
-	//actual bytecode persists until next call
-	return true;
-}
-
-bool Toy_callFn(Toy_Interpreter* interpreter, const char* name, Toy_LiteralArray* arguments, Toy_LiteralArray* returns) {
-	Toy_Literal key = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(name, strlen(name)));
-	Toy_Literal val = TOY_TO_NULL_LITERAL;
-	
-	if (!Toy_isDeclaredScopeVariable(interpreter->scope, key)) {
-		interpreter->errorOutput("No function with that name\n");
-		return false;
-	}
-
-	Toy_getScopeVariable(interpreter->scope, key, &val);
-
-	bool ret = Toy_callLiteralFn(interpreter, val, arguments, returns);
-
-	Toy_freeLiteral(key);
-	Toy_freeLiteral(val);
-
-	return ret;
-}
-
 static bool execFnReturn(Toy_Interpreter* interpreter) {
 	Toy_LiteralArray returns;
 	Toy_initLiteralArray(&returns);
@@ -1496,7 +1238,7 @@ static bool execFnReturn(Toy_Interpreter* interpreter) {
 		}
 
 		if (TOY_IS_ARRAY(lit) || TOY_IS_DICTIONARY(lit)) {
-			Toy_parseCompoundToPureValues(interpreter, &lit);
+			Toy_parseCompoundToValue(interpreter, &lit);
 		}
 
 		Toy_pushLiteralArray(&returns, lit); //reverses the order
@@ -1639,7 +1381,13 @@ static bool execIndex(Toy_Interpreter* interpreter, bool assignIntermediate) {
 static bool execIndexAssign(Toy_Interpreter* interpreter, int assignDepth) {
 	//assume -> compound, first, second, third, assign are all on the stack
 
-	Toy_Literal assign = TOY_TO_NULL_LITERAL, third = TOY_TO_NULL_LITERAL, second = TOY_TO_NULL_LITERAL, first = TOY_TO_NULL_LITERAL, compound = TOY_TO_NULL_LITERAL, result = TOY_TO_NULL_LITERAL;
+	Toy_Literal assign = TOY_TO_NULL_LITERAL;
+	Toy_Literal third = TOY_TO_NULL_LITERAL;
+	Toy_Literal second = TOY_TO_NULL_LITERAL;
+	Toy_Literal first = TOY_TO_NULL_LITERAL;
+	Toy_Literal compound = TOY_TO_NULL_LITERAL;
+	Toy_Literal result = TOY_TO_NULL_LITERAL;
+
 	Toy_Literal compoundIdn = TOY_TO_NULL_LITERAL;
 	bool freeIdn = false;
 
@@ -1840,7 +1588,7 @@ static void execInterpreter(Toy_Interpreter* interpreter) {
 			break;
 
 			case TOY_OP_LITERAL_RAW:
-				if (!rawLiteral(interpreter)) {
+				if (!execRawLiteral(interpreter)) {
 					return;
 				}
 			break;
@@ -1866,11 +1614,13 @@ static void execInterpreter(Toy_Interpreter* interpreter) {
 			case TOY_OP_VAR_MULTIPLICATION_ASSIGN:
 			case TOY_OP_VAR_DIVISION_ASSIGN:
 			case TOY_OP_VAR_MODULO_ASSIGN:
-				execVarArithmeticAssign(interpreter);
+				execVarArithmeticAssignInterjection(interpreter); //hang on, let me just prep this first
+
 				if (!execArithmetic(interpreter, opcode)) {
-					Toy_freeLiteral(Toy_popLiteralArray(&interpreter->stack));
+					Toy_freeLiteral(Toy_popLiteralArray(&interpreter->stack)); //remove the extra identifier if this went south
 					return;
 				}
+
 				if (!execVarAssign(interpreter)) {
 					return;
 				}
@@ -1881,6 +1631,7 @@ static void execInterpreter(Toy_Interpreter* interpreter) {
 			break;
 
 			case TOY_OP_GROUPING_END:
+				//And so doeth, yeet thine operation upwards
 				return;
 
 			//scope
@@ -1987,7 +1738,7 @@ static void execInterpreter(Toy_Interpreter* interpreter) {
 			break;
 
 			case TOY_OP_IF_FALSE_JUMP:
-				if (!execFalseJump(interpreter)) {
+				if (!execJumpIfFalse(interpreter)) {
 					return;
 				}
 			break;
@@ -2455,4 +2206,273 @@ void Toy_freeInterpreter(Toy_Interpreter* interpreter) {
 	}
 
 	interpreter->hooks = NULL;
+}
+
+//for function calls
+bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_LiteralArray* arguments, Toy_LiteralArray* returns) {
+	//check for side-loaded native functions
+	if (TOY_IS_FUNCTION_NATIVE(func)) {
+		//TODO: parse out identifier values, see issue #64
+
+		//call the native function
+		int returnsCount = TOY_AS_FUNCTION_NATIVE(func)(interpreter, arguments);
+
+		if (returnsCount < 0) {
+			// interpreter->errorOutput("Unknown error from native function\n");
+			return false;
+		}
+
+		//get the results
+		Toy_LiteralArray returnsFromInner;
+		Toy_initLiteralArray(&returnsFromInner);
+
+		for (int i = 0; i < (returnsCount || 1); i++) {
+			Toy_Literal lit = Toy_popLiteralArray(&interpreter->stack);
+			Toy_pushLiteralArray(&returnsFromInner, lit); //NOTE: also reverses the order
+			Toy_freeLiteral(lit);
+		}
+
+		//flip them around and pass to returns
+		while (returnsFromInner.count > 0) {
+			Toy_Literal lit = Toy_popLiteralArray(&returnsFromInner);
+			Toy_pushLiteralArray(returns, lit);
+			Toy_freeLiteral(lit);
+		}
+
+		Toy_freeLiteralArray(&returnsFromInner);
+		return true;
+	}
+
+	//normal Toy function
+	if (!TOY_IS_FUNCTION(func)) {
+		interpreter->errorOutput("Function literal required in Toy_callLiteralFn()\n");
+		return false;
+	}
+
+	//set up a new interpreter
+	Toy_Interpreter inner;
+
+	//init the inner interpreter manually
+	Toy_initLiteralArray(&inner.literalCache);
+	inner.scope = Toy_pushScope(func.as.function.scope);
+	inner.bytecode = ((Toy_RefFunction*)(TOY_AS_FUNCTION(func).inner.ptr))->data;
+	inner.length = ((Toy_RefFunction*)(TOY_AS_FUNCTION(func).inner.ptr))->length;
+	inner.count = 0;
+	inner.codeStart = -1;
+	inner.depth = interpreter->depth + 1;
+	inner.panic = false;
+	Toy_initLiteralArray(&inner.stack);
+	inner.hooks = interpreter->hooks;
+	Toy_setInterpreterPrint(&inner, interpreter->printOutput);
+	Toy_setInterpreterAssert(&inner, interpreter->assertOutput);
+	Toy_setInterpreterError(&inner, interpreter->errorOutput);
+
+	//prep the sections
+	readInterpreterSections(&inner);
+
+	//prep the arguments
+	Toy_LiteralArray* paramArray = TOY_AS_ARRAY(inner.literalCache.literals[ readShort(inner.bytecode, &inner.count) ]);
+	Toy_LiteralArray* returnArray = TOY_AS_ARRAY(inner.literalCache.literals[ readShort(inner.bytecode, &inner.count) ]);
+
+	//get the rest param, if it exists
+	Toy_Literal restParam = TOY_TO_NULL_LITERAL;
+	if (paramArray->count >= 2 && TOY_AS_TYPE(paramArray->literals[ paramArray->count -1 ]).typeOf == TOY_LITERAL_FUNCTION_ARG_REST) {
+		restParam = paramArray->literals[ paramArray->count -2 ];
+	}
+
+	//check the param total is correct
+	if ((TOY_IS_NULL(restParam) && paramArray->count != arguments->count * 2) || (!TOY_IS_NULL(restParam) && paramArray->count -2 > arguments->count * 2)) {
+		interpreter->errorOutput("Incorrect number of arguments passed to a function\n");
+
+		//free, and skip out
+		Toy_popScope(inner.scope);
+
+		Toy_freeLiteralArray(&inner.stack);
+		Toy_freeLiteralArray(&inner.literalCache);
+
+		return false;
+	}
+
+	//BUGFIX: access the arguments from the beginning
+	int argumentIndex = 0;
+
+	//contents is the indexes of identifier & type
+	for (int i = 0; i < paramArray->count - (TOY_IS_NULL(restParam) ? 0 : 2); i += 2) { //don't count the rest parameter, if present
+		//declare and define each entry in the scope
+		if (!Toy_declareScopeVariable(inner.scope, paramArray->literals[i], paramArray->literals[i + 1])) {
+			interpreter->errorOutput("[internal] Could not re-declare parameter\n");
+
+			//free, and skip out
+			Toy_popScope(inner.scope);
+
+			Toy_freeLiteralArray(&inner.stack);
+			Toy_freeLiteralArray(&inner.literalCache);
+
+			return false;
+		}
+
+		//access the arguments in order
+		Toy_Literal arg = TOY_TO_NULL_LITERAL;
+		if (argumentIndex < arguments->count) {
+			arg = Toy_copyLiteral(arguments->literals[argumentIndex++]);
+		}
+
+		Toy_Literal argIdn = arg;
+		if (TOY_IS_IDENTIFIER(arg) && Toy_parseIdentifierToValue(interpreter, &arg)) {
+			Toy_freeLiteral(argIdn);
+		}
+
+		if (!Toy_setScopeVariable(inner.scope, paramArray->literals[i], arg, false)) {
+			interpreter->errorOutput("[internal] Could not define parameter (bad type?)\n");
+
+			//free, and skip out
+			Toy_freeLiteral(arg);
+			Toy_popScope(inner.scope);
+
+			Toy_freeLiteralArray(&inner.stack);
+			Toy_freeLiteralArray(&inner.literalCache);
+
+			return false;
+		}
+		Toy_freeLiteral(arg);
+	}
+
+	//if using rest, pack the optional extra arguments into the rest parameter (array)
+	if (!TOY_IS_NULL(restParam)) {
+		Toy_LiteralArray rest;
+		Toy_initLiteralArray(&rest);
+
+		//access the arguments in order
+		while (argumentIndex < arguments->count) {
+			Toy_Literal lit = Toy_copyLiteral(arguments->literals[argumentIndex++]);
+			Toy_pushLiteralArray(&rest, lit);
+			Toy_freeLiteral(lit);
+		}
+
+		Toy_Literal restType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_ARRAY, true);
+		Toy_Literal any = TOY_TO_TYPE_LITERAL(TOY_LITERAL_ANY, false);
+		TOY_TYPE_PUSH_SUBTYPE(&restType, any);
+
+		//declare & define the rest parameter
+		if (!Toy_declareScopeVariable(inner.scope, restParam, restType)) {
+			interpreter->errorOutput("[internal] Could not declare rest parameter\n");
+
+			//free, and skip out
+			Toy_freeLiteral(restType);
+			Toy_freeLiteralArray(&rest);
+			Toy_popScope(inner.scope);
+
+			Toy_freeLiteralArray(&inner.stack);
+			Toy_freeLiteralArray(&inner.literalCache);
+
+			return false;
+		}
+
+		Toy_Literal lit = TOY_TO_ARRAY_LITERAL(&rest);
+		if (!Toy_setScopeVariable(inner.scope, restParam, lit, false)) {
+			interpreter->errorOutput("[internal] Could not define rest parameter\n");
+
+			//free, and skip out
+			Toy_freeLiteral(restType);
+			Toy_freeLiteral(lit);
+			Toy_popScope(inner.scope);
+
+			Toy_freeLiteralArray(&inner.stack);
+			Toy_freeLiteralArray(&inner.literalCache);
+
+			return false;
+		}
+
+		Toy_freeLiteral(restType);
+		Toy_freeLiteralArray(&rest);
+	}
+
+	//execute the interpreter
+	execInterpreter(&inner);
+
+	//adopt the panic state
+	interpreter->panic = inner.panic;
+
+	//accept the stack as the results
+	Toy_LiteralArray returnsFromInner;
+	Toy_initLiteralArray(&returnsFromInner);
+
+	//unpack the results
+	for (int i = 0; i < (returnArray->count || 1); i++) {
+		Toy_Literal lit = Toy_popLiteralArray(&inner.stack);
+		Toy_pushLiteralArray(&returnsFromInner, lit); //NOTE: also reverses the order
+		Toy_freeLiteral(lit);
+	}
+
+	bool returnValue = true;
+
+	//TODO: remove this when multiple assignment is enabled - note the BUGFIX that balances the stack
+	if (returnsFromInner.count > 1) {
+		interpreter->errorOutput("Too many values returned (multiple returns not yet supported)\n");
+
+		returnValue = false;
+	}
+
+	for (int i = 0; i < returnsFromInner.count && returnValue; i++) {
+		Toy_Literal ret = Toy_popLiteralArray(&returnsFromInner);
+
+		//check the return types
+		if (returnArray->count > 0 && TOY_AS_TYPE(returnArray->literals[i]).typeOf != ret.type) {
+			interpreter->errorOutput("Bad type found in return value\n");
+
+			//free, and skip out
+			returnValue = false;
+			break;
+		}
+
+		Toy_pushLiteralArray(returns, ret); //NOTE: reverses again
+		Toy_freeLiteral(ret);
+	}
+
+	//manual free
+	//BUGFIX: handle scopes of functions, which refer to the parent scope (leaking memory)
+	while(inner.scope != TOY_AS_FUNCTION(func).scope) {
+		for (int i = 0; i < inner.scope->variables.capacity; i++) {
+			//handle keys, just in case
+			if (TOY_IS_FUNCTION(inner.scope->variables.entries[i].key)) {
+				Toy_popScope(TOY_AS_FUNCTION(inner.scope->variables.entries[i].key).scope);
+				TOY_AS_FUNCTION(inner.scope->variables.entries[i].key).scope = NULL;
+			}
+
+			if (TOY_IS_FUNCTION(inner.scope->variables.entries[i].value)) {
+				Toy_popScope(TOY_AS_FUNCTION(inner.scope->variables.entries[i].value).scope);
+				TOY_AS_FUNCTION(inner.scope->variables.entries[i].value).scope = NULL;
+			}
+		}
+
+		inner.scope = Toy_popScope(inner.scope);
+	}
+	Toy_freeLiteralArray(&returnsFromInner);
+	Toy_freeLiteralArray(&inner.stack);
+	Toy_freeLiteralArray(&inner.literalCache);
+
+	//BUGFIX: this function needs to eat the arguments
+	Toy_freeLiteralArray(arguments);
+
+	//actual bytecode persists until next call
+	return true;
+}
+
+bool Toy_callFn(Toy_Interpreter* interpreter, const char* name, Toy_LiteralArray* arguments, Toy_LiteralArray* returns) {
+	Toy_Literal key = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefStringLength(name, strlen(name)));
+	Toy_Literal val = TOY_TO_NULL_LITERAL;
+	
+	if (!Toy_isDeclaredScopeVariable(interpreter->scope, key)) {
+		interpreter->errorOutput("No function with that name\n");
+		return false;
+	}
+
+	Toy_getScopeVariable(interpreter->scope, key, &val);
+
+	bool ret = Toy_callLiteralFn(interpreter, val, arguments, returns);
+
+	Toy_freeLiteral(key);
+	Toy_freeLiteral(val);
+
+	return ret;
 }
