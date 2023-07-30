@@ -114,9 +114,8 @@
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <PostBuildEvent>
-      <Command>del "$(OutDir)$(ProjectName).exp"
-del "$(OutDir)$(ProjectName).pdb"
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <Link>
       <OutputFile>$(Outdir)$(TargetName)$(TargetExt)</OutputFile>
@@ -131,9 +130,8 @@ del "$(OutDir)$(ProjectName).pdb"
       <PreprocessorDefinitions>TOY_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <PostBuildEvent>
-      <Command>del "$(OutDir)$(ProjectName).exp"
-del "$(OutDir)$(ProjectName).pdb"
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <Link>
       <OutputFile>$(Outdir)$(TargetName)$(TargetExt)</OutputFile>
