@@ -53,6 +53,18 @@ This function returns the value of the lowest integer or float passed in. It can
 
 This function returns the value of any integer or float passed in, rounded to the nearest whole number.
 
+### sign(self): int
+
+This function expects an integer or float as the value for `self`.
+
+If `self` is below 0, this function returns -1. Otherwise it returns 1.
+
+### normalize(self): int
+
+This function expects an integer or float as the value for `self`.
+
+If `self` is below 0, this function returns -1. Otherwise if `self` is above 0, this function returns 1. Otherwise it returns 0.
+
 ## Defined Compound Functions
 
 ### concat(self, other): any
