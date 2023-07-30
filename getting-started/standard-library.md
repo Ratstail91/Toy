@@ -65,6 +65,18 @@ This function expects an integer or float as the value for `self`.
 
 If `self` is below 0, this function returns -1. Otherwise if `self` is above 0, this function returns 1. Otherwise it returns 0.
 
+### clamp(value, min, max)
+
+This function expects integers or floats as the values for `value`, `min`, and `max`.
+
+If `value` is smaller than `min`, this function will return `min`. Otherwise, if `value` larget than `max`, it will return `max`. Otherwise, it will return `value`.
+
+### lerp(start, end, amount)
+
+This function expects integers or floats as the values for `value`, `min`, and `max`.
+
+This function will return the value of `start` adjusted towards the value of `end` by `amount`, by interpreting `amount` as a fraction.
+
 ## Defined Compound Functions
 
 ### concat(self, other): any
