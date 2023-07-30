@@ -47,6 +47,11 @@ static int nativeHash(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 		Toy_freeLiteral(selfLiteralIdn);
 	}
 
+	if (TOY_IS_IDENTIFIER(selfLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		return -1;
+	}
+
 	Toy_Literal result = TOY_TO_INTEGER_LITERAL(Toy_hashLiteral(selfLiteral));
 
 	Toy_pushLiteralArray(&interpreter->stack, result);
@@ -70,6 +75,11 @@ static int nativeAbs(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 	Toy_Literal selfLiteralIdn = selfLiteral;
 	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
 		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(selfLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		return -1;
 	}
 
 	if (!(TOY_IS_INTEGER(selfLiteral) || TOY_IS_FLOAT(selfLiteral))) {
@@ -108,6 +118,11 @@ static int nativeCeil(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	Toy_Literal selfLiteralIdn = selfLiteral;
 	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
 		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(selfLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		return -1;
 	}
 
 	if (!(TOY_IS_INTEGER(selfLiteral) || TOY_IS_FLOAT(selfLiteral))) {
@@ -149,6 +164,11 @@ static int nativeFloor(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 		Toy_freeLiteral(selfLiteralIdn);
 	}
 
+	if (TOY_IS_IDENTIFIER(selfLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		return -1;
+	}
+
 	if (!(TOY_IS_INTEGER(selfLiteral) || TOY_IS_FLOAT(selfLiteral))) {
 		interpreter->errorOutput("Incorrect argument type passed to floor\n");
 		Toy_freeLiteral(selfLiteral);
@@ -186,6 +206,11 @@ static int nativeMax(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 		Toy_Literal selfLiteralIdn = selfLiteral;
 		if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
 			Toy_freeLiteral(selfLiteralIdn);
+		}
+
+		if (TOY_IS_IDENTIFIER(selfLiteral)) {
+			Toy_freeLiteral(selfLiteral);
+			return -1;
 		}
 
 		if (!(TOY_IS_INTEGER(selfLiteral) || TOY_IS_FLOAT(selfLiteral))) {
@@ -244,6 +269,11 @@ static int nativeMin(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 			Toy_freeLiteral(selfLiteralIdn);
 		}
 
+		if (TOY_IS_IDENTIFIER(selfLiteral)) {
+			Toy_freeLiteral(selfLiteral);
+			return -1;
+		}
+
 		if (!(TOY_IS_INTEGER(selfLiteral) || TOY_IS_FLOAT(selfLiteral))) {
 			interpreter->errorOutput("Incorrect argument type passed to min\n");
 			Toy_freeLiteral(selfLiteral);
@@ -300,6 +330,11 @@ static int nativeRound(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 		Toy_freeLiteral(selfLiteralIdn);
 	}
 
+	if (TOY_IS_IDENTIFIER(selfLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		return -1;
+	}
+
 	if (!(TOY_IS_INTEGER(selfLiteral) || TOY_IS_FLOAT(selfLiteral))) {
 		interpreter->errorOutput("Incorrect argument type passed to round\n");
 		Toy_freeLiteral(selfLiteral);
@@ -330,107 +365,143 @@ static int nativeRound(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	return 1;
 }
 
-static int nativeSign(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
-	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to sign\n");
+static int nativeClamp(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 3) {
+		interpreter->errorOutput("Incorrect number of arguments to clamp\n");
 		return -1;
 	}
 
-	//get the self
-	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
-
-	//parse to value if needed
-	Toy_Literal selfLiteralIdn = selfLiteral;
-	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
-		Toy_freeLiteral(selfLiteralIdn);
+	//get the max
+	Toy_Literal maxLiteral = Toy_popLiteralArray(arguments);
+	
+	//parse the max
+	Toy_Literal maxLiteralIdn = maxLiteral;
+	if (TOY_IS_IDENTIFIER(maxLiteral) && Toy_parseIdentifierToValue(interpreter, &maxLiteral)) {
+		Toy_freeLiteral(maxLiteralIdn);
 	}
 
-	if (!(TOY_IS_INTEGER(selfLiteral) || TOY_IS_FLOAT(selfLiteral))) {
-		interpreter->errorOutput("Incorrect argument type passed to sign\n");
-		Toy_freeLiteral(selfLiteral);
+	if (!(TOY_IS_INTEGER(maxLiteral) || TOY_IS_FLOAT(maxLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to clamp\n");
+		Toy_freeLiteral(maxLiteral);
 		return -1;
 	}
 
-	Toy_Literal resultLiteral = TOY_TO_NULL_LITERAL;
-
-	if (TOY_IS_INTEGER(selfLiteral)) {
-		if (TOY_AS_INTEGER(selfLiteral) < 0) {
-			resultLiteral = TOY_TO_INTEGER_LITERAL(-1);
-		}
-		else {
-			resultLiteral = TOY_TO_INTEGER_LITERAL(1);
-		}
-	}
-	if (TOY_IS_FLOAT(selfLiteral)) {
-		if (TOY_AS_FLOAT(selfLiteral) < 0) {
-			resultLiteral = TOY_TO_INTEGER_LITERAL(-1);
-		}
-		else {
-			resultLiteral = TOY_TO_INTEGER_LITERAL(1);
-		}
+		//get the min
+	Toy_Literal minLiteral = Toy_popLiteralArray(arguments);
+	
+	//parse the min
+	Toy_Literal minLiteralIdn = minLiteral;
+	if (TOY_IS_IDENTIFIER(minLiteral) && Toy_parseIdentifierToValue(interpreter, &minLiteral)) {
+		Toy_freeLiteral(minLiteralIdn);
 	}
 
+	if (!(TOY_IS_INTEGER(minLiteral) || TOY_IS_FLOAT(minLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to clamp\n");
+		Toy_freeLiteral(minLiteral);
+		return -1;
+	}
+
+	//get the value
+	Toy_Literal valueLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the value
+	Toy_Literal valueLiteralIdn = valueLiteral;
+	if (TOY_IS_IDENTIFIER(valueLiteral) && Toy_parseIdentifierToValue(interpreter, &valueLiteral)) {
+		Toy_freeLiteral(valueLiteralIdn);
+	}
+
+	if (!(TOY_IS_INTEGER(valueLiteral) || TOY_IS_FLOAT(valueLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to clamp\n");
+		Toy_freeLiteral(valueLiteral);
+		return -1;
+	}
+
+	// cast ints to floats to handle all types of numbers
+	float value = TOY_IS_INTEGER(valueLiteral)? TOY_AS_INTEGER(valueLiteral) : TOY_AS_FLOAT(valueLiteral);
+	float min = TOY_IS_INTEGER(minLiteral)? TOY_AS_INTEGER(minLiteral) : TOY_AS_FLOAT(minLiteral);
+	float max = TOY_IS_INTEGER(maxLiteral)? TOY_AS_INTEGER(maxLiteral) : TOY_AS_FLOAT(maxLiteral);
+
+	float result = (value < min)? min : value;
+	if (result > max) result = max;
+
+	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	Toy_freeLiteral(resultLiteral);
-	Toy_freeLiteral(selfLiteral);
-
-	return 1;
+	Toy_freeLiteral(valueLiteral);
+	Toy_freeLiteral(minLiteral);
+	Toy_freeLiteral(maxLiteral);
+    
+    return 1;
 }
 
-static int nativeNormalize(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
-	//NOTE: this is identical to `sign`, except it returns 0 when the argument is 0.
-	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to normalize\n");
+static int nativeLerp(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 3) {
+		interpreter->errorOutput("Incorrect number of arguments to lerp\n");
 		return -1;
 	}
 
-	//get the self
-	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
-
-	//parse to value if needed
-	Toy_Literal selfLiteralIdn = selfLiteral;
-	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
-		Toy_freeLiteral(selfLiteralIdn);
+	//get the amount
+	Toy_Literal amountLiteral = Toy_popLiteralArray(arguments);
+	
+	//parse the amount
+	Toy_Literal amountLiteralIdn = amountLiteral;
+	if (TOY_IS_IDENTIFIER(amountLiteral) && Toy_parseIdentifierToValue(interpreter, &amountLiteral)) {
+		Toy_freeLiteral(amountLiteralIdn);
 	}
 
-	if (!(TOY_IS_INTEGER(selfLiteral) || TOY_IS_FLOAT(selfLiteral))) {
-		interpreter->errorOutput("Incorrect argument type passed to normalize\n");
-		Toy_freeLiteral(selfLiteral);
+	if (!(TOY_IS_INTEGER(amountLiteral) || TOY_IS_FLOAT(amountLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to lerp\n");
+		Toy_freeLiteral(amountLiteral);
 		return -1;
 	}
 
-	Toy_Literal resultLiteral = TOY_TO_NULL_LITERAL;
-
-	if (TOY_IS_INTEGER(selfLiteral)) {
-		if (TOY_AS_INTEGER(selfLiteral) < 0) {
-			resultLiteral = TOY_TO_INTEGER_LITERAL(-1);
-		}
-		else if (TOY_AS_INTEGER(selfLiteral) > 0) {
-			resultLiteral = TOY_TO_INTEGER_LITERAL(1);
-		}
-		else {
-			resultLiteral = TOY_TO_INTEGER_LITERAL(0);
-		}
-	}
-	if (TOY_IS_FLOAT(selfLiteral)) {
-		if (TOY_AS_FLOAT(selfLiteral) < 0) {
-			resultLiteral = TOY_TO_INTEGER_LITERAL(-1);
-		}
-		else if (TOY_AS_FLOAT(selfLiteral) > 0) {
-			resultLiteral = TOY_TO_INTEGER_LITERAL(1);
-		}
-		else {
-			resultLiteral = TOY_TO_INTEGER_LITERAL(0);
-		}
+	//get the end
+	Toy_Literal endLiteral = Toy_popLiteralArray(arguments);
+	
+	//parse the end
+	Toy_Literal endLiteralIdn = endLiteral;
+	if (TOY_IS_IDENTIFIER(endLiteral) && Toy_parseIdentifierToValue(interpreter, &endLiteral)) {
+		Toy_freeLiteral(endLiteralIdn);
 	}
 
+	if (!(TOY_IS_INTEGER(endLiteral) || TOY_IS_FLOAT(endLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to lerp\n");
+		Toy_freeLiteral(endLiteral);
+		return -1;
+	}
+
+	//get the value
+	Toy_Literal startLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the value
+	Toy_Literal startLiteralIdn = startLiteral;
+	if (TOY_IS_IDENTIFIER(startLiteral) && Toy_parseIdentifierToValue(interpreter, &startLiteral)) {
+		Toy_freeLiteral(startLiteralIdn);
+	}
+
+	if (!(TOY_IS_INTEGER(startLiteral) || TOY_IS_FLOAT(startLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to lerp\n");
+		Toy_freeLiteral(startLiteral);
+		return -1;
+	}
+
+	// cast ints to floats to handle all types of numbers
+	float start = TOY_IS_INTEGER(startLiteral)? TOY_AS_INTEGER(startLiteral) : TOY_AS_FLOAT(startLiteral);
+	float end = TOY_IS_INTEGER(endLiteral)? TOY_AS_INTEGER(endLiteral) : TOY_AS_FLOAT(endLiteral);
+	float amount = TOY_IS_INTEGER(amountLiteral)? TOY_AS_INTEGER(amountLiteral) : TOY_AS_FLOAT(amountLiteral);
+
+	float result = start + amount * (end - start);
+
+	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	Toy_freeLiteral(resultLiteral);
-	Toy_freeLiteral(selfLiteral);
-
-	return 1;
+	Toy_freeLiteral(startLiteral);
+	Toy_freeLiteral(endLiteral);
+	Toy_freeLiteral(amountLiteral);
+    
+    return 1;
 }
 
 static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
@@ -453,6 +524,12 @@ static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 	Toy_Literal otherLiteralIdn = otherLiteral;
 	if (TOY_IS_IDENTIFIER(otherLiteral) && Toy_parseIdentifierToValue(interpreter, &otherLiteral)) {
 		Toy_freeLiteral(otherLiteralIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(selfLiteral) || TOY_IS_IDENTIFIER(otherLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(otherLiteral);
+		return -1;
 	}
 
 	//for each self type
@@ -565,6 +642,12 @@ static int nativeContainsKey(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 		Toy_freeLiteral(keyLiteralIdn);
 	}
 
+	if (TOY_IS_IDENTIFIER(selfLiteral) || TOY_IS_IDENTIFIER(keyLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(keyLiteral);
+		return -1;
+	}
+
 	//check type
 	if (!(/* TOY_IS_ARRAY(selfLiteral) || */ TOY_IS_DICTIONARY(selfLiteral) )) {
 		interpreter->errorOutput("Incorrect argument type passed to containsKey\n");
@@ -608,6 +691,12 @@ static int nativeContainsValue(Toy_Interpreter* interpreter, Toy_LiteralArray* a
 	Toy_Literal valueLiteralIdn = valueLiteral;
 	if (TOY_IS_IDENTIFIER(valueLiteral) && Toy_parseIdentifierToValue(interpreter, &valueLiteral)) {
 		Toy_freeLiteral(valueLiteralIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(selfLiteral) || TOY_IS_IDENTIFIER(valueLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(valueLiteral);
+		return -1;
 	}
 
 	//check type
@@ -678,6 +767,12 @@ static int nativeEvery(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	Toy_Literal fnLiteralIdn = fnLiteral;
 	if (TOY_IS_IDENTIFIER(fnLiteral) && Toy_parseIdentifierToValue(interpreter, &fnLiteral)) {
 		Toy_freeLiteral(fnLiteralIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(selfLiteral) || TOY_IS_IDENTIFIER(fnLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(fnLiteral);
+		return -1;
 	}
 
 	//check type
@@ -796,6 +891,12 @@ static int nativeFilter(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 		Toy_freeLiteral(fnLiteralIdn);
 	}
 
+	if (TOY_IS_IDENTIFIER(selfLiteral) || TOY_IS_IDENTIFIER(fnLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(fnLiteral);
+		return -1;
+	}
+
 	//check type
 	if (!( TOY_IS_ARRAY(selfLiteral) || TOY_IS_DICTIONARY(selfLiteral) ) || !( TOY_IS_FUNCTION(fnLiteral) || TOY_IS_FUNCTION_NATIVE(fnLiteral) )) {
 		interpreter->errorOutput("Incorrect argument type passed to filter\n");
@@ -910,6 +1011,12 @@ static int nativeForEach(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 		Toy_freeLiteral(fnLiteralIdn);
 	}
 
+	if (TOY_IS_IDENTIFIER(selfLiteral) || TOY_IS_IDENTIFIER(fnLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(fnLiteral);
+		return -1;
+	}
+
 	//check type
 	if (!( TOY_IS_ARRAY(selfLiteral) || TOY_IS_DICTIONARY(selfLiteral) ) || !( TOY_IS_FUNCTION(fnLiteral) || TOY_IS_FUNCTION_NATIVE(fnLiteral) )) {
 		interpreter->errorOutput("Incorrect argument type passed to forEach\n");
@@ -982,6 +1089,11 @@ static int nativeGetKeys(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 		Toy_freeLiteral(selfLiteralIdn);
 	}
 
+	if (TOY_IS_IDENTIFIER(selfLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		return -1;
+	}
+
 	//check type
 	if (!TOY_IS_DICTIONARY(selfLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to getKeys\n");
@@ -1025,6 +1137,11 @@ static int nativeGetValues(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 	Toy_Literal selfLiteralIdn = selfLiteral;
 	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
 		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(selfLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		return -1;
 	}
 
 	//check type
@@ -1079,6 +1196,12 @@ static int nativeIndexOf(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 		Toy_freeLiteral(valueLiteralIdn);
 	}
 
+	if (TOY_IS_IDENTIFIER(selfLiteral) || TOY_IS_IDENTIFIER(valueLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(valueLiteral);
+		return -1;
+	}
+
 	//check type
 	if (!TOY_IS_ARRAY(selfLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to indexOf\n");
@@ -1124,6 +1247,12 @@ static int nativeMap(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 	Toy_Literal fnLiteralIdn = fnLiteral;
 	if (TOY_IS_IDENTIFIER(fnLiteral) && Toy_parseIdentifierToValue(interpreter, &fnLiteral)) {
 		Toy_freeLiteral(fnLiteralIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(selfLiteral) || TOY_IS_IDENTIFIER(fnLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(fnLiteral);
+		return -1;
 	}
 
 	//check type
@@ -1235,6 +1364,13 @@ static int nativeReduce(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 		Toy_freeLiteral(fnLiteralIdn);
 	}
 
+	if (TOY_IS_IDENTIFIER(selfLiteral) || TOY_IS_IDENTIFIER(defaultLiteral) || TOY_IS_IDENTIFIER(fnLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(defaultLiteral);
+		Toy_freeLiteral(fnLiteral);
+		return -1;
+	}
+
 	//check type
 	if (!( TOY_IS_ARRAY(selfLiteral) || TOY_IS_DICTIONARY(selfLiteral) ) || !( TOY_IS_FUNCTION(fnLiteral) || TOY_IS_FUNCTION_NATIVE(fnLiteral) )) {
 		interpreter->errorOutput("Incorrect argument type passed to reduce\n");
@@ -1328,6 +1464,12 @@ static int nativeSome(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	Toy_Literal fnLiteralIdn = fnLiteral;
 	if (TOY_IS_IDENTIFIER(fnLiteral) && Toy_parseIdentifierToValue(interpreter, &fnLiteral)) {
 		Toy_freeLiteral(fnLiteralIdn);
+	}
+
+	if (TOY_IS_IDENTIFIER(selfLiteral) || TOY_IS_IDENTIFIER(fnLiteral)) {
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(fnLiteral);
+		return -1;
 	}
 
 	//check type
@@ -1994,8 +2136,8 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		{"max", nativeMax},
 		{"min", nativeMin},
 		{"round", nativeRound},
-		{"sign", nativeSign},
-		{"normalize", nativeNormalize},
+		{"clamp", nativeClamp},
+		{"lerp", nativeLerp},
 
 		//compound utils
 		{"concat", nativeConcat}, //array, dictionary, string
