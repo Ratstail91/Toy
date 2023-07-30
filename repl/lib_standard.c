@@ -433,6 +433,145 @@ static int nativeNormalize(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 	return 1;
 }
 
+static int nativeClamp(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 3) {
+		interpreter->errorOutput("Incorrect number of arguments to clamp\n");
+		return -1;
+	}
+
+	//get the max
+	Toy_Literal maxLiteral = Toy_popLiteralArray(arguments);
+	
+	//parse the max
+	Toy_Literal maxLiteralIdn = maxLiteral;
+	if (TOY_IS_IDENTIFIER(maxLiteral) && Toy_parseIdentifierToValue(interpreter, &maxLiteral)) {
+		Toy_freeLiteral(maxLiteralIdn);
+	}
+
+	if (!(TOY_IS_INTEGER(maxLiteral) || TOY_IS_FLOAT(maxLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to clamp\n");
+		Toy_freeLiteral(maxLiteral);
+		return -1;
+	}
+
+		//get the min
+	Toy_Literal minLiteral = Toy_popLiteralArray(arguments);
+	
+	//parse the min
+	Toy_Literal minLiteralIdn = minLiteral;
+	if (TOY_IS_IDENTIFIER(minLiteral) && Toy_parseIdentifierToValue(interpreter, &minLiteral)) {
+		Toy_freeLiteral(minLiteralIdn);
+	}
+
+	if (!(TOY_IS_INTEGER(minLiteral) || TOY_IS_FLOAT(minLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to clamp\n");
+		Toy_freeLiteral(minLiteral);
+		return -1;
+	}
+
+	//get the value
+	Toy_Literal valueLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the value
+	Toy_Literal valueLiteralIdn = valueLiteral;
+	if (TOY_IS_IDENTIFIER(valueLiteral) && Toy_parseIdentifierToValue(interpreter, &valueLiteral)) {
+		Toy_freeLiteral(valueLiteralIdn);
+	}
+
+	if (!(TOY_IS_INTEGER(valueLiteral) || TOY_IS_FLOAT(valueLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to clamp\n");
+		Toy_freeLiteral(valueLiteral);
+		return -1;
+	}
+
+	// cast ints to floats to handle all types of numbers
+	float value = TOY_IS_INTEGER(valueLiteral)? TOY_AS_INTEGER(valueLiteral) : TOY_AS_FLOAT(valueLiteral);
+	float min = TOY_IS_INTEGER(minLiteral)? TOY_AS_INTEGER(minLiteral) : TOY_AS_FLOAT(minLiteral);
+	float max = TOY_IS_INTEGER(maxLiteral)? TOY_AS_INTEGER(maxLiteral) : TOY_AS_FLOAT(maxLiteral);
+
+	float result = (value < min)? min : value;
+	if (result > max) result = max;
+
+	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(valueLiteral);
+	Toy_freeLiteral(minLiteral);
+	Toy_freeLiteral(maxLiteral);
+    
+    return 1;
+}
+
+static int nativeLerp(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 3) {
+		interpreter->errorOutput("Incorrect number of arguments to lerp\n");
+		return -1;
+	}
+
+	//get the amount
+	Toy_Literal amountLiteral = Toy_popLiteralArray(arguments);
+	
+	//parse the amount
+	Toy_Literal amountLiteralIdn = amountLiteral;
+	if (TOY_IS_IDENTIFIER(amountLiteral) && Toy_parseIdentifierToValue(interpreter, &amountLiteral)) {
+		Toy_freeLiteral(amountLiteralIdn);
+	}
+
+	if (!(TOY_IS_INTEGER(amountLiteral) || TOY_IS_FLOAT(amountLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to lerp\n");
+		Toy_freeLiteral(amountLiteral);
+		return -1;
+	}
+
+	//get the end
+	Toy_Literal endLiteral = Toy_popLiteralArray(arguments);
+	
+	//parse the end
+	Toy_Literal endLiteralIdn = endLiteral;
+	if (TOY_IS_IDENTIFIER(endLiteral) && Toy_parseIdentifierToValue(interpreter, &endLiteral)) {
+		Toy_freeLiteral(endLiteralIdn);
+	}
+
+	if (!(TOY_IS_INTEGER(endLiteral) || TOY_IS_FLOAT(endLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to lerp\n");
+		Toy_freeLiteral(endLiteral);
+		return -1;
+	}
+
+	//get the value
+	Toy_Literal startLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the value
+	Toy_Literal startLiteralIdn = startLiteral;
+	if (TOY_IS_IDENTIFIER(startLiteral) && Toy_parseIdentifierToValue(interpreter, &startLiteral)) {
+		Toy_freeLiteral(startLiteralIdn);
+	}
+
+	if (!(TOY_IS_INTEGER(startLiteral) || TOY_IS_FLOAT(startLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to lerp\n");
+		Toy_freeLiteral(startLiteral);
+		return -1;
+	}
+
+	// cast ints to floats to handle all types of numbers
+	float start = TOY_IS_INTEGER(startLiteral)? TOY_AS_INTEGER(startLiteral) : TOY_AS_FLOAT(startLiteral);
+	float end = TOY_IS_INTEGER(endLiteral)? TOY_AS_INTEGER(endLiteral) : TOY_AS_FLOAT(endLiteral);
+	float amount = TOY_IS_INTEGER(amountLiteral)? TOY_AS_INTEGER(amountLiteral) : TOY_AS_FLOAT(amountLiteral);
+
+	float result = start + amount * (end - start);
+
+	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(startLiteral);
+	Toy_freeLiteral(endLiteral);
+	Toy_freeLiteral(amountLiteral);
+    
+    return 1;
+}
+
 static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
@@ -1996,6 +2135,8 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		{"round", nativeRound},
 		{"sign", nativeSign},
 		{"normalize", nativeNormalize},
+		{"clamp", nativeClamp},
+		{"lerp", nativeLerp},
 
 		//compound utils
 		{"concat", nativeConcat}, //array, dictionary, string
