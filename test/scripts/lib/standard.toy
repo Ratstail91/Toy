@@ -101,6 +101,38 @@ import standard;
 }
 
 
+//test sign
+{
+	assert sign(4) == 1, "sign(int) failed";
+	assert sign(-4) == -1, "sign(-int) failed";
+	assert sign(4.1) == 1, "sign(float) failed";
+	assert sign(-4.1) == -1, "sign(-float) failed";
+	assert sign(0) == 1, "sign(0) failed";
+
+	var x = 4.1;
+
+	assert x.sign() == 1, "var.sign() failed";
+
+	assert typeof sign(1.0) == int, "typeof sign() == int failed";
+}
+
+
+//test normalize
+{
+	assert normalize(4) == 1, "normalize(int) failed";
+	assert normalize(-4) == -1, "normalize(-int) failed";
+	assert normalize(4.1) == 1, "normalize(float) failed";
+	assert normalize(-4.1) == -1, "normalize(-float) failed";
+	assert normalize(0) == 0, "normalize(0) failed";
+
+	var x = 4.1;
+
+	assert x.normalize() == 1, "var.normalize() failed";
+
+	assert typeof normalize(1.0) == int, "typeof normalize() == int failed";
+}
+
+
 //test concat
 {
 	//test array concat
