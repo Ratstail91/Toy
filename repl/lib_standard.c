@@ -583,6 +583,180 @@ static int nativeLerp(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	return 1;
 }
 
+static int nativeToRad(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to toRad\n");
+		return -1;
+	}
+
+	//get the argument
+	Toy_Literal degreesLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the argument (if it's an identifier)
+	Toy_Literal degreesLiteralIdn = degreesLiteral;
+	if (TOY_IS_IDENTIFIER(degreesLiteral) && Toy_parseIdentifierToValue(interpreter, &degreesLiteral)) {	
+		Toy_freeLiteral(degreesLiteralIdn);
+	}
+
+	//check the argument type
+	if (!(TOY_IS_INTEGER(degreesLiteral) || TOY_IS_FLOAT(degreesLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to toRad\n");
+		Toy_freeLiteral(degreesLiteral);
+		return -1;
+	}
+
+	// cast int to float to handle all types of numbers
+	float degrees = TOY_IS_INTEGER(degreesLiteral)? TOY_AS_INTEGER(degreesLiteral) : TOY_AS_FLOAT(degreesLiteral);
+
+	const float PI = 3.14159265358979323846f;
+
+	float result = degrees * (PI / 180.0);
+
+	//return the result
+	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	//cleanup
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(degreesLiteral);
+
+	return 1;
+}
+
+static int nativeToDeg(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to toDeg\n");
+		return -1;
+	}
+
+	//get the argument
+	Toy_Literal radiansLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the argument (if it's an identifier)
+	Toy_Literal radiansLiteralIdn = radiansLiteral;
+	if (TOY_IS_IDENTIFIER(radiansLiteral) && Toy_parseIdentifierToValue(interpreter, &radiansLiteral)) {	
+		Toy_freeLiteral(radiansLiteralIdn);
+	}
+
+	//check the argument type
+	if (!(TOY_IS_INTEGER(radiansLiteral) || TOY_IS_FLOAT(radiansLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to toDeg\n");
+		Toy_freeLiteral(radiansLiteral);
+		return -1;
+	}
+
+	// cast int to float to handle all types of numbers
+	float radians = TOY_IS_INTEGER(radiansLiteral)? TOY_AS_INTEGER(radiansLiteral) : TOY_AS_FLOAT(radiansLiteral);
+
+	const float PI = 3.14159265358979323846f;
+
+	float result = radians * (180.0 / PI);
+
+	//return the result
+	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	//cleanup
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(radiansLiteral);
+
+	return 1;
+}
+
+static int nativeSin(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to sin\n");
+		return -1;
+	}
+
+	//get the argument
+	Toy_Literal valueLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the argument (if it's an identifier)
+	Toy_Literal valueLiteralIdn = valueLiteral;
+	if (TOY_IS_IDENTIFIER(valueLiteral) && Toy_parseIdentifierToValue(interpreter, &valueLiteral)) {
+		Toy_freeLiteral(valueLiteralIdn);
+	}
+
+	//check the argument type
+	if (!(TOY_IS_INTEGER(valueLiteral) || TOY_IS_FLOAT(valueLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to lerp\n");
+		Toy_freeLiteral(valueLiteral);
+		return -1;
+	}
+
+	// cast ints to floats to handle all types of numbers
+	float value = TOY_IS_INTEGER(valueLiteral)? TOY_AS_INTEGER(valueLiteral) : TOY_AS_FLOAT(valueLiteral);
+
+	// calculate the result
+	// using Taylor series approximation
+	float result = 0;
+	float power = value;
+	int sign = 1;
+
+	for (int n = 1; n <= 10; n += 2) {
+        result += sign * power / n;
+        power = power * value * value;
+        sign = -sign;
+    }
+
+	//return the result
+	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	//cleanup
+	Toy_freeLiteral(resultLiteral);
+
+	return 1;
+}
+
+static int nativeCos(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to sin\n");
+		return -1;
+	}
+
+	//get the argument
+	Toy_Literal valueLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the argument (if it's an identifier)
+	Toy_Literal valueLiteralIdn = valueLiteral;
+	if (TOY_IS_IDENTIFIER(valueLiteral) && Toy_parseIdentifierToValue(interpreter, &valueLiteral)) {
+		Toy_freeLiteral(valueLiteralIdn);
+	}
+
+	//check the argument type
+	if (!(TOY_IS_INTEGER(valueLiteral) || TOY_IS_FLOAT(valueLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to lerp\n");
+		Toy_freeLiteral(valueLiteral);
+		return -1;
+	}
+
+	// cast ints to floats to handle all types of numbers
+	float value = TOY_IS_INTEGER(valueLiteral)? TOY_AS_INTEGER(valueLiteral) : TOY_AS_FLOAT(valueLiteral);
+
+	// calculate the result
+	// using Taylor series approximation
+	float result = 0;
+	float power = value;
+	int sign = 1;
+
+	for (int n = 1; n <= 10; n += 2) {
+        result += sign * power / n;
+        power = power * value * value;
+        sign = -sign;
+    }
+
+	//return the result
+	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	//cleanup
+	Toy_freeLiteral(resultLiteral);
+
+	return 1;
+}
+
 static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
@@ -2148,6 +2322,10 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		{"normalize", nativeNormalize},
 		{"clamp", nativeClamp},
 		{"lerp", nativeLerp},
+		{"toRad", nativeToRad},
+		{"toDeg", nativeToDeg},
+		// {"sin", nativeSin},
+		// {"cos", nativeCos},
 
 		//compound utils
 		{"concat", nativeConcat}, //array, dictionary, string
