@@ -202,11 +202,11 @@ static int nativeMax(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 
 		//cooerce if needed
 		if (TOY_IS_INTEGER(resultLiteral) && TOY_IS_FLOAT(selfLiteral)) {
-			resultLiteral = TOY_TO_FLOAT_LITERAL( TOY_AS_INTEGER(resultLiteral) );
+			resultLiteral = TOY_TO_FLOAT_LITERAL( (float)TOY_AS_INTEGER(resultLiteral) );
 		}
 
 		if (TOY_IS_FLOAT(resultLiteral) && TOY_IS_INTEGER(selfLiteral)) {
-			selfLiteral = TOY_TO_FLOAT_LITERAL( TOY_AS_INTEGER(selfLiteral) );
+			selfLiteral = TOY_TO_FLOAT_LITERAL( (float)TOY_AS_INTEGER(selfLiteral) );
 		}
 
 		//compare
@@ -258,11 +258,11 @@ static int nativeMin(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 
 		//cooerce if needed
 		if (TOY_IS_INTEGER(resultLiteral) && TOY_IS_FLOAT(selfLiteral)) {
-			resultLiteral = TOY_TO_FLOAT_LITERAL( TOY_AS_INTEGER(resultLiteral) );
+			resultLiteral = TOY_TO_FLOAT_LITERAL( (float)TOY_AS_INTEGER(resultLiteral) );
 		}
 
 		if (TOY_IS_FLOAT(resultLiteral) && TOY_IS_INTEGER(selfLiteral)) {
-			selfLiteral = TOY_TO_FLOAT_LITERAL( TOY_AS_INTEGER(selfLiteral) );
+			selfLiteral = TOY_TO_FLOAT_LITERAL( (float)TOY_AS_INTEGER(selfLiteral) );
 		}
 
 		//compare
