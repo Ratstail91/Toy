@@ -157,12 +157,14 @@ import standard;
 	assert typeof lerp(0, 10, 0) == float, "typeof lerp result failed";
 }
 
+
 // test toRad
 {
 	assert toRad(0) == 0, "toRad 0° failed";
 	assert toRad(180) == PI, "toRad 180° failed";
 	assert toRad(360) == 2 * PI, "toRad 360° failed";
 }
+
 
 // test toDeg
 {
@@ -171,6 +173,16 @@ import standard;
 	assert toDeg(2 * PI) == 360, "toDeg 2π failed";
 }
 
+// test sin
+{
+	assert sin(PI) == 0, "sin π failed";
+}
+
+
+// test cos
+{
+	assert cos(PI) == -1, "cos π failed";
+}
 
 //test concat
 {

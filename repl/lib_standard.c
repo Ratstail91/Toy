@@ -7,8 +7,9 @@
 #include <time.h>
 #include <ctype.h>
 
-#define STD_MATH_PI	3.14159265358979323846f
-#define STD_MATH_E	2.71828182845904523536f
+#define STD_MATH_PI		3.14159265358979323846f
+#define STD_MATH_E		2.71828182845904523536f
+#define STD_MATH_LIMIT 	20
 
 static int nativeClock(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
@@ -669,34 +670,40 @@ static int nativeSin(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 	}
 
 	//get the argument
-	Toy_Literal valueLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal radiansLiteral = Toy_popLiteralArray(arguments);
 
 	//parse the argument (if it's an identifier)
-	Toy_Literal valueLiteralIdn = valueLiteral;
-	if (TOY_IS_IDENTIFIER(valueLiteral) && Toy_parseIdentifierToValue(interpreter, &valueLiteral)) {
-		Toy_freeLiteral(valueLiteralIdn);
+	Toy_Literal radiansLiteralIdn = radiansLiteral;
+	if (TOY_IS_IDENTIFIER(radiansLiteral) && Toy_parseIdentifierToValue(interpreter, &radiansLiteral)) {
+		Toy_freeLiteral(radiansLiteralIdn);
 	}
 
 	//check the argument type
-	if (!(TOY_IS_INTEGER(valueLiteral) || TOY_IS_FLOAT(valueLiteral))) {
-		interpreter->errorOutput("Incorrect argument type passed to lerp\n");
-		Toy_freeLiteral(valueLiteral);
+	if (!(TOY_IS_INTEGER(radiansLiteral) || TOY_IS_FLOAT(radiansLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to sin\n");
+		Toy_freeLiteral(radiansLiteral);
 		return -1;
 	}
 
 	// cast ints to floats to handle all types of numbers
-	float value = TOY_IS_INTEGER(valueLiteral)? TOY_AS_INTEGER(valueLiteral) : TOY_AS_FLOAT(valueLiteral);
+	float radians = TOY_IS_INTEGER(radiansLiteral)? TOY_AS_INTEGER(radiansLiteral) : TOY_AS_FLOAT(radiansLiteral);
 
 	// calculate the result
 	// using Taylor series approximation
-	float result = 0;
-	float power = value;
-	int sign = 1;
+	float result = radians;
+	float numerator = radians;
+	float denominator = 1;
 
-	for (int n = 1; n <= 10; n += 2) {
-        result += sign * power / n;
-        power = power * value * value;
-        sign = -sign;
+	for (int i = 1; i <= STD_MATH_LIMIT; i++) {
+        numerator *= radians * radians;
+        denominator *= (2 * i) * (2 * i + 1);
+
+        float value = numerator / denominator;
+
+        if (i & 0x01)
+            result -= value;
+        else
+            result += value;
     }
 
 	//return the result
@@ -705,7 +712,7 @@ static int nativeSin(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 
 	//cleanup
 	Toy_freeLiteral(resultLiteral);
-	Toy_freeLiteral(valueLiteral);
+	Toy_freeLiteral(radiansLiteral);
 
 	return 1;
 }
@@ -717,43 +724,37 @@ static int nativeCos(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 	}
 
 	//get the argument
-	Toy_Literal valueLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal radiansLiteral = Toy_popLiteralArray(arguments);
 
 	//parse the argument (if it's an identifier)
-	Toy_Literal valueLiteralIdn = valueLiteral;
-	if (TOY_IS_IDENTIFIER(valueLiteral) && Toy_parseIdentifierToValue(interpreter, &valueLiteral)) {
-		Toy_freeLiteral(valueLiteralIdn);
+	Toy_Literal radiansLiteralIdn = radiansLiteral;
+	if (TOY_IS_IDENTIFIER(radiansLiteral) && Toy_parseIdentifierToValue(interpreter, &radiansLiteral)) {
+		Toy_freeLiteral(radiansLiteralIdn);
 	}
 
 	//check the argument type
-	if (!(TOY_IS_INTEGER(valueLiteral) || TOY_IS_FLOAT(valueLiteral))) {
+	if (!(TOY_IS_INTEGER(radiansLiteral) || TOY_IS_FLOAT(radiansLiteral))) {
 		interpreter->errorOutput("Incorrect argument type passed to lerp\n");
-		Toy_freeLiteral(valueLiteral);
+		Toy_freeLiteral(radiansLiteral);
 		return -1;
 	}
 
 	// cast ints to floats to handle all types of numbers
-	float value = TOY_IS_INTEGER(valueLiteral)? TOY_AS_INTEGER(valueLiteral) : TOY_AS_FLOAT(valueLiteral);
+	float radians = TOY_IS_INTEGER(radiansLiteral)? TOY_AS_INTEGER(radiansLiteral) : TOY_AS_FLOAT(radiansLiteral);
 
 	// calculate the result
 	// using Taylor series approximation
-	float result = 0;
-	float power = value;
-	int sign = 1;
 
-	for (int n = 0; n <= 10; n += 2) {
-        result += sign * power;
-        power = power * value * value / ((n + 1) * (n + 2));
-        sign = -sign;
-    }
-
+	// TODO
+	float result = -1;
+	
 	//return the result
 	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	//cleanup
 	Toy_freeLiteral(resultLiteral);
-	Toy_freeLiteral(valueLiteral);
+	Toy_freeLiteral(radiansLiteral);
 
 	return 1;
 }
@@ -2325,8 +2326,8 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		{"lerp", nativeLerp},
 		{"toRad", nativeToRad},
 		{"toDeg", nativeToDeg},
-		// {"sin", nativeSin},
-		// {"cos", nativeCos},
+		{"sin", nativeSin},
+		{"cos", nativeCos},
 
 		//compound utils
 		{"concat", nativeConcat}, //array, dictionary, string
