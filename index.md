@@ -83,6 +83,7 @@ print tally(); //3
 Note: This section is WIP.
 
 * [Game Engine](game-engine/game-engine.md)
+* [Box Version Info Library](game-engine/box-version-info-library.md)
 * Engine Library
 * Node Library
 * Input Library
