@@ -157,11 +157,8 @@ import standard;
 	assert typeof lerp(0, 10, 0) == float, "typeof lerp result failed";
 }
 
-
 // test toRad
 {
-	var PI: float const = 3.14159265358979323846;
-
 	assert toRad(0) == 0, "toRad 0° failed";
 	assert toRad(180) == PI, "toRad 180° failed";
 	assert toRad(360) == 2 * PI, "toRad 360° failed";
@@ -169,8 +166,6 @@ import standard;
 
 // test toDeg
 {
-	var PI: float const = 3.14159265358979323846;
-
 	assert toDeg(0) == 0, "toDeg 0 failed";
 	assert toDeg(PI) == 180, "toDeg π failed";
 	assert toDeg(2 * PI) == 360, "toDeg 2π failed";

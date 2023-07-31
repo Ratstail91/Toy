@@ -7,6 +7,9 @@
 #include <time.h>
 #include <ctype.h>
 
+#define STD_MATH_PI	3.14159265358979323846f
+#define STD_MATH_E	2.71828182845904523536f
+
 static int nativeClock(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 0) {
@@ -608,9 +611,7 @@ static int nativeToRad(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	// cast int to float to handle all types of numbers
 	float degrees = TOY_IS_INTEGER(degreesLiteral)? TOY_AS_INTEGER(degreesLiteral) : TOY_AS_FLOAT(degreesLiteral);
 
-	const float PI = 3.14159265358979323846f;
-
-	float result = degrees * (PI / 180.0);
+	float result = degrees * (STD_MATH_PI / 180.0);
 
 	//return the result
 	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
@@ -648,9 +649,7 @@ static int nativeToDeg(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	// cast int to float to handle all types of numbers
 	float radians = TOY_IS_INTEGER(radiansLiteral)? TOY_AS_INTEGER(radiansLiteral) : TOY_AS_FLOAT(radiansLiteral);
 
-	const float PI = 3.14159265358979323846f;
-
-	float result = radians * (180.0 / PI);
+	float result = radians * (180.0 / STD_MATH_PI);
 
 	//return the result
 	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
@@ -2352,6 +2351,16 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		{NULL, NULL}
 	};
 
+	// math constants
+	Toy_Literal piKeyLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("PI"));
+	Toy_Literal piIdentifierLiteral = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString("PI"));
+	Toy_Literal piLiteral = TOY_TO_FLOAT_LITERAL(STD_MATH_PI);
+
+	Toy_Literal eKeyLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("E"));
+	Toy_Literal eIdentifierLiteral = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString("E"));
+	Toy_Literal eLiteral = TOY_TO_FLOAT_LITERAL(STD_MATH_PI);
+	
+
 	//store the library in an aliased dictionary
 	if (!TOY_IS_NULL(alias)) {
 		//make sure the name isn't taken
@@ -2376,6 +2385,9 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 			Toy_freeLiteral(func);
 		}
 
+		Toy_setLiteralDictionary(dictionary, piKeyLiteral, piLiteral);
+		Toy_setLiteralDictionary(dictionary, eKeyLiteral, eLiteral);
+
 		//build the type
 		Toy_Literal type = TOY_TO_TYPE_LITERAL(TOY_LITERAL_DICTIONARY, true);
 		Toy_Literal strType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_STRING, true);
@@ -2391,6 +2403,13 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		//cleanup
 		Toy_freeLiteral(dict);
 		Toy_freeLiteral(type);
+		Toy_freeLiteral(piKeyLiteral);
+		Toy_freeLiteral(piIdentifierLiteral);
+		Toy_freeLiteral(piLiteral);
+		Toy_freeLiteral(eKeyLiteral);
+		Toy_freeLiteral(eIdentifierLiteral);
+		Toy_freeLiteral(eLiteral);
+
 		return 0;
 	}
 
@@ -2398,6 +2417,35 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 	for (int i = 0; natives[i].name; i++) {
 		Toy_injectNativeFn(interpreter, natives[i].name, natives[i].fn);
 	}
+
+	if (Toy_isDeclaredScopeVariable(interpreter->scope, piKeyLiteral)) {
+		interpreter->errorOutput("Can't override an existing variable\n");
+		
+		// cleanup
+		Toy_freeLiteral(alias);
+		Toy_freeLiteral(piKeyLiteral);
+
+		return -1;
+	}
+
+	Toy_Literal floatType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_FLOAT, false);
+
+	// pi
+	Toy_declareScopeVariable(interpreter->scope, piIdentifierLiteral, floatType);
+	Toy_setScopeVariable(interpreter->scope, piIdentifierLiteral, piLiteral, false);
+
+	// e
+	Toy_declareScopeVariable(interpreter->scope, eIdentifierLiteral, floatType);
+	Toy_setScopeVariable(interpreter->scope, eIdentifierLiteral, eLiteral, false);
+
+	// cleanup
+	Toy_freeLiteral(floatType);
+	Toy_freeLiteral(piKeyLiteral);
+	Toy_freeLiteral(piIdentifierLiteral);
+	Toy_freeLiteral(piLiteral);
+	Toy_freeLiteral(eKeyLiteral);
+	Toy_freeLiteral(eIdentifierLiteral);
+	Toy_freeLiteral(eLiteral);
 
 	return 0;
 }
