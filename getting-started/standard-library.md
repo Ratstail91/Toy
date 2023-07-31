@@ -65,13 +65,13 @@ This function expects an integer or float as the value for `self`.
 
 If `self` is below 0, this function returns -1. Otherwise if `self` is above 0, this function returns 1. Otherwise it returns 0.
 
-### clamp(value, min, max)
+### clamp(value, min, max): any
 
 This function expects integers or floats as the values for `value`, `min`, and `max`.
 
 If `value` is smaller than `min`, this function will return `min`. Otherwise, if `value` larget than `max`, it will return `max`. Otherwise, it will return `value`.
 
-### lerp(start, end, amount)
+### lerp(start, end, amount): any
 
 This function expects integers or floats as the values for `value`, `min`, and `max`.
 
