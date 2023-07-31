@@ -751,7 +751,7 @@ static Toy_Opcode fnCall(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	//wait - is the previous token a type? this should be casting instead
 	if (parser->previous.type >= TOY_TOKEN_NULL && parser->previous.type <= TOY_TOKEN_ANY) {
 		//casting value
-		parsePrecedence(parser, nodeHandle, PREC_TERM);
+		parsePrecedence(parser, nodeHandle, PREC_CALL);
 
 		return TOY_OP_TYPE_CAST; //opcode value
 	}
