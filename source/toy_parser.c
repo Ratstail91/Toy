@@ -757,7 +757,7 @@ static Toy_Opcode fnCall(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 
 		//casting value
 		Toy_ASTNode* rhsNode = NULL;
-		grouping(parser, &rhsNode);
+		parsePrecedence(parser, &rhsNode, PREC_TERNARY);
 
 		//emit the cast node
 
@@ -765,6 +765,8 @@ static Toy_Opcode fnCall(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 
 		//pass it off to the caller
 		*nodeHandle = lhsNode;
+
+		consume(parser, TOY_TOKEN_PAREN_RIGHT, "Expected ')' at end of cast grouping");
 
 		return TOY_OP_GROUPING_BEGIN; //dummy value
 	}

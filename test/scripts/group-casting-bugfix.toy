@@ -1,0 +1,11 @@
+//test for casting + grouping, see #67
+{
+	assert string(10 % 4) == "2", "basic group casting failed";
+	assert string 4 == "4", "Normal casting failed";
+	
+	assert typeof string(10 % 4) == string, "group casting type failed";
+}
+
+
+
+print "All good";
