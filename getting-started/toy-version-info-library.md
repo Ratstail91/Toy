@@ -1,12 +1,12 @@
-# About Library
+# Toy Version Info Library
 
-The about library simply provides version info about the current build of Toy.
+The toy_version_info library simply provides version info about the current build of Toy.
 
-The about library can usually be accessed with the `import` keyword:
+The toy_version_info library can usually be accessed with the `import` keyword:
 
 ```
-import about;
-import about as about; //can be aliased
+import toy_version_info;
+import toy_version_info as toy_version_info; //can be aliased
 ```
 
 ## Defined Variables

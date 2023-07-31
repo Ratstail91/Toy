@@ -45,7 +45,7 @@ print tally(); //3
 
 * [Quick Start Guide](getting-started/quick-start-guide)
 * [Types](getting-started/types)
-* [About Library](getting-started/about-library)
+* [Toy Version Info Library](getting-started/toy-version-info-library)
 * [Standard Library](getting-started/standard-library)
 * [Random Library](getting-started/random-library)
 * [Runner Library](getting-started/runner-library)
