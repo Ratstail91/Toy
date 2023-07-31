@@ -159,7 +159,7 @@ static unsigned char readByte(const unsigned char* tb, int* count) {
 
 static const char* readString(const unsigned char* tb, int* count) {
 	const unsigned char* ret = tb + *count;
-	*count += strlen((char*)ret) + 1; //+1 for null character
+	*count += (int)strlen((char*)ret) + 1; //+1 for null character
 	return (const char*)ret;
 }
 
