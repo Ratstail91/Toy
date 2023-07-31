@@ -1,23 +1,23 @@
-#include "lib_about.h"
+#include "lib_toy_version_info.h"
 
 #include "toy_memory.h"
 
-int Toy_hookAbout(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Literal alias) {
-	//the about keys
+int Toy_hookToyVersionInfo(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Literal alias) {
+	//the info keys
 	Toy_Literal majorKeyLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("major"));
 	Toy_Literal minorKeyLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("minor"));
 	Toy_Literal patchKeyLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("patch"));
 	Toy_Literal buildKeyLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("build"));
 	Toy_Literal authorKeyLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("author"));
 
-	//the about identifiers
+	//the info identifiers
 	Toy_Literal majorIdentifierLiteral = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString("major"));
 	Toy_Literal minorIdentifierLiteral = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString("minor"));
 	Toy_Literal patchIdentifierLiteral = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString("patch"));
 	Toy_Literal buildIdentifierLiteral = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString("build"));
 	Toy_Literal authorIdentifierLiteral = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString("author"));
 
-	//the about values
+	//the info values
 	Toy_Literal majorLiteral = TOY_TO_INTEGER_LITERAL(TOY_VERSION_MAJOR);
 	Toy_Literal minorLiteral = TOY_TO_INTEGER_LITERAL(TOY_VERSION_MINOR);
 	Toy_Literal patchLiteral = TOY_TO_INTEGER_LITERAL(TOY_VERSION_PATCH);
