@@ -1,5 +1,5 @@
-import about as about;
-import about;
+import toy_version_info as toy_version_info;
+import toy_version_info;
 
 assert author == "Kayne Ruse, KR Game Studios", "Author failed";
 

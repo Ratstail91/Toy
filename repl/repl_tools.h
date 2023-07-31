@@ -46,7 +46,7 @@ const unsigned char* Toy_compileString(const char* source, size_t* size);
 
 This function takes a bytecode array of `size` size, and executes it. The libraries available to the code are currently:
 
-* lib_about
+* lib_toy_version_info
 * lib_standard
 * lib_random
 * lib_runner

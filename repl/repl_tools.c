@@ -1,5 +1,5 @@
 #include "repl_tools.h"
-#include "lib_about.h"
+#include "lib_toy_version_info.h"
 #include "lib_standard.h"
 #include "lib_random.h"
 #include "lib_runner.h"
@@ -111,7 +111,7 @@ void Toy_runBinary(const unsigned char* tb, size_t size) {
 	Toy_initInterpreter(&interpreter);
 
 	//inject the libs
-	Toy_injectNativeHook(&interpreter, "about", Toy_hookAbout);
+	Toy_injectNativeHook(&interpreter, "toy_version_info", Toy_hookToyVersionInfo);
 	Toy_injectNativeHook(&interpreter, "standard", Toy_hookStandard);
 	Toy_injectNativeHook(&interpreter, "random", Toy_hookRandom);
 	Toy_injectNativeHook(&interpreter, "runner", Toy_hookRunner);
@@ -159,7 +159,7 @@ static unsigned char readByte(const unsigned char* tb, int* count) {
 
 static const char* readString(const unsigned char* tb, int* count) {
 	const unsigned char* ret = tb + *count;
-	*count += strlen((char*)ret) + 1; //+1 for null character
+	*count += (int)strlen((char*)ret) + 1; //+1 for null character
 	return (const char*)ret;
 }
 
