@@ -706,6 +706,7 @@ static int nativeSin(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 
 	//cleanup
 	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(valueLiteral);
 
 	return 1;
 }
@@ -741,9 +742,9 @@ static int nativeCos(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 	float power = value;
 	int sign = 1;
 
-	for (int n = 1; n <= 10; n += 2) {
-        result += sign * power / n;
-        power = power * value * value;
+	for (int n = 0; n <= 10; n += 2) {
+        result += sign * power;
+        power = power * value * value / ((n + 1) * (n + 2));
         sign = -sign;
     }
 
@@ -753,6 +754,7 @@ static int nativeCos(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 
 	//cleanup
 	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(valueLiteral);
 
 	return 1;
 }
