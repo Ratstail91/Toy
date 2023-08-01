@@ -71,6 +71,44 @@ import math;
 	assert floatCompare(cos(0), 1), "cos(0) failed";
 }
 
+// test tan
+{
+	assert floatCompare(tan(PI), 0), "tan(π) failed";
+	assert floatCompare(tan(PI / 4), 1), "tan(π/4) failed";
+	assert floatCompare(tan(0), 0), "tan(0) failed";
+}
+
+
+// test asin
+{
+	assert floatCompare(asin(1), 1.570796), "asin(1) failed";
+	assert floatCompare(asin(-0.5), -0.523599), "asin(-0.5) failed";
+	assert floatCompare(asin(0), 0), "asin(0) failed";
+}
+
+
+// test acos
+{
+	assert floatCompare(acos(1), 0), "acos(1) failed";
+	assert floatCompare(acos(0.5), 1.047198), "acos(0.5) failed";
+	assert floatCompare(acos(0), 1.570796), "acos(0) failed";
+}
+
+
+// test atan
+{
+	assert floatCompare(atan(1), 0.785398), "acos(1) failed";
+	assert floatCompare(atan(INFINITY), 1.570796), "atan(INFINITY) failed";
+	assert floatCompare(atan(0), 0), "atan(0) failed";
+}
+
+
+// test atan2
+{
+	assert floatCompare(atans(0, 0), 0), "atan2(0, 0) failed";
+	assert floatCompare(atans(7, 0), 1.570796), "atans(7, 0) failed";
+}
+
 
 // test isnan
 {
