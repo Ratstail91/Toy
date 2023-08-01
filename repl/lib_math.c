@@ -4,18 +4,19 @@
 
 #include <math.h>
 
-#define LIB_MATH_PI	3.14159265358979323846f
-#define LIB_MATH_E	2.71828182845904523536f
+#define LIB_MATH_PI      3.14159265358979323846f
+#define LIB_MATH_E       2.71828182845904523536f
+#define LIB_MATH_EPSILON 0.000001f
 
 static int nativeMod(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
-	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to sin\n");
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments to mod\n");
 		return -1;
 	}
 
 	//get the arguments
-	Toy_Literal xLiteral = Toy_popLiteralArray(arguments);
 	Toy_Literal yLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal xLiteral = Toy_popLiteralArray(arguments);
 
 	//parse the argument (if it's an identifier)
 	Toy_Literal xLiteralIdn = xLiteral;
@@ -30,13 +31,13 @@ static int nativeMod(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 
 	//check the argument types
 	if (!(TOY_IS_INTEGER(xLiteral) || TOY_IS_FLOAT(xLiteral))) {
-		interpreter->errorOutput("Incorrect argument type passed to sin\n");
+		interpreter->errorOutput("Incorrect argument type passed to mod\n");
 		Toy_freeLiteral(xLiteral);
 		return -1;
 	}
 
 	if (!(TOY_IS_INTEGER(yLiteral) || TOY_IS_FLOAT(yLiteral))) {
-		interpreter->errorOutput("Incorrect argument type passed to sin\n");
+		interpreter->errorOutput("Incorrect argument type passed to mod\n");
 		Toy_freeLiteral(yLiteral);
 		return -1;
 	}
@@ -61,14 +62,14 @@ static int nativeMod(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 }
 
 static int nativePow(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
-	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to sin\n");
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments to pow\n");
 		return -1;
 	}
 
 	//get the arguments
-	Toy_Literal xLiteral = Toy_popLiteralArray(arguments);
 	Toy_Literal yLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal xLiteral = Toy_popLiteralArray(arguments);
 
 	//parse the argument (if it's an identifier)
 	Toy_Literal xLiteralIdn = xLiteral;
@@ -83,13 +84,13 @@ static int nativePow(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 
 	//check the argument types
 	if (!(TOY_IS_INTEGER(xLiteral) || TOY_IS_FLOAT(xLiteral))) {
-		interpreter->errorOutput("Incorrect argument type passed to sin\n");
+		interpreter->errorOutput("Incorrect argument type passed to pow\n");
 		Toy_freeLiteral(xLiteral);
 		return -1;
 	}
 
 	if (!(TOY_IS_INTEGER(yLiteral) || TOY_IS_FLOAT(yLiteral))) {
-		interpreter->errorOutput("Incorrect argument type passed to sin\n");
+		interpreter->errorOutput("Incorrect argument type passed to pow\n");
 		Toy_freeLiteral(yLiteral);
 		return -1;
 	}
@@ -115,7 +116,7 @@ static int nativePow(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 
 static int nativeSqrt(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to sin\n");
+		interpreter->errorOutput("Incorrect number of arguments to sqrt\n");
 		return -1;
 	}
 
@@ -130,7 +131,7 @@ static int nativeSqrt(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	//check the argument type
 	if (!(TOY_IS_INTEGER(xLiteral) || TOY_IS_FLOAT(xLiteral))) {
-		interpreter->errorOutput("Incorrect argument type passed to sin\n");
+		interpreter->errorOutput("Incorrect argument type passed to sqrt\n");
 		Toy_freeLiteral(xLiteral);
 		return -1;
 	}
@@ -154,7 +155,7 @@ static int nativeSqrt(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 static int nativeCbrt(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to sin\n");
+		interpreter->errorOutput("Incorrect number of arguments to cbrt\n");
 		return -1;
 	}
 
@@ -169,7 +170,7 @@ static int nativeCbrt(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	//check the argument type
 	if (!(TOY_IS_INTEGER(xLiteral) || TOY_IS_FLOAT(xLiteral))) {
-		interpreter->errorOutput("Incorrect argument type passed to sin\n");
+		interpreter->errorOutput("Incorrect argument type passed to cbrt\n");
 		Toy_freeLiteral(xLiteral);
 		return -1;
 	}
@@ -192,14 +193,14 @@ static int nativeCbrt(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 }
 
 static int nativeHypot(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
-	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to sin\n");
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments to hypot\n");
 		return -1;
 	}
 
 	//get the arguments
-	Toy_Literal xLiteral = Toy_popLiteralArray(arguments);
 	Toy_Literal yLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal xLiteral = Toy_popLiteralArray(arguments);
 
 	//parse the argument (if it's an identifier)
 	Toy_Literal xLiteralIdn = xLiteral;
@@ -214,13 +215,13 @@ static int nativeHypot(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 
 	//check the argument types
 	if (!(TOY_IS_INTEGER(xLiteral) || TOY_IS_FLOAT(xLiteral))) {
-		interpreter->errorOutput("Incorrect argument type passed to sin\n");
+		interpreter->errorOutput("Incorrect argument type passed to hypot\n");
 		Toy_freeLiteral(xLiteral);
 		return -1;
 	}
 
 	if (!(TOY_IS_INTEGER(yLiteral) || TOY_IS_FLOAT(yLiteral))) {
-		interpreter->errorOutput("Incorrect argument type passed to sin\n");
+		interpreter->errorOutput("Incorrect argument type passed to hypot\n");
 		Toy_freeLiteral(yLiteral);
 		return -1;
 	}
@@ -437,41 +438,94 @@ static int nativeTan(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) 
 	return 1;
 }
 
-static int nativeTan(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+static int nativeIsnan(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments to tan\n");
 		return -1;
 	}
 
 	//get the argument
-	Toy_Literal radiansLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal xLiteral = Toy_popLiteralArray(arguments);
 
 	//parse the argument (if it's an identifier)
-	Toy_Literal radiansLiteralIdn = radiansLiteral;
-	if (TOY_IS_IDENTIFIER(radiansLiteral) && Toy_parseIdentifierToValue(interpreter, &radiansLiteral)) {
-		Toy_freeLiteral(radiansLiteralIdn);
+	Toy_Literal xLiteralIdn = xLiteral;
+	if (TOY_IS_IDENTIFIER(xLiteral) && Toy_parseIdentifierToValue(interpreter, &xLiteral)) {
+		Toy_freeLiteral(xLiteralIdn);
 	}
 
 	//check the argument type
-	if (!(TOY_IS_INTEGER(radiansLiteral) || TOY_IS_FLOAT(radiansLiteral))) {
+	if (!(TOY_IS_INTEGER(xLiteral) || TOY_IS_FLOAT(xLiteral))) {
 		interpreter->errorOutput("Incorrect argument type passed to tan\n");
-		Toy_freeLiteral(radiansLiteral);
+		Toy_freeLiteral(xLiteral);
 		return -1;
 	}
 
 	// cast ints to floats to handle all types of numbers
-	float radians = TOY_IS_INTEGER(radiansLiteral)? TOY_AS_INTEGER(radiansLiteral) : TOY_AS_FLOAT(radiansLiteral);
+	float x = TOY_IS_INTEGER(xLiteral)? TOY_AS_INTEGER(xLiteral) : TOY_AS_FLOAT(xLiteral);
 
 	// calculate the result
-	float result = tanf(radians);
+	float result = isnan(x);
 	
 	//return the result
-	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
+	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	//cleanup
 	Toy_freeLiteral(resultLiteral);
-	Toy_freeLiteral(radiansLiteral);
+	Toy_freeLiteral(xLiteral);
+
+	return 1;
+}
+
+static int nativeFloatCompare(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments to mod\n");
+		return -1;
+	}
+
+	//get the arguments
+	Toy_Literal yLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal xLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the argument (if it's an identifier)
+	Toy_Literal xLiteralIdn = xLiteral;
+	if (TOY_IS_IDENTIFIER(xLiteral) && Toy_parseIdentifierToValue(interpreter, &xLiteral)) {
+		Toy_freeLiteral(xLiteralIdn);
+	}
+
+	Toy_Literal yLiteralIdn = yLiteral;
+	if (TOY_IS_IDENTIFIER(yLiteral) && Toy_parseIdentifierToValue(interpreter, &yLiteral)) {
+		Toy_freeLiteral(yLiteralIdn);
+	}
+
+	//check the argument types
+	if (!(TOY_IS_INTEGER(xLiteral) || TOY_IS_FLOAT(xLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to mod\n");
+		Toy_freeLiteral(xLiteral);
+		return -1;
+	}
+
+	if (!(TOY_IS_INTEGER(yLiteral) || TOY_IS_FLOAT(yLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to mod\n");
+		Toy_freeLiteral(yLiteral);
+		return -1;
+	}
+
+	// cast ints to floats to handle all types of numbers
+	float x = TOY_IS_INTEGER(xLiteral)? TOY_AS_INTEGER(xLiteral) : TOY_AS_FLOAT(xLiteral);
+	float y = TOY_IS_INTEGER(yLiteral)? TOY_AS_INTEGER(yLiteral) : TOY_AS_FLOAT(yLiteral);
+
+	// calculate the result
+	float result = (fabsf(x - y)) <= (LIB_MATH_EPSILON * fmaxf(1, fmaxf(fabsf(x), fabsf(y))));
+
+	// return the result
+	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	// cleanup
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(xLiteral);
+	Toy_freeLiteral(yLiteral);
 
 	return 1;
 }
@@ -501,6 +555,10 @@ int Toy_hookMath(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 		{"cos", nativeCos},
 		{"tan", nativeTan},
 
+		// Comparison
+		{"isnan",  nativeIsnan},
+		{"floatCompare", nativeFloatCompare},
+
 		{NULL, NULL}
 	};
 
@@ -512,7 +570,18 @@ int Toy_hookMath(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 	Toy_Literal eKeyLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("E"));
 	Toy_Literal eIdentifierLiteral = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString("E"));
 	Toy_Literal eLiteral = TOY_TO_FLOAT_LITERAL(LIB_MATH_E);
-	
+
+	Toy_Literal epsilonKeyLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("EPSILON"));
+	Toy_Literal epsilonIdentifierLiteral = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString("EPSILON"));
+	Toy_Literal epsilonLiteral = TOY_TO_FLOAT_LITERAL(LIB_MATH_EPSILON);
+
+	Toy_Literal nanKeyLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("NAN"));
+	Toy_Literal nanIdentifierLiteral = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString("NAN"));
+	Toy_Literal nanLiteral = TOY_TO_FLOAT_LITERAL(NAN);
+
+	Toy_Literal infinityKeyLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("INFINITY"));
+	Toy_Literal infinityIdentifierLiteral = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString("INFINITY"));
+	Toy_Literal infinityLiteral = TOY_TO_FLOAT_LITERAL(INFINITY);
 
 	//store the library in an aliased dictionary
 	if (!TOY_IS_NULL(alias)) {
@@ -540,7 +609,9 @@ int Toy_hookMath(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 
 		Toy_setLiteralDictionary(dictionary, piKeyLiteral, piLiteral);
 		Toy_setLiteralDictionary(dictionary, eKeyLiteral, eLiteral);
-
+		Toy_setLiteralDictionary(dictionary, nanKeyLiteral, nanLiteral);
+		Toy_setLiteralDictionary(dictionary, infinityKeyLiteral, infinityLiteral);
+		Toy_setLiteralDictionary(dictionary, epsilonKeyLiteral, epsilonLiteral);
 
 		//build the type
 		Toy_Literal type = TOY_TO_TYPE_LITERAL(TOY_LITERAL_DICTIONARY, true);
@@ -566,8 +637,11 @@ int Toy_hookMath(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 	}
 
 	if (
-		Toy_isDeclaredScopeVariable(interpreter->scope, piKeyLiteral) ||
-		Toy_isDeclaredScopeVariable(interpreter->scope, eKeyLiteral)
+		Toy_isDeclaredScopeVariable(interpreter->scope, piKeyLiteral)		||
+		Toy_isDeclaredScopeVariable(interpreter->scope, eKeyLiteral)		||
+		Toy_isDeclaredScopeVariable(interpreter->scope, epsilonKeyLiteral)  ||
+		Toy_isDeclaredScopeVariable(interpreter->scope, nanKeyLiteral)		||
+		Toy_isDeclaredScopeVariable(interpreter->scope, infinityLiteral)
 	) {
 		interpreter->errorOutput("Can't override an existing variable\n");
 		
@@ -577,6 +651,12 @@ int Toy_hookMath(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 		Toy_freeLiteral(piKeyLiteral);
 		Toy_freeLiteral(eIdentifierLiteral);
 		Toy_freeLiteral(eKeyLiteral);
+		Toy_freeLiteral(epsilonIdentifierLiteral);
+		Toy_freeLiteral(epsilonKeyLiteral);
+		Toy_freeLiteral(nanIdentifierLiteral);
+		Toy_freeLiteral(nanKeyLiteral);
+		Toy_freeLiteral(infinityIdentifierLiteral);
+		Toy_freeLiteral(infinityLiteral);
 
 		return -1;
 	}
@@ -591,6 +671,18 @@ int Toy_hookMath(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 	Toy_declareScopeVariable(interpreter->scope, eIdentifierLiteral, floatType);
 	Toy_setScopeVariable(interpreter->scope, eIdentifierLiteral, eLiteral, false);
 
+	// epsilon
+	Toy_declareScopeVariable(interpreter->scope, epsilonIdentifierLiteral, floatType);
+	Toy_setScopeVariable(interpreter->scope, epsilonIdentifierLiteral, epsilonLiteral, false);
+
+	// nan
+	Toy_declareScopeVariable(interpreter->scope, nanIdentifierLiteral, floatType);
+	Toy_setScopeVariable(interpreter->scope, nanIdentifierLiteral, nanLiteral, false);
+
+	// infinity
+	Toy_declareScopeVariable(interpreter->scope, infinityIdentifierLiteral, floatType);
+	Toy_setScopeVariable(interpreter->scope, infinityIdentifierLiteral, infinityLiteral, false);
+
 	// cleanup
 	Toy_freeLiteral(floatType);
 	Toy_freeLiteral(piKeyLiteral);
@@ -599,6 +691,15 @@ int Toy_hookMath(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 	Toy_freeLiteral(eKeyLiteral);
 	Toy_freeLiteral(eIdentifierLiteral);
 	Toy_freeLiteral(eLiteral);
+	Toy_freeLiteral(epsilonKeyLiteral);
+	Toy_freeLiteral(epsilonIdentifierLiteral);
+	Toy_freeLiteral(epsilonLiteral);
+	Toy_freeLiteral(nanIdentifierLiteral);
+	Toy_freeLiteral(nanKeyLiteral);
+	Toy_freeLiteral(nanLiteral);
+	Toy_freeLiteral(infinityIdentifierLiteral);
+	Toy_freeLiteral(infinityKeyLiteral);
+	Toy_freeLiteral(infinityLiteral);
 
 	return 0;
 }

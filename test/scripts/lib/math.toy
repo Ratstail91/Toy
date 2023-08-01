@@ -1,5 +1,46 @@
 import math;
 
+// test mod
+{
+	assert mod(5, 3) == 2.0, "mod(5, 3) failed";
+	assert mod(-5, 3) == -2.0, "mod(-5, 3) failed";
+	assert mod(-5.5, 3) == -2.5, "mod(-5.5, 3) failed";
+	assert mod(0, 1) == 0.0, "mod(0, 1) failed";
+	assert mod(-0.0, 1) == -0.0, "mod(0, 1) failed";
+}
+
+// test pow
+{
+	assert pow(5, 3) == 125, "pow(5, 3) failed";
+	assert pow(-5, 3) == -125, "pow(-5, 3) failed";
+	assert pow(-5.5, 3) == -166.375, "pow(-5.5, 3) failed";
+	assert pow(0, 1) == 0.0, "pow(0, 1) failed";
+	assert pow(-0.0, 1) == -0.0, "pow(0, 1) failed";
+}
+
+// test sqrt
+{
+	assert sqrt(25) == 5, "sqrt(25) failed";
+	assert sqrt(256.0) == 16, "sqrt(256.0) failed";
+	assert isnan(sqrt(-256.0)), "sqrt(-256.0) failed";
+	assert sqrt(1) == 1, "sqrt(1) failed";
+	assert sqrt(0) == 0, "sqrt(0) failed";
+}
+
+// test cbrt
+{
+	assert cbrt(64) == 4, "cbrt(64) failed";
+	assert cbrt(4096.0) == 16, "cbrt(4096.0) failed";
+	assert cbrt(-64) == -4, "cbrt(-64) failed";
+	assert cbrt(1) == 1, "cbrt(1) failed";
+	assert cbrt(0) == 0, "cbrt(0) failed";
+}
+
+// test hypot
+{
+	assert hypot(3, 4) == 5, "hypot(3, 4) failed";
+}
+
 // test toRad
 {
 	assert toRad(0) == 0, "toRad 0° failed";
@@ -17,11 +58,34 @@ import math;
 
 // test sin
 {
-	assert sin(PI) == 0, "sin π failed";
+	assert floatCompare(sin(PI), 0), "sin(π) failed";
+	assert floatCompare(sin(PI / 2), 1), "sin(π/2) failed";
+	assert floatCompare(sin(0), 0), "sin(0) failed";
 }
 
 
 // test cos
 {
-	assert cos(PI) == -1, "cos π failed";
+	assert floatCompare(cos(PI), -1), "cos(π) failed";
+	assert floatCompare(cos(PI / 2), 0), "cos(π/2) failed";
+	assert floatCompare(cos(0), 1), "cos(0) failed";
+}
+
+
+// test isnan
+{
+	assert isnan(NAN) == true, "isnan(NAN) failed";
+	assert isnan(INFINITY) == false, "isnan(INFINITY) failed";
+	assert isnan(0.0) == false, "isnan(0.0) failed";
+	// assert isnan(0 / 0) == true, "isnan(0 / 0) failed"; interpreter prevents dividing by 0
+	assert isnan(INFINITY - INFINITY) == true, "isnan(INFINITY - INFINITY) failed";
+}
+
+
+// test floatCompare
+{
+	assert floatCompare(1, 1) == true, "floatCompare(1, 1) failed";
+	assert floatCompare(1, 1.000001) == true, "floatCompare(1, 1.000001) failed";
+	assert floatCompare(1, 1.001) == false, "floatCompare(1, 1.001) failed";
+	assert floatCompare(0, 0) == true, "floatCompare(0, 0) failed";
 }
