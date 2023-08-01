@@ -7,10 +7,6 @@
 #include <time.h>
 #include <ctype.h>
 
-#define STD_MATH_PI		3.14159265358979323846f
-#define STD_MATH_E		2.71828182845904523536f
-#define STD_MATH_LIMIT 	20
-
 static int nativeClock(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 0) {
@@ -584,178 +580,6 @@ static int nativeLerp(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	Toy_freeLiteral(endLiteral);
 	Toy_freeLiteral(amountLiteral);
 	
-	return 1;
-}
-
-static int nativeToRad(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
-	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to toRad\n");
-		return -1;
-	}
-
-	//get the argument
-	Toy_Literal degreesLiteral = Toy_popLiteralArray(arguments);
-
-	//parse the argument (if it's an identifier)
-	Toy_Literal degreesLiteralIdn = degreesLiteral;
-	if (TOY_IS_IDENTIFIER(degreesLiteral) && Toy_parseIdentifierToValue(interpreter, &degreesLiteral)) {	
-		Toy_freeLiteral(degreesLiteralIdn);
-	}
-
-	//check the argument type
-	if (!(TOY_IS_INTEGER(degreesLiteral) || TOY_IS_FLOAT(degreesLiteral))) {
-		interpreter->errorOutput("Incorrect argument type passed to toRad\n");
-		Toy_freeLiteral(degreesLiteral);
-		return -1;
-	}
-
-	// cast int to float to handle all types of numbers
-	float degrees = TOY_IS_INTEGER(degreesLiteral)? TOY_AS_INTEGER(degreesLiteral) : TOY_AS_FLOAT(degreesLiteral);
-
-	float result = degrees * (STD_MATH_PI / 180.0);
-
-	//return the result
-	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
-	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
-
-	//cleanup
-	Toy_freeLiteral(resultLiteral);
-	Toy_freeLiteral(degreesLiteral);
-
-	return 1;
-}
-
-static int nativeToDeg(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
-	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to toDeg\n");
-		return -1;
-	}
-
-	//get the argument
-	Toy_Literal radiansLiteral = Toy_popLiteralArray(arguments);
-
-	//parse the argument (if it's an identifier)
-	Toy_Literal radiansLiteralIdn = radiansLiteral;
-	if (TOY_IS_IDENTIFIER(radiansLiteral) && Toy_parseIdentifierToValue(interpreter, &radiansLiteral)) {	
-		Toy_freeLiteral(radiansLiteralIdn);
-	}
-
-	//check the argument type
-	if (!(TOY_IS_INTEGER(radiansLiteral) || TOY_IS_FLOAT(radiansLiteral))) {
-		interpreter->errorOutput("Incorrect argument type passed to toDeg\n");
-		Toy_freeLiteral(radiansLiteral);
-		return -1;
-	}
-
-	// cast int to float to handle all types of numbers
-	float radians = TOY_IS_INTEGER(radiansLiteral)? TOY_AS_INTEGER(radiansLiteral) : TOY_AS_FLOAT(radiansLiteral);
-
-	float result = radians * (180.0 / STD_MATH_PI);
-
-	//return the result
-	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
-	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
-
-	//cleanup
-	Toy_freeLiteral(resultLiteral);
-	Toy_freeLiteral(radiansLiteral);
-
-	return 1;
-}
-
-static int nativeSin(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
-	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to sin\n");
-		return -1;
-	}
-
-	//get the argument
-	Toy_Literal radiansLiteral = Toy_popLiteralArray(arguments);
-
-	//parse the argument (if it's an identifier)
-	Toy_Literal radiansLiteralIdn = radiansLiteral;
-	if (TOY_IS_IDENTIFIER(radiansLiteral) && Toy_parseIdentifierToValue(interpreter, &radiansLiteral)) {
-		Toy_freeLiteral(radiansLiteralIdn);
-	}
-
-	//check the argument type
-	if (!(TOY_IS_INTEGER(radiansLiteral) || TOY_IS_FLOAT(radiansLiteral))) {
-		interpreter->errorOutput("Incorrect argument type passed to sin\n");
-		Toy_freeLiteral(radiansLiteral);
-		return -1;
-	}
-
-	// cast ints to floats to handle all types of numbers
-	float radians = TOY_IS_INTEGER(radiansLiteral)? TOY_AS_INTEGER(radiansLiteral) : TOY_AS_FLOAT(radiansLiteral);
-
-	// calculate the result
-	// using Taylor series approximation
-	float result = radians;
-	float numerator = radians;
-	float denominator = 1;
-
-	for (int i = 1; i <= STD_MATH_LIMIT; i++) {
-        numerator *= radians * radians;
-        denominator *= (2 * i) * (2 * i + 1);
-
-        float value = numerator / denominator;
-
-        if (i & 0x01)
-            result -= value;
-        else
-            result += value;
-    }
-
-	//return the result
-	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
-	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
-
-	//cleanup
-	Toy_freeLiteral(resultLiteral);
-	Toy_freeLiteral(radiansLiteral);
-
-	return 1;
-}
-
-static int nativeCos(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
-	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to sin\n");
-		return -1;
-	}
-
-	//get the argument
-	Toy_Literal radiansLiteral = Toy_popLiteralArray(arguments);
-
-	//parse the argument (if it's an identifier)
-	Toy_Literal radiansLiteralIdn = radiansLiteral;
-	if (TOY_IS_IDENTIFIER(radiansLiteral) && Toy_parseIdentifierToValue(interpreter, &radiansLiteral)) {
-		Toy_freeLiteral(radiansLiteralIdn);
-	}
-
-	//check the argument type
-	if (!(TOY_IS_INTEGER(radiansLiteral) || TOY_IS_FLOAT(radiansLiteral))) {
-		interpreter->errorOutput("Incorrect argument type passed to lerp\n");
-		Toy_freeLiteral(radiansLiteral);
-		return -1;
-	}
-
-	// cast ints to floats to handle all types of numbers
-	float radians = TOY_IS_INTEGER(radiansLiteral)? TOY_AS_INTEGER(radiansLiteral) : TOY_AS_FLOAT(radiansLiteral);
-
-	// calculate the result
-	// using Taylor series approximation
-
-	// TODO
-	float result = -1;
-	
-	//return the result
-	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
-	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
-
-	//cleanup
-	Toy_freeLiteral(resultLiteral);
-	Toy_freeLiteral(radiansLiteral);
-
 	return 1;
 }
 
@@ -2324,10 +2148,6 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		{"normalize", nativeNormalize},
 		{"clamp", nativeClamp},
 		{"lerp", nativeLerp},
-		{"toRad", nativeToRad},
-		{"toDeg", nativeToDeg},
-		{"sin", nativeSin},
-		{"cos", nativeCos},
 
 		//compound utils
 		{"concat", nativeConcat}, //array, dictionary, string
@@ -2351,16 +2171,6 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 		{"trimEnd", nativeTrimEnd}, //string
 		{NULL, NULL}
 	};
-
-	// math constants
-	Toy_Literal piKeyLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("PI"));
-	Toy_Literal piIdentifierLiteral = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString("PI"));
-	Toy_Literal piLiteral = TOY_TO_FLOAT_LITERAL(STD_MATH_PI);
-
-	Toy_Literal eKeyLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("E"));
-	Toy_Literal eIdentifierLiteral = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString("E"));
-	Toy_Literal eLiteral = TOY_TO_FLOAT_LITERAL(STD_MATH_PI);
-	
 
 	//store the library in an aliased dictionary
 	if (!TOY_IS_NULL(alias)) {
@@ -2386,31 +2196,6 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 			Toy_freeLiteral(func);
 		}
 
-		Toy_setLiteralDictionary(dictionary, piKeyLiteral, piLiteral);
-		Toy_setLiteralDictionary(dictionary, eKeyLiteral, eLiteral);
-
-		//build the type
-		Toy_Literal type = TOY_TO_TYPE_LITERAL(TOY_LITERAL_DICTIONARY, true);
-		Toy_Literal strType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_STRING, true);
-		Toy_Literal fnType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_FUNCTION_NATIVE, true);
-		TOY_TYPE_PUSH_SUBTYPE(&type, strType);
-		TOY_TYPE_PUSH_SUBTYPE(&type, fnType);
-
-		//set scope
-		Toy_Literal dict = TOY_TO_DICTIONARY_LITERAL(dictionary);
-		Toy_declareScopeVariable(interpreter->scope, alias, type);
-		Toy_setScopeVariable(interpreter->scope, alias, dict, false);
-
-		//cleanup
-		Toy_freeLiteral(dict);
-		Toy_freeLiteral(type);
-		Toy_freeLiteral(piKeyLiteral);
-		Toy_freeLiteral(piIdentifierLiteral);
-		Toy_freeLiteral(piLiteral);
-		Toy_freeLiteral(eKeyLiteral);
-		Toy_freeLiteral(eIdentifierLiteral);
-		Toy_freeLiteral(eLiteral);
-
 		return 0;
 	}
 
@@ -2418,35 +2203,6 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 	for (int i = 0; natives[i].name; i++) {
 		Toy_injectNativeFn(interpreter, natives[i].name, natives[i].fn);
 	}
-
-	if (Toy_isDeclaredScopeVariable(interpreter->scope, piKeyLiteral)) {
-		interpreter->errorOutput("Can't override an existing variable\n");
-		
-		// cleanup
-		Toy_freeLiteral(alias);
-		Toy_freeLiteral(piKeyLiteral);
-
-		return -1;
-	}
-
-	Toy_Literal floatType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_FLOAT, false);
-
-	// pi
-	Toy_declareScopeVariable(interpreter->scope, piIdentifierLiteral, floatType);
-	Toy_setScopeVariable(interpreter->scope, piIdentifierLiteral, piLiteral, false);
-
-	// e
-	Toy_declareScopeVariable(interpreter->scope, eIdentifierLiteral, floatType);
-	Toy_setScopeVariable(interpreter->scope, eIdentifierLiteral, eLiteral, false);
-
-	// cleanup
-	Toy_freeLiteral(floatType);
-	Toy_freeLiteral(piKeyLiteral);
-	Toy_freeLiteral(piIdentifierLiteral);
-	Toy_freeLiteral(piLiteral);
-	Toy_freeLiteral(eKeyLiteral);
-	Toy_freeLiteral(eIdentifierLiteral);
-	Toy_freeLiteral(eLiteral);
 
 	return 0;
 }
