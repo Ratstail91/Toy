@@ -2196,6 +2196,8 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 			Toy_freeLiteral(func);
 		}
 
+		Toy_freeLiteralDictionary(dictionary);
+
 		return 0;
 	}
 
