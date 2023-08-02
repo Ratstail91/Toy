@@ -2196,8 +2196,21 @@ int Toy_hookStandard(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_L
 			Toy_freeLiteral(func);
 		}
 
-		Toy_freeLiteralDictionary(dictionary);
+		//build the type
+		Toy_Literal type = TOY_TO_TYPE_LITERAL(TOY_LITERAL_DICTIONARY, true);
+		Toy_Literal strType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_STRING, true);
+		Toy_Literal fnType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_FUNCTION_NATIVE, true);
+		TOY_TYPE_PUSH_SUBTYPE(&type, strType);
+		TOY_TYPE_PUSH_SUBTYPE(&type, fnType);
 
+		//set scope
+		Toy_Literal dict = TOY_TO_DICTIONARY_LITERAL(dictionary);
+		Toy_declareScopeVariable(interpreter->scope, alias, type);
+		Toy_setScopeVariable(interpreter->scope, alias, dict, false);
+
+		//cleanup
+		Toy_freeLiteral(dict);
+		Toy_freeLiteral(type);
 		return 0;
 	}
 

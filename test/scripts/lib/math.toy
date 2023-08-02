@@ -1,13 +1,5 @@
 import math;
 
-// test mod
-{
-	assert mod(5, 3) == 2.0, "mod(5, 3) failed";
-	assert mod(-5, 3) == -2.0, "mod(-5, 3) failed";
-	assert mod(-5.5, 3) == -2.5, "mod(-5.5, 3) failed";
-	assert mod(0, 1) == 0.0, "mod(0, 1) failed";
-	assert mod(-0.0, 1) == -0.0, "mod(0, 1) failed";
-}
 
 // test pow
 {
@@ -22,7 +14,7 @@ import math;
 {
 	assert sqrt(25) == 5, "sqrt(25) failed";
 	assert sqrt(256.0) == 16, "sqrt(256.0) failed";
-	assert isnan(sqrt(-256.0)), "sqrt(-256.0) failed";
+	assert checkIsNaN(sqrt(-256.0)), "sqrt(-256.0) failed";
 	assert sqrt(1) == 1, "sqrt(1) failed";
 	assert sqrt(0) == 0, "sqrt(0) failed";
 }
@@ -43,87 +35,86 @@ import math;
 
 // test toRad
 {
-	assert toRad(0) == 0, "toRad 0° failed";
-	assert toRad(180) == PI, "toRad 180° failed";
-	assert toRad(360) == 2 * PI, "toRad 360° failed";
+	assert toRadians(0) == 0, "toRadians(0) failed";
+	assert toRadians(180) == PI, "toRadians(180) failed";
+	assert toRadians(360) == 2 * PI, "toRadians(360) failed";
 }
 
 
 // test toDeg
 {
-	assert toDeg(0) == 0, "toDeg 0 failed";
-	assert toDeg(PI) == 180, "toDeg π failed";
-	assert toDeg(2 * PI) == 360, "toDeg 2π failed";
+	assert toDegrees(0) == 0, "toDegrees(0) failed";
+	assert toDegrees(PI) == 180, "toDegrees(PI) failed";
+	assert toDegrees(2 * PI) == 360, "toDegrees(2*PI) failed";
 }
 
 // test sin
 {
-	assert floatCompare(sin(PI), 0), "sin(π) failed";
-	assert floatCompare(sin(PI / 2), 1), "sin(π/2) failed";
-	assert floatCompare(sin(0), 0), "sin(0) failed";
+	assert epsilionCompare(sin(PI), 0), "sin(PI) failed";
+	assert epsilionCompare(sin(PI / 2), 1), "sin(PI/2) failed";
+	assert epsilionCompare(sin(0), 0), "sin(0) failed";
 }
 
 
 // test cos
 {
-	assert floatCompare(cos(PI), -1), "cos(π) failed";
-	assert floatCompare(cos(PI / 2), 0), "cos(π/2) failed";
-	assert floatCompare(cos(0), 1), "cos(0) failed";
+	assert epsilionCompare(cos(PI), -1), "cos(PI) failed";
+	assert epsilionCompare(cos(PI / 2), 0), "cos(PI/2) failed";
+	assert epsilionCompare(cos(0), 1), "cos(0) failed";
 }
 
 // test tan
 {
-	assert floatCompare(tan(PI), 0), "tan(π) failed";
-	assert floatCompare(tan(PI / 4), 1), "tan(π/4) failed";
-	assert floatCompare(tan(0), 0), "tan(0) failed";
+	assert epsilionCompare(tan(PI), 0), "tan(PI) failed";
+	assert epsilionCompare(tan(PI / 4), 1), "tan(PI/4) failed";
+	assert epsilionCompare(tan(0), 0), "tan(0) failed";
 }
 
 
 // test asin
 {
-	assert floatCompare(asin(1), 1.570796), "asin(1) failed";
-	assert floatCompare(asin(-0.5), -0.523599), "asin(-0.5) failed";
-	assert floatCompare(asin(0), 0), "asin(0) failed";
+	assert epsilionCompare(asin(1), 1.570796), "asin(1) failed";
+	assert epsilionCompare(asin(-0.5), -0.523599), "asin(-0.5) failed";
+	assert epsilionCompare(asin(0), 0), "asin(0) failed";
 }
 
 
 // test acos
 {
-	assert floatCompare(acos(1), 0), "acos(1) failed";
-	assert floatCompare(acos(0.5), 1.047198), "acos(0.5) failed";
-	assert floatCompare(acos(0), 1.570796), "acos(0) failed";
+	assert epsilionCompare(acos(1), 0), "acos(1) failed";
+	assert epsilionCompare(acos(0.5), 1.047198), "acos(0.5) failed";
+	assert epsilionCompare(acos(0), 1.570796), "acos(0) failed";
 }
 
 
 // test atan
 {
-	assert floatCompare(atan(1), 0.785398), "acos(1) failed";
-	assert floatCompare(atan(INFINITY), 1.570796), "atan(INFINITY) failed";
-	assert floatCompare(atan(0), 0), "atan(0) failed";
+	assert epsilionCompare(atan(1), 0.785398), "acos(1) failed";
+	assert epsilionCompare(atan(INFINITY), 1.570796), "atan(INFINITY) failed";
+	assert epsilionCompare(atan(0), 0), "atan(0) failed";
 }
 
 
 // test atan2
 {
-	assert floatCompare(atans(0, 0), 0), "atan2(0, 0) failed";
-	assert floatCompare(atans(7, 0), 1.570796), "atans(7, 0) failed";
+	assert epsilionCompare(atans(0, 0), 0), "atan2(0, 0) failed";
+	assert epsilionCompare(atans(7, 0), 1.570796), "atans(7, 0) failed";
 }
 
 
-// test isnan
+// test checkIsNaN
 {
-	assert isnan(NAN) == true, "isnan(NAN) failed";
-	assert isnan(INFINITY) == false, "isnan(INFINITY) failed";
-	assert isnan(0.0) == false, "isnan(0.0) failed";
-	// assert isnan(0 / 0) == true, "isnan(0 / 0) failed"; interpreter prevents dividing by 0
-	assert isnan(INFINITY - INFINITY) == true, "isnan(INFINITY - INFINITY) failed";
+	assert checkIsNaN(NAN) == true, "checkIsNaN(NAN) failed";
+	assert checkIsNaN(INFINITY) == false, "checkIsNaN(INFINITY) failed";
+	assert checkIsNaN(0.0) == false, "checkIsNaN(0.0) failed";
+	assert checkIsNaN(INFINITY - INFINITY) == true, "checkIsNaN(INFINITY - INFINITY) failed";
 }
 
 
-// test floatCompare
+// test epsilionCompare
 {
-	assert floatCompare(1, 1) == true, "floatCompare(1, 1) failed";
-	assert floatCompare(1, 1.000001) == true, "floatCompare(1, 1.000001) failed";
-	assert floatCompare(1, 1.001) == false, "floatCompare(1, 1.001) failed";
-	assert floatCompare(0, 0) == true, "floatCompare(0, 0) failed";
+	assert epsilionCompare(1, 1) == true, "epsilionCompare(1, 1) failed";
+	assert epsilionCompare(1, 1.000001) == true, "epsilionCompare(1, 1.000001) failed";
+	assert epsilionCompare(1, 1.001) == false, "epsilionCompare(1, 1.001) failed";
+	assert epsilionCompare(0, 0) == true, "epsilionCompare(0, 0) failed";
 }
