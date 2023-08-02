@@ -3,6 +3,7 @@
 #include "lib_standard.h"
 #include "lib_random.h"
 #include "lib_runner.h"
+#include "lib_math.h"
 
 #include "toy_console_colors.h"
 
@@ -115,6 +116,7 @@ void Toy_runBinary(const unsigned char* tb, size_t size) {
 	Toy_injectNativeHook(&interpreter, "standard", Toy_hookStandard);
 	Toy_injectNativeHook(&interpreter, "random", Toy_hookRandom);
 	Toy_injectNativeHook(&interpreter, "runner", Toy_hookRunner);
+	Toy_injectNativeHook(&interpreter, "math", Toy_hookMath);
 
 	Toy_runInterpreter(&interpreter, tb, (int)size);
 	Toy_freeInterpreter(&interpreter);

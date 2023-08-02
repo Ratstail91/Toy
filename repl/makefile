@@ -2,7 +2,7 @@ CC=gcc
 
 IDIR+=. ../source
 CFLAGS+=$(addprefix -I,$(IDIR)) -g -Wall -W -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
-LIBS+=-ltoy
+LIBS+=-ltoy -lm
 
 ODIR = obj
 SRC = $(wildcard *.c)

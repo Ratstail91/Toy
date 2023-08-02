@@ -1,0 +1,185 @@
+import math;
+
+
+// test pow
+{
+	assert pow(5, 3) == 125, "pow(5, 3) failed";
+	assert pow(-5, 3) == -125, "pow(-5, 3) failed";
+	assert pow(-5.5, 3) == -166.375, "pow(-5.5, 3) failed";
+	assert pow(0, 1) == 0.0, "pow(0, 1) failed";
+	assert pow(-0.0, 1) == -0.0, "pow(0, 1) failed";
+}
+
+// test sqrt
+{
+	assert sqrt(25) == 5, "sqrt(25) failed";
+	assert sqrt(256.0) == 16, "sqrt(256.0) failed";
+	assert checkIsNaN(sqrt(-256.0)), "sqrt(-256.0) failed";
+	assert sqrt(1) == 1, "sqrt(1) failed";
+	assert sqrt(0) == 0, "sqrt(0) failed";
+}
+
+// test cbrt
+{
+	assert cbrt(64) == 4, "cbrt(64) failed";
+	assert cbrt(4096.0) == 16, "cbrt(4096.0) failed";
+	assert cbrt(-64) == -4, "cbrt(-64) failed";
+	assert cbrt(1) == 1, "cbrt(1) failed";
+	assert cbrt(0) == 0, "cbrt(0) failed";
+}
+
+// test hypot
+{
+	assert hypot(3, 4) == 5, "hypot(3, 4) failed";
+}
+
+// test toRad
+{
+	assert toRadians(0) == 0, "toRadians(0) failed";
+	assert toRadians(180) == PI, "toRadians(180) failed";
+	assert toRadians(360) == 2 * PI, "toRadians(360) failed";
+}
+
+
+// test toDeg
+{
+	assert toDegrees(0) == 0, "toDegrees(0) failed";
+	assert toDegrees(PI) == 180, "toDegrees(PI) failed";
+	assert toDegrees(2 * PI) == 360, "toDegrees(2*PI) failed";
+}
+
+// test sin
+{
+	assert epsilionCompare(sin(PI), 0), "sin(PI) failed";
+	assert epsilionCompare(sin(PI / 2), 1), "sin(PI/2) failed";
+	assert epsilionCompare(sin(0), 0), "sin(0) failed";
+}
+
+
+// test cos
+{
+	assert epsilionCompare(cos(PI), -1), "cos(PI) failed";
+	assert epsilionCompare(cos(PI / 2), 0), "cos(PI/2) failed";
+	assert epsilionCompare(cos(0), 1), "cos(0) failed";
+}
+
+// test tan
+{
+	assert epsilionCompare(tan(PI), 0), "tan(PI) failed";
+	assert epsilionCompare(tan(PI / 4), 1), "tan(PI/4) failed";
+	assert epsilionCompare(tan(0), 0), "tan(0) failed";
+}
+
+
+// test asin
+{
+	assert epsilionCompare(asin(1), 1.570796), "asin(1) failed";
+	assert epsilionCompare(asin(-0.5), -0.523599), "asin(-0.5) failed";
+	assert epsilionCompare(asin(0), 0), "asin(0) failed";
+}
+
+
+// test acos
+{
+	assert epsilionCompare(acos(1), 0), "acos(1) failed";
+	assert epsilionCompare(acos(0.5), 1.047198), "acos(0.5) failed";
+	assert epsilionCompare(acos(0), 1.570796), "acos(0) failed";
+}
+
+
+// test atan
+{
+	assert epsilionCompare(atan(1), 0.785398), "acos(1) failed";
+	assert epsilionCompare(atan(INFINITY), 1.570796), "atan(INFINITY) failed";
+	assert epsilionCompare(atan(0), 0), "atan(0) failed";
+}
+
+
+// test atan2
+{
+	assert epsilionCompare(atans(0, 0), 0), "atan2(0, 0) failed";
+	assert epsilionCompare(atans(7, 0), 1.570796), "atans(7, 0) failed";
+}
+
+
+// test sinh
+{
+	assert epsilionCompare(sinh(1), 1.175201), "sinh(1) failed";
+	assert epsilionCompare(sinh(-1), -1.175201), "sinh(-1) failed";
+	assert epsilionCompare(sinh(0), 0), "sinh(0) failed";
+}
+
+
+// test cosh
+{
+	assert epsilionCompare(cosh(1), 1.543081), "cosh(1) failed";
+	assert epsilionCompare(cosh(-1), 1.543081), "cosh(-1) failed";
+	assert epsilionCompare(cosh(0), 1), "cosh(0) failed";
+}
+
+
+// test tanh
+{
+	assert epsilionCompare(tanh(1), 0.761594), "tanh(1) failed";
+	assert epsilionCompare(tanh(-1), -0.761594), "tanh(-1) failed";
+	assert epsilionCompare(tanh(0), 0), "tanh(0) failed";
+}
+
+
+// test asinh
+{
+	assert epsilionCompare(asinh(1), 0.881374), "asinh(1) failed";
+	assert epsilionCompare(asinh(-1), -0.881374), "asinh(-1) failed";
+	assert epsilionCompare(asinh(0), 0), "asinh(0) failed";
+}
+
+
+// test acosh
+{
+	assert epsilionCompare(acosh(1), 0), "acosh(1) failed";
+	assert checkIsNaN(acosh(-1)) == true, "acosh(-1) failed";
+	assert checkIsNaN(acosh(0)) == true, "acosh(0) failed";
+}
+
+
+// test atanh
+{
+	assert chechIsInfinite(atanh(1)) == true, "atanh(1) failed";
+	assert chechIsInfinite(atanh(-1)) == true, "atanh(-1) failed";
+	assert epsilionCompare(atanh(0), 0), "atanh(0) failed";
+}
+
+
+// test checkIsNaN
+{
+	assert checkIsNaN(NAN) == true, "checkIsNaN(NAN) failed";
+	assert checkIsNaN(INFINITY) == false, "checkIsNaN(INFINITY) failed";
+	assert checkIsNaN(0.0) == false, "checkIsNaN(0.0) failed";
+	assert checkIsNaN(INFINITY - INFINITY) == true, "checkIsNaN(INFINITY - INFINITY) failed";
+}
+
+
+// test chechIsFinite
+{
+	assert chechIsFinite(NAN) == false, "chechIsFinite(NAN) failed";
+	assert chechIsFinite(INFINITY) == false, "chechIsFinite(INFINITY) failed";
+	assert chechIsFinite(0.0) == true, "chechIsFinite(0.0) failed";
+	assert chechIsFinite(1) == true, "chechIsFinite(1) failed";
+}
+
+
+// test chechIsInfinite
+{
+	assert chechIsInfinite(NAN) == false, "chechIsInfinite(NAN) failed";
+	assert chechIsInfinite(INFINITY) == true, "chechIsInfinite(INFINITY) failed";
+	assert chechIsInfinite(0.0) == false, "chechIsInfinite(0.0) failed";
+	assert chechIsInfinite(1) == false, "chechIsInfinite(1) failed";
+}
+
+// test epsilionCompare
+{
+	assert epsilionCompare(1, 1) == true, "epsilionCompare(1, 1) failed";
+	assert epsilionCompare(1, 1.000001) == true, "epsilionCompare(1, 1.000001) failed";
+	assert epsilionCompare(1, 1.001) == false, "epsilionCompare(1, 1.001) failed";
+	assert epsilionCompare(0, 0) == true, "epsilionCompare(0, 0) failed";
+}
