@@ -560,9 +560,243 @@ static int nativeAtan2(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	return 1;
 }
 
+static int nativeSinh(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to sinh\n");
+		return -1;
+	}
+
+	//get the argument
+	Toy_Literal radiansLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the argument (if it's an identifier)
+	Toy_Literal radiansLiteralIdn = radiansLiteral;
+	if (TOY_IS_IDENTIFIER(radiansLiteral) && Toy_parseIdentifierToValue(interpreter, &radiansLiteral)) {
+		Toy_freeLiteral(radiansLiteralIdn);
+	}
+
+	//check the argument type
+	if (!(TOY_IS_INTEGER(radiansLiteral) || TOY_IS_FLOAT(radiansLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to sinh\n");
+		Toy_freeLiteral(radiansLiteral);
+		return -1;
+	}
+
+	// cast ints to floats to handle all types of numbers
+	float radians = TOY_IS_INTEGER(radiansLiteral)? TOY_AS_INTEGER(radiansLiteral) : TOY_AS_FLOAT(radiansLiteral);
+
+	// calculate the result
+	float result = sinhf(radians);
+	
+	//return the result
+	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	//cleanup
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(radiansLiteral);
+
+	return 1;
+}
+
+static int nativeCosh(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to cosh\n");
+		return -1;
+	}
+
+	//get the argument
+	Toy_Literal radiansLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the argument (if it's an identifier)
+	Toy_Literal radiansLiteralIdn = radiansLiteral;
+	if (TOY_IS_IDENTIFIER(radiansLiteral) && Toy_parseIdentifierToValue(interpreter, &radiansLiteral)) {
+		Toy_freeLiteral(radiansLiteralIdn);
+	}
+
+	//check the argument type
+	if (!(TOY_IS_INTEGER(radiansLiteral) || TOY_IS_FLOAT(radiansLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to cosh\n");
+		Toy_freeLiteral(radiansLiteral);
+		return -1;
+	}
+
+	// cast ints to floats to handle all types of numbers
+	float radians = TOY_IS_INTEGER(radiansLiteral)? TOY_AS_INTEGER(radiansLiteral) : TOY_AS_FLOAT(radiansLiteral);
+
+	// calculate the result
+	float result = coshf(radians);
+	
+	//return the result
+	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	//cleanup
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(radiansLiteral);
+
+	return 1;
+}
+
+static int nativeTanh(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to tanh\n");
+		return -1;
+	}
+
+	//get the argument
+	Toy_Literal radiansLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the argument (if it's an identifier)
+	Toy_Literal radiansLiteralIdn = radiansLiteral;
+	if (TOY_IS_IDENTIFIER(radiansLiteral) && Toy_parseIdentifierToValue(interpreter, &radiansLiteral)) {
+		Toy_freeLiteral(radiansLiteralIdn);
+	}
+
+	//check the argument type
+	if (!(TOY_IS_INTEGER(radiansLiteral) || TOY_IS_FLOAT(radiansLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to tanh\n");
+		Toy_freeLiteral(radiansLiteral);
+		return -1;
+	}
+
+	// cast ints to floats to handle all types of numbers
+	float radians = TOY_IS_INTEGER(radiansLiteral)? TOY_AS_INTEGER(radiansLiteral) : TOY_AS_FLOAT(radiansLiteral);
+
+	// calculate the result
+	float result = tanhf(radians);
+	
+	//return the result
+	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	//cleanup
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(radiansLiteral);
+
+	return 1;
+}
+
+static int nativeAsinh(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to asinh\n");
+		return -1;
+	}
+
+	//get the argument
+	Toy_Literal radiansLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the argument (if it's an identifier)
+	Toy_Literal radiansLiteralIdn = radiansLiteral;
+	if (TOY_IS_IDENTIFIER(radiansLiteral) && Toy_parseIdentifierToValue(interpreter, &radiansLiteral)) {
+		Toy_freeLiteral(radiansLiteralIdn);
+	}
+
+	//check the argument type
+	if (!(TOY_IS_INTEGER(radiansLiteral) || TOY_IS_FLOAT(radiansLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to asinh\n");
+		Toy_freeLiteral(radiansLiteral);
+		return -1;
+	}
+
+	// cast ints to floats to handle all types of numbers
+	float radians = TOY_IS_INTEGER(radiansLiteral)? TOY_AS_INTEGER(radiansLiteral) : TOY_AS_FLOAT(radiansLiteral);
+
+	// calculate the result
+	float result = asinhf(radians);
+	
+	//return the result
+	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	//cleanup
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(radiansLiteral);
+
+	return 1;
+}
+
+static int nativeAcosh(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to acosh\n");
+		return -1;
+	}
+
+	//get the argument
+	Toy_Literal radiansLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the argument (if it's an identifier)
+	Toy_Literal radiansLiteralIdn = radiansLiteral;
+	if (TOY_IS_IDENTIFIER(radiansLiteral) && Toy_parseIdentifierToValue(interpreter, &radiansLiteral)) {
+		Toy_freeLiteral(radiansLiteralIdn);
+	}
+
+	//check the argument type
+	if (!(TOY_IS_INTEGER(radiansLiteral) || TOY_IS_FLOAT(radiansLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to acosh\n");
+		Toy_freeLiteral(radiansLiteral);
+		return -1;
+	}
+
+	// cast ints to floats to handle all types of numbers
+	float radians = TOY_IS_INTEGER(radiansLiteral)? TOY_AS_INTEGER(radiansLiteral) : TOY_AS_FLOAT(radiansLiteral);
+
+	// calculate the result
+	float result = acoshf(radians);
+	
+	//return the result
+	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	//cleanup
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(radiansLiteral);
+
+	return 1;
+}
+
+static int nativeAtanh(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to atanh\n");
+		return -1;
+	}
+
+	//get the argument
+	Toy_Literal radiansLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the argument (if it's an identifier)
+	Toy_Literal radiansLiteralIdn = radiansLiteral;
+	if (TOY_IS_IDENTIFIER(radiansLiteral) && Toy_parseIdentifierToValue(interpreter, &radiansLiteral)) {
+		Toy_freeLiteral(radiansLiteralIdn);
+	}
+
+	//check the argument type
+	if (!(TOY_IS_INTEGER(radiansLiteral) || TOY_IS_FLOAT(radiansLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to atanh\n");
+		Toy_freeLiteral(radiansLiteral);
+		return -1;
+	}
+
+	// cast ints to floats to handle all types of numbers
+	float radians = TOY_IS_INTEGER(radiansLiteral)? TOY_AS_INTEGER(radiansLiteral) : TOY_AS_FLOAT(radiansLiteral);
+
+	// calculate the result
+	float result = atanhf(radians);
+	
+	//return the result
+	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	//cleanup
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(radiansLiteral);
+
+	return 1;
+}
+
 static int nativeCheckIsNaN(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to tan\n");
+		interpreter->errorOutput("Incorrect number of arguments to checkIsNaN\n");
 		return -1;
 	}
 
@@ -577,7 +811,7 @@ static int nativeCheckIsNaN(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 
 	//check the argument type
 	if (!(TOY_IS_INTEGER(xLiteral) || TOY_IS_FLOAT(xLiteral))) {
-		interpreter->errorOutput("Incorrect argument type passed to tan\n");
+		interpreter->errorOutput("Incorrect argument type passed to checkIsNaN\n");
 		Toy_freeLiteral(xLiteral);
 		return -1;
 	}
@@ -587,6 +821,84 @@ static int nativeCheckIsNaN(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 
 	// calculate the result
 	float result = isnan(x);
+	
+	//return the result
+	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	//cleanup
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(xLiteral);
+
+	return 1;
+}
+
+static int nativeCheckIsFinite(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to checkIsFinite\n");
+		return -1;
+	}
+
+	//get the argument
+	Toy_Literal xLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the argument (if it's an identifier)
+	Toy_Literal xLiteralIdn = xLiteral;
+	if (TOY_IS_IDENTIFIER(xLiteral) && Toy_parseIdentifierToValue(interpreter, &xLiteral)) {
+		Toy_freeLiteral(xLiteralIdn);
+	}
+
+	//check the argument type
+	if (!(TOY_IS_INTEGER(xLiteral) || TOY_IS_FLOAT(xLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to checkIsFinite\n");
+		Toy_freeLiteral(xLiteral);
+		return -1;
+	}
+
+	// cast ints to floats to handle all types of numbers
+	float x = TOY_IS_INTEGER(xLiteral)? TOY_AS_INTEGER(xLiteral) : TOY_AS_FLOAT(xLiteral);
+
+	// calculate the result
+	float result = isfinite(x);
+	
+	//return the result
+	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	//cleanup
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(xLiteral);
+
+	return 1;
+}
+
+static int nativeCheckIsInfinite(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to checkIsInfinite\n");
+		return -1;
+	}
+
+	//get the argument
+	Toy_Literal xLiteral = Toy_popLiteralArray(arguments);
+
+	//parse the argument (if it's an identifier)
+	Toy_Literal xLiteralIdn = xLiteral;
+	if (TOY_IS_IDENTIFIER(xLiteral) && Toy_parseIdentifierToValue(interpreter, &xLiteral)) {
+		Toy_freeLiteral(xLiteralIdn);
+	}
+
+	//check the argument type
+	if (!(TOY_IS_INTEGER(xLiteral) || TOY_IS_FLOAT(xLiteral))) {
+		interpreter->errorOutput("Incorrect argument type passed to checkIsInfinite\n");
+		Toy_freeLiteral(xLiteral);
+		return -1;
+	}
+
+	// cast ints to floats to handle all types of numbers
+	float x = TOY_IS_INTEGER(xLiteral)? TOY_AS_INTEGER(xLiteral) : TOY_AS_FLOAT(xLiteral);
+
+	// calculate the result
+	float result = isinf(x);
 	
 	//return the result
 	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result);
@@ -661,6 +973,8 @@ typedef struct Natives {
 int Toy_hookMath(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Literal alias) {
 	//build the natives list
 	Natives natives[] = {
+		// Exponential
+
 		// Power
 		{"pow", nativePow},
 		{"sqrt", nativeSqrt},
@@ -678,8 +992,18 @@ int Toy_hookMath(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 		{"atan", nativeAtan},
 		{"atans", nativeAtan2},
 
+		// Hyperbolic
+		{"sinh", nativeSinh},
+		{"cosh", nativeCosh},
+		{"tanh", nativeTanh},
+		{"asinh", nativeAsinh},
+		{"acosh", nativeAcosh},
+		{"atanh", nativeAtanh},
+
 		// Comparison
 		{"checkIsNaN",  nativeCheckIsNaN},
+		{"chechIsFinite", nativeCheckIsFinite},
+		{"chechIsInfinite", nativeCheckIsInfinite},
 		{"epsilionCompare", nativeEpsilionCompare},
 
 		{NULL, NULL}

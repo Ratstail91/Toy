@@ -102,6 +102,54 @@ import math;
 }
 
 
+// test sinh
+{
+	assert epsilionCompare(sinh(1), 1.175201), "sinh(1) failed";
+	assert epsilionCompare(sinh(-1), -1.175201), "sinh(-1) failed";
+	assert epsilionCompare(sinh(0), 0), "sinh(0) failed";
+}
+
+
+// test cosh
+{
+	assert epsilionCompare(cosh(1), 1.543081), "cosh(1) failed";
+	assert epsilionCompare(cosh(-1), 1.543081), "cosh(-1) failed";
+	assert epsilionCompare(cosh(0), 1), "cosh(0) failed";
+}
+
+
+// test tanh
+{
+	assert epsilionCompare(tanh(1), 0.761594), "tanh(1) failed";
+	assert epsilionCompare(tanh(-1), -0.761594), "tanh(-1) failed";
+	assert epsilionCompare(tanh(0), 0), "tanh(0) failed";
+}
+
+
+// test asinh
+{
+	assert epsilionCompare(asinh(1), 0.881374), "asinh(1) failed";
+	assert epsilionCompare(asinh(-1), -0.881374), "asinh(-1) failed";
+	assert epsilionCompare(asinh(0), 0), "asinh(0) failed";
+}
+
+
+// test acosh
+{
+	assert epsilionCompare(acosh(1), 0), "acosh(1) failed";
+	assert checkIsNaN(acosh(-1)) == true, "acosh(-1) failed";
+	assert checkIsNaN(acosh(0)) == true, "acosh(0) failed";
+}
+
+
+// test atanh
+{
+	assert chechIsInfinite(atanh(1)) == true, "atanh(1) failed";
+	assert chechIsInfinite(atanh(-1)) == true, "atanh(-1) failed";
+	assert epsilionCompare(atanh(0), 0), "atanh(0) failed";
+}
+
+
 // test checkIsNaN
 {
 	assert checkIsNaN(NAN) == true, "checkIsNaN(NAN) failed";
@@ -110,6 +158,23 @@ import math;
 	assert checkIsNaN(INFINITY - INFINITY) == true, "checkIsNaN(INFINITY - INFINITY) failed";
 }
 
+
+// test chechIsFinite
+{
+	assert chechIsFinite(NAN) == false, "chechIsFinite(NAN) failed";
+	assert chechIsFinite(INFINITY) == false, "chechIsFinite(INFINITY) failed";
+	assert chechIsFinite(0.0) == true, "chechIsFinite(0.0) failed";
+	assert chechIsFinite(1) == true, "chechIsFinite(1) failed";
+}
+
+
+// test chechIsInfinite
+{
+	assert chechIsInfinite(NAN) == false, "chechIsInfinite(NAN) failed";
+	assert chechIsInfinite(INFINITY) == true, "chechIsInfinite(INFINITY) failed";
+	assert chechIsInfinite(0.0) == false, "chechIsInfinite(0.0) failed";
+	assert chechIsInfinite(1) == false, "chechIsInfinite(1) failed";
+}
 
 // test epsilionCompare
 {
