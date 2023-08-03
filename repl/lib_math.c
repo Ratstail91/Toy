@@ -1002,8 +1002,8 @@ int Toy_hookMath(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 
 		// Comparison
 		{"checkIsNaN",  nativeCheckIsNaN},
-		{"chechIsFinite", nativeCheckIsFinite},
-		{"chechIsInfinite", nativeCheckIsInfinite},
+		{"checkIsFinite", nativeCheckIsFinite},
+		{"checkIsInfinite", nativeCheckIsInfinite},
 		{"epsilionCompare", nativeEpsilionCompare},
 
 		{NULL, NULL}
