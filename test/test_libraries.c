@@ -19,6 +19,7 @@
 #include "../repl/lib_random.h"
 #include "../repl/lib_runner.h"
 #include "../repl/lib_math.h"
+#include "../repl/lib_io.h"
 
 //supress the print output
 static void noPrintFn(const char* output) {
@@ -78,6 +79,7 @@ int main() {
 			{"runner.toy", "runner", Toy_hookRunner},
 			{"random.toy", "random", Toy_hookRandom},
 			{"math.toy", "math", Toy_hookMath},
+			{"io.toy", "io", Toy_hookIO},
 			{NULL, NULL, NULL}
 		};
 
