@@ -102,11 +102,11 @@ This function returns the inverse hyperbolic sine of `x`
 
 ### acosh(x): float
 
-This function returns the inverse cosine sine of `x`
+This function returns the inverse hyperbolic cosine of `x`
 
 ### atanh(x): float
 
-This function returns the inverse tangent sine of `x`
+This function returns the inverse hyperbolic tangent of `x`
 
 ## Defined Comparison Functions
 
