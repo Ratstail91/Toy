@@ -114,11 +114,11 @@ This function returns the inverse tangent sine of `x`
 
 This function returns true if `x` is NaN, otherwise it returns false.
 
-### chechIsFinite(x): bool
+### checkIsFinite(x): bool
 
 This function returns true if `x` is finite, otherwise it returns false.
 
-### chechIsInfinite(x): bool
+### checkIsInfinite(x): bool
 
 This function returns true if `x` is Infinite, otherwise it returns false.
 
