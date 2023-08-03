@@ -50,61 +50,61 @@ This function returns the length of the hypotenuse, assuming `x` and `y` are the
 
 ## Defined Trigonometric Functions
 
-## toRadians(d): float
+### toRadians(d): float
 
 This function converts `d` into radians.
 
-## toDegrees(r): float
+### toDegrees(r): float
 
 This function converts `r` into degrees.
 
-## sin(x): float
+### sin(x): float
 
 This function returns the sine of `x`.
 
-## cos(x): float
+### cos(x): float
 
 This function returns the cosine of `x`.
 
-## tan(x): float
+### tan(x): float
 
 This function returns the tangent of `x`.
 
-## asin(x): float
+### asin(x): float
 
 This function returns the arc sine of `x`.
 
-## acos(x): float
+### acos(x): float
 
 This function returns the arc cosine of `x`.
 
-## atan(x): float
+### atan(x): float
 
 This function returns the arc tangent of `x`.
 
 ## Defined Hyperbolic Functions
 
-## sinh(x): float
+### sinh(x): float
 
 This function returns the hyperbolic sine of `x`
 
-## cosh(x): float
+### cosh(x): float
 
 This function returns the hyperbolic cosine of `x`
 
-## tanh(x): float
+### tanh(x): float
 
 This function returns the hyperbolic tangent of `x`
 
-## asinh(x): float
+### asinh(x): float
 
 This function returns the inverse hyperbolic sine of `x`
 
-## acosh(x): float
+### acosh(x): float
 
 This function returns the inverse cosine sine of `x`
 
-## atanh(x): float
+### atanh(x): float
 
 This function returns the inverse tangent sine of `x`
 
