@@ -47,6 +47,7 @@ print tally(); //3
 * [Types](getting-started/types)
 * [Toy Version Info Library](getting-started/toy-version-info-library)
 * [Standard Library](getting-started/standard-library)
+* [Math Library](getting-started/math.md)
 * [Random Library](getting-started/random-library)
 * [Runner Library](getting-started/runner-library)
 

@@ -1,129 +1,127 @@
 # Math Library
 
-The math library is a collection of mathematical functions and constants that provide a wide range of calculations that are commonly used.
+The math library is a collection of mathematical functions and constants that provide a wide range of calculations that are commonly used. All functions in this library take either integers or floats as parameters and will return the result as a float.
 
-All functions in this library take floats or integers as parameters and will return the result as a float.
-
-The math library can be through the `import` keyword:
+The math library can usually be accessed with the `import` keyword:
 
 ```
 import math;
 ```
 
-## Constants
+## Defined Constants
 
 ### PI: float
 
-Represents the ratio of a circle's circumference to its diameter.
+This constant represents the ratio of a circle's circumference to its diameter. It's value is approximately `3.14159265358979323846`.
 
 ### E: float
 
-Represents Euler's number, the base of natural logarithms.
+This constant represents Euler's number, the base of natural logarithms. It's value is approximately `2.71828182845904523536`.
 
 ### EPSILON: float
 
-Represents the acceptable amount of approximation for floats, defaults to `0.000001`.
+This constant represents the acceptable amount of error when comparing floats with the functions provided by this library (see [Defined Comparison Functions](#defined-comparison-functions)). It's default value is `0.000001`.
 
 ### NAN: float
 
-Represents Not-a-Number, often returned when a calculation is impossible e.g. `sqrt(-1)`
+This constant represents "Not-a-Number", often returned when a calculation is impossible e.g. `sqrt(-1)`.
 
 ### INFINITY: float
 
-Represents the largest possible float type.
+This constant represents an uncountable value.
 
-## Power
+## Defined Power Functions
 
 ### pow(x, y): float
 
-Returns `x` to the power of `y`.
+This function returns `x` to the power of `y`.
 
 ### sqrt(x): float
 
-Returns the square root of `x`.
+This function returns the square root of `x`.
 
 ### qbrt(x): float
 
-Returns the cube root of `x`.
+This function returns the cube root of `x`.
 
 ### hypot(x, y): float
 
-Returns the length of the hypotenuse assuming `x` and `y` are the legs in a right-angle triangle.
+This function returns the length of the hypotenuse, assuming `x` and `y` are the legs in a right-angle triangle.
 
-## Trigonometric
+## Defined Trigonometric Functions
 
 ## toRadians(d): float
 
-Converts `d` into radians.
+This function converts `d` into radians.
 
 ## toDegrees(r): float
 
-Converts `r` into degrees.
+This function converts `r` into degrees.
 
 ## sin(x): float
 
-Returns the sine of `x`.
+This function returns the sine of `x`.
 
 ## cos(x): float
 
-Returns the cosine of `x`.
+This function returns the cosine of `x`.
 
 ## tan(x): float
 
-Returns the tangent of `x`.
+This function returns the tangent of `x`.
 
 ## asin(x): float
 
-Returns the arc sine of `x`.
+This function returns the arc sine of `x`.
 
 ## acos(x): float
 
-Returns the arc cosine of `x`.
+This function returns the arc cosine of `x`.
 
 ## atan(x): float
 
-Returns the arc tangent of `x`.
+This function returns the arc tangent of `x`.
 
-## Hyperbolic
+## Defined Hyperbolic Functions
 
 ## sinh(x): float
 
-Returns the hyperbolic sine of `x`
+This function returns the hyperbolic sine of `x`
 
 ## cosh(x): float
 
-Returns the hyperbolic cosine of `x`
+This function returns the hyperbolic cosine of `x`
 
 ## tanh(x): float
 
-Returns the hyperbolic tangent of `x`
+This function returns the hyperbolic tangent of `x`
 
 ## asinh(x): float
 
-Returns the inverse hyperbolic sine of `x`
+This function returns the inverse hyperbolic sine of `x`
 
 ## acosh(x): float
 
-Returns the inverse cosine sine of `x`
+This function returns the inverse cosine sine of `x`
 
 ## atanh(x): float
 
-Returns the inverse tangent sine of `x`
+This function returns the inverse tangent sine of `x`
 
-## Comparison
+## Defined Comparison Functions
 
 ### checkIsNaN(x): bool
 
-Returns true if `x` is NaN and false otherwise.
+This function returns true if `x` is NaN, otherwise it returns false.
 
 ### chechIsFinite(x): bool
 
-Returns true if `x` is finite or in otherwords it is not Infinite or NaN.
+This function returns true if `x` is finite, otherwise it returns false.
 
 ### chechIsInfinite(x): bool
 
-Returns true if `x` is Infinite and false otherwise.
+This function returns true if `x` is Infinite, otherwise it returns false.
 
 ### epsilionCompare(x, y): bool
 
-Returns true if `x` or `y` are within epsilon of each other, otherwise it returns false. This is very useful for compairing floating point values.
+This function returns true if `x` and `y` are within `EPSILON` of each other, otherwise it returns false. This is very useful for compairing floating point values.
