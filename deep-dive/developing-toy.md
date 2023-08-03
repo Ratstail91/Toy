@@ -79,7 +79,7 @@ As the final step, the newly reconstructed `LiteralArray` is added to the litera
 
 `TOY_LITERAL_DICTIONARY_INTERMEDIATE` specifies that the literal to be read is a flattened `LiteralDictionary`. A "flattened" compound literal does not actually store it's contents, only references to it's contents' positions within the literal cache.
 
-To read this dictionary, you must first read an `unsigned short` which specifies the size (both keys and values), then read that many additional `unsigned shorts`, which are indices of keys and values. Finally, the original `LiteralDictionary` can be reconstructed using those keys and value indices.
+To read this dictionary, you must first read an `unsigned short` which specifies the size (both keys and values), then read that many additional `unsigned shorts`, which are indices of keys and values. Finally, the original `LiteralDictionary` can be reconstructed using those key and value indices.
 
 As the final step, the newly reconstructed `LiteralDictionary` is added to the literal cache.
 
@@ -124,6 +124,10 @@ Once all function literals have been read out of this section, the opcode `TOY_O
 ## Program Definition
 
 TODO
+
+## Function Internal Structure
+
+TODO: loose first argument, args & returns counters in the program space
 
 ### Opcodes
 
