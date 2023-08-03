@@ -125,13 +125,13 @@ Once all function literals have been read out of this section, the opcode `TOY_O
 
 TODO
 
-## Function Internal Structure
-
-TODO: loose first argument, args & returns counters in the program space
-
 ### Opcodes
 
 TODO
+
+## Function Internal Structure
+
+TODO: loose first argument, args & returns counters in the program space
 
 # Parser Structure and Operations
 
