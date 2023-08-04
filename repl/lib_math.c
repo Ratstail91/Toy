@@ -221,7 +221,7 @@ static int nativeToRadians(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 	// cast int to float to handle all types of numbers
 	float degrees = TOY_IS_INTEGER(degreesLiteral)? TOY_AS_INTEGER(degreesLiteral) : TOY_AS_FLOAT(degreesLiteral);
 
-	float result = degrees * (LIB_MATH_PI / 180.0);
+	float result = degrees * (LIB_MATH_PI / 180.0f);
 
 	//return the result
 	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
@@ -259,7 +259,7 @@ static int nativeToDegrees(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 	// cast int to float to handle all types of numbers
 	float radians = TOY_IS_INTEGER(radiansLiteral)? TOY_AS_INTEGER(radiansLiteral) : TOY_AS_FLOAT(radiansLiteral);
 
-	float result = radians * (180.0 / LIB_MATH_PI);
+	float result = radians * (180.0f / LIB_MATH_PI);
 
 	//return the result
 	Toy_Literal resultLiteral = TOY_TO_FLOAT_LITERAL(result);
@@ -820,10 +820,10 @@ static int nativeCheckIsNaN(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 	float x = TOY_IS_INTEGER(xLiteral)? TOY_AS_INTEGER(xLiteral) : TOY_AS_FLOAT(xLiteral);
 
 	// calculate the result
-	float result = isnan(x);
+	int result = isnan(x);
 	
 	//return the result
-	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result);
+	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result != 0);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	//cleanup
@@ -859,10 +859,10 @@ static int nativeCheckIsFinite(Toy_Interpreter* interpreter, Toy_LiteralArray* a
 	float x = TOY_IS_INTEGER(xLiteral)? TOY_AS_INTEGER(xLiteral) : TOY_AS_FLOAT(xLiteral);
 
 	// calculate the result
-	float result = isfinite(x);
+	int result = isfinite(x);
 	
 	//return the result
-	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result);
+	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result != 0);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	//cleanup
@@ -898,10 +898,10 @@ static int nativeCheckIsInfinite(Toy_Interpreter* interpreter, Toy_LiteralArray*
 	float x = TOY_IS_INTEGER(xLiteral)? TOY_AS_INTEGER(xLiteral) : TOY_AS_FLOAT(xLiteral);
 
 	// calculate the result
-	float result = isinf(x);
+	int result = isinf(x);
 	
 	//return the result
-	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result);
+	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result != 0);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	//cleanup
@@ -950,10 +950,10 @@ static int nativeEpsilionCompare(Toy_Interpreter* interpreter, Toy_LiteralArray*
 	float y = TOY_IS_INTEGER(yLiteral)? TOY_AS_INTEGER(yLiteral) : TOY_AS_FLOAT(yLiteral);
 
 	// calculate the result
-	float result = (fabsf(x - y)) <= (LIB_MATH_EPSILON * fmaxf(1, fmaxf(fabsf(x), fabsf(y))));
+	int result = (fabsf(x - y)) <= (LIB_MATH_EPSILON * fmaxf(1, fmaxf(fabsf(x), fabsf(y))));
 
 	// return the result
-	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result);
+	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result != 0);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	// cleanup
