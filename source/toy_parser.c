@@ -168,6 +168,10 @@ static Toy_Opcode compound(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 			consume(parser, TOY_TOKEN_COMMA, "Expected ',' in array or dictionary");
 		}
 
+		if (match(parser, TOY_TOKEN_BRACKET_RIGHT)) { //allow for trailing commas
+			break;
+		}
+
 		iterations++;
 
 		Toy_ASTNode* left = NULL;

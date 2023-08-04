@@ -140,6 +140,7 @@ int main() {
 			"polyfill-remove.toy",
 			"short-circuiting-support.toy",
 			"ternary-expressions.toy",
+			"trailing-comma-bugfix.toy",
 			"types.toy",
 			NULL
 		};
