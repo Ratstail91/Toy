@@ -582,7 +582,7 @@ static bool execVarDecl(Toy_Interpreter* interpreter, bool lng) {
 		typeIndex = (int)readByte(interpreter->bytecode, &interpreter->count);
 	}
 
-	Toy_Literal identifier = interpreter->literalCache.literals[identifierIndex];
+	Toy_Literal identifier = Toy_copyLiteral(interpreter->literalCache.literals[identifierIndex]);
 	Toy_Literal type = Toy_copyLiteral(interpreter->literalCache.literals[typeIndex]);
 
 	Toy_Literal typeIdn = type;
@@ -597,6 +597,10 @@ static bool execVarDecl(Toy_Interpreter* interpreter, bool lng) {
 		interpreter->errorOutput("Can't redefine the variable \"");
 		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
+
+		Toy_freeLiteral(identifier);
+		Toy_freeLiteral(type);
+
 		return false;
 	}
 
@@ -623,14 +627,16 @@ static bool execVarDecl(Toy_Interpreter* interpreter, bool lng) {
 		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 
+		Toy_freeLiteral(identifier);
 		Toy_freeLiteral(type);
 		Toy_freeLiteral(val);
 
 		return false;
 	}
 
-	Toy_freeLiteral(val);
+	Toy_freeLiteral(identifier);
 	Toy_freeLiteral(type);
+	Toy_freeLiteral(val);
 
 	return true;
 }
