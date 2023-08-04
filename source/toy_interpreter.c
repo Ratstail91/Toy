@@ -1991,27 +1991,9 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 			}
 			break;
 
-			case TOY_LITERAL_TYPE: {
-				//what the literal is
-				Toy_LiteralType literalType = (Toy_LiteralType)readByte(interpreter->bytecode, &interpreter->count);
-				unsigned char constant = readByte(interpreter->bytecode, &interpreter->count);
-
-				Toy_Literal typeLiteral = TOY_TO_TYPE_LITERAL(literalType, constant);
-
-				//save the type
-				Toy_pushLiteralArray(&interpreter->literalCache, typeLiteral);
-
-#ifndef TOY_EXPORT
-				if (Toy_commandLine.verbose) {
-					printf("(type ");
-					Toy_printLiteral(typeLiteral);
-					printf(")\n");
-				}
-#endif
-			}
-			break;
-
-			case TOY_LITERAL_TYPE_INTERMEDIATE: {
+			case TOY_LITERAL_TYPE:
+			case TOY_LITERAL_TYPE_INTERMEDIATE:
+			{
 				//what the literal represents
 				Toy_LiteralType literalType = (Toy_LiteralType)readByte(interpreter->bytecode, &interpreter->count);
 				unsigned char constant = readByte(interpreter->bytecode, &interpreter->count);
