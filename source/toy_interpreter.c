@@ -1048,57 +1048,63 @@ static bool execCompareLessEqual(Toy_Interpreter* interpreter, bool invert) {
 }
 
 static bool execAnd(Toy_Interpreter* interpreter) {
-	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
 	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
-
-	Toy_Literal rhsIdn = rhs;
-	if (TOY_IS_IDENTIFIER(rhs) && Toy_parseIdentifierToValue(interpreter, &rhs)) {
-		Toy_freeLiteral(rhsIdn);
-	}
 
 	Toy_Literal lhsIdn = lhs;
 	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
 		Toy_freeLiteral(lhsIdn);
 	}
 
-	//short-circuit - broken, see issue #73
+	//short-circuit - if not true
 	if (!TOY_IS_TRUTHY(lhs)) {
 		Toy_pushLiteralArray(&interpreter->stack, lhs);
+
+		int target = (int)readShort(interpreter->bytecode, &interpreter->count);
+
+		if (target + interpreter->codeStart > interpreter->length) {
+			interpreter->errorOutput("[internal] AND Jump out of range\n");
+			return false;
+		}
+
+		//actually jump
+		interpreter->count = target + interpreter->codeStart;
 	}
 	else {
-		Toy_pushLiteralArray(&interpreter->stack, rhs);
+		readShort(interpreter->bytecode, &interpreter->count); //discard
 	}
 
 	Toy_freeLiteral(lhs);
-	Toy_freeLiteral(rhs);
 
 	return true;
 }
 
 static bool execOr(Toy_Interpreter* interpreter) {
-	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
 	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
-
-	Toy_Literal rhsIdn = rhs;
-	if (TOY_IS_IDENTIFIER(rhs) && Toy_parseIdentifierToValue(interpreter, &rhs)) {
-		Toy_freeLiteral(rhsIdn);
-	}
 
 	Toy_Literal lhsIdn = lhs;
 	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
 		Toy_freeLiteral(lhsIdn);
 	}
 
-	//short-circuit - broken, see issue #73
+	//short-circuit - if is true
 	if (TOY_IS_TRUTHY(lhs)) {
 		Toy_pushLiteralArray(&interpreter->stack, lhs);
+
+		int target = (int)readShort(interpreter->bytecode, &interpreter->count);
+
+		if (target + interpreter->codeStart > interpreter->length) {
+			interpreter->errorOutput("[internal] OR Jump out of range\n");
+			return false;
+		}
+
+		//actually jump
+		interpreter->count = target + interpreter->codeStart;
 	}
 	else {
-		Toy_pushLiteralArray(&interpreter->stack, rhs);
+		readShort(interpreter->bytecode, &interpreter->count); //discard
 	}
 
 	Toy_freeLiteral(lhs);
-	Toy_freeLiteral(rhs);
 
 	return true;
 }

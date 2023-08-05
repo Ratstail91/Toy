@@ -1,8 +1,0 @@
-//something was odd, so I broke this down for testing
-import math;
-
-fn shadowCastPoint(x: float, y: float, depth: int) {
-	return sin(tan(x/y)) * depth;
-}
-
-print shadowCastPoint(1, 1, 10);

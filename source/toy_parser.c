@@ -339,6 +339,28 @@ static Toy_Opcode grouping(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	}
 }
 
+static Toy_Opcode circuit(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
+	advance(parser);
+
+	//handle short-circuitable operators - && ||
+	switch (parser->previous.type) {
+		case TOY_TOKEN_AND_AND: {
+			parsePrecedence(parser, nodeHandle, PREC_AND + 1);
+			return TOY_OP_AND;
+		}
+
+		case TOY_TOKEN_OR_OR: {
+			parsePrecedence(parser, nodeHandle, PREC_OR + 1);
+			return TOY_OP_OR;
+		}
+
+		default: {
+			error(parser, parser->previous, "Unexpected token passed to grouping precedence rule");
+			return TOY_OP_EOF;
+		}
+	}
+}
+
 static Toy_Opcode binary(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 	advance(parser);
 
@@ -430,16 +452,6 @@ static Toy_Opcode binary(Toy_Parser* parser, Toy_ASTNode** nodeHandle) {
 		case TOY_TOKEN_GREATER_EQUAL: {
 			parsePrecedence(parser, nodeHandle, PREC_COMPARISON + 1);
 			return TOY_OP_COMPARE_GREATER_EQUAL;
-		}
-
-		case TOY_TOKEN_AND: {
-			parsePrecedence(parser, nodeHandle, PREC_AND + 1);
-			return TOY_OP_AND;
-		}
-
-		case TOY_TOKEN_OR: {
-			parsePrecedence(parser, nodeHandle, PREC_OR + 1);
-			return TOY_OP_OR;
 		}
 
 		default:
@@ -1002,8 +1014,8 @@ ParseRule parseRules[] = { //must match the token types
 	{NULL, binary, PREC_COMPARISON},// TOKEN_GREATER,
 	{NULL, binary, PREC_COMPARISON},// TOKEN_LESS_EQUAL,
 	{NULL, binary, PREC_COMPARISON},// TOKEN_GREATER_EQUAL,
-	{NULL, binary, PREC_AND},// TOKEN_AND,
-	{NULL, binary, PREC_OR},// TOKEN_OR,
+	{NULL, circuit, PREC_AND},// TOKEN_AND,
+	{NULL, circuit, PREC_OR},// TOKEN_OR,
 
 	//other operators
 	{NULL, question, PREC_TERNARY}, //TOKEN_QUESTION,
@@ -1282,6 +1294,16 @@ static void parsePrecedence(Toy_Parser* parser, Toy_ASTNode** nodeHandle, Preced
 		if (opcode == TOY_OP_PREFIX || opcode == TOY_OP_POSTFIX) {
 			Toy_freeASTNode(*nodeHandle);
 			*nodeHandle = rhsNode;
+			continue;
+		}
+
+		if (opcode == TOY_OP_AND) {
+			Toy_emitASTNodeAnd(nodeHandle, rhsNode);
+			continue;
+		}
+
+		if (opcode == TOY_OP_OR) {
+			Toy_emitASTNodeOr(nodeHandle, rhsNode);
 			continue;
 		}
 

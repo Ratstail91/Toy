@@ -1,0 +1,13 @@
+fn doA() {
+	print "doA()";
+	return true;
+}
+
+fn doB() {
+	print "doB()";
+	return true;
+}
+
+if (doA() || doB()) {
+	print "success";
+}

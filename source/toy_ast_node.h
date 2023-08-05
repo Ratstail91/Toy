@@ -29,6 +29,8 @@ typedef enum Toy_ASTNodeType {
 	TOY_AST_NODE_FOR, //for control flow
 	TOY_AST_NODE_BREAK, //for control flow
 	TOY_AST_NODE_CONTINUE, //for control flow
+	TOY_AST_NODE_AND, //for control flow
+	TOY_AST_NODE_OR, //for control flow
 	TOY_AST_NODE_PREFIX_INCREMENT, //increment a variable
 	TOY_AST_NODE_POSTFIX_INCREMENT, //increment a variable
 	TOY_AST_NODE_PREFIX_DECREMENT, //decrement a variable
@@ -204,6 +206,24 @@ typedef struct Toy_NodeContinue {
 	Toy_ASTNodeType type;
 } Toy_NodeContinue;
 
+//and operator
+void Toy_emitASTNodeAnd(Toy_ASTNode** nodeHandle, Toy_ASTNode* rhs); //handled node becomes lhs
+
+typedef struct Toy_NodeAnd {
+	Toy_ASTNodeType type;
+	Toy_ASTNode* left;
+	Toy_ASTNode* right;
+} Toy_NodeAnd;
+
+//or operator
+void Toy_emitASTNodeOr(Toy_ASTNode** nodeHandle, Toy_ASTNode* rhs); //handled node becomes lhs
+
+typedef struct Toy_NodeOr {
+	Toy_ASTNodeType type;
+	Toy_ASTNode* left;
+	Toy_ASTNode* right;
+} Toy_NodeOr;
+
 //pre-post increment/decrement
 void Toy_emitASTNodePrefixIncrement(Toy_ASTNode** nodeHandle, Toy_Literal identifier);
 void Toy_emitASTNodePrefixDecrement(Toy_ASTNode** nodeHandle, Toy_Literal identifier);
@@ -263,6 +283,8 @@ union Toy_private_node {
 	Toy_NodeFor pathFor;
 	Toy_NodeBreak pathBreak;
 	Toy_NodeContinue pathContinue;
+	Toy_NodeAnd pathAnd;
+	Toy_NodeOr pathOr;
 	Toy_NodePrefixIncrement prefixIncrement;
 	Toy_NodePrefixDecrement prefixDecrement;
 	Toy_NodePostfixIncrement postfixIncrement;

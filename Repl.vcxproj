@@ -136,6 +136,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="repl\drive_system.c" />
+    <ClCompile Include="repl\lib_math.c" />
     <ClCompile Include="repl\lib_random.c" />
     <ClCompile Include="repl\lib_runner.c" />
     <ClCompile Include="repl\lib_standard.c" />
@@ -145,6 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="repl\drive_system.h" />
+    <ClInclude Include="repl\lib_math.h" />
     <ClInclude Include="repl\lib_random.h" />
     <ClInclude Include="repl\lib_runner.h" />
     <ClInclude Include="repl\lib_standard.h" />

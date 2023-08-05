@@ -237,7 +237,7 @@ static Toy_Token makeKeywordOrIdentifier(Toy_Lexer* lexer) {
 
 	//scan for a keyword
 	for (int i = 0; Toy_keywordTypes[i].keyword; i++) {
-		if (strlen(Toy_keywordTypes[i].keyword) == (long unsigned int)(lexer->current - lexer->start) && !strncmp(Toy_keywordTypes[i].keyword, &lexer->source[lexer->start], lexer->current - lexer->start)) {
+		if (strlen(Toy_keywordTypes[i].keyword) == (size_t)(lexer->current - lexer->start) && !strncmp(Toy_keywordTypes[i].keyword, &lexer->source[lexer->start], lexer->current - lexer->start)) {
 			Toy_Token token;
 
 			token.type = Toy_keywordTypes[i].type;
@@ -317,10 +317,10 @@ Toy_Token Toy_private_scanLexer(Toy_Lexer* lexer) {
 			if (advance(lexer) != '&') {
 				return makeErrorToken(lexer, "Unexpected '&'");
 			} else {
-				return makeToken(lexer, TOY_TOKEN_AND);
+				return makeToken(lexer, TOY_TOKEN_AND_AND);
 			}
 
-		case '|':  return makeToken(lexer, match(lexer, '|') ? TOY_TOKEN_OR : TOY_TOKEN_PIPE);
+		case '|':  return makeToken(lexer, match(lexer, '|') ? TOY_TOKEN_OR_OR : TOY_TOKEN_PIPE);
 
 		case '?': return makeToken(lexer, TOY_TOKEN_QUESTION);
 		case ':': return makeToken(lexer, TOY_TOKEN_COLON);

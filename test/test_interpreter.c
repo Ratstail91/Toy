@@ -138,6 +138,7 @@ int main() {
 			"panic-within-functions.toy",
 			"polyfill-insert.toy",
 			"polyfill-remove.toy",
+			"short-circuit.toy",
 			"short-circuiting-support.toy",
 			"ternary-expressions.toy",
 			"trailing-comma-bugfix.toy",
