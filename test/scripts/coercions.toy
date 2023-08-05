@@ -10,4 +10,20 @@
 }
 
 
+//test function coercion
+{
+	fn f(arg: float) {
+		assert typeof arg == float, "argument coercion failed";
+	}
+
+	f(42);
+
+	fn g(): float {
+		return 42;
+	}
+
+	assert typeof g() == float, "return coercion failed";
+}
+
+
 print "All good";

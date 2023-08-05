@@ -2310,6 +2310,13 @@ bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_Liter
 			Toy_freeLiteral(argIdn);
 		}
 
+		//BUGFIX: coerce ints to floats, if the function requires floats
+		if (TOY_IS_INTEGER(arg) && TOY_IS_TYPE(paramArray->literals[i + 1]) && TOY_AS_TYPE(paramArray->literals[i + 1]).typeOf == TOY_LITERAL_FLOAT) {
+			Toy_Literal f = TOY_TO_FLOAT_LITERAL( (float)TOY_AS_INTEGER(arg) );
+			Toy_freeLiteral(arg);
+			arg = f;
+		}
+
 		if (!Toy_setScopeVariable(inner.scope, paramArray->literals[i], arg, false)) {
 			interpreter->errorOutput("[internal] Could not define parameter (bad type?)\n");
 
@@ -2403,6 +2410,13 @@ bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_Liter
 
 	for (int i = 0; i < returnsFromInner.count && returnValue; i++) {
 		Toy_Literal ret = Toy_popLiteralArray(&returnsFromInner);
+
+		//BUGFIX: coerce the returned integers to floats, if specified
+		if (returnArray->count > 0 && TOY_AS_TYPE(returnArray->literals[i]).typeOf == TOY_LITERAL_FLOAT && TOY_IS_INTEGER(ret)) {
+			Toy_Literal f = TOY_TO_FLOAT_LITERAL( (float)TOY_AS_INTEGER(ret) );
+			Toy_freeLiteral(ret);
+			ret = f;
+		}
 
 		//check the return types
 		if (returnArray->count > 0 && TOY_AS_TYPE(returnArray->literals[i]).typeOf != ret.type) {
