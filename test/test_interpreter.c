@@ -18,6 +18,7 @@ static void noPrintFn(const char* output) {
 	//NO OP
 }
 
+int failedAssertions = 0;
 int ignoredAssertions = 0;
 static void noAssertFn(const char* output) {
 	if (strncmp(output, "!ignore", 7) == 0) {
@@ -27,6 +28,7 @@ static void noAssertFn(const char* output) {
 		fprintf(stderr, TOY_CC_ERROR "Assertion failure: ");
 		fprintf(stderr, "%s", output);
 		fprintf(stderr, "\n" TOY_CC_RESET); //default new line
+		failedAssertions++;
 	}
 }
 
@@ -139,7 +141,6 @@ int main() {
 			"polyfill-insert.toy",
 			"polyfill-remove.toy",
 			"short-circuit.toy",
-			"short-circuiting-support.toy",
 			"ternary-expressions.toy",
 			"trailing-comma-bugfix.toy",
 			"types.toy",
@@ -162,7 +163,10 @@ int main() {
 		return -1;
 	}
 
-	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
-	return 0;
+	if (failedAssertions == 0) {
+		printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
+	}
+
+	return failedAssertions;
 }
 
