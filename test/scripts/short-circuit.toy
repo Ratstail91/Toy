@@ -1,9 +1,9 @@
 //These operators should short-circuit
-assert true && false == false, "true && false == false failed";
-assert false && true == false, "false && true == false failed";
+assert (true && false) == false, "(true && false) == false failed";
+assert (false && true) == false, "(false && true) == false failed";
 
-assert true || false == true, "true || false == true failed";
-assert false || true == true, "false || true == true failed";
+assert (true || false) == true, "(true || false) == true failed";
+assert (false || true) == true, "(false || true) == true failed";
 
 
 //make sure the right value is being returned when chained
