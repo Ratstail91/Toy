@@ -18,8 +18,8 @@
 #include "../repl/lib_standard.h"
 #include "../repl/lib_random.h"
 #include "../repl/lib_runner.h"
+#include "../repl/lib_fileio.h"
 #include "../repl/lib_math.h"
-#include "../repl/lib_io.h"
 
 //supress the print output
 static void noPrintFn(const char* output) {
@@ -78,8 +78,8 @@ int main() {
 			{"standard.toy", "standard", Toy_hookStandard},
 			{"runner.toy", "runner", Toy_hookRunner},
 			{"random.toy", "random", Toy_hookRandom},
+			{"fileio.toy", "fileio", Toy_hookFileIO},
 			{"math.toy", "math", Toy_hookMath},
-			{"io.toy", "io", Toy_hookIO},
 			{NULL, NULL, NULL}
 		};
 

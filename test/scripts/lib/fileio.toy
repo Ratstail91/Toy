@@ -1,0 +1,20 @@
+import fileio;
+
+// test constants
+{
+    // print MAX_FILENAME_SIZE;
+    // print MAX_FILES_OPEN;
+    // print END_OF_FILE;
+
+    assert END_OF_FILE < 0, "END_OF_FILE failed";
+}
+
+// test open
+{
+    var file = open("doesNotExist.txt", "r");
+
+    assert file["error"] == true, "error failed";
+    assert file["size"] == 0, "size failed";
+
+    // close(file);
+}
