@@ -11,10 +11,17 @@ import fileio;
 
 // test open
 {
-    var file = open("doesNotExist.txt", "r");
+    var file = open("does", "r");
 
-    assert file["error"] == true, "error failed";
-    assert file["size"] == 0, "size failed";
-
+    file.read(string);
+    
+    // TODO:
+    // file.write(12, ",", 12);
+    // file.size();
+    // file.isOpened();
+    // file.error();
+    // file.position();
+    // file.mode();
+    
     // close(file);
 }

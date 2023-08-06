@@ -36,6 +36,8 @@ hal_file_code read(hal_file* file, char* buffer, const int size) {
         return HAL_ERROR_INPUT;
     }
 
+    scanf()
+
     if (fgets(buffer, size, file->fp) == NULL) {
         return HAL_ERROR_READ;
     }
@@ -68,6 +70,31 @@ hal_file_code close(hal_file* file) {
     return HAL_SUCCESS;
 }
 
+hal_file_code crename(const char* oldname, const char* newname) {
+    if (!oldname || !newname) {
+        return HAL_ERROR_INPUT;
+
+    }
+
+    if (rename(oldname, newname) != 0) {
+        return HAL_ERROR_RENAME;
+    }
+
+    return HAL_SUCCESS;
+}
+
+hal_file_code cremove(const char* filename) {
+    if (!filename) {
+        return HAL_ERROR_INPUT;
+    }
+
+    if (remove(filename) != 0) {
+        return HAL_ERROR_REMOVE;
+    }
+
+    return HAL_SUCCESS;
+}
+
 // deletion logic, if needed
 hal_file_code teardown() {
     return HAL_SUCCESS;
@@ -80,6 +107,8 @@ hal_file_operations hal_file_manager = {
     .read = read,
     .write = write,
     .close = close,
+    .rename = crename,
+    .remove = cremove,
     .teardown = teardown
 };
 

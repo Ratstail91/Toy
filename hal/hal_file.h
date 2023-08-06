@@ -10,6 +10,8 @@ typedef enum hal_file_code {
     HAL_ERROR_READ,     // Error while reading from a file
     HAL_ERROR_WRITE,    // Error while writing to a file
     HAL_ERROR_CLOSE,    // Error while closing a file
+    HAL_ERROR_RENAME,   // Error while renaming a file
+    HAL_ERROR_REMOVE,   // Error while removing (deleting) a file
     HAL_ERROR_TEARDOWN, // Error during teardown
     HAL_ERROR_MAX,      // Maximum error code value (used for range checking)
 } hal_file_code;
@@ -43,6 +45,12 @@ typedef struct hal_file_operations {
     // Close the file and release associated resources.
     // Returns: HAL_SUCCESS on successful close, or appropriate error code on failure.
     hal_file_code (*close)(hal_file* file);
+
+    
+    hal_file_code (*rename)(const char* oldname, const char* newname);
+
+
+    hal_file_code (*remove)(const char* filename);
 
     // Function: teardown
     // Perform necessary cleanup and teardown operations for the file handling system.

@@ -1,12 +1,12 @@
 #include "lib_fileio.h"
 #include "toy_memory.h"
 
-#include "hal_file.h"
+#include "../hal/hal_file.h"
 
 typedef struct Toy_File
 {
 	hal_file* fp;
-	int error;
+	hal_file_code error;
 	int size;
 } Toy_File;
 
@@ -46,19 +46,16 @@ static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	const char* filename = Toy_toCString(TOY_AS_STRING(filenameLiteral));
 	const char* mode = Toy_toCString(TOY_AS_STRING(modeLiteral));
 
-	static int tag = 0;
-	bool error = false;
-	hal_file* fp = NULL;
+	// build file object
+	Toy_File* file = TOY_ALLOCATE(Toy_File, 1);
+	file->error = HAL_SUCCESS;
+	file->fp = NULL;
+	file->size = 0;
 
 	// attempt to open file
-	hal_file_code code = hal_file_manager.open(&fp, filename, mode);
-	if (code != HAL_SUCCESS) {
-		error = true;
-	}
+	file->error = hal_file_manager.open(&file->fp, filename, mode);
 
 	// set size
-	int size = 0;
-	
 	// if (!error) {
 	// 	fseek(fp, 0, SEEK_END);
 		
@@ -69,41 +66,14 @@ static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	// }
 
 	// result
-	Toy_LiteralDictionary* result = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
-	Toy_initLiteralDictionary(result);
+	Toy_Literal fileLiteral = TOY_TO_OPAQUE_LITERAL(file, 900);
 
-	Toy_Literal fileKeyLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("_file"));
-	Toy_Literal fileLiteral = TOY_TO_OPAQUE_LITERAL(fp, tag);
-
-	Toy_Literal errorKeyLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("error"));
-	Toy_Literal errorLiteral = TOY_TO_BOOLEAN_LITERAL(error);
-
-	Toy_Literal sizeKeyLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("size"));
-	Toy_Literal sizeLiteral = TOY_TO_INTEGER_LITERAL(size);
-
-	Toy_setLiteralDictionary(result, fileKeyLiteral, fileLiteral);
-	Toy_setLiteralDictionary(result, errorKeyLiteral, errorLiteral);
-	Toy_setLiteralDictionary(result, sizeKeyLiteral, sizeLiteral);
-
-	Toy_Literal name = TOY_TO_STRING_LITERAL(Toy_createRefString("File"));
-	Toy_Literal resultLiteral = TOY_TO_DICTIONARY_LITERAL(result);
-
-	Toy_Literal type = TOY_TO_TYPE_LITERAL(TOY_LITERAL_DICTIONARY, true);
-	Toy_Literal stringType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_STRING, true);
-	Toy_Literal anyType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_ANY, true);
-	TOY_TYPE_PUSH_SUBTYPE(&type, stringType);
-	TOY_TYPE_PUSH_SUBTYPE(&type, anyType);
-
-
-	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+	Toy_pushLiteralArray(&interpreter->stack, fileLiteral);
 	
 	// cleanup
-	Toy_freeLiteral(type);
-	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(fileLiteral);
 	Toy_freeLiteral(filenameLiteral);
 	Toy_freeLiteral(modeLiteral);
-
-	tag++;
 
 	return 1;
 }
@@ -131,6 +101,61 @@ static int nativeClose(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	// FILE* fp = (FILE*)TOY_AS_OPAQUE(fileLiteral);
 
 	// Toy_freeLiteral(fileLiteral);
+
+	return 1;
+}
+
+static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments to read\n");
+		return -1;
+	}
+
+	Toy_Literal valueLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	// parse the value (if it's an identifier)
+	Toy_Literal valueLiteralIdn = valueLiteral;
+	if (TOY_IS_IDENTIFIER(valueLiteral) && Toy_parseIdentifierToValue(interpreter, &valueLiteral)) {
+		Toy_freeLiteral(valueLiteralIdn);
+	}
+
+	// check the value type
+	if (!TOY_IS_TYPE(valueLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to read\n");
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(valueLiteral);
+
+		return -1;
+	}
+
+	// parse the self (if it's an identifier)
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	// check self type
+	if (!TOY_IS_OPAQUE(selfLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to read\n");
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(valueLiteral);
+		
+		return -1;
+	}
+
+	Toy_File* file = (Toy_File*)TOY_AS_OPAQUE(selfLiteral);
+
+	char buffer[256] = {0};
+
+	hal_file_manager.read(file->fp, buffer, 256);
+
+	Toy_RefString* result = Toy_createRefStringLength(buffer, 256);
+
+	Toy_pushLiteralArray(&interpreter->stack, TOY_TO_STRING_LITERAL(result));
+
+	Toy_freeLiteral(valueLiteral);
+	Toy_freeLiteral(selfLiteral);
 
 	return 1;
 }
@@ -196,11 +221,24 @@ int Toy_hookFileIO(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Lit
 		{"open", nativeOpen},
 		{"close", nativeClose},
 
+		//
+		{"read", nativeRead},
 		{NULL, NULL}
 	};
 	
+	// store the library in an aliased dictionary
+	if (!TOY_IS_NULL(alias)) {
+		// make sure the name isn't taken
+		if (Toy_isDeclaredScopeVariable(interpreter->scope, alias)) {
+			interpreter->errorOutput("Can't override an existing variable\n");
+			Toy_freeLiteral(alias);
+			return -1;
+		}
 
-	//default
+		// TODO
+	}
+
+	// default
 	for (int i = 0; natives[i].name; i++) {
 		Toy_injectNativeFn(interpreter, natives[i].name, natives[i].fn);
 	}
