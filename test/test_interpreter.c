@@ -129,6 +129,7 @@ int main() {
 			"index-assignment-left-bugfix.toy",
 			"index-dictionaries.toy",
 			"index-strings.toy",
+			"indexing-in-argument-list-bugfix.toy",
 			"jumps.toy",
 			"jumps-in-functions.toy",
 			"logicals.toy",

@@ -1,4 +1,12 @@
-import standard;
+fn max(lhs, rhs) {
+    if (lhs > rhs) {
+        return lhs;
+    }
+    else {
+        return rhs;
+    }
+}
+
 var array = [42];
 
 var result = null;

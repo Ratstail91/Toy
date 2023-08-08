@@ -649,7 +649,7 @@ static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode
 			for (int i = 0; i < node->fnCall.arguments->fnCollection.count; i++) { //reverse order, to count from the beginning in the interpreter
 				//sub-calls
 				if (node->fnCall.arguments->fnCollection.nodes[i].type != TOY_AST_NODE_LITERAL) {
-					Toy_Opcode override = Toy_writeCompilerWithJumps(compiler, &node->fnCall.arguments->fnCollection.nodes[i], breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
+					Toy_Opcode override = Toy_writeCompilerWithJumps(compiler, &node->fnCall.arguments->fnCollection.nodes[i], breakAddressesPtr, continueAddressesPtr, jumpOffsets, node); //BUGFIX: use node as rootNode, to allow indexing within argument lists
 					if (override != TOY_OP_EOF) {//compensate for indexing & dot notation being screwy
 						compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
 					}
