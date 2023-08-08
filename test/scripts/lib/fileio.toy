@@ -2,7 +2,7 @@ import fileio;
 
 // test open
 {
-    var file = open("scripts:/fileio.txt", "r");
+    var file = open("scripts:/lib/file/fileio.txt", "r");
 
     // file.read(string);
     
