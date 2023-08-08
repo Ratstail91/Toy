@@ -1,0 +1,20 @@
+fn max(lhs, rhs) {
+    if (lhs > rhs) {
+        return lhs;
+    }
+    else {
+        return rhs;
+    }
+}
+
+var array = [42];
+
+var result = null;
+
+//problematic line
+result = max(0, array[0]);
+
+assert result == 42, "Indexing in argument list failed";
+
+
+print "All good";

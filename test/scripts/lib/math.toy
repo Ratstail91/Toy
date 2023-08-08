@@ -144,8 +144,8 @@ import math;
 
 // test atanh
 {
-	assert chechIsInfinite(atanh(1)) == true, "atanh(1) failed";
-	assert chechIsInfinite(atanh(-1)) == true, "atanh(-1) failed";
+	assert checkIsInfinite(atanh(1)) == true, "atanh(1) failed";
+	assert checkIsInfinite(atanh(-1)) == true, "atanh(-1) failed";
 	assert epsilionCompare(atanh(0), 0), "atanh(0) failed";
 }
 
@@ -159,21 +159,21 @@ import math;
 }
 
 
-// test chechIsFinite
+// test checkIsFinite
 {
-	assert chechIsFinite(NAN) == false, "chechIsFinite(NAN) failed";
-	assert chechIsFinite(INFINITY) == false, "chechIsFinite(INFINITY) failed";
-	assert chechIsFinite(0.0) == true, "chechIsFinite(0.0) failed";
-	assert chechIsFinite(1) == true, "chechIsFinite(1) failed";
+	assert checkIsFinite(NAN) == false, "checkIsFinite(NAN) failed";
+	assert checkIsFinite(INFINITY) == false, "checkIsFinite(INFINITY) failed";
+	assert checkIsFinite(0.0) == true, "checkIsFinite(0.0) failed";
+	assert checkIsFinite(1) == true, "checkIsFinite(1) failed";
 }
 
 
-// test chechIsInfinite
+// test checkIsInfinite
 {
-	assert chechIsInfinite(NAN) == false, "chechIsInfinite(NAN) failed";
-	assert chechIsInfinite(INFINITY) == true, "chechIsInfinite(INFINITY) failed";
-	assert chechIsInfinite(0.0) == false, "chechIsInfinite(0.0) failed";
-	assert chechIsInfinite(1) == false, "chechIsInfinite(1) failed";
+	assert checkIsInfinite(NAN) == false, "checkIsInfinite(NAN) failed";
+	assert checkIsInfinite(INFINITY) == true, "checkIsInfinite(INFINITY) failed";
+	assert checkIsInfinite(0.0) == false, "checkIsInfinite(0.0) failed";
+	assert checkIsInfinite(1) == false, "checkIsInfinite(1) failed";
 }
 
 // test epsilionCompare

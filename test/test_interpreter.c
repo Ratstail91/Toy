@@ -18,6 +18,7 @@ static void noPrintFn(const char* output) {
 	//NO OP
 }
 
+int failedAssertions = 0;
 int ignoredAssertions = 0;
 static void noAssertFn(const char* output) {
 	if (strncmp(output, "!ignore", 7) == 0) {
@@ -27,6 +28,7 @@ static void noAssertFn(const char* output) {
 		fprintf(stderr, TOY_CC_ERROR "Assertion failure: ");
 		fprintf(stderr, "%s", output);
 		fprintf(stderr, "\n" TOY_CC_RESET); //default new line
+		failedAssertions++;
 	}
 }
 
@@ -127,6 +129,7 @@ int main() {
 			"index-assignment-left-bugfix.toy",
 			"index-dictionaries.toy",
 			"index-strings.toy",
+			"indexing-in-argument-list-bugfix.toy",
 			"jumps.toy",
 			"jumps-in-functions.toy",
 			"logicals.toy",
@@ -138,8 +141,9 @@ int main() {
 			"panic-within-functions.toy",
 			"polyfill-insert.toy",
 			"polyfill-remove.toy",
-			"short-circuiting-support.toy",
+			"short-circuit.toy",
 			"ternary-expressions.toy",
+			"trailing-comma-bugfix.toy",
 			"types.toy",
 			NULL
 		};
@@ -160,7 +164,10 @@ int main() {
 		return -1;
 	}
 
-	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
-	return 0;
+	if (failedAssertions == 0) {
+		printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
+	}
+
+	return failedAssertions;
 }
 

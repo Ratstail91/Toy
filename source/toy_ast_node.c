@@ -124,6 +124,16 @@ static void freeASTNodeCustom(Toy_ASTNode* node, bool freeSelf) {
 			//NO-OP
 		break;
 
+		case TOY_AST_NODE_AND:
+			Toy_freeASTNode(node->pathAnd.left);
+			Toy_freeASTNode(node->pathAnd.right);
+		break;
+
+		case TOY_AST_NODE_OR:
+			Toy_freeASTNode(node->pathOr.left);
+			Toy_freeASTNode(node->pathOr.right);
+		break;
+
 		case TOY_AST_NODE_PREFIX_INCREMENT:
 			Toy_freeLiteral(node->prefixIncrement.identifier);
 		break;
@@ -344,6 +354,26 @@ void Toy_emitASTNodeContinue(Toy_ASTNode** nodeHandle) {
 	Toy_ASTNode* tmp = TOY_ALLOCATE(Toy_ASTNode, 1);
 
 	tmp->type = TOY_AST_NODE_CONTINUE;
+
+	*nodeHandle = tmp;
+}
+
+void Toy_emitASTNodeAnd(Toy_ASTNode** nodeHandle, Toy_ASTNode* rhs) {
+	Toy_ASTNode* tmp = TOY_ALLOCATE(Toy_ASTNode, 1);
+
+	tmp->type = TOY_AST_NODE_AND;
+	tmp->binary.left = *nodeHandle;
+	tmp->binary.right = rhs;
+
+	*nodeHandle = tmp;
+}
+
+void Toy_emitASTNodeOr(Toy_ASTNode** nodeHandle, Toy_ASTNode* rhs) {
+	Toy_ASTNode* tmp = TOY_ALLOCATE(Toy_ASTNode, 1);
+
+	tmp->type = TOY_AST_NODE_OR;
+	tmp->binary.left = *nodeHandle;
+	tmp->binary.right = rhs;
 
 	*nodeHandle = tmp;
 }

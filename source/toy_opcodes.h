@@ -29,8 +29,8 @@ typedef enum Toy_Opcode {
 	TOY_OP_SCOPE_BEGIN,
 	TOY_OP_SCOPE_END,
 
-	TOY_OP_TYPE_DECL,		//declare a type to be used (as a literal)
-	TOY_OP_TYPE_DECL_LONG,	//declare a type to be used (as a long literal)
+	TOY_OP_TYPE_DECL_removed,
+	TOY_OP_TYPE_DECL_LONG_removed,
 
 	TOY_OP_VAR_DECL,		//declare a variable to be used (as a literal)
 	TOY_OP_VAR_DECL_LONG,	//declare a variable to be used (as a long literal)

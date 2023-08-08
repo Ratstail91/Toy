@@ -582,7 +582,7 @@ static bool execVarDecl(Toy_Interpreter* interpreter, bool lng) {
 		typeIndex = (int)readByte(interpreter->bytecode, &interpreter->count);
 	}
 
-	Toy_Literal identifier = interpreter->literalCache.literals[identifierIndex];
+	Toy_Literal identifier = Toy_copyLiteral(interpreter->literalCache.literals[identifierIndex]);
 	Toy_Literal type = Toy_copyLiteral(interpreter->literalCache.literals[typeIndex]);
 
 	Toy_Literal typeIdn = type;
@@ -597,6 +597,10 @@ static bool execVarDecl(Toy_Interpreter* interpreter, bool lng) {
 		interpreter->errorOutput("Can't redefine the variable \"");
 		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
+
+		Toy_freeLiteral(identifier);
+		Toy_freeLiteral(type);
+
 		return false;
 	}
 
@@ -623,14 +627,16 @@ static bool execVarDecl(Toy_Interpreter* interpreter, bool lng) {
 		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
 
+		Toy_freeLiteral(identifier);
 		Toy_freeLiteral(type);
 		Toy_freeLiteral(val);
 
 		return false;
 	}
 
-	Toy_freeLiteral(val);
+	Toy_freeLiteral(identifier);
 	Toy_freeLiteral(type);
+	Toy_freeLiteral(val);
 
 	return true;
 }
@@ -1042,57 +1048,63 @@ static bool execCompareLessEqual(Toy_Interpreter* interpreter, bool invert) {
 }
 
 static bool execAnd(Toy_Interpreter* interpreter) {
-	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
 	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
-
-	Toy_Literal rhsIdn = rhs;
-	if (TOY_IS_IDENTIFIER(rhs) && Toy_parseIdentifierToValue(interpreter, &rhs)) {
-		Toy_freeLiteral(rhsIdn);
-	}
 
 	Toy_Literal lhsIdn = lhs;
 	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
 		Toy_freeLiteral(lhsIdn);
 	}
 
-	//short-circuit - broken, see issue #73
+	//short-circuit - if not true
 	if (!TOY_IS_TRUTHY(lhs)) {
 		Toy_pushLiteralArray(&interpreter->stack, lhs);
+
+		int target = (int)readShort(interpreter->bytecode, &interpreter->count);
+
+		if (target + interpreter->codeStart > interpreter->length) {
+			interpreter->errorOutput("[internal] AND Jump out of range\n");
+			return false;
+		}
+
+		//actually jump
+		interpreter->count = target + interpreter->codeStart;
 	}
 	else {
-		Toy_pushLiteralArray(&interpreter->stack, rhs);
+		readShort(interpreter->bytecode, &interpreter->count); //discard
 	}
 
 	Toy_freeLiteral(lhs);
-	Toy_freeLiteral(rhs);
 
 	return true;
 }
 
 static bool execOr(Toy_Interpreter* interpreter) {
-	Toy_Literal rhs = Toy_popLiteralArray(&interpreter->stack);
 	Toy_Literal lhs = Toy_popLiteralArray(&interpreter->stack);
-
-	Toy_Literal rhsIdn = rhs;
-	if (TOY_IS_IDENTIFIER(rhs) && Toy_parseIdentifierToValue(interpreter, &rhs)) {
-		Toy_freeLiteral(rhsIdn);
-	}
 
 	Toy_Literal lhsIdn = lhs;
 	if (TOY_IS_IDENTIFIER(lhs) && Toy_parseIdentifierToValue(interpreter, &lhs)) {
 		Toy_freeLiteral(lhsIdn);
 	}
 
-	//short-circuit - broken, see issue #73
+	//short-circuit - if is true
 	if (TOY_IS_TRUTHY(lhs)) {
 		Toy_pushLiteralArray(&interpreter->stack, lhs);
+
+		int target = (int)readShort(interpreter->bytecode, &interpreter->count);
+
+		if (target + interpreter->codeStart > interpreter->length) {
+			interpreter->errorOutput("[internal] OR Jump out of range\n");
+			return false;
+		}
+
+		//actually jump
+		interpreter->count = target + interpreter->codeStart;
 	}
 	else {
-		Toy_pushLiteralArray(&interpreter->stack, rhs);
+		readShort(interpreter->bytecode, &interpreter->count); //discard
 	}
 
 	Toy_freeLiteral(lhs);
-	Toy_freeLiteral(rhs);
 
 	return true;
 }
@@ -1985,27 +1997,9 @@ static void readInterpreterSections(Toy_Interpreter* interpreter) {
 			}
 			break;
 
-			case TOY_LITERAL_TYPE: {
-				//what the literal is
-				Toy_LiteralType literalType = (Toy_LiteralType)readByte(interpreter->bytecode, &interpreter->count);
-				unsigned char constant = readByte(interpreter->bytecode, &interpreter->count);
-
-				Toy_Literal typeLiteral = TOY_TO_TYPE_LITERAL(literalType, constant);
-
-				//save the type
-				Toy_pushLiteralArray(&interpreter->literalCache, typeLiteral);
-
-#ifndef TOY_EXPORT
-				if (Toy_commandLine.verbose) {
-					printf("(type ");
-					Toy_printLiteral(typeLiteral);
-					printf(")\n");
-				}
-#endif
-			}
-			break;
-
-			case TOY_LITERAL_TYPE_INTERMEDIATE: {
+			case TOY_LITERAL_TYPE:
+			case TOY_LITERAL_TYPE_INTERMEDIATE:
+			{
 				//what the literal represents
 				Toy_LiteralType literalType = (Toy_LiteralType)readByte(interpreter->bytecode, &interpreter->count);
 				unsigned char constant = readByte(interpreter->bytecode, &interpreter->count);
@@ -2322,6 +2316,13 @@ bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_Liter
 			Toy_freeLiteral(argIdn);
 		}
 
+		//BUGFIX: coerce ints to floats, if the function requires floats
+		if (TOY_IS_INTEGER(arg) && TOY_IS_TYPE(paramArray->literals[i + 1]) && TOY_AS_TYPE(paramArray->literals[i + 1]).typeOf == TOY_LITERAL_FLOAT) {
+			Toy_Literal f = TOY_TO_FLOAT_LITERAL( (float)TOY_AS_INTEGER(arg) );
+			Toy_freeLiteral(arg);
+			arg = f;
+		}
+
 		if (!Toy_setScopeVariable(inner.scope, paramArray->literals[i], arg, false)) {
 			interpreter->errorOutput("[internal] Could not define parameter (bad type?)\n");
 
@@ -2415,6 +2416,13 @@ bool Toy_callLiteralFn(Toy_Interpreter* interpreter, Toy_Literal func, Toy_Liter
 
 	for (int i = 0; i < returnsFromInner.count && returnValue; i++) {
 		Toy_Literal ret = Toy_popLiteralArray(&returnsFromInner);
+
+		//BUGFIX: coerce the returned integers to floats, if specified
+		if (returnArray->count > 0 && TOY_AS_TYPE(returnArray->literals[i]).typeOf == TOY_LITERAL_FLOAT && TOY_IS_INTEGER(ret)) {
+			Toy_Literal f = TOY_TO_FLOAT_LITERAL( (float)TOY_AS_INTEGER(ret) );
+			Toy_freeLiteral(ret);
+			ret = f;
+		}
 
 		//check the return types
 		if (returnArray->count > 0 && TOY_AS_TYPE(returnArray->literals[i]).typeOf != ret.type) {

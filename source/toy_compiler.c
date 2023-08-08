@@ -318,6 +318,12 @@ bool checkNodeInTree(Toy_ASTNode* tree, Toy_ASTNode* node) {
 		case TOY_AST_NODE_FOR:
 			return checkNodeInTree(tree->pathFor.preClause, node) || checkNodeInTree(tree->pathFor.condition, node) || checkNodeInTree(tree->pathFor.postClause, node) || checkNodeInTree(tree->pathFor.thenPath, node);
 
+		case TOY_AST_NODE_AND:
+			return checkNodeInTree(tree->pathAnd.left, node) || checkNodeInTree(tree->pathAnd.right, node);
+
+		case TOY_AST_NODE_OR:
+			return checkNodeInTree(tree->pathOr.left, node) || checkNodeInTree(tree->pathOr.right, node);
+
 		case TOY_AST_NODE_ERROR:
 		case TOY_AST_NODE_LITERAL:
 		case TOY_AST_NODE_BREAK:
@@ -429,8 +435,6 @@ static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode
 					case TOY_OP_COMPARE_GREATER:
 					case TOY_OP_COMPARE_GREATER_EQUAL:
 					case TOY_OP_INVERT:
-					case TOY_OP_AND:
-					case TOY_OP_OR:
 						//place the rhs result before the outer instruction
 						compiler->bytecode[compiler->count++] = (unsigned char)ret; //1 byte
 						ret = TOY_OP_EOF;
@@ -645,7 +649,7 @@ static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode
 			for (int i = 0; i < node->fnCall.arguments->fnCollection.count; i++) { //reverse order, to count from the beginning in the interpreter
 				//sub-calls
 				if (node->fnCall.arguments->fnCollection.nodes[i].type != TOY_AST_NODE_LITERAL) {
-					Toy_Opcode override = Toy_writeCompilerWithJumps(compiler, &node->fnCall.arguments->fnCollection.nodes[i], breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
+					Toy_Opcode override = Toy_writeCompilerWithJumps(compiler, &node->fnCall.arguments->fnCollection.nodes[i], breakAddressesPtr, continueAddressesPtr, jumpOffsets, node); //BUGFIX: use node as rootNode, to allow indexing within argument lists
 					if (override != TOY_OP_EOF) {//compensate for indexing & dot notation being screwy
 						compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
 					}
@@ -914,6 +918,54 @@ static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode
 			Toy_freeLiteral(literal);
 
 			compiler->count += sizeof(unsigned short); //2 bytes
+		}
+		break;
+
+		case TOY_AST_NODE_AND: {
+			//process the lhs
+			Toy_Opcode override = Toy_writeCompilerWithJumps(compiler, node->pathAnd.left, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
+			if (override != TOY_OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
+
+			//insert the AND opcode to signal a possible jump
+			compiler->bytecode[compiler->count++] = TOY_OP_AND; //1 byte
+			int jumpToEnd = compiler->count;
+			compiler->count += sizeof(unsigned short); //2 bytes
+
+			//process the rhs
+			override = Toy_writeCompilerWithJumps(compiler, node->pathAnd.right, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
+			if (override != TOY_OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
+
+			//set the spot to jump to, to proceed
+			unsigned short tmpVal = compiler->count + jumpOffsets;
+			memcpy(compiler->bytecode + jumpToEnd, &tmpVal, sizeof(tmpVal));
+		}
+		break;
+
+		case TOY_AST_NODE_OR: {
+			//process the lhs
+			Toy_Opcode override = Toy_writeCompilerWithJumps(compiler, node->pathOr.left, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
+			if (override != TOY_OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
+
+			//insert the AND opcode to signal a possible jump
+			compiler->bytecode[compiler->count++] = TOY_OP_OR; //1 byte
+			int jumpToEnd = compiler->count;
+			compiler->count += sizeof(unsigned short); //2 bytes
+
+			//process the rhs
+			override = Toy_writeCompilerWithJumps(compiler, node->pathOr.right, breakAddressesPtr, continueAddressesPtr, jumpOffsets, rootNode);
+			if (override != TOY_OP_EOF) {//compensate for indexing & dot notation being screwy
+				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+			}
+
+			//set the spot to jump to, to proceed
+			unsigned short tmpVal = compiler->count + jumpOffsets;
+			memcpy(compiler->bytecode + jumpToEnd, &tmpVal, sizeof(tmpVal));
 		}
 		break;
 
