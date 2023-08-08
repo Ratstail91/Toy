@@ -1,12 +1,14 @@
 #include "lib_fileio.h"
 #include "toy_memory.h"
+#include "drive_system.h"
 
-#include "../hal/hal_file.h"
+#include <limits.h>
+#include <stdio.h>
 
 typedef struct Toy_File
 {
-	hal_file* fp;
-	hal_file_code error;
+	FILE* fp;
+	int error;
 	int size;
 } Toy_File;
 
@@ -17,18 +19,32 @@ static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	}
 
 	Toy_Literal modeLiteral = arguments->count == 2? Toy_popLiteralArray(arguments) : TOY_TO_STRING_LITERAL(Toy_createRefString("r"));
-	Toy_Literal filenameLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal drivePathLiteral = Toy_popLiteralArray(arguments);
 
-	// parse the filename (if it's an identifier)
-	Toy_Literal filenameLiteralIdn = filenameLiteral;
-	if (TOY_IS_IDENTIFIER(filenameLiteral) && Toy_parseIdentifierToValue(interpreter, &filenameLiteral)) {
-		Toy_freeLiteral(filenameLiteralIdn);
+	// parse the drivePath (if it's an identifier)
+	Toy_Literal drivePathLiteralIdn = drivePathLiteral;
+	if (TOY_IS_IDENTIFIER(drivePathLiteral) && Toy_parseIdentifierToValue(interpreter, &drivePathLiteral)) {
+		Toy_freeLiteral(drivePathLiteralIdn);
 	}
 
-	// check the filename type
-	if (!TOY_IS_STRING(filenameLiteral)) {
-		interpreter->errorOutput("open(string, string) incorrect type for the first parameter expected: string\n");
-		Toy_freeLiteral(filenameLiteral);
+	// check the drivePath type
+	if (!TOY_IS_STRING(drivePathLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to open\n");
+		Toy_freeLiteral(drivePathLiteral);
+		Toy_freeLiteral(modeLiteral);
+
+		return -1;
+	}
+
+	Toy_Literal filePathLiteral = Toy_getDrivePathLiteral(interpreter, &drivePathLiteral);
+	
+	if (TOY_IS_NULL(filePathLiteral)) {
+		interpreter->errorOutput("File not found in the specified drive\n");
+		Toy_freeLiteral(drivePathLiteral);
+		Toy_freeLiteral(filePathLiteral);
+		Toy_freeLiteral(modeLiteral);
+
+		return -1;
 	}
 
 	// parse the mode (if it's an identifier)
@@ -39,31 +55,42 @@ static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	// check the mode type
 	if (!TOY_IS_STRING(modeLiteral)) {
-		interpreter->errorOutput("open(string, string) incorrect type for the second parameter expected: string\n");
+		interpreter->errorOutput("Incorrect argument type passed to open\n");
+		Toy_freeLiteral(drivePathLiteral);
+		Toy_freeLiteral(filePathLiteral);
 		Toy_freeLiteral(modeLiteral);
+
+		return -1;
 	}
 
-	const char* filename = Toy_toCString(TOY_AS_STRING(filenameLiteral));
+	const char* filePath = Toy_toCString(TOY_AS_STRING(filePathLiteral));
+	size_t filePathLength = Toy_lengthRefString(TOY_AS_STRING(filePathLiteral));
+
 	const char* mode = Toy_toCString(TOY_AS_STRING(modeLiteral));
+
+	interpreter->printOutput(filePath);
 
 	// build file object
 	Toy_File* file = TOY_ALLOCATE(Toy_File, 1);
-	file->error = HAL_SUCCESS;
+	file->error = 0;
 	file->fp = NULL;
 	file->size = 0;
 
 	// attempt to open file
-	file->error = hal_file_manager.open(&file->fp, filename, mode);
+	file->fp = fopen(filePath, mode);
+	if (file->fp == NULL) {
+		file->error = 1;
+	}
 
 	// set size
-	// if (!error) {
-	// 	fseek(fp, 0, SEEK_END);
+	if (!file->error) {
+		fseek(file->fp, 0, SEEK_END);
 		
-	// 	// pervent integer overflow as ftell returns a long
-	// 	size = ftell(fp) > INT_MAX? INT_MAX : ftell(fp);
+		// pervent integer overflow as ftell returns a long
+		file->size = ftell(file->fp) > INT_MAX? INT_MAX : ftell(file->fp);
 		
-	// 	fseek(fp, 0, SEEK_SET);
-	// }
+		fseek(file->fp, 0, SEEK_SET);
+	}
 
 	// result
 	Toy_Literal fileLiteral = TOY_TO_OPAQUE_LITERAL(file, 900);
@@ -72,7 +99,8 @@ static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	
 	// cleanup
 	Toy_freeLiteral(fileLiteral);
-	Toy_freeLiteral(filenameLiteral);
+	Toy_freeLiteral(drivePathLiteral);
+	Toy_freeLiteral(filePathLiteral);
 	Toy_freeLiteral(modeLiteral);
 
 	return 1;
@@ -136,7 +164,7 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	}
 
 	// check self type
-	if (!TOY_IS_OPAQUE(selfLiteral)) {
+	if (!(TOY_IS_OPAQUE(selfLiteral) || TOY_GET_OPAQUE_TAG(selfLiteral) == 900)) {
 		interpreter->errorOutput("Incorrect argument type passed to read\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(valueLiteral);
@@ -148,7 +176,7 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	char buffer[256] = {0};
 
-	hal_file_manager.read(file->fp, buffer, 256);
+	// fscanf(file->fp, buffer);
 
 	Toy_RefString* result = Toy_createRefStringLength(buffer, 256);
 
@@ -160,7 +188,7 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	return 1;
 }
 
-//call the hook
+// call the hook
 typedef struct Natives {
 	char* name;
 	Toy_NativeFn fn;
@@ -246,9 +274,9 @@ int Toy_hookFileIO(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Lit
 	const int VARIABLES_SIZE = 3;
 	Variable variables[VARIABLES_SIZE];
 	
-	createToyVariable(&variables[0], "MAX_FILENAME_SIZE", HAL_MAX_FILENAME_SIZE);
-	createToyVariable(&variables[1], "MAX_FILES_OPEN", HAL_MAX_FILES_OPEN);
-	createToyVariable(&variables[2], "END_OF_FILE", HAL_EOF);
+	createToyVariable(&variables[0], "MAX_FILENAME_SIZE", FILENAME_MAX);
+	createToyVariable(&variables[1], "MAX_FILES_OPEN", FOPEN_MAX);
+	createToyVariable(&variables[2], "END_OF_FILE", EOF);
 
 	if (scopeConflict(interpreter, variables, VARIABLES_SIZE)) {
 		return -1;

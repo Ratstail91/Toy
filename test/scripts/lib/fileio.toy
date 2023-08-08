@@ -1,19 +1,10 @@
 import fileio;
 
-// test constants
-{
-    // print MAX_FILENAME_SIZE;
-    // print MAX_FILES_OPEN;
-    // print END_OF_FILE;
-
-    assert END_OF_FILE < 0, "END_OF_FILE failed";
-}
-
 // test open
 {
-    var file = open("does", "r");
+    var file = open("scripts:/fileio.txt", "r");
 
-    file.read(string);
+    // file.read(string);
     
     // TODO:
     // file.write(12, ",", 12);

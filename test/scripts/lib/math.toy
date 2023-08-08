@@ -183,3 +183,5 @@ import math;
 	assert epsilionCompare(1, 1.001) == false, "epsilionCompare(1, 1.001) failed";
 	assert epsilionCompare(0, 0) == true, "epsilionCompare(0, 0) failed";
 }
+
+print "All good";
