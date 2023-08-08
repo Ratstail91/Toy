@@ -3,7 +3,9 @@
 #include "drive_system.h"
 
 #include <limits.h>
+#include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 
 typedef struct Toy_File
 {
@@ -68,8 +70,6 @@ static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	const char* mode = Toy_toCString(TOY_AS_STRING(modeLiteral));
 
-	interpreter->printOutput(filePath);
-
 	// build file object
 	Toy_File* file = TOY_ALLOCATE(Toy_File, 1);
 	file->error = 0;
@@ -79,6 +79,9 @@ static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	// attempt to open file
 	file->fp = fopen(filePath, mode);
 	if (file->fp == NULL) {
+		TOY_FREE(Toy_File, file);
+		fprintf(stderr, "Error code: %d\n", errno);
+		fprintf(stderr, "File not found: %s\n", filePath);
 		file->error = 1;
 	}
 
@@ -107,28 +110,37 @@ static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 }
 
 static int nativeClose(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
-	// if (arguments->count != 1) {
-	// 	interpreter->errorOutput("Incorrect number of arguments to open\n");
-	// 	return -1;
-	// }
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments to close\n");
+		return -1;
+	}
 
-	// Toy_Literal fileLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
 
-	// // parse the file (if it's an identifier)
-	// Toy_Literal fileLiteralIdn = fileLiteral;
-	// if (TOY_IS_IDENTIFIER(fileLiteral) && Toy_parseIdentifierToValue(interpreter, &fileLiteral)) {
-	// 	Toy_freeLiteral(fileLiteralIdn);
-	// }
+	// parse the self (if it's an identifier)
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
 
-	// // check the file type
-	// if (!TOY_IS_STRING(fileLiteral)) {
-	// 	interpreter->errorOutput("close(File) incorrect type for the first parameter expected: File\n");
-	// 	Toy_freeLiteral(fileLiteral);
-	// }
+	// check self type
+	if (!(TOY_IS_OPAQUE(selfLiteral) || TOY_GET_OPAQUE_TAG(selfLiteral) == 900)) {
+		interpreter->errorOutput("Incorrect argument type passed to close\n");
+		Toy_freeLiteral(selfLiteral);
+		
+		return -1;
+	}
 
-	// FILE* fp = (FILE*)TOY_AS_OPAQUE(fileLiteral);
+	Toy_File* file = (Toy_File*)TOY_AS_OPAQUE(selfLiteral);
 
-	// Toy_freeLiteral(fileLiteral);
+	int result = fclose(file->fp);
+
+	// return the result
+	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result > 0);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	// cleanup
+	Toy_freeLiteral(selfLiteral);
 
 	return 1;
 }

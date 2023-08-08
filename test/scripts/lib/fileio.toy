@@ -14,5 +14,5 @@ import fileio;
     // file.position();
     // file.mode();
     
-    // close(file);
+    // file.close();
 }
