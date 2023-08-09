@@ -3,9 +3,7 @@
 #include "drive_system.h"
 
 #include <limits.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <errno.h>
 
 typedef struct Toy_File
 {
@@ -80,7 +78,6 @@ static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	file->fp = fopen(filePath, mode);
 	if (file->fp == NULL) {
 		TOY_FREE(Toy_File, file);
-		fprintf(stderr, "Error code: %d\n", errno);
 		fprintf(stderr, "File not found: %s\n", filePath);
 		file->error = 1;
 	}
@@ -96,8 +93,7 @@ static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	}
 
 	// result
-	Toy_Literal fileLiteral = TOY_TO_OPAQUE_LITERAL(file, 900);
-
+	Toy_Literal fileLiteral = TOY_TO_OPAQUE_LITERAL(file, TOY_OPAQUE_TAG_FILE);
 	Toy_pushLiteralArray(&interpreter->stack, fileLiteral);
 	
 	// cleanup
@@ -124,7 +120,7 @@ static int nativeClose(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	}
 
 	// check self type
-	if (!(TOY_IS_OPAQUE(selfLiteral) || TOY_GET_OPAQUE_TAG(selfLiteral) == 900)) {
+	if (!(TOY_IS_OPAQUE(selfLiteral) || TOY_GET_OPAQUE_TAG(selfLiteral) == TOY_OPAQUE_TAG_FILE)) {
 		interpreter->errorOutput("Incorrect argument type passed to close\n");
 		Toy_freeLiteral(selfLiteral);
 		
