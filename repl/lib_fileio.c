@@ -133,13 +133,20 @@ static int nativeClose(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 
 	Toy_File* file = (Toy_File*)TOY_AS_OPAQUE(selfLiteral);
 
-	int result = fclose(file->fp);
+	int result = 0;
+	if (file->error > 0) {
+		result = file->error;
+	}
+	else {
+		result = fclose(file->fp);
+	}
 
 	// return the result
 	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result > 0);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	// cleanup
+	TOY_FREE(Toy_File, file);
 	Toy_freeLiteral(selfLiteral);
 
 	return 1;
@@ -186,14 +193,51 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	Toy_File* file = (Toy_File*)TOY_AS_OPAQUE(selfLiteral);
 
-	char buffer[256] = {0};
+	Toy_Literal resultLiteral = {0};
 
-	// fscanf(file->fp, buffer);
+	if (file->error == 0) {
+		switch (selfLiteral.type)
+		{
+		case TOY_LITERAL_INTEGER:
+		{
+			int value = 0;
+			file->error = fscanf(file->fp, "%i", &value);
 
-	Toy_RefString* result = Toy_createRefStringLength(buffer, 256);
+			resultLiteral = TOY_TO_INTEGER_LITERAL(value);
 
-	Toy_pushLiteralArray(&interpreter->stack, TOY_TO_STRING_LITERAL(result));
+			break;
+		}
 
+		case TOY_LITERAL_FLOAT:
+		{
+			float value = 0.0f;
+			file->error = fscanf(file->fp, "%f", &value);
+
+			resultLiteral = TOY_TO_FLOAT_LITERAL(value);
+
+			break;
+		}
+
+		case TOY_LITERAL_STRING:
+		{
+			char value[TOY_MAX_STRING_LENGTH] = {0};
+			fgets(value, sizeof(value) - 1, file->fp);
+			value[TOY_MAX_STRING_LENGTH] = '\0';
+
+			resultLiteral = TOY_TO_STRING_LITERAL(Toy_createRefStringLength(value, TOY_MAX_STRING_LENGTH));
+
+			break;
+		}
+		
+		default:
+			break;
+		}
+	}
+
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	// cleanup
+	Toy_freeLiteral(resultLiteral);
 	Toy_freeLiteral(valueLiteral);
 	Toy_freeLiteral(selfLiteral);
 

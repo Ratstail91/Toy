@@ -10,9 +10,9 @@ import fileio;
     // file.write(12, ",", 12);
     // file.size();
     // file.isOpened();
-    // file.error();
+    // file.getrror();
     // file.position();
     // file.mode();
     
-    // file.close();
+    print file.close();
 }
