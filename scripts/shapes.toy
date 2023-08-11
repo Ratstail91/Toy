@@ -1,0 +1,61 @@
+import math;
+import fileio;
+import standard;
+
+fn circle(radius: int, centerX: int, centerY: int) {
+    for (var y: int = 0; y <= 2 * radius; y++) {
+        for (var x: int = 0; x <= 2 * radius; x++) {
+            var distance: int = round(sqrt((x - radius) * (x - radius) + (y - radius) * (y - radius)));
+
+            if (distance <= radius) {
+                output.write("*");
+            } else {
+                output.write(" ");
+            }
+        }
+
+        output.write("\n");
+    }
+}
+
+fn triangle(height: int) {
+    for (var i: int = 1; i <= height; i++) {
+        for (var j: int = 1; j <= height - i; j++) {
+            output.write(" ");
+        }
+
+        for (var j: int = 1; j <= 2 * i - 1; j++) {
+            output.write("*");
+        }
+
+        output.write("\n");
+    }
+}
+
+fn square(size: int) {
+    for (var i: int = 0; i < size; ++i) {
+        for (var j: int = 0; j < size; ++j) {
+            output.write("* ");
+        }
+
+        output.write("\n");
+    }
+}
+
+for (;;) {
+    output.write("Enter:\n0\tfor circle\n1\tfor triangle\n2\tfor square\n> ");
+    var result: any = input.read(int);
+
+    if (result == 0) {
+        circle(5, 5, 5);
+    }
+    else if (result == 1) {
+        triangle(5);
+    }
+    else if (result == 2) {
+        square(5);
+    }
+    else {
+        output.write("invalid input :(\n");
+    }
+}
