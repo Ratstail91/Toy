@@ -4,13 +4,28 @@
 
 #include <limits.h>
 #include <stdio.h>
-#include <errno.h>
 
 typedef struct Toy_File
 {
 	FILE* fp;
 	Toy_RefString* mode;
+	Toy_RefString* name;
 } Toy_File;
+
+Toy_File* createToyFile(const char* mode, const char* name) {
+	Toy_File* file = TOY_ALLOCATE(Toy_File, 1);
+	file->fp = NULL;
+	file->mode = Toy_createRefString(mode);
+	file->name = Toy_createRefString(name);
+
+	return file;
+}
+
+void deleteToyFile(Toy_File* file) {
+	Toy_deleteRefString(file->mode);
+	Toy_deleteRefString(file->name);
+	TOY_FREE(Toy_File, file);
+}
 
 static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count < 1 || arguments->count > 2) {
@@ -69,9 +84,7 @@ static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	const char* mode = Toy_toCString(TOY_AS_STRING(modeLiteral));
 
 	// build file object
-	Toy_File* file = TOY_ALLOCATE(Toy_File, 1);
-	file->fp = NULL;
-	file->mode = Toy_createRefString(mode);
+	Toy_File* file = createToyFile(mode, filePath);
 
 	// attempt to open file
 	file->fp = fopen(filePath, mode);
@@ -79,6 +92,7 @@ static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	// result
 	Toy_Literal fileLiteral = TOY_TO_NULL_LITERAL;
 	if (file->fp == NULL) {
+		Toy_deleteRefString(file->mode);
 		TOY_FREE(Toy_File, file);
 	}
 	else {
@@ -130,8 +144,7 @@ static int nativeClose(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	// cleanup
-	TOY_FREE(Toy_File, file);
-	Toy_deleteRefString(file->mode);
+	deleteToyFile(file);
 	Toy_freeLiteral(selfLiteral);
 
 	return 1;
@@ -319,6 +332,148 @@ static int nativeWrite(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	return 1;
 }
 
+static int nativeRename(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments to rename\n");
+		return -1;
+	}
+
+	Toy_Literal valueLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	// parse the value (if it's an identifier)
+	Toy_Literal valueLiteralIdn = valueLiteral;
+	if (TOY_IS_IDENTIFIER(valueLiteral) && Toy_parseIdentifierToValue(interpreter, &valueLiteral)) {
+		Toy_freeLiteral(valueLiteralIdn);
+	}
+
+	// check the value type
+	if (!TOY_IS_STRING(valueLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to rename\n");
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(valueLiteral);
+
+		return -1;
+	}
+
+	// parse the self (if it's an identifier)
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	// check self type
+	if (!TOY_IS_OPAQUE(selfLiteral) && !(TOY_GET_OPAQUE_TAG(selfLiteral) == 900)) {
+		interpreter->errorOutput("Incorrect argument type passed to read\n");
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(valueLiteral);
+		
+		return -1;
+	}
+
+	Toy_File* file = (Toy_File*)TOY_AS_OPAQUE(selfLiteral);
+
+	int result = rename(Toy_toCString(file->name), Toy_toCString(TOY_AS_STRING(valueLiteral)));
+
+	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result != 0);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	// cleanup
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(valueLiteral);
+	Toy_freeLiteral(selfLiteral);
+
+	return 1;
+}
+
+static int nativeSeek(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments to seek\n");
+		return -1;
+	}
+
+
+	Toy_Literal originLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal offsetLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	// parse the value (if it's an identifier)
+	Toy_Literal offsetLiteralIdn = offsetLiteral;
+	if (TOY_IS_IDENTIFIER(offsetLiteral) && Toy_parseIdentifierToValue(interpreter, &offsetLiteral)) {
+		Toy_freeLiteral(offsetLiteralIdn);
+	}
+
+	// check the value type
+	if (!TOY_IS_INTEGER(offsetLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to seek\n");
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(offsetLiteral);
+		Toy_freeLiteral(originLiteral);
+
+		return -1;
+	}
+
+	// parse the origin (if it's an identifier)
+	Toy_Literal originLiteralIdn = originLiteral;
+	if (TOY_IS_IDENTIFIER(originLiteral) && Toy_parseIdentifierToValue(interpreter, &originLiteral)) {
+		Toy_freeLiteral(originLiteralIdn);
+	}
+
+	// check the origin type
+	if (!TOY_IS_INTEGER(originLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to seek\n");
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(offsetLiteral);
+		Toy_freeLiteral(originLiteral);
+
+		return -1;
+	}
+
+	// parse the self (if it's an identifier)
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	// check self type
+	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != 900) {
+		interpreter->errorOutput("Incorrect argument type passed to seek\n");
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(offsetLiteral);
+		Toy_freeLiteral(originLiteral);
+		
+		return -1;
+	}
+
+	Toy_File* file = (Toy_File*)TOY_AS_OPAQUE(selfLiteral);
+	int offset = TOY_AS_INTEGER(offsetLiteral);
+	const char* orginString = Toy_toCString(TOY_AS_STRING(originLiteral));
+
+	int origin = 0;
+
+	if (Toy_equalsRefString(orginString, "set")) {
+		origin = SEEK_SET;
+	}
+	else if (Toy_equalsRefString(orginString, "cur")) {
+		origin = SEEK_CUR;
+	}
+	else if (Toy_equalsRefString(orginString, "end")) {
+		origin = SEEK_END;
+	}
+
+	int result = fseek(file->fp, offset, origin);
+
+	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result != 0);
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	// cleanup
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(offsetLiteral);
+	Toy_freeLiteral(selfLiteral);
+
+	return 1;
+}
+
 static int nativeError(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments to error\n");
@@ -346,7 +501,7 @@ static int nativeError(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	int result = ferror(file->fp);
 
 	// return the result
-	Toy_Literal resultLiteral = TOY_TO_INTEGER_LITERAL(result == 0);
+	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result != 0);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	// cleanup
@@ -382,7 +537,7 @@ static int nativeCompleted(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 	int result = feof(file->fp);
 
 	// return the result
-	Toy_Literal resultLiteral = TOY_TO_INTEGER_LITERAL(result == 0);
+	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result != 0);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	// cleanup
@@ -414,16 +569,9 @@ static int nativePosition(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	}
 
 	Toy_File* file = (Toy_File*)TOY_AS_OPAQUE(selfLiteral);
-
-	int size = 0;
 		
 	// pervent integer overflow as ftell returns a long
-	if (ftell(file->fp) > INT_MAX) {
-		size = INT_MAX;
-	}
-	else {
-		size = ftell(file->fp);
-	}
+	int size = ftell(file->fp) > INT_MAX? INT_MAX : ftell(file->fp);
 		
 	// return the result
 	Toy_Literal resultLiteral = TOY_TO_INTEGER_LITERAL(size);
@@ -599,6 +747,10 @@ int Toy_hookFileIO(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Lit
 		{"read", nativeRead},
 		{"write", nativeWrite},
 
+		// operations
+		{"rename", nativeRename},
+		{"seek", nativeSeek},
+
 		// accessors
 		{"error", nativeError},
 		{"completed", nativeCompleted},
@@ -617,13 +769,13 @@ int Toy_hookFileIO(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Lit
 	createToyVariableInt(&variables[1], "MAX_FILES_OPEN", FOPEN_MAX);
 	createToyVariableInt(&variables[2], "END_OF_FILE", EOF);
 
-	Toy_File* outFile = TOY_ALLOCATE(Toy_File, 1);
+	Toy_File* outFile = createToyFile("w", "outFile");
 	outFile->fp = stdout;
 
 	createToyVariableFile(&variables[3], "output", outFile);
 
-	Toy_File* inFile = TOY_ALLOCATE(Toy_File, 1);
-	inFile->fp = stdin;
+	Toy_File* inFile = createToyFile("r", "inFile");
+	outFile->fp = stdin;
 
 	createToyVariableFile(&variables[4], "input", inFile);
 

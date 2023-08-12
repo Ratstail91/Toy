@@ -1,5 +1,7 @@
 import fileio;
 
+var PATH: string const = "scripts:/lib/file/fileio.txt";
+
 // test global constants
 {
     assert MAX_FILENAME_SIZE > 0, "MAX_FILENAME_SIZE failed";
@@ -9,7 +11,7 @@ import fileio;
 
 // test open and close
 {
-    var file = open("scripts:/lib/file/fileio.txt", "r");
+    var file = open(PATH, "r");
     assert file != null, "open failed";
 
     var wrong = open("scripts:/doesNotExist", "r");
@@ -18,38 +20,54 @@ import fileio;
     assert file.close() == true, "close failed";
 }
 
-// test accessors
+// test append
 {
-    var file = open("scripts:/lib/file/fileio.txt", "r");
-
-    print file.error();
-    print file.completed();
-    print file.position();
-    print file.size();
-    print file.mode(); 
+    var file = open(PATH, "a");
+    assert file.write("appended text") == true, "append failed";
 
     file.close();
 }
 
-// test output
+// test accessors
 {
-    // assert output.write(8), "write int failed";
-    // assert output.write("\n"), "write string failed";
-    // assert output.write(12.5), "write float failed";
+    var file = open(PATH, "r");
+
+    assert file.error() == false, "error failed";
+    assert file.completed() == false, "completed failed";
+    assert file.position() == 0, "position failed";
+    assert file.size() >= 13, "size failed";
+    assert file.mode() == "r", "mode failed"; 
+
+    file.read(string);
+
+    assert file.error() == false, "error failed";
+    assert file.completed() == true, "completed failed";
+    assert file.position() >= 13, "position failed";
+    assert file.size() >= 13, "size failed";
+    // assert file.mode() == "r", "mode failed"; 
+
+    file.close();
 }
 
-// test input
+// test write
 {
-    // // enter 8
-    // assert input.read(int) == 8, "read int failed";
+    assert output.write(8), "write int failed";
+    assert output.write("\n"), "write string failed";
+    assert output.write(12.5), "write float failed";
+}
 
-    // // enter 12.5
-    // assert input.read(float) == 12.5, "read float failed";
+// test read
+{
+    // enter 8
+    assert input.read(int) == 8, "read int failed";
 
-    // // enter test
-    // assert input.read(string) == "test\n", "read string failed";
+    // enter 12.5
+    assert input.read(float) == 12.5, "read float failed";
 
-    // // invaild types
-    // assert input.read(type) == null, "type failed";
-    // assert input.read(any) == null, "any failed";
+    // enter test
+    assert input.read(string) == "test\n", "read string failed";
+
+    // invaild types
+    assert input.read(type) == null, "type failed";
+    assert input.read(any) == null, "any failed";
 }
