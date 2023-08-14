@@ -42,12 +42,12 @@ fn square(size: int) {
     }
 }
 
-for (;;) {
+while (true) {
     output.write("Enter:\n0\tfor circle\n1\tfor triangle\n2\tfor square\n> ");
     var result: any = input.read(int);
 
     if (result == 0) {
-        circle(5, 5, 5);
+        circle(2, 5, 5);
     }
     else if (result == 1) {
         triangle(5);
