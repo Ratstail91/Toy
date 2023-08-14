@@ -54,7 +54,7 @@ The current minor version of Toy. This value is embedded into the bytecode, and 
 This value MUST fit into an unsigned char.
 !*/
 
-#define TOY_VERSION_MINOR 2
+#define TOY_VERSION_MINOR 3
 
 /*!
 ### TOY_VERSION_PATCH
@@ -64,7 +64,7 @@ The current patch version of Toy. This value is embedded into the bytecode.
 This value MUST fit into an unsigned char.
 !*/
 
-#define TOY_VERSION_PATCH 2
+#define TOY_VERSION_PATCH 0
 
 /*!
 ### TOY_VERSION_BUILD
