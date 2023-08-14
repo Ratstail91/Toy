@@ -587,9 +587,13 @@ static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode
 			Toy_initCompiler(fnCompiler);
 			Toy_writeCompiler(fnCompiler, node->fnDecl.arguments); //can be empty, but not NULL
 			Toy_writeCompiler(fnCompiler, node->fnDecl.returns); //can be empty, but not NULL
-			Toy_Opcode override = Toy_writeCompilerWithJumps(fnCompiler, node->fnDecl.block, NULL, NULL, -4, rootNode); //can be empty, but not NULL
-			if (override != TOY_OP_EOF) {//compensate for indexing & dot notation being screwy
-				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
+
+			//BUGFIX: copied from TOY_AST_NODE_BLOCK, omitting the SCOPE_BEGIN and SCOPE_END opcodes (might squeeze a few bytes out of the interpreter's scopes by declaring one less)
+			for (int i = 0; i < node->fnDecl.block->block.count; i++) {
+				Toy_Opcode override = Toy_writeCompilerWithJumps(fnCompiler, &(node->fnDecl.block->block.nodes[i]), NULL, NULL, -4, &(node->fnDecl.block->block.nodes[i]));
+				if (override != TOY_OP_EOF) {//compensate for indexing & dot notation being screwy
+					fnCompiler->bytecode[fnCompiler->count++] = (unsigned char)override; //1 byte
+				}
 			}
 
 			//adopt the panic state if anything happened

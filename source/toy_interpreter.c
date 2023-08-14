@@ -655,8 +655,15 @@ static bool execFnDecl(Toy_Interpreter* interpreter, bool lng) {
 		functionIndex = (int)readByte(interpreter->bytecode, &interpreter->count);
 	}
 
-	Toy_Literal identifier = interpreter->literalCache.literals[identifierIndex];
-	Toy_Literal function = interpreter->literalCache.literals[functionIndex];
+	Toy_Literal identifier = Toy_copyLiteral(interpreter->literalCache.literals[identifierIndex]);
+	Toy_Literal function = Toy_copyLiteral(interpreter->literalCache.literals[functionIndex]);
+
+	if (!TOY_IS_IDENTIFIER(identifier) || !TOY_IS_FUNCTION(function)) {
+		interpreter->errorOutput("Failed to declare a function, unknown literal error\n");
+		Toy_freeLiteral(identifier);
+		Toy_freeLiteral(function);
+		return false;
+	}
 
 	TOY_AS_FUNCTION(function).scope = Toy_pushScope(interpreter->scope); //hacked in (needed for closure persistance)
 
@@ -666,6 +673,10 @@ static bool execFnDecl(Toy_Interpreter* interpreter, bool lng) {
 		interpreter->errorOutput("Can't redefine the function \"");
 		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
+
+		Toy_freeLiteral(identifier);
+		Toy_freeLiteral(function);
+
 		return false;
 	}
 
@@ -673,6 +684,10 @@ static bool execFnDecl(Toy_Interpreter* interpreter, bool lng) {
 		interpreter->errorOutput("Incorrect type assigned to variable \"");
 		Toy_printLiteralCustom(identifier, interpreter->errorOutput);
 		interpreter->errorOutput("\"\n");
+
+		Toy_freeLiteral(identifier);
+		Toy_freeLiteral(function);
+
 		return false;
 	}
 
@@ -680,6 +695,8 @@ static bool execFnDecl(Toy_Interpreter* interpreter, bool lng) {
 	TOY_AS_FUNCTION(function).scope = NULL;
 
 	Toy_freeLiteral(type);
+	Toy_freeLiteral(identifier);
+	Toy_freeLiteral(function);
 
 	return true;
 }
