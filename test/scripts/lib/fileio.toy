@@ -19,25 +19,27 @@ fn reset() {
 
 // test read
 {
-    // // enter test
-    // assert input.read(string) == "test\n", "read string failed";
+    var reader = open("scripts:/lib/file/inputs.txt", "r");
 
-    // // enter 8
-    // assert input.read(int) == 8, "read int failed";
+    assert reader.read(int) == 8, "read int failed";
+    assert reader.read(float) == 12.5, "read float failed";
+    assert reader.read(string) == "\ntest\n", "read string failed";
 
-    // // enter 12.5
-    // assert input.read(float) == 12.5, "read float failed";
+    // invaild types
+    assert input.read(type) == null, "read type failed";
+    assert input.read(any) == null, "read any failed";
 
-    // // invaild types
-    // assert input.read(type) == null, "read type failed";
-    // assert input.read(any) == null, "read any failed";
+    reader.close();
 }
 
 // test write
 {
-    assert output.write(8) == true, "write int failed";
-    assert output.write("\n") == true, "write string failed";
-    assert output.write(12.5) == true, "write float failed";
+    var writer = open("scripts:/lib/file/outputs.txt", "w");
+    assert writer.write(8) == true, "write int failed";
+    assert writer.write("\n") == true, "write string failed";
+    assert writer.write(12.5) == true, "write float failed";
+
+    writer.close();
 }
 
 
