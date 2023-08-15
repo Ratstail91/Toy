@@ -2,6 +2,14 @@ import fileio;
 
 var PATH: string const = "scripts:/lib/file/fileio.txt";
 
+// reset file to orginal state
+fn reset() {
+    var writer = open(PATH, "w");
+    writer.write("Hello, World!\n");
+
+    writer.close();
+}
+
 // test global constants
 {
     assert MAX_FILENAME_SIZE > 0, "MAX_FILENAME_SIZE failed";
@@ -9,28 +17,89 @@ var PATH: string const = "scripts:/lib/file/fileio.txt";
     assert END_OF_FILE == -1, "END_OF_FILE failed";
 }
 
+// test read
+{
+    // // enter test
+    // assert input.read(string) == "test\n", "read string failed";
+
+    // // enter 8
+    // assert input.read(int) == 8, "read int failed";
+
+    // // enter 12.5
+    // assert input.read(float) == 12.5, "read float failed";
+
+    // // invaild types
+    // assert input.read(type) == null, "read type failed";
+    // assert input.read(any) == null, "read any failed";
+}
+
+// test write
+{
+    assert output.write(8) == true, "write int failed";
+    assert output.write("\n") == true, "write string failed";
+    assert output.write(12.5) == true, "write float failed";
+}
+
+
 // test open and close
 {
     var reader = open(PATH, "r");
-    assert reader != null, "open failed on existing file";
+    assert reader != null, "open failed in reading mode";
+
+    assert reader.close() == true, "close failed";
 
     var file = open("scripts:/doesNotExist", "r");
     assert file == null, "open failed on nonexisting file";
-    
-    assert reader.close() == true, "close failed";
+}
+
+// test write
+{
+    var writer = open(PATH, "w");
+    assert writer != null, "open failed in writing mode";
+
+    assert writer.read(string) != null, "read in writing mode failed";
+    assert writer.write("writen text") == true, "write in writing mode failed";
+
+    writer.close();
+    reset();
 }
 
 // test append
 {
     var appender = open(PATH, "a");
+    assert appender != null, "open failed on appending file";
+
     assert appender.write("appended text") == true, "append failed";
 
     appender.close();
+    reset();
+}
 
-    var writer = open(PATH, "w");
-    writer.write("Hello, World!\n");
+// test read extended
+{
+    var reader = open(PATH, "r+");
+    assert reader != null, "open failed on read extended mode";
+
+    assert reader.write("writen text") == true, "write in read extended failed";
+    assert reader.read(string) == "d!\n", "read in read extended failed";
+
+    reader.close();
+    reset();
+}
+
+// test write extended
+{
+    var writer = open(PATH, "w+");
+    assert writer != null, "open failed on write extended mode";
+
+    assert writer.write("writen text") == true, "write in write extended failed";
+
+    writer.seek("bgn", 0);
+
+    assert writer.read(string) == "writen text", "read in write extended failed";
 
     writer.close();
+    reset();
 }
 
 // test rename
@@ -38,16 +107,17 @@ var PATH: string const = "scripts:/lib/file/fileio.txt";
     var reader = open(PATH, "r");
     assert reader.rename("scripts:/lib/file/newName.txt") == true, "rename failed";
 
+    reader.rename(PATH);
     reader.close();
 }
 
 // test seek
 {
     var reader = open(PATH, "r");
-    assert reader.seek("set", 6) == true, "seek failed";
+    assert reader.seek("bgn", 6) == true, "seek operation failed";
 
     var contents = reader.read(string);
-    assert contents == " World!\n", "seek failed to move";
+    assert contents == " World!\n", "seek failed to move file position";
 
     reader.close();
 }
@@ -64,36 +134,13 @@ var PATH: string const = "scripts:/lib/file/fileio.txt";
 
     reader.read(string);
 
-    // assert reader.error() == false, "error failed";
-    // assert reader.completed() == true, "completed failed"; // Leaks for some reason?
-    // assert reader.position() == 14, "position failed";
-    // assert reader.size() == 13, "size failed";
-    // assert reader.mode() == "r", "mode failed"; 
+    assert reader.error() == false, "error failed";
+    assert reader.completed() == true, "completed after read failed";
+    assert reader.position() == 14, "position failed";
+    assert reader.size() == 14, "size failed";
+    assert reader.mode() == "r", "mode failed"; 
 
     reader.close();
 }
 
-// test write
-{
-    assert output.write(8), "write int failed";
-    assert output.write("\n"), "write string failed";
-    assert output.write(12.5), "write float failed";
-}
-
-// test read
-{
-    output.write("\n");
-
-    // enter 8
-    assert input.read(int) == 8, "read int failed";
-
-    // enter 12.5
-    assert input.read(float) == 12.5, "read float failed";
-
-    // enter test
-    assert input.read(string) == "test\n", "read string failed";
-
-    // invaild types
-    assert input.read(type) == null, "type failed";
-    assert input.read(any) == null, "any failed";
-}
+print "All good";

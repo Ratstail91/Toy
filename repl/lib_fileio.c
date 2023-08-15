@@ -196,18 +196,18 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	switch (valueLiteral.as.type.typeOf)
 		{
-		case TOY_LITERAL_BOOLEAN:
-		{
-			char value[TOY_MAX_STRING_LENGTH] = {0};
-			fgets(value, sizeof(value) - 1, file->fp);
-			value[TOY_MAX_STRING_LENGTH] = '\0';
+		// case TOY_LITERAL_BOOLEAN:
+		// {
+		// 	char value[TOY_MAX_STRING_LENGTH] = {0};
+		// 	fgets(value, sizeof(value) - 1, file->fp);
+		// 	value[TOY_MAX_STRING_LENGTH] = '\0';
 
-			Toy_Literal stringLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString(value));
-			resultLiteral = TOY_TO_BOOLEAN_LITERAL(TOY_IS_TRUTHY(stringLiteral));
-			Toy_freeLiteral(stringLiteral);
+		// 	Toy_Literal stringLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString(value));
+		// 	resultLiteral = TOY_TO_BOOLEAN_LITERAL(TOY_IS_TRUTHY(stringLiteral));
+		// 	Toy_freeLiteral(stringLiteral);
 
-			break;
-		}
+		// 	break;
+		// }
 
 		case TOY_LITERAL_INTEGER:
 		{
@@ -232,7 +232,7 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 		case TOY_LITERAL_STRING:
 		{
 			char value[TOY_MAX_STRING_LENGTH] = {0};
-			fgets(value, sizeof(value) - 1, file->fp);
+			fread(value, sizeof(char), sizeof(value) - 1, file->fp);
 			value[TOY_MAX_STRING_LENGTH] = '\0';
 
 			resultLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString(value));
@@ -372,8 +372,10 @@ static int nativeRename(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 		return -1;
 	}
 
+	Toy_Literal filePathLiteral = Toy_getDrivePathLiteral(interpreter, &valueLiteral);
+
 	Toy_File* file = (Toy_File*)TOY_AS_OPAQUE(selfLiteral);
-	const char* newName = Toy_toCString(TOY_AS_STRING(valueLiteral));
+	const char* newName = Toy_toCString(TOY_AS_STRING(filePathLiteral));
 
 	// close the file
 	if (file->fp != NULL) {
@@ -384,18 +386,20 @@ static int nativeRename(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 	// rename the file
 	int result = rename(Toy_toCString(file->name), newName);
 
-	// attempt to open file
+	// open file again
 	file->fp = fopen(newName, Toy_toCString(file->mode));
 
+	// update the file object's name
 	Toy_deleteRefString(file->name);
 	file->name = Toy_createRefString(newName);
 
 	// return result
-	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result != 0);
+	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result == 0);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	// cleanup
 	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(filePathLiteral);
 	Toy_freeLiteral(valueLiteral);
 	Toy_freeLiteral(selfLiteral);
 
@@ -462,11 +466,10 @@ static int nativeSeek(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	Toy_File* file = (Toy_File*)TOY_AS_OPAQUE(selfLiteral);
 	int offset = TOY_AS_INTEGER(offsetLiteral);
-	Toy_RefString* orginString = TOY_AS_STRING(originLiteral);
+	Toy_RefString* orginString = Toy_copyRefString(TOY_AS_STRING(originLiteral));
 
 	int origin = 0;
-
-	if (Toy_equalsRefStringCString(orginString, "set")) {
+	if (Toy_equalsRefStringCString(orginString, "bgn")) {
 		origin = SEEK_SET;
 	}
 	else if (Toy_equalsRefStringCString(orginString, "cur")) {
@@ -476,13 +479,13 @@ static int nativeSeek(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 		origin = SEEK_END;
 	}
 
-	int result = fseek(file->fp, offset, origin);
+	int result = origin >= SEEK_SET && origin <= SEEK_END? 
+		fseek(file->fp, offset, origin) : -1;
 
 	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result == 0);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	// cleanup
-	Toy_deleteRefString(orginString);
 	Toy_freeLiteral(resultLiteral);
 	Toy_freeLiteral(offsetLiteral);
 	Toy_freeLiteral(selfLiteral);
@@ -674,7 +677,7 @@ static int nativeMode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	Toy_File* file = (Toy_File*)TOY_AS_OPAQUE(selfLiteral);
 
 	// return the result
-	Toy_Literal resultLiteral = TOY_TO_STRING_LITERAL(file->mode);
+	Toy_Literal resultLiteral = TOY_TO_STRING_LITERAL(Toy_copyRefString(file->mode));
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	// cleanup
