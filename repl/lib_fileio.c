@@ -486,6 +486,7 @@ static int nativeSeek(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	// cleanup
+	Toy_deleteRefString(orginString);
 	Toy_freeLiteral(resultLiteral);
 	Toy_freeLiteral(offsetLiteral);
 	Toy_freeLiteral(selfLiteral);

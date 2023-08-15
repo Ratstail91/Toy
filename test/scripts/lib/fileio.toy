@@ -42,7 +42,6 @@ fn reset() {
     writer.close();
 }
 
-
 // test open and close
 {
     var reader = open(PATH, "r");
@@ -144,5 +143,9 @@ fn reset() {
 
     reader.close();
 }
+
+// standard in/out are closed to prevent memory leaks
+input.close();
+output.close();
 
 print "All good";
