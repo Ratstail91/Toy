@@ -144,8 +144,4 @@ fn reset() {
     reader.close();
 }
 
-// standard in/out are closed to prevent memory leaks
-input.close();
-output.close();
-
 print "All good";

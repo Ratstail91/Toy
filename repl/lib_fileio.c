@@ -792,12 +792,14 @@ int Toy_hookFileIO(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Lit
 	createToyVariableInt(&variables[1], "MAX_FILES_OPEN", FOPEN_MAX);
 	createToyVariableInt(&variables[2], "END_OF_FILE", EOF);
 
-	Toy_File* outFile = createToyFile("w", "output");
+	static Toy_File* outFile;
+	outFile = createToyFile("w", "output");
 	outFile->fp = stdout;
 
 	createToyVariableFile(&variables[3], "output", outFile);
 
-	Toy_File* inFile = createToyFile("r", "input");
+	static Toy_File* inFile;
+	inFile = createToyFile("r", "input");
 	inFile->fp = stdin;
 
 	createToyVariableFile(&variables[4], "input", inFile);
