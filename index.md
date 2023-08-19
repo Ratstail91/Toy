@@ -57,7 +57,7 @@ print tally(); //3
 * [Building Toy](deep-dive/building-toy)
 * [Embedding Toy](deep-dive/embedding-toy)
 * [Compiling Toy](deep-dive/compiling-toy)
-* [Developing Toy](deep-dive/developing-toy)
+* [Developing Toy](deep-dive/developing-toy) (incomplete, but being expanded)
 * [Testing Toy](deep-dive/testing-toy)
 * [Roadmapping Toy](deep-dive/roadmapping-toy)
 
