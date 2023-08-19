@@ -12,11 +12,11 @@ typedef struct Toy_File
 	Toy_RefString* name;
 } Toy_File;
 
-Toy_File* createToyFile(const char* mode, const char* name) {
+Toy_File* createToyFile(Toy_RefString* mode, Toy_RefString* name) {
 	Toy_File* file = TOY_ALLOCATE(Toy_File, 1);
 	file->fp = NULL;
-	file->mode = Toy_createRefString(mode);
-	file->name = Toy_createRefString(name);
+	file->mode = Toy_copyRefString(mode);
+	file->name = Toy_copyRefString(name);
 
 	return file;
 }
@@ -28,8 +28,12 @@ void deleteToyFile(Toy_File* file) {
 }
 
 static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
-	if (arguments->count < 1 || arguments->count > 2) {
-		interpreter->errorOutput("Incorrect number of arguments to open\n");
+	if (arguments->count < 1) {
+		interpreter->errorOutput("Too few arguments open(string, string) expects two arguments\n");
+		return -1;
+	}
+	else if (arguments->count > 2) {
+		interpreter->errorOutput("Too many arguments open(string, string) expects two arguments\n");
 		return -1;
 	}
 
@@ -44,7 +48,7 @@ static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	// check the drivePath type
 	if (!TOY_IS_STRING(drivePathLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to open\n");
+		interpreter->errorOutput("Incorrect argument type expected a string as the first argument to open(string, string)\n");
 		Toy_freeLiteral(drivePathLiteral);
 		Toy_freeLiteral(modeLiteral);
 
@@ -70,7 +74,7 @@ static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	// check the mode type
 	if (!TOY_IS_STRING(modeLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to open\n");
+		interpreter->errorOutput("Incorrect argument type expected a string as the second argument to open(string, string)\n");
 		Toy_freeLiteral(drivePathLiteral);
 		Toy_freeLiteral(filePathLiteral);
 		Toy_freeLiteral(modeLiteral);
@@ -84,7 +88,7 @@ static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	const char* mode = Toy_toCString(TOY_AS_STRING(modeLiteral));
 
 	// build file object
-	Toy_File* file = createToyFile(mode, filePath);
+	Toy_File* file = createToyFile(TOY_AS_STRING(modeLiteral), TOY_AS_STRING(filePathLiteral));
 
 	// attempt to open file
 	file->fp = fopen(filePath, mode);
@@ -111,7 +115,7 @@ static int nativeOpen(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 static int nativeClose(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to close\n");
+		interpreter->errorOutput("Too many arguments close() expects zero arguments\n");
 		return -1;
 	}
 
@@ -124,8 +128,8 @@ static int nativeClose(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	}
 
 	// check self type
-	if (!(TOY_IS_OPAQUE(selfLiteral) || TOY_GET_OPAQUE_TAG(selfLiteral) == TOY_OPAQUE_TAG_FILE)) {
-		interpreter->errorOutput("Incorrect argument type passed to close\n");
+	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != TOY_OPAQUE_TAG_FILE) {
+		interpreter->errorOutput("Incorrect self type close() expects a file type\n");
 		Toy_freeLiteral(selfLiteral);
 		
 		return -1;
@@ -152,8 +156,12 @@ static int nativeClose(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 }
 
 static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
-	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to read\n");
+	if (arguments->count < 2) {
+		interpreter->errorOutput("Too few arguments read(type) expects one argument\n");
+		return -1;
+	}
+	else if (arguments->count > 2) {
+		interpreter->errorOutput("Too many arguments read(type) expects one argument\n");
 		return -1;
 	}
 
@@ -168,7 +176,7 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	// check the value type
 	if (!TOY_IS_TYPE(valueLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to read\n");
+		interpreter->errorOutput("Incorrect argument type expected a type as the first argument to read(type)\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(valueLiteral);
 
@@ -182,8 +190,8 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	}
 
 	// check self type
-	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != 900) {
-		interpreter->errorOutput("Incorrect argument type passed to read\n");
+	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != TOY_OPAQUE_TAG_FILE) {
+		interpreter->errorOutput("Incorrect self type, read(type) expects a file type\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(valueLiteral);
 		
@@ -194,8 +202,7 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	Toy_Literal resultLiteral = TOY_TO_NULL_LITERAL;
 
-	switch (valueLiteral.as.type.typeOf)
-		{
+	switch (valueLiteral.as.type.typeOf) {
 		// case TOY_LITERAL_BOOLEAN:
 		// {
 		// 	char value[TOY_MAX_STRING_LENGTH] = {0};
@@ -209,8 +216,7 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 		// 	break;
 		// }
 
-		case TOY_LITERAL_INTEGER:
-		{
+		case TOY_LITERAL_INTEGER: {
 			int value = 0;
 			fscanf(file->fp, "%i", &value);
 
@@ -219,8 +225,7 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			break;
 		}
 
-		case TOY_LITERAL_FLOAT:
-		{
+		case TOY_LITERAL_FLOAT: {
 			float value = 0.0f;
 			fscanf(file->fp, "%f", &value);
 
@@ -229,8 +234,7 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			break;
 		}
 
-		case TOY_LITERAL_STRING:
-		{
+		case TOY_LITERAL_STRING: {
 			char value[TOY_MAX_STRING_LENGTH] = {0};
 			fread(value, sizeof(char), TOY_MAX_STRING_LENGTH - 1, file->fp);
 			value[TOY_MAX_STRING_LENGTH - 1] = '\0';
@@ -240,9 +244,10 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			break;
 		}
 		
-		default:
-			// TODO handle other types
-			break;
+		default: {
+				// TODO handle other types
+				break;
+			}
 		}
 
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
@@ -256,8 +261,12 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 }
 
 static int nativeWrite(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
-	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to write\n");
+	if (arguments->count < 2) {
+		interpreter->errorOutput("Too few arguments write(any) expects one argument\n");
+		return -1;
+	}
+	else if (arguments->count > 2) {
+		interpreter->errorOutput("Too many arguments write(any) expects one argument\n");
 		return -1;
 	}
 
@@ -272,7 +281,7 @@ static int nativeWrite(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 
 	// check the value type
 	if (TOY_IS_NULL(valueLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to write\n");
+		interpreter->errorOutput("Incorrect argument type expected non null value as the first argument to write(any)\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(valueLiteral);
 
@@ -286,8 +295,8 @@ static int nativeWrite(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	}
 
 	// check self type
-	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != 900) {
-		interpreter->errorOutput("Incorrect argument type passed to write\n");
+	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != TOY_OPAQUE_TAG_FILE) {
+		interpreter->errorOutput("Incorrect self type write(any) expects a file type\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(valueLiteral);
 		
@@ -297,29 +306,26 @@ static int nativeWrite(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	Toy_File* file = (Toy_File*)TOY_AS_OPAQUE(selfLiteral);
 
 	int result = 0;
-	switch (valueLiteral.type)
-	{
-	case TOY_LITERAL_INTEGER:
-	{
-		result = fprintf(file->fp, "%i", TOY_AS_INTEGER(valueLiteral));
-		break;
-	}
+	switch (valueLiteral.type) {
+		case TOY_LITERAL_INTEGER: {
+			result = fprintf(file->fp, "%i", TOY_AS_INTEGER(valueLiteral));
+			break;
+		}
 
-	case TOY_LITERAL_FLOAT:
-	{
-		result = fprintf(file->fp, "%f", TOY_AS_FLOAT(valueLiteral));
-		break;
-	}
+		case TOY_LITERAL_FLOAT: {
+			result = fprintf(file->fp, "%f", TOY_AS_FLOAT(valueLiteral));
+			break;
+		}
 
-	case TOY_LITERAL_STRING:
-	{
-		result = fprintf(file->fp, "%s", Toy_toCString(TOY_AS_STRING(valueLiteral)));
-		break;
-	}
-	
-	default:
-		// TODO handle other types
-		break;
+		case TOY_LITERAL_STRING: {
+			result = fprintf(file->fp, "%s", Toy_toCString(TOY_AS_STRING(valueLiteral)));
+			break;
+		}
+		
+		default: {
+			// TODO handle other types
+			break;
+		}
 	}
 
 	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result > 0);
@@ -334,8 +340,12 @@ static int nativeWrite(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 }
 
 static int nativeRename(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
-	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to rename\n");
+	if (arguments->count < 2) {
+		interpreter->errorOutput("Too few arguments rename(string) expects one argument\n");
+		return -1;
+	}
+	else if (arguments->count > 2) {
+		interpreter->errorOutput("Too many arguments rename(string) expects one argument\n");
 		return -1;
 	}
 
@@ -350,7 +360,7 @@ static int nativeRename(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 
 	// check the value type
 	if (!TOY_IS_STRING(valueLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to rename\n");
+		interpreter->errorOutput("Incorrect argument type expected a string as the first argument to rename(string)\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(valueLiteral);
 
@@ -364,8 +374,8 @@ static int nativeRename(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 	}
 
 	// check self type
-	if (!TOY_IS_OPAQUE(selfLiteral) && !(TOY_GET_OPAQUE_TAG(selfLiteral) == 900)) {
-		interpreter->errorOutput("Incorrect argument type passed to read\n");
+	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != TOY_OPAQUE_TAG_FILE) {
+		interpreter->errorOutput("Incorrect self type, rename(string) expects a file type\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(valueLiteral);
 		
@@ -407,30 +417,18 @@ static int nativeRename(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 }
 
 static int nativeSeek(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
-	if (arguments->count != 3) {
-		interpreter->errorOutput("Incorrect number of arguments to seek\n");
+	if (arguments->count < 3) {
+		interpreter->errorOutput("Too few arguments seek(string, int) expects two arguments\n");
+		return -1;
+	}
+	else if (arguments->count > 3) {
+		interpreter->errorOutput("Too many arguments seek(string, int) expects two arguments\n");
 		return -1;
 	}
 
 	Toy_Literal offsetLiteral = Toy_popLiteralArray(arguments);
 	Toy_Literal originLiteral = Toy_popLiteralArray(arguments);
 	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
-
-	// parse the offset (if it's an identifier)
-	Toy_Literal offsetLiteralIdn = offsetLiteral;
-	if (TOY_IS_IDENTIFIER(offsetLiteral) && Toy_parseIdentifierToValue(interpreter, &offsetLiteral)) {
-		Toy_freeLiteral(offsetLiteralIdn);
-	}
-
-	// check the offset type
-	if (!TOY_IS_INTEGER(offsetLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to seek\n");
-		Toy_freeLiteral(selfLiteral);
-		Toy_freeLiteral(offsetLiteral);
-		Toy_freeLiteral(originLiteral);
-
-		return -1;
-	}
 
 	// parse the origin (if it's an identifier)
 	Toy_Literal originLiteralIdn = originLiteral;
@@ -440,7 +438,23 @@ static int nativeSeek(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	// check the origin type
 	if (!TOY_IS_STRING(originLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to seek\n");
+		interpreter->errorOutput("Incorrect argument type expected a string as the first argument to seek(string, int)\n");
+		Toy_freeLiteral(selfLiteral);
+		Toy_freeLiteral(offsetLiteral);
+		Toy_freeLiteral(originLiteral);
+
+		return -1;
+	}
+
+	// parse the offset (if it's an identifier)
+	Toy_Literal offsetLiteralIdn = offsetLiteral;
+	if (TOY_IS_IDENTIFIER(offsetLiteral) && Toy_parseIdentifierToValue(interpreter, &offsetLiteral)) {
+		Toy_freeLiteral(offsetLiteralIdn);
+	}
+
+	// check the offset type
+	if (!TOY_IS_INTEGER(offsetLiteral)) {
+		interpreter->errorOutput("Incorrect argument type expected a int as the second argument to seek(string, int)\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(offsetLiteral);
 		Toy_freeLiteral(originLiteral);
@@ -455,8 +469,8 @@ static int nativeSeek(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	}
 
 	// check self type
-	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != 900) {
-		interpreter->errorOutput("Incorrect argument type passed to seek\n");
+	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != TOY_OPAQUE_TAG_FILE) {
+		interpreter->errorOutput("Incorrect self type seek(string, int) expects a file type\n");
 		Toy_freeLiteral(selfLiteral);
 		Toy_freeLiteral(offsetLiteral);
 		Toy_freeLiteral(originLiteral);
@@ -496,7 +510,7 @@ static int nativeSeek(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 static int nativeError(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to error\n");
+		interpreter->errorOutput("Too many arguments error() expects zero arguments\n");
 		return -1;
 	}
 
@@ -509,8 +523,8 @@ static int nativeError(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	}
 
 	// check self type
-	if (!(TOY_IS_OPAQUE(selfLiteral) || TOY_GET_OPAQUE_TAG(selfLiteral) == TOY_OPAQUE_TAG_FILE)) {
-		interpreter->errorOutput("Incorrect argument type passed to error\n");
+	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != TOY_OPAQUE_TAG_FILE) {
+		interpreter->errorOutput("Incorrect self type error() expects a file type\n");
 		Toy_freeLiteral(selfLiteral);
 		
 		return -1;
@@ -532,7 +546,7 @@ static int nativeError(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 
 static int nativeCompleted(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to error\n");
+		interpreter->errorOutput("Too many arguments completed() expects zero arguments\n");
 		return -1;
 	}
 
@@ -545,8 +559,8 @@ static int nativeCompleted(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 	}
 
 	// check self type
-	if (!(TOY_IS_OPAQUE(selfLiteral) || TOY_GET_OPAQUE_TAG(selfLiteral) == TOY_OPAQUE_TAG_FILE)) {
-		interpreter->errorOutput("Incorrect argument type passed to error\n");
+	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != TOY_OPAQUE_TAG_FILE) {
+		interpreter->errorOutput("Incorrect self type completed() expects a file type\n");
 		Toy_freeLiteral(selfLiteral);
 		
 		return -1;
@@ -569,7 +583,7 @@ static int nativeCompleted(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 
 static int nativePosition(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to size\n");
+		interpreter->errorOutput("Too many arguments position() expects zero arguments\n");
 		return -1;
 	}
 
@@ -582,8 +596,8 @@ static int nativePosition(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	}
 
 	// check self type
-	if (!(TOY_IS_OPAQUE(selfLiteral) || TOY_GET_OPAQUE_TAG(selfLiteral) == TOY_OPAQUE_TAG_FILE)) {
-		interpreter->errorOutput("Incorrect argument type passed to size\n");
+	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != TOY_OPAQUE_TAG_FILE) {
+		interpreter->errorOutput("Incorrect self type position() expects a file type\n");
 		Toy_freeLiteral(selfLiteral);
 		
 		return -1;
@@ -607,7 +621,7 @@ static int nativePosition(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 
 static int nativeSize(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to size\n");
+		interpreter->errorOutput("Too many arguments size() expects zero arguments\n");
 		return -1;
 	}
 
@@ -620,8 +634,8 @@ static int nativeSize(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	}
 
 	// check self type
-	if (!(TOY_IS_OPAQUE(selfLiteral) || TOY_GET_OPAQUE_TAG(selfLiteral) == TOY_OPAQUE_TAG_FILE)) {
-		interpreter->errorOutput("Incorrect argument type passed to size\n");
+	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != TOY_OPAQUE_TAG_FILE) {
+		interpreter->errorOutput("Incorrect self type size() expects a file type\n");
 		Toy_freeLiteral(selfLiteral);
 		
 		return -1;
@@ -655,7 +669,7 @@ static int nativeSize(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 static int nativeMode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to mode\n");
+		interpreter->errorOutput("Too many arguments mode() expects zero arguments\n");
 		return -1;
 	}
 
@@ -668,8 +682,8 @@ static int nativeMode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	}
 
 	// check self type
-	if (!(TOY_IS_OPAQUE(selfLiteral) || TOY_GET_OPAQUE_TAG(selfLiteral) == TOY_OPAQUE_TAG_FILE)) {
-		interpreter->errorOutput("Incorrect argument type passed to mode\n");
+	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != TOY_OPAQUE_TAG_FILE) {
+		interpreter->errorOutput("Incorrect self type mode() expects a file type\n");
 		Toy_freeLiteral(selfLiteral);
 		
 		return -1;
@@ -745,10 +759,10 @@ void exposeVariablesToScope(Toy_Interpreter* interpreter, Variable variables[], 
 	Toy_Literal opaqueType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_OPAQUE, false);
 	
 	for (int i = 0; i < size; i++) {
-		if (variables[i].literal.type == TOY_LITERAL_INTEGER) {
+		if (TOY_IS_INTEGER(variables[i].literal)) {
 			Toy_declareScopeVariable(interpreter->scope, variables[i].identifier, intType);
 		}
-		else if (variables[i].literal.type == TOY_LITERAL_OPAQUE) {
+		else if (TOY_IS_OPAQUE(variables[i].literal)) {
 			Toy_declareScopeVariable(interpreter->scope, variables[i].identifier, opaqueType);
 		}
 
@@ -766,11 +780,9 @@ int Toy_hookFileIO(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Lit
 		{"open", nativeOpen},
 		{"close", nativeClose},
 
-		// input/output
+		// operations
 		{"read", nativeRead},
 		{"write", nativeWrite},
-
-		// operations
 		{"rename", nativeRename},
 		{"seek", nativeSeek},
 
@@ -793,13 +805,13 @@ int Toy_hookFileIO(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Lit
 	createToyVariableInt(&variables[2], "END_OF_FILE", EOF);
 
 	static Toy_File* outFile;
-	outFile = createToyFile("w", "output");
+	outFile = createToyFile(Toy_createRefString("w"), Toy_createRefString("output"));
 	outFile->fp = stdout;
 
 	createToyVariableFile(&variables[3], "output", outFile);
 
 	static Toy_File* inFile;
-	inFile = createToyFile("r", "input");
+	inFile = createToyFile(Toy_createRefString("r"), Toy_createRefString("input"));
 	inFile->fp = stdin;
 
 	createToyVariableFile(&variables[4], "input", inFile);
