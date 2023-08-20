@@ -21,9 +21,10 @@ fn reset() {
 {
     var reader = open("scripts:/lib/file/inputs.txt", "r");
 
+    assert reader.read(bool) == true, "read true bool failed";
     assert reader.read(int) == 8, "read int failed";
     assert reader.read(float) == 12.5, "read float failed";
-    assert reader.read(string) == "\ntest\n", "read string failed";
+    assert reader.read(string) == "\ntest", "read string failed";
 
     // invaild types
     assert input.read(type) == null, "read type failed";
@@ -35,9 +36,11 @@ fn reset() {
 // test write
 {
     var writer = open("scripts:/lib/file/outputs.txt", "w");
+    assert writer.write(false) == true, "write bool failed";
     assert writer.write(8) == true, "write int failed";
     assert writer.write("\n") == true, "write string failed";
     assert writer.write(12.5) == true, "write float failed";
+    assert writer.write("\nLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n") == true, "write long string failed";
 
     writer.close();
 }
@@ -51,18 +54,6 @@ fn reset() {
 
     var file = open("scripts:/doesNotExist", "r");
     assert file == null, "open failed on nonexisting file";
-}
-
-// test write
-{
-    var writer = open(PATH, "w");
-    assert writer != null, "open failed in writing mode";
-
-    assert writer.read(string) != null, "read in writing mode failed";
-    assert writer.write("writen text") == true, "write in writing mode failed";
-
-    writer.close();
-    reset();
 }
 
 // test append

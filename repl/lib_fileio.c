@@ -165,20 +165,20 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 		return -1;
 	}
 
-	Toy_Literal valueLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal typeLiteral = Toy_popLiteralArray(arguments);
 	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
 
-	// parse the value (if it's an identifier)
-	Toy_Literal valueLiteralIdn = valueLiteral;
-	if (TOY_IS_IDENTIFIER(valueLiteral) && Toy_parseIdentifierToValue(interpreter, &valueLiteral)) {
-		Toy_freeLiteral(valueLiteralIdn);
+	// parse the type (if it's an identifier)
+	Toy_Literal typeLiteralIdn = typeLiteral;
+	if (TOY_IS_IDENTIFIER(typeLiteral) && Toy_parseIdentifierToValue(interpreter, &typeLiteral)) {
+		Toy_freeLiteral(typeLiteralIdn);
 	}
 
-	// check the value type
-	if (!TOY_IS_TYPE(valueLiteral)) {
+	// check the type type
+	if (!TOY_IS_TYPE(typeLiteral)) {
 		interpreter->errorOutput("Incorrect argument type expected a type as the first argument to read(type)\n");
 		Toy_freeLiteral(selfLiteral);
-		Toy_freeLiteral(valueLiteral);
+		Toy_freeLiteral(typeLiteral);
 
 		return -1;
 	}
@@ -193,7 +193,7 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != TOY_OPAQUE_TAG_FILE) {
 		interpreter->errorOutput("Incorrect self type, read(type) expects a file type\n");
 		Toy_freeLiteral(selfLiteral);
-		Toy_freeLiteral(valueLiteral);
+		Toy_freeLiteral(typeLiteral);
 		
 		return -1;
 	}
@@ -201,24 +201,21 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	Toy_File* file = (Toy_File*)TOY_AS_OPAQUE(selfLiteral);
 
 	Toy_Literal resultLiteral = TOY_TO_NULL_LITERAL;
+	int error = 0;
 
-	switch (valueLiteral.as.type.typeOf) {
-		// case TOY_LITERAL_BOOLEAN:
-		// {
-		// 	char value[TOY_MAX_STRING_LENGTH] = {0};
-		// 	fgets(value, sizeof(value) - 1, file->fp);
-		// 	value[TOY_MAX_STRING_LENGTH] = '\0';
+	switch (TOY_AS_TYPE(typeLiteral).typeOf) {
+		case TOY_LITERAL_BOOLEAN: {
+			char value = '0';
+			error = fscanf(file->fp, "%c", &value);
 
-		// 	Toy_Literal stringLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString(value));
-		// 	resultLiteral = TOY_TO_BOOLEAN_LITERAL(TOY_IS_TRUTHY(stringLiteral));
-		// 	Toy_freeLiteral(stringLiteral);
+			resultLiteral = TOY_TO_BOOLEAN_LITERAL(value != '0');
 
-		// 	break;
-		// }
+			break;
+		}
 
 		case TOY_LITERAL_INTEGER: {
 			int value = 0;
-			fscanf(file->fp, "%i", &value);
+			error = fscanf(file->fp, "%i", &value);
 
 			resultLiteral = TOY_TO_INTEGER_LITERAL(value);
 
@@ -227,7 +224,7 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 		case TOY_LITERAL_FLOAT: {
 			float value = 0.0f;
-			fscanf(file->fp, "%f", &value);
+			error = fscanf(file->fp, "%f", &value);
 
 			resultLiteral = TOY_TO_FLOAT_LITERAL(value);
 
@@ -247,14 +244,19 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 		default: {
 				// TODO handle other types
 				break;
-			}
 		}
+	}
 
-	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+	if (error != EOF) {
+		Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+	}
+	else {
+		Toy_pushLiteralArray(&interpreter->stack, TOY_TO_NULL_LITERAL);
+	}
 
 	// cleanup
 	Toy_freeLiteral(resultLiteral);
-	Toy_freeLiteral(valueLiteral);
+	Toy_freeLiteral(typeLiteral);
 	Toy_freeLiteral(selfLiteral);
 
 	return 1;
@@ -307,6 +309,11 @@ static int nativeWrite(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 
 	int result = 0;
 	switch (valueLiteral.type) {
+		case TOY_LITERAL_BOOLEAN: {
+			result = fprintf(file->fp, "%i", TOY_AS_BOOLEAN(valueLiteral));
+			break;
+		}
+		
 		case TOY_LITERAL_INTEGER: {
 			result = fprintf(file->fp, "%i", TOY_AS_INTEGER(valueLiteral));
 			break;
@@ -321,7 +328,7 @@ static int nativeWrite(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 			result = fprintf(file->fp, "%s", Toy_toCString(TOY_AS_STRING(valueLiteral)));
 			break;
 		}
-		
+
 		default: {
 			// TODO handle other types
 			break;
@@ -479,8 +486,8 @@ static int nativeSeek(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	}
 
 	Toy_File* file = (Toy_File*)TOY_AS_OPAQUE(selfLiteral);
+	Toy_RefString* orginString = TOY_AS_STRING(originLiteral);
 	int offset = TOY_AS_INTEGER(offsetLiteral);
-	Toy_RefString* orginString = Toy_copyRefString(TOY_AS_STRING(originLiteral));
 
 	int origin = 0;
 	if (Toy_equalsRefStringCString(orginString, "bgn")) {
@@ -500,8 +507,8 @@ static int nativeSeek(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
 	// cleanup
-	Toy_deleteRefString(orginString);
 	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(originLiteral);
 	Toy_freeLiteral(offsetLiteral);
 	Toy_freeLiteral(selfLiteral);
 
