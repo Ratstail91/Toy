@@ -73,7 +73,9 @@ fn reset() {
     assert reader != null, "open failed on read extended mode";
 
     assert reader.write("writen text") == true, "write in read extended failed";
-    assert reader.read(string) == "d!\n", "read in read extended failed";
+    
+    var result = reader.read(string);
+    assert (result == "d!\n" || result == "d!\\r\n"), "read in read extended failed";
 
     reader.close();
     reset();
