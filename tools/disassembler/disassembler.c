@@ -320,7 +320,7 @@ static void dis_disassemble_section(dis_program_t **prg, uint32_t pc, uint32_t l
         uint16_t args = readWord((*prg)->program, &pc);
         uint16_t rets = readWord((*prg)->program, &pc);
         SPC(spaces);
-        printf("| ( args %d, rets %d )", args, rets);
+        printf("| ( args [%d], rets [%d] )", args, rets);
     }
 
     uint32_t pc_start = pc;
@@ -328,7 +328,7 @@ static void dis_disassemble_section(dis_program_t **prg, uint32_t pc, uint32_t l
         opcode = (*prg)->program[pc];
         printf("\n");
         SPC(spaces);
-        printf("| [ %05d ](%03d) ", (pc++) - pc_start, opcode);
+        printf("| [%05d](%03d) ", (pc++) - pc_start, opcode);
         dis_print_opcode(opcode);
 
         if (opcode > DIS_OP_END_OPCODES)
@@ -348,7 +348,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
 
     printf("\n");
     SPC(spaces);
-    printf("| ( Reading %d literals )\n", literalCount);
+    printf("| --- ( Reading %d literals from cache ) ---\n", literalCount);
 
     for (int i = 0; i < literalCount; i++) {
         const unsigned char literalType = readByte((*prg)->program, pc);
@@ -481,16 +481,16 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
     consumeByte(DIS_OP_SECTION_END, (*prg)->program, pc);
 
     SPC(spaces);
-    printf("| ( end literals )\n");
+    printf("| --- ( end literal section ) ---\n");
 
     int functionCount = readWord((*prg)->program, pc);
     int functionSize = readWord((*prg)->program, pc);
 
     if (functionCount) {
         SPC(spaces);
-        printf("| | \n");
+        printf("|\n");
         SPC(spaces);
-        printf("| | ( fun count: %d, total size: %d )\n", functionCount, functionSize);
+        printf("| --- ( fn count: %d, total size: %d ) ---\n", functionCount, functionSize);
 
 		uint32_t fcnt = 0;
 		char tree_local[2048];
@@ -507,9 +507,9 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
 				if (tree_local[0] == '.')
 					memcpy(tree_local, tree_local + 1, strlen(tree_local));
                 SPC(spaces);
-                printf("| | |\n");
+                printf("| |\n");
                 SPC(spaces);
-                printf("| | | ( fun %s [ start: %d, end: %d ] )", tree_local, fpc_start, fpc_end);
+                printf("| | ( fun %s [ start: %d, end: %d ] )", tree_local, fpc_start, fpc_end);
                 if ((*prg)->program[*pc + size - 1] != DIS_OP_FN_END) {
                     printf("\nERROR: Failed to find function end\n");
                     exit(1);
@@ -520,16 +520,22 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                 printf("| | |\n");
 
                 SPC(spaces + 4);
-                printf("| ------ ( code ) ------");
+                printf("| --- ( reading code for %s ) ---", tree_local);
                 dis_disassemble_section(prg, fpc_start, fpc_end, spaces + 4, true);
                 printf("\n");
                 SPC(spaces + 4);
-                printf("| ---- ( end code ) ----\n");
+                printf("| --- ( end code section ) ---\n");
 
                 fcnt++;
                 *pc += size;
             }
         }
+
+        SPC(spaces);
+        printf("|\n");
+        SPC(spaces);
+        printf("| --- ( end fn section ) ---\n");
+
     }
 
     consumeByte(DIS_OP_SECTION_END, (*prg)->program, pc);
@@ -548,13 +554,11 @@ void disassemble(const char *filename) {
 
     consumeByte(DIS_OP_SECTION_END, prg->program, &(prg->pc));
 
-    printf("\n| ---- ( literals ) ----");
     dis_read_interpreter_sections(&prg, &(prg->pc), 0, "");
-    printf("| -- ( end literals) --\n|");
 
-    printf("\n| ---- ( main code ) ----");
+    printf("|\n| --- ( reading main code ) ---");
     dis_disassemble_section(&prg, prg->pc, prg->len, 0, false);
-    printf("\n| -- ( end main code ) --");
+    printf("\n| --- ( end main code section ) ---");
 
     printf("\n\n");
     dis_disassembler_deinit(&prg);
