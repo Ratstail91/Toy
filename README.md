@@ -35,6 +35,8 @@ Run `make install-tools` to install a number of tools, including:
 
 * VSCode syntax highlighting
 
+Other tools such as a disassembler are available, as well - simply run `make` in the correct directory.
+
 ## Syntax
 
 ```
@@ -68,6 +70,14 @@ print tally(); //3
 # License
 
 This source code is covered by the zlib license (see [LICENSE.md](LICENSE.md)).
+
+# Contributions
+
+@hiperiondev - Disassembler, porting support and feedback  
+@add00 - Library support  
+@gruelingpine185 - Unofficial MacOS support  
+@solar-mist - Minor bugfixes  
+Unnamed Individuals - Feedback
 
 # Patrons via Patreon
 
