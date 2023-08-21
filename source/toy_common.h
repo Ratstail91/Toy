@@ -64,7 +64,7 @@ The current patch version of Toy. This value is embedded into the bytecode.
 This value MUST fit into an unsigned char.
 !*/
 
-#define TOY_VERSION_PATCH 0
+#define TOY_VERSION_PATCH 1
 
 /*!
 ### TOY_VERSION_BUILD
