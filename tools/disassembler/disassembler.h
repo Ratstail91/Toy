@@ -123,6 +123,6 @@ typedef enum DIS_LITERAL_TYPE {
     DIS_LITERAL_INDEX_BLANK,             // for blank indexing i.e. arr[:]
 } dis_literal_type_t;
 
-extern void disassemble(const char *filename);
+extern void disassemble(const char *filename, bool alt_fmt);
 
 #endif /* DISASSEMBLER_H_ */

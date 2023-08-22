@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "utils.h"
 #include "disassembler.h"
 
 #define SPC(n)  printf("%.*s", n, "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |");
@@ -167,10 +168,11 @@ typedef struct dis_program_s {
     uint32_t pc;
 } dis_program_t;
 
-typedef struct dis_func_op_s {
-    uint32_t start;
-    uint32_t end;
-} dis_func_op_t;
+typedef struct fun_code_s {
+	uint32_t start;
+	uint32_t len;
+	char *fun;
+} fun_code_t;
 
 static void dis_print_opcode(uint8_t op);
 
@@ -307,259 +309,399 @@ static void dis_print_opcode(uint8_t op) {
 		        exit(1); \
 		}
 
-static void dis_disassemble_section(dis_program_t **prg, uint32_t pc, uint32_t len, uint8_t spaces, bool is_function) {
-    uint8_t opcode;
-    uint32_t uint;
-    int32_t intg;
-    float flt;
-    char *str;
+static void dis_disassemble_section(dis_program_t **prg, uint32_t pc,
+		uint32_t len, uint8_t spaces, bool is_function, bool alt_fmt) {
+	uint8_t opcode;
+	uint32_t uint;
+	int32_t intg;
+	float flt;
+	char *str;
 
-    //first 4 bytes of the program section within a function are actually specifying the parameter and return lists
-    if (is_function) {
-        printf("\n");
-        uint16_t args = readWord((*prg)->program, &pc);
-        uint16_t rets = readWord((*prg)->program, &pc);
-        SPC(spaces);
-        printf("| ( args [%d], rets [%d] )", args, rets);
-    }
+	//first 4 bytes of the program section within a function are actually specifying the parameter and return lists
+	if (is_function) {
+		printf("\n");
+		uint16_t args = readWord((*prg)->program, &pc);
+		uint16_t rets = readWord((*prg)->program, &pc);
+		if (!alt_fmt) {
+			SPC(spaces);
+			printf("| ");
+		} else
+			printf("  .comment args [%d], rets [%d]", args, rets);
+	}
 
-    uint32_t pc_start = pc;
-    while (pc < len) {
-        opcode = (*prg)->program[pc];
-        printf("\n");
-        SPC(spaces);
-        printf("| [%05d](%03d) ", (pc++) - pc_start, opcode);
-        dis_print_opcode(opcode);
+	uint32_t pc_start = pc;
+	while (pc < len) {
+		opcode = (*prg)->program[pc];
+		if (alt_fmt && (opcode == 255 || opcode == 0)) {
+			++pc;
+			continue;
+		}
 
-        if (opcode > DIS_OP_END_OPCODES)
-            continue;
+		printf("\n");
+		if (!alt_fmt) {
+			SPC(spaces);
+			printf("| ");
+		} else
+			printf("  ");
 
-        S_OP(0);
-        S_OP(1);
-    }
+		printf("[%05d](%03d) ", (pc++) - pc_start, opcode);
+		dis_print_opcode(opcode);
+
+		if (opcode > DIS_OP_END_OPCODES)
+			continue;
+
+		S_OP(0);
+		S_OP(1);
+	}
 }
 
 #define LIT_ADD(a, b, c)  b[c] = a;  ++c;
-static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uint8_t spaces, char *tree) {
-    uint32_t literal_count = 0;
-    uint8_t literal_type[65536];
+static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc,
+		uint8_t spaces, char *tree, bool alt_fmt) {
+	uint32_t literal_count = 0;
+	uint8_t literal_type[65536];
 
-    const unsigned short literalCount = readWord((*prg)->program, pc);
+	const unsigned short literalCount = readWord((*prg)->program, pc);
 
-    printf("\n");
-    SPC(spaces);
-    printf("| --- ( Reading %d literals from cache ) ---\n", literalCount);
+	printf("\n");
+	if (!alt_fmt) {
+		SPC(spaces);
+		printf("| ");
+		printf("  ");
+		printf("--- ( Reading %d literals from cache ) ---\n", literalCount);
+	}
 
-    for (int i = 0; i < literalCount; i++) {
-        const unsigned char literalType = readByte((*prg)->program, pc);
+	for (int i = 0; i < literalCount; i++) {
+		const unsigned char literalType = readByte((*prg)->program, pc);
 
-        switch (literalType) {
-            case DIS_LITERAL_NULL:
-                LIT_ADD(DIS_LITERAL_NULL, literal_type, literal_count);
-                SPC(spaces);
-                printf("| | [%05d] ( null )\n", i);
-                break;
+		switch (literalType) {
+		case DIS_LITERAL_NULL:
+			LIT_ADD(DIS_LITERAL_NULL, literal_type, literal_count) ;
+			if (!alt_fmt) {
+				SPC(spaces);
+				printf("| | ");
+			} else
+				printf("  ");
+			printf("[%05d] ( null )\n", i);
+			break;
 
-            case DIS_LITERAL_BOOLEAN: {
-                const bool b = readByte((*prg)->program, pc);
-                LIT_ADD(DIS_LITERAL_BOOLEAN, literal_type, literal_count);
-                SPC(spaces);
-                printf("| | [%05d] ( boolean %s )\n", i, b ? "true" : "false");
-            }
-                break;
+		case DIS_LITERAL_BOOLEAN: {
+			const bool b = readByte((*prg)->program, pc);
+			LIT_ADD(DIS_LITERAL_BOOLEAN, literal_type, literal_count);
+			if (!alt_fmt) {
+				SPC(spaces);
+				printf("| | ");
+			} else
+				printf("  ");
+			printf("[%05d] ( boolean %s )\n", i, b ? "true" : "false");
+		}
+			break;
 
-            case DIS_LITERAL_INTEGER: {
-                const int d = readInt((*prg)->program, pc);
-                LIT_ADD(DIS_LITERAL_INTEGER, literal_type, literal_count);
-                SPC(spaces);
-                printf("| | [%05d] ( integer %d )\n", i, d);
-            }
-                break;
+		case DIS_LITERAL_INTEGER: {
+			const int d = readInt((*prg)->program, pc);
+			LIT_ADD(DIS_LITERAL_INTEGER, literal_type, literal_count);
+			if (!alt_fmt) {
+				SPC(spaces);
+				printf("| | ");
+			} else
+				printf("  ");
+			printf("[%05d] ( integer %d )\n", i, d);
+		}
+			break;
 
-            case DIS_LITERAL_FLOAT: {
-                const float f = readFloat((*prg)->program, pc);
-                LIT_ADD(DIS_LITERAL_FLOAT, literal_type, literal_count);
-                SPC(spaces);
-                printf("| | [%05d] ( float %f )\n", i, f);
-            }
-                break;
+		case DIS_LITERAL_FLOAT: {
+			const float f = readFloat((*prg)->program, pc);
+			LIT_ADD(DIS_LITERAL_FLOAT, literal_type, literal_count);
+			if (!alt_fmt) {
+				SPC(spaces);
+				printf("| | ");
+			} else
+				printf("  ");
+			printf("[%05d] ( float %f )\n", i, f);
+		}
+			break;
 
-            case DIS_LITERAL_STRING: {
-                const char *s = readString((*prg)->program, pc);
-                LIT_ADD(DIS_LITERAL_STRING, literal_type, literal_count);
-                SPC(spaces);
-                printf("| | [%05d] ( string \"%s\" )\n", i, s);
-            }
-                break;
+		case DIS_LITERAL_STRING: {
+			const char *s = readString((*prg)->program, pc);
+			LIT_ADD(DIS_LITERAL_STRING, literal_type, literal_count);
+			if (!alt_fmt) {
+				SPC(spaces);
+				printf("| | ");
+			} else
+				printf("  ");
+			printf("[%05d] ( string \"%s\" )\n", i, s);
+		}
+			break;
 
-            case DIS_LITERAL_ARRAY_INTERMEDIATE:
-            case DIS_LITERAL_ARRAY: {
-                unsigned short length = readWord((*prg)->program, pc);
-                SPC(spaces);
-                printf("| | [%05d] ( array ", i);
-                for (int i = 0; i < length; i++) {
-                    int index = readWord((*prg)->program, pc);
-                    printf("%d ", index);
-                    LIT_ADD(DIS_LITERAL_NULL, literal_type, literal_count);
-                    if (!(i % 15) && i != 0) {
-                        printf("\n");
-                        SPC(spaces);
-                        printf("| |                 ");
-                                       }
-                }
-                printf(")\n");
-                LIT_ADD(DIS_LITERAL_ARRAY, literal_type, literal_count);
-            }
-                break;
+		case DIS_LITERAL_ARRAY_INTERMEDIATE:
+		case DIS_LITERAL_ARRAY: {
+			unsigned short length = readWord((*prg)->program, pc);
+			if (!alt_fmt) {
+				SPC(spaces);
+				printf("| | ");
+			} else
+				printf("  ");
+			printf("[%05d] ( array ", i);
+			for (int i = 0; i < length; i++) {
+				int index = readWord((*prg)->program, pc);
+				printf("%d ", index);
+				LIT_ADD(DIS_LITERAL_NULL, literal_type, literal_count);
+				if (!(i % 15) && i != 0) {
+					printf("\n");
+					if (!alt_fmt) {
+						SPC(spaces);
+						printf("| | ");
+					} else
+						printf("  ");
+					printf("                ");
+				}
+			}
+			printf(")\n");
+			LIT_ADD(DIS_LITERAL_ARRAY, literal_type, literal_count);
+		}
+			break;
 
-            case DIS_LITERAL_DICTIONARY_INTERMEDIATE:
-            case DIS_LITERAL_DICTIONARY: {
-                unsigned short length = readWord((*prg)->program, pc);
-                SPC(spaces);
-                printf("| | [%05d] ( dictionary ", i);
-                for (int i = 0; i < length / 2; i++) {
-                    int key = readWord((*prg)->program, pc);
-                    int val = readWord((*prg)->program, pc);
-                    printf("(key: %d, val:%d) ", key, val);
-                    if(!(i % 5) && i != 0){
-                        printf("\n");
-                        SPC(spaces);
-                        printf("| |                      ");
-                    }
-                }
-                printf(")\n");
-                LIT_ADD(DIS_LITERAL_DICTIONARY, literal_type, literal_count);
-            }
-                break;
+		case DIS_LITERAL_DICTIONARY_INTERMEDIATE:
+		case DIS_LITERAL_DICTIONARY: {
+			unsigned short length = readWord((*prg)->program, pc);
+			if (!alt_fmt) {
+				SPC(spaces);
+				printf("| | ");
+			} else
+				printf("  ");
+			printf("[%05d] ( dictionary ", i);
+			for (int i = 0; i < length / 2; i++) {
+				int key = readWord((*prg)->program, pc);
+				int val = readWord((*prg)->program, pc);
+				printf("(key: %d, val:%d) ", key, val);
+				if (!(i % 5) && i != 0) {
+					printf("\n");
+					if (!alt_fmt) {
+						SPC(spaces);
+						printf("| | ");
+					} else
+						printf("  ");
+					printf("                     ");
+				}
+			}
+			printf(")\n");
+			LIT_ADD(DIS_LITERAL_DICTIONARY, literal_type, literal_count);
+		}
+			break;
 
-            case DIS_LITERAL_FUNCTION: {
-                unsigned short index = readWord((*prg)->program, pc);
-                LIT_ADD(DIS_LITERAL_FUNCTION_INTERMEDIATE, literal_type, literal_count);
-                SPC(spaces);
-                printf("| | [%05d] ( function index: %d )\n", i, index);
-            }
-                break;
+		case DIS_LITERAL_FUNCTION: {
+			unsigned short index = readWord((*prg)->program, pc);
+			LIT_ADD(DIS_LITERAL_FUNCTION_INTERMEDIATE, literal_type,
+					literal_count);
+			if (!alt_fmt) {
+				SPC(spaces);
+				printf("| | ");
+			} else
+				printf("  ");
+			printf("[%05d] ( function index: %d )\n", i, index);
+		}
+			break;
 
-            case DIS_LITERAL_IDENTIFIER: {
-                const char *str = readString((*prg)->program, pc);
-                LIT_ADD(DIS_LITERAL_IDENTIFIER, literal_type, literal_count);
-                SPC(spaces);
-                printf("| | [%05d] ( identifier %s )\n", i, str);
-            }
-                break;
+		case DIS_LITERAL_IDENTIFIER: {
+			const char *str = readString((*prg)->program, pc);
+			LIT_ADD(DIS_LITERAL_IDENTIFIER, literal_type, literal_count);
+			if (!alt_fmt) {
+				SPC(spaces);
+				printf("| | ");
+			} else
+				printf("  ");
+			printf("[%05d] ( identifier %s )\n", i, str);
+		}
+			break;
 
-            case DIS_LITERAL_TYPE:
-            case DIS_LITERAL_TYPE_INTERMEDIATE: {
-                uint8_t literalType = readByte((*prg)->program, pc);
-                uint8_t constant = readByte((*prg)->program, pc);
-                SPC(spaces);
-                printf("| | [%05d] ( type %s: %d)\n", i, (LIT_STR[literalType] + 12), constant);
-                if (literalType == DIS_LITERAL_ARRAY) {
-                    uint16_t vt = readWord((*prg)->program, pc);
-                    SPC(spaces);
-                    printf("| |           ( subtype: %d)\n", vt);
-                }
+		case DIS_LITERAL_TYPE:
+		case DIS_LITERAL_TYPE_INTERMEDIATE: {
+			uint8_t literalType = readByte((*prg)->program, pc);
+			uint8_t constant = readByte((*prg)->program, pc);
+			if (!alt_fmt) {
+				SPC(spaces);
+				printf("| | ");
+			} else
+				printf("  ");
+			printf("[%05d] ( type %s: %d)\n", i, (LIT_STR[literalType] + 12),
+					constant);
+			if (literalType == DIS_LITERAL_ARRAY) {
+				uint16_t vt = readWord((*prg)->program, pc);
+				if (!alt_fmt) {
+					SPC(spaces);
+					printf("| | ");
+				} else
+					printf("  ");
+				printf("          ( subtype: %d)\n", vt);
+			}
 
-                if (literalType == DIS_LITERAL_DICTIONARY) {
-                    uint8_t kt = readWord((*prg)->program, pc);
-                    uint8_t vt = readWord((*prg)->program, pc);
-                    SPC(spaces);
-                    printf("| |           ( subtype: [%d, %d] )\n", kt, vt);
-                }
-                LIT_ADD(literalType, literal_type, literal_count);
-            }
-                break;
+			if (literalType == DIS_LITERAL_DICTIONARY) {
+				uint8_t kt = readWord((*prg)->program, pc);
+				uint8_t vt = readWord((*prg)->program, pc);
+				if (!alt_fmt) {
+					SPC(spaces);
+					printf("| | ");
+				} else
+					printf("  ");
+				printf("          ( subtype: [%d, %d] )\n", kt, vt);
+			}
+			LIT_ADD(literalType, literal_type, literal_count);
+		}
+			break;
 
-            case DIS_LITERAL_INDEX_BLANK:
-                LIT_ADD(DIS_LITERAL_INDEX_BLANK, literal_type, literal_count);
-                SPC(spaces);
-                printf("| | [%05d] ( blank )\n", i);
-                break;
-        }
-    }
+		case DIS_LITERAL_INDEX_BLANK:
+			LIT_ADD(DIS_LITERAL_INDEX_BLANK, literal_type, literal_count);
+			if (!alt_fmt) {
+				SPC(spaces);
+				printf("| | ");
+			} else
+				printf("  ");
+			printf("[%05d] ( blank )\n", i);
+			break;
+		}
+	}
 
-    consumeByte(DIS_OP_SECTION_END, (*prg)->program, pc);
+	consumeByte(DIS_OP_SECTION_END, (*prg)->program, pc);
 
-    SPC(spaces);
-    printf("| --- ( end literal section ) ---\n");
+	if (!alt_fmt) {
+		SPC(spaces);
+		printf("| ");
+		printf("--- ( end literal section ) ---\n");
+	}
 
-    int functionCount = readWord((*prg)->program, pc);
-    int functionSize = readWord((*prg)->program, pc);
 
-    if (functionCount) {
-        SPC(spaces);
-        printf("|\n");
-        SPC(spaces);
-        printf("| --- ( fn count: %d, total size: %d ) ---\n", functionCount, functionSize);
+	int functionCount = readWord((*prg)->program, pc);
+	int functionSize = readWord((*prg)->program, pc);
+
+	if (functionCount) {
+		if (!alt_fmt) {
+			SPC(spaces);
+			printf("|\n");
+			SPC(spaces);
+			printf("| ");
+			printf("--- ( fn count: %d, total size: %d ) ---\n", functionCount, functionSize);
+		}
 
 		uint32_t fcnt = 0;
 		char tree_local[2048];
 
 		for (uint32_t i = 0; i < literal_count; i++) {
-            if (literal_type[i] == DIS_LITERAL_FUNCTION_INTERMEDIATE) {
-                size_t size = (size_t) readWord((*prg)->program, pc);
+			if (literal_type[i] == DIS_LITERAL_FUNCTION_INTERMEDIATE) {
+				size_t size = (size_t) readWord((*prg)->program, pc);
 
-                uint32_t fpc_start = *pc;
-                uint32_t fpc_end = *pc + size - 1;
+				uint32_t fpc_start = *pc;
+				uint32_t fpc_end = *pc + size - 1;
 
 				tree_local[0] = '\0';
-				sprintf(tree_local, "%s.%d",tree, fcnt);
-				if (tree_local[0] == '.')
-					memcpy(tree_local, tree_local + 1, strlen(tree_local));
-                SPC(spaces);
-                printf("| |\n");
-                SPC(spaces);
-                printf("| | ( fun %s [ start: %d, end: %d ] )", tree_local, fpc_start, fpc_end);
-                if ((*prg)->program[*pc + size - 1] != DIS_OP_FN_END) {
-                    printf("\nERROR: Failed to find function end\n");
-                    exit(1);
-                }
+				if (!alt_fmt) {
+					sprintf(tree_local, "%s.%d", tree, fcnt);
+					if (tree_local[0] == '_')
+						memcpy(tree_local, tree_local + 1, strlen(tree_local));
+				} else {
+					sprintf(tree_local, "%s_%d", tree, fcnt);
+					if (tree_local[0] == '_')
+						memcpy(tree_local, tree_local + 1, strlen(tree_local));
+				}
 
-                dis_read_interpreter_sections(prg, &fpc_start, spaces + 4, tree_local);
-                SPC(spaces);
-                printf("| | |\n");
+				if (!alt_fmt) {
+					SPC(spaces);
+					printf("| |\n");
+					SPC(spaces);
+					printf("| | ");
+					printf("( fun %s [ start: %d, end: %d ] )", tree_local, fpc_start, fpc_end);
+				} else
+					printf("\nLIT_FUN_%s:", tree_local);
 
-                SPC(spaces + 4);
-                printf("| --- ( reading code for %s ) ---", tree_local);
-                dis_disassemble_section(prg, fpc_start, fpc_end, spaces + 4, true);
-                printf("\n");
-                SPC(spaces + 4);
-                printf("| --- ( end code section ) ---\n");
 
-                fcnt++;
-                *pc += size;
-            }
-        }
 
-        SPC(spaces);
-        printf("|\n");
-        SPC(spaces);
-        printf("| --- ( end fn section ) ---\n");
+				if ((*prg)->program[*pc + size - 1] != DIS_OP_FN_END) {
+					printf("\nERROR: Failed to find function end\n");
+					exit(1);
+				}
 
-    }
+				dis_read_interpreter_sections(prg, &fpc_start, spaces + 4, tree_local, alt_fmt);
 
-    consumeByte(DIS_OP_SECTION_END, (*prg)->program, pc);
+				if (!alt_fmt) {
+					SPC(spaces);
+					printf("| | |\n");
+					SPC(spaces + 4);
+					printf("| ");
+					printf("--- ( reading code for %s ) ---", tree_local);
+					dis_disassemble_section(prg, fpc_start, fpc_end, spaces + 4, true, alt_fmt);
+					printf("\n");
+					SPC(spaces + 4);
+					printf("| ");
+					printf("--- ( end code section ) ---\n");
+				} else {
+					fun_code_t *fun = malloc(sizeof(struct fun_code_s));
+					fun->fun = malloc(strlen(tree_local) + 1);
+					strcpy(fun->fun, tree_local);
+					fun->start = fpc_start;
+					fun->len = fpc_end;
+					enqueue((void*) fun);
+				}
+
+				fcnt++;
+				*pc += size;
+			}
+		}
+
+		if (!alt_fmt) {
+			SPC(spaces);
+			printf("|\n");
+			SPC(spaces);
+			printf("| ");
+			printf("--- ( end fn section ) ---\n");
+		}
+	}
+
+	consumeByte(DIS_OP_SECTION_END, (*prg)->program, pc);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void disassemble(const char *filename) {
-    dis_program_t *prg;
+void disassemble(const char *filename, bool alt_fmt) {
+	dis_program_t *prg;
+	queue_front = NULL;
+	queue_rear = NULL;
 
-    dis_disassembler_init(&prg);
-    if (dis_load_file(filename, &prg))
-        exit(1);
+	dis_disassembler_init(&prg);
+	if (dis_load_file(filename, &prg))
+		exit(1);
 
-    dis_read_header(&prg);
+	dis_read_header(&prg);
 
-    consumeByte(DIS_OP_SECTION_END, prg->program, &(prg->pc));
+	consumeByte(DIS_OP_SECTION_END, prg->program, &(prg->pc));
 
-    dis_read_interpreter_sections(&prg, &(prg->pc), 0, "");
+	if (alt_fmt)
+		printf("\nLIT_MAIN:");
+	dis_read_interpreter_sections(&prg, &(prg->pc), 0, "", alt_fmt);
+	if (!alt_fmt) {
+		printf("|\n| ");
+		printf("--- ( reading main code ) ---");
+	} else
+		printf("\nMAIN:");
+	dis_disassemble_section(&prg, prg->pc, prg->len, 0, false, alt_fmt);
+	if (!alt_fmt) {
+		printf("\n| ");
+		printf("--- ( end main code section ) ---");
+	} else
+		printf("\n");
 
-    printf("|\n| --- ( reading main code ) ---");
-    dis_disassemble_section(&prg, prg->pc, prg->len, 0, false);
-    printf("\n| --- ( end main code section ) ---");
+	if (alt_fmt) {
+		while (queue_front != NULL) {
+			fun_code_t *fun = (fun_code_t*)front();
+			printf("\nFUN_%s:", fun->fun);
+			free(fun->fun);
 
-    printf("\n\n");
-    dis_disassembler_deinit(&prg);
+			dis_disassemble_section(&prg, fun->start, fun->len, 0, true, alt_fmt);
+
+			dequeue();
+			printf("\n");
+		}
+
+	}
+
+	printf("\n");
+	dis_disassembler_deinit(&prg);
 }
