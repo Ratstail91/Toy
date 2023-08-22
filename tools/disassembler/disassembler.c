@@ -461,7 +461,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     printf("[%05d] ( array ", i);
                 } else {
                     printf("  ");
-                    printf(".lit ARRAY  ");
+                    printf(".lit ARRAY ");
                 }
 
                 for (int i = 0; i < length; i++) {
@@ -475,7 +475,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                             printf("| | ");
                         } else
                             printf("  ");
-                        printf("                ");
+                        printf("           ");
                     }
                 }
                 if (!alt_fmt)
@@ -513,7 +513,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                             printf("| | ");
                         } else
                             printf("  ");
-                        printf("                     ");
+                        printf("                ");
                     }
                 }
                 if (!alt_fmt)
@@ -570,26 +570,24 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                         SPC(spaces);
                         printf("| | ");
                         printf("\n          ( subtype: %d)", vt);
-                    } else {
-                        printf("  ");
+                    } else
                         printf(" SUBTYPE %d", vt);
-                    }
-                }
-                printf("\n");
 
-                if (literalType == DIS_LITERAL_DICTIONARY) {
+                    printf("\n");
+                } else if (literalType == DIS_LITERAL_DICTIONARY) {
                     uint8_t kt = readWord((*prg)->program, pc);
                     uint8_t vt = readWord((*prg)->program, pc);
                     if (!alt_fmt) {
                         SPC(spaces);
                         printf("| | ");
                         printf("\n          ( subtype: [%d, %d] )", kt, vt);
-                    } else {
-                        printf("  ");
+                    } else
                         printf(" SUBTYPE %d, %d", kt, vt);
-                    }
-                }
-                printf("\n");
+
+                    printf("\n");
+                } else
+                    printf("\n");
+
                 LIT_ADD(literalType, literal_type, literal_count);
             }
                 break;
@@ -600,10 +598,9 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     SPC(spaces);
                     printf("| | ");
                     printf("[%05d] ( blank )\n", i);
-                } else {
-                    printf("  ");
+                } else
                     printf(".lit BLANK\n");
-                }
+
                 break;
         }
     }
