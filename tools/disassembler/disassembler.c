@@ -222,12 +222,14 @@ static void consumeByte(uint8_t byte, uint8_t *tb, uint32_t *count) {
 
 static void dis_disassembler_init(dis_program_t **prg) {
     (*prg) = malloc(sizeof(struct dis_program_s));
+    (*prg)->program = NULL;
     (*prg)->len = 0;
     (*prg)->pc = 0;
 }
 
 static void dis_disassembler_deinit(dis_program_t **prg) {
-    free((*prg)->program);
+    if((*prg)->program != NULL)
+        free((*prg)->program);
     free((*prg));
 }
 
@@ -469,7 +471,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     printf("%d ", index);
                     LIT_ADD(DIS_LITERAL_NULL, literal_type, literal_count);
                     if (!(i % 15) && i != 0) {
-                        printf("\n");
+                        printf(" \\\n");
                         if (!alt_fmt) {
                             SPC(spaces);
                             printf("| | ");
@@ -507,7 +509,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                         printf("%d,%d ", key, val);
 
                     if (!(i % 5) && i != 0) {
-                        printf("\n");
+                        printf(" \\\n");
                         if (!alt_fmt) {
                             SPC(spaces);
                             printf("| | ");
@@ -707,10 +709,14 @@ void disassemble(const char *filename, bool alt_fmt) {
     queue_rear = NULL;
 
     dis_disassembler_init(&prg);
-    if (dis_load_file(filename, &prg, alt_fmt))
+    if (dis_load_file(filename, &prg, alt_fmt)) {
+        dis_disassembler_deinit(&prg);
         exit(1);
+    }
 
     dis_read_header(&prg, alt_fmt);
+
+    printf("\n.start MAIN\n");
 
     consumeByte(DIS_OP_SECTION_END, prg->program, &(prg->pc));
 
