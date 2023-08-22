@@ -27,8 +27,8 @@ fn reset() {
     assert reader.read(string) == "\ntest", "read string failed";
 
     // invaild types
-    assert input.read(type) == null, "read type failed";
-    assert input.read(any) == null, "read any failed";
+    assert reader.read(type) == null, "read type failed";
+    assert reader.read(any) == null, "read any failed";
 
     reader.close();
 }
@@ -76,6 +76,7 @@ fn reset() {
     
     var result = reader.read(string);
     assert (result == "d!\n" || result == "d!\\r\n"), "read in read extended failed";
+    print result;
 
     reader.close();
     reset();
@@ -136,5 +137,8 @@ fn reset() {
 
     reader.close();
 }
+
+input.close();
+output.close();
 
 print "All good";

@@ -138,7 +138,11 @@ static int nativeClose(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments
 	Toy_File* file = (Toy_File*)TOY_AS_OPAQUE(selfLiteral);
 
 	int result = 0;
-	if (file->fp != NULL) {
+	if (
+		file->fp != stdout && 
+		file->fp != stdin && 
+		file->fp != NULL
+	) {
 		result = fclose(file->fp);
 		file->fp = NULL;
 	}
@@ -811,17 +815,29 @@ int Toy_hookFileIO(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Lit
 	createToyVariableInt(&variables[1], "MAX_FILES_OPEN", FOPEN_MAX);
 	createToyVariableInt(&variables[2], "END_OF_FILE", EOF);
 
+	Toy_RefString* outMode = Toy_createRefString("w");
+	Toy_RefString* outName = Toy_createRefString("output");
+
 	static Toy_File* outFile;
-	outFile = createToyFile(Toy_createRefString("w"), Toy_createRefString("output"));
+	outFile = createToyFile(outMode, outName);
 	outFile->fp = stdout;
 
 	createToyVariableFile(&variables[3], "output", outFile);
 
+	Toy_deleteRefString(outMode);
+	Toy_deleteRefString(outName);
+
+	Toy_RefString* inMode = Toy_createRefString("r");
+	Toy_RefString* inName = Toy_createRefString("input");
+
 	static Toy_File* inFile;
-	inFile = createToyFile(Toy_createRefString("r"), Toy_createRefString("input"));
+	inFile = createToyFile(inMode, inName);
 	inFile->fp = stdin;
 
 	createToyVariableFile(&variables[4], "input", inFile);
+
+	Toy_deleteRefString(inMode);
+	Toy_deleteRefString(inName);
 
 	// store the library in an aliased dictionary
 	if (!TOY_IS_NULL(alias)) {
