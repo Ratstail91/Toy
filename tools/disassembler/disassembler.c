@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "utils.h"
+#include "disassembler_utils.h"
 #include "disassembler.h"
 
 #define SPC(n)  printf("%.*s", n, "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |");
@@ -471,7 +471,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     printf("%d ", index);
                     LIT_ADD(DIS_LITERAL_NULL, literal_type, literal_count);
                     if (!(i % 15) && i != 0) {
-                        printf(" \\\n");
+                        printf("\\\n");
                         if (!alt_fmt) {
                             SPC(spaces);
                             printf("| | ");
@@ -509,7 +509,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                         printf("%d,%d ", key, val);
 
                     if (!(i % 5) && i != 0) {
-                        printf(" \\\n");
+                        printf("\\\n");
                         if (!alt_fmt) {
                             SPC(spaces);
                             printf("| | ");
@@ -584,7 +584,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                         printf("| | ");
                         printf("\n          ( subtype: [%d, %d] )", kt, vt);
                     } else
-                        printf(" SUBTYPE %d, %d", kt, vt);
+                        printf(" SUBTYPE %d,%d", kt, vt);
 
                     printf("\n");
                 } else
@@ -681,7 +681,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     strcpy(fun->fun, tree_local);
                     fun->start = fpc_start;
                     fun->len = fpc_end;
-                    enqueue((void*) fun);
+                    disassembler_enqueue((void*) fun);
                 }
 
                 fcnt++;
@@ -737,13 +737,13 @@ void disassemble(const char *filename, bool alt_fmt) {
 
     if (alt_fmt) {
         while (queue_front != NULL) {
-            fun_code_t *fun = (fun_code_t*) front();
+            fun_code_t *fun = (fun_code_t*) disassembler_front();
             printf("\nFUN_%s:", fun->fun);
             free(fun->fun);
 
             dis_disassemble_section(&prg, fun->start, fun->len, 0, true, alt_fmt);
 
-            dequeue();
+            disassembler_dequeue();
             printf("\n");
         }
 
