@@ -22,8 +22,8 @@ typedef enum DIS_OPCODES {
 
     // data
     DIS_OP_LITERAL,                    //
-    DIS_OP_LITERAL_LONG,               // for more than 256 literals in a chunk
-    DIS_OP_LITERAL_RAW,                // forcibly get the raw value of the literal
+    DIS_OP_LITERAL_LONG,               //
+    DIS_OP_LITERAL_RAW,                //
 
     // arithmetic operators
     DIS_OP_NEGATE,                     //
@@ -42,21 +42,21 @@ typedef enum DIS_OPCODES {
     DIS_OP_TYPE_DECL_removed,          // deprecated
     DIS_OP_TYPE_DECL_LONG_removed,     // deprecated
 
-    DIS_OP_VAR_DECL,                   // declare a variable to be used (as a literal)
-    DIS_OP_VAR_DECL_LONG,              // declare a variable to be used (as a long literal)
+    DIS_OP_VAR_DECL,                   //
+    DIS_OP_VAR_DECL_LONG,              //
 
-    DIS_OP_FN_DECL,                    // declare a function to be used (as a literal)
-    DIS_OP_FN_DECL_LONG,               // declare a function to be used (as a long literal)
+    DIS_OP_FN_DECL,                    //
+    DIS_OP_FN_DECL_LONG,               //
 
-    DIS_OP_VAR_ASSIGN,                 // assign to a literal
+    DIS_OP_VAR_ASSIGN,                 //
     DIS_OP_VAR_ADDITION_ASSIGN,        //
     DIS_OP_VAR_SUBTRACTION_ASSIGN,     //
     DIS_OP_VAR_MULTIPLICATION_ASSIGN,  //
     DIS_OP_VAR_DIVISION_ASSIGN,        //
     DIS_OP_VAR_MODULO_ASSIGN,          //
 
-    DIS_OP_TYPE_CAST,                  // temporarily change a type of an atomic value
-    DIS_OP_TYPE_OF,                    // get the type of a variable
+    DIS_OP_TYPE_CAST,                  //
+    DIS_OP_TYPE_OF,                    //
 
     DIS_OP_IMPORT,                     //
     DIS_OP_EXPORT_removed,             // deprecated
@@ -74,7 +74,7 @@ typedef enum DIS_OPCODES {
     DIS_OP_COMPARE_LESS_EQUAL,         //
     DIS_OP_COMPARE_GREATER,            //
     DIS_OP_COMPARE_GREATER_EQUAL,      //
-    DIS_OP_INVERT,                     // for booleans
+    DIS_OP_INVERT,                     //
 
     // logical operators
     DIS_OP_AND,                        //

@@ -329,7 +329,7 @@ static void dis_disassemble_section(dis_program_t **prg, uint32_t pc, uint32_t l
     float flt = 0;
     char *str = NULL;
 
-    //first 4 bytes of the program section within a function are actually specifying the parameter and return lists
+    // first 4 bytes of the program section within a function are actually specifying the parameter and return lists
     if (is_function) {
         printf("\n");
         uint16_t args = readWord((*prg)->program, &pc);
@@ -409,7 +409,7 @@ static void dis_disassemble_section(dis_program_t **prg, uint32_t pc, uint32_t l
 
         dis_print_opcode(opcode);
 
-        if (opcode > DIS_OP_END_OPCODES)
+        if (opcode >= DIS_OP_END_OPCODES)
             continue;
 
         if (alt_fmt) {
@@ -433,6 +433,9 @@ static void dis_disassemble_section(dis_program_t **prg, uint32_t pc, uint32_t l
         free(label_line);
         free(label_id);
     }
+
+    if (alt_fmt && (*prg)->program[pc - 5] != DIS_OP_FN_RETURN)
+        printf("\n    FN_RETURN w(0)");
 }
 
 #define LIT_ADD(a, b, c)  b[c] = a;  ++c;
