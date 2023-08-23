@@ -1,3 +1,8 @@
+/*
+ * Project: https://github.com/likle/cargs
+ * License: MIT
+ */
+
 #ifndef CARGS_H_
 #define CARGS_H_
 

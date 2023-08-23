@@ -1,3 +1,8 @@
+/*
+ * Project: https://github.com/likle/cargs
+ * License: MIT
+ */
+
 #include <assert.h>
 #include <cargs.h>
 #include <memory.h>
