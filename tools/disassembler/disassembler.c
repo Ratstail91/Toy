@@ -342,46 +342,53 @@ static void dis_disassemble_section(dis_program_t **prg, uint32_t pc, uint32_t l
     }
 
     uint32_t pc_start = pc;
-    // first pass: search jump labels
+
     uint32_t labels_qty = 0;
-    uint16_t *label_line = malloc(sizeof(uint16_t));
-    uint32_t *label_id = malloc(sizeof(uint32_t));
+    uint16_t *label_line = NULL;
+    uint32_t *label_id = NULL;
+    if (alt_fmt) {
+        // first pass: search jump labels
+        label_line = malloc(sizeof(uint16_t));
+        label_id = malloc(sizeof(uint32_t));
 
-    while (pc < len) {
-        label_line = realloc(label_line, (labels_qty + 1) * sizeof(uint16_t));
-        label_id = realloc(label_id, (labels_qty + 1) * sizeof(uint32_t));
+        while (pc < len) {
+            label_line = realloc(label_line, (labels_qty + 1) * sizeof(uint16_t));
+            label_id = realloc(label_id, (labels_qty + 1) * sizeof(uint32_t));
 
-        opcode = (*prg)->program[pc];
-        if (alt_fmt && (opcode == 255 || opcode == 0)) {
+            opcode = (*prg)->program[pc];
+            if (alt_fmt && (opcode == 255 || opcode == 0)) {
+                ++pc;
+                continue;
+            }
+
+            if (opcode > DIS_OP_END_OPCODES)
+                continue;
+
             ++pc;
-            continue;
+
+            S_OP(0, 0);
+
+            if (OP_ARGS[opcode][2]) {
+                label_line[labels_qty] = uint;
+                label_id[labels_qty] = jump_label++;
+                ++labels_qty;
+            }
+
+            S_OP(1, 0);
         }
 
-        if (opcode > DIS_OP_END_OPCODES)
-            continue;
-
-        ++pc;
-
-        S_OP(0, 0);
-
-        if(OP_ARGS[opcode][2]) {
-            label_line[labels_qty] = uint;
-            label_id[labels_qty] = jump_label++;
-            ++labels_qty;
-        }
-
-        S_OP(1, 0);
+        pc = pc_start;
     }
 
-    // second pass: disassemble\n
-    pc = pc_start;
     while (pc < len) {
         opcode = (*prg)->program[pc];
 
-        for (uint32_t lbl = 0; lbl < labels_qty; lbl++) {
-            if (pc - pc_start == label_line[lbl]) {
-                printf("\nJL_%04d_:", label_id[lbl]);
-                break;
+        if (alt_fmt) {
+            for (uint32_t lbl = 0; lbl < labels_qty; lbl++) {
+                if (pc - pc_start == label_line[lbl]) {
+                    printf("\nJL_%04d_:", label_id[lbl]);
+                    break;
+                }
             }
         }
 
@@ -405,22 +412,27 @@ static void dis_disassemble_section(dis_program_t **prg, uint32_t pc, uint32_t l
         if (opcode > DIS_OP_END_OPCODES)
             continue;
 
-        if (OP_ARGS[opcode][2]) {
-            uint = readWord((*prg)->program, &pc);
-            for (uint32_t lbl = 0; lbl < labels_qty; lbl++) {
-                if (uint == label_line[lbl]) {
-                    printf(" JL_%04d_", label_id[lbl]);
-                    break;
+        if (alt_fmt) {
+            if (OP_ARGS[opcode][2]) {
+                uint = readWord((*prg)->program, &pc);
+                for (uint32_t lbl = 0; lbl < labels_qty; lbl++) {
+                    if (uint == label_line[lbl]) {
+                        printf(" JL_%04d_", label_id[lbl]);
+                        break;
+                    }
                 }
-            }
+            } else
+                S_OP(0, 1);
         } else
             S_OP(0, 1);
 
         S_OP(1, 1);
     }
 
-    free(label_line);
-    free(label_id);
+    if (alt_fmt) {
+        free(label_line);
+        free(label_id);
+    }
 }
 
 #define LIT_ADD(a, b, c)  b[c] = a;  ++c;
