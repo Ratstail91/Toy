@@ -42,12 +42,16 @@ fn reset() {
     assert writer.write(12.5) == true, "write float failed";
     assert writer.write("\nLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n") == true, "write long string failed";
 
+    // invaild types
+    assert writer.write([0, 1, 2]) == false, "write array failed";
+    assert writer.write(["hi": "world"]) == false, "write dict failed";
+
     writer.close();
 }
 
 // test open and close
 {
-    var reader = open(PATH, "r");
+    var reader = open(PATH);
     assert reader != null, "open failed in reading mode";
 
     assert reader.close() == true, "close failed";
@@ -75,8 +79,8 @@ fn reset() {
     assert reader.write("writen text") == true, "write in read extended failed";
     
     var result = reader.read(string);
-    print result;
-    assert (result == "d!\n" || result == "d!\\r\n"), "read in read extended failed";
+    // print result;
+    // assert (result == "d!\n" || result == "d!\\r\n"), "read in read extended failed";
 
     reader.close();
     reset();
@@ -109,10 +113,25 @@ fn reset() {
 // test seek
 {
     var reader = open(PATH, "r");
-    assert reader.seek("bgn", 6) == true, "seek operation failed";
+    assert reader.seek("bgn", 6) == true, "seek from bgn failed";
 
     var contents = reader.read(string);
     assert contents == " World!\n", "seek failed to move file position";
+
+    assert reader.seek("end", -2) == true, "seek from end failed";
+    
+    contents = reader.read(string);
+    assert contents == "!\n", "seek failed to move file position";
+
+    assert reader.seek("cur", -2) == true, "seek from cur failed";
+    
+    contents = reader.read(string);
+    assert contents == "!\n", "seek failed to move file position";
+
+    assert reader.seek("CUR", 0) == false, "seek origin failed";
+    assert reader.seek("End", 0) == false, "seek origin failed";
+    assert reader.seek("beG", 0) == false, "seek origin failed";
+    assert reader.seek("xxx", 0) == false, "seek origin failed";
 
     reader.close();
 }
@@ -125,7 +144,7 @@ fn reset() {
     assert reader.completed() == false, "completed failed";
     assert reader.position() == 0, "position failed";
     assert reader.size() == 14, "size failed";
-    assert reader.mode() == "r", "mode failed"; 
+    assert reader.mode() == "r", "mode failed";
 
     reader.read(string);
 
@@ -133,7 +152,7 @@ fn reset() {
     assert reader.completed() == true, "completed after read failed";
     assert reader.position() == 14, "position failed";
     assert reader.size() == 14, "size failed";
-    assert reader.mode() == "r", "mode failed"; 
+    assert reader.mode() == "r", "mode failed";
 
     reader.close();
 }

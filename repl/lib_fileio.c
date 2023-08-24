@@ -9,21 +9,21 @@ typedef struct Toy_File
 {
 	FILE* fp;
 	Toy_RefString* mode;
-	Toy_RefString* name;
+	Toy_RefString* path;
 } Toy_File;
 
-Toy_File* createToyFile(Toy_RefString* mode, Toy_RefString* name) {
+Toy_File* createToyFile(Toy_RefString* mode, Toy_RefString* path) {
 	Toy_File* file = TOY_ALLOCATE(Toy_File, 1);
 	file->fp = NULL;
 	file->mode = Toy_copyRefString(mode);
-	file->name = Toy_copyRefString(name);
+	file->path = Toy_copyRefString(path);
 
 	return file;
 }
 
 void deleteToyFile(Toy_File* file) {
 	Toy_deleteRefString(file->mode);
-	Toy_deleteRefString(file->name);
+	Toy_deleteRefString(file->path);
 	TOY_FREE(Toy_File, file);
 }
 
@@ -405,14 +405,14 @@ static int nativeRename(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 	}
 
 	// rename the file
-	int result = rename(Toy_toCString(file->name), newName);
+	int result = rename(Toy_toCString(file->path), newName);
 
 	// open file again
 	file->fp = fopen(newName, Toy_toCString(file->mode));
 
 	// update the file object's name
-	Toy_deleteRefString(file->name);
-	file->name = Toy_createRefString(newName);
+	Toy_deleteRefString(file->path);
+	file->path = Toy_createRefString(newName);
 
 	// return result
 	Toy_Literal resultLiteral = TOY_TO_BOOLEAN_LITERAL(result == 0);
@@ -493,7 +493,7 @@ static int nativeSeek(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	Toy_RefString* orginString = TOY_AS_STRING(originLiteral);
 	int offset = TOY_AS_INTEGER(offsetLiteral);
 
-	int origin = 0;
+	int origin = -1;
 	if (Toy_equalsRefStringCString(orginString, "bgn")) {
 		origin = SEEK_SET;
 	}
@@ -713,6 +713,41 @@ static int nativeMode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 	return 1;
 }
 
+static int nativePath(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Too many arguments name() expects zero arguments\n");
+		return -1;
+	}
+
+	Toy_Literal selfLiteral = Toy_popLiteralArray(arguments);
+
+	// parse the self (if it's an identifier)
+	Toy_Literal selfLiteralIdn = selfLiteral;
+	if (TOY_IS_IDENTIFIER(selfLiteral) && Toy_parseIdentifierToValue(interpreter, &selfLiteral)) {
+		Toy_freeLiteral(selfLiteralIdn);
+	}
+
+	// check self type
+	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != TOY_OPAQUE_TAG_FILE) {
+		interpreter->errorOutput("Incorrect self type mode() expects a file type\n");
+		Toy_freeLiteral(selfLiteral);
+		
+		return -1;
+	}
+
+	Toy_File* file = (Toy_File*)TOY_AS_OPAQUE(selfLiteral);
+
+	// return the result
+	Toy_Literal resultLiteral = TOY_TO_STRING_LITERAL(Toy_copyRefString(file->path));
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	// cleanup
+	Toy_freeLiteral(resultLiteral);
+	Toy_freeLiteral(selfLiteral);
+
+	return 1;
+}
+
 // call the hook
 typedef struct Natives {
 	char* name;
@@ -803,6 +838,7 @@ int Toy_hookFileIO(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Lit
 		{"position", nativePosition},
 		{"size", nativeSize},
 		{"mode", nativeMode},
+		{"path", nativePath},
 
 		{NULL, NULL}
 	};
