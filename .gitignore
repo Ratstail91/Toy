@@ -1,35 +1,59 @@
-#Editor generated files
-*.suo
-*.ncb
-*.user
-compile_commands.json
+# Prerequisites
+*.d
 
-#Directories
-Release/
-Debug/
-Out/
-release/
-debug/
-out/
-bin/
-.cache/
-.vs/
-
-#Project generated files
-*.db
+# Object files
 *.o
-*.a
-*.so
-*.dll
-*.exe
-*.meta
-*.log
-*.out
-*.stackdump
-*.tb
-*.filters
-[Dd]ocs/
+*.ko
+*.obj
+*.elf
 
-#Shell files
-*.bat
-*.sh
+# Linker output
+*.ilk
+*.map
+*.exp
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+
+.cproject
+.project
+.settings/
+temp/
+Release/
+out/

@@ -841,12 +841,20 @@ static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode
 			compiler->count += sizeof(unsigned short); //2 bytes
 
 			//write the body
-			compiler->bytecode[compiler->count++] = TOY_OP_SCOPE_BEGIN; //1 byte
+			bool closeScope = false;
+			if (node->pathFor.thenPath->type != TOY_AST_NODE_BLOCK) {
+				compiler->bytecode[compiler->count++] = TOY_OP_SCOPE_BEGIN; //1 byte
+				closeScope = true;
+			}
+
 			override = Toy_writeCompilerWithJumps(compiler, node->pathFor.thenPath, &breakAddresses, &continueAddresses, jumpOffsets, rootNode);
 			if (override != TOY_OP_EOF) {//compensate for indexing & dot notation being screwy
 				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
 			}
-			compiler->bytecode[compiler->count++] = TOY_OP_SCOPE_END; //1 byte
+
+			if (closeScope) {
+				compiler->bytecode[compiler->count++] = TOY_OP_SCOPE_END; //1 byte
+			}
 
 			//for-breaks actually jump to the bottom
 			int jumpToIncrement = compiler->count;
@@ -856,6 +864,9 @@ static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode
 			if (override != TOY_OP_EOF) {//compensate for indexing & dot notation being screwy
 				compiler->bytecode[compiler->count++] = (unsigned char)override; //1 byte
 			}
+
+			//BUGFIX: clear the stack after each loop
+			compiler->bytecode[compiler->count++] = TOY_OP_POP_STACK; //1 byte
 
 			compiler->bytecode[compiler->count++] = TOY_OP_JUMP; //1 byte
 			unsigned short tmpVal = jumpToStart + jumpOffsets;
@@ -879,9 +890,6 @@ static Toy_Opcode Toy_writeCompilerWithJumps(Toy_Compiler* compiler, Toy_ASTNode
 				tmpVal = jumpToIncrement + jumpOffsets;
 				memcpy(compiler->bytecode + point, &tmpVal, sizeof(tmpVal));
 			}
-
-			//clear the stack after use
-			compiler->bytecode[compiler->count++] = TOY_OP_POP_STACK; //1 byte
 
 			//cleanup
 			Toy_freeLiteralArray(&breakAddresses);

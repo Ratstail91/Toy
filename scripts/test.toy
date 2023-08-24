@@ -1,12 +1,13 @@
-import standard;
-var array = [42];
+fn f() {
+    //
+}
 
-var result = null;
+fn g() {
+    fn i() {
+        //
+    }
+}
 
-//problematic line
-result = max(0, array[0]);
-
-assert result == 42, "Indexing in argument list failed";
-
-
-print "All good";
+fn h() {
+    //
+}

@@ -7,8 +7,8 @@ LIBS+=
 ODIR = obj
 SRC = $(wildcard *.c)
 OBJ = $(addprefix $(ODIR)/,$(SRC:.c=.o))
-OUTNAME=
-OUT=disassembler
+OUTDIR=../../out
+OUT=$(OUTDIR)/disassembler
 
 all: $(OBJ)
 	$(CC) $(CFLAGS) -o $(OUT) $(OBJ) $(LIBS)
