@@ -107,59 +107,60 @@ enum DIS_ARG_TYPE {
     DIS_ARG_STRING   //
 };
 
-const uint8_t OP_ARGS[DIS_OP_END_OPCODES][2] = {
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_EOF
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_PASS
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_ASSERT
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_PRINT
-        { DIS_ARG_BYTE, DIS_ARG_NONE }, // DIS_OP_LITERAL
-        { DIS_ARG_WORD, DIS_ARG_NONE }, // DIS_OP_LITERAL_LONG
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_LITERAL_RAW
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_NEGATE
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_ADDITION
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_SUBTRACTION
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_MULTIPLICATION
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_DIVISION
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_MODULO
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_GROUPING_BEGIN
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_GROUPING_END
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_SCOPE_BEGIN
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_SCOPE_END
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_TYPE_DECL_removed
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_TYPE_DECL_LONG_removed
-        { DIS_ARG_BYTE, DIS_ARG_BYTE }, // DIS_OP_VAR_DECL
-        { DIS_ARG_WORD, DIS_ARG_WORD }, // DIS_OP_VAR_DECL_LONG
-        { DIS_ARG_BYTE, DIS_ARG_BYTE }, // DIS_OP_FN_DECL
-        { DIS_ARG_WORD, DIS_ARG_WORD }, // DIS_OP_FN_DECL_LONG
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_VAR_ASSIGN
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_VAR_ADDITION_ASSIGN
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_VAR_SUBTRACTION_ASSIGN
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_VAR_MULTIPLICATION_ASSIGN
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_VAR_DIVISION_ASSIGN
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_VAR_MODULO_ASSIGN
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_TYPE_CAST
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_TYPE_OF
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_IMPORT
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_EXPORT_removed
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_INDEX
-        { DIS_ARG_BYTE, DIS_ARG_NONE }, // DIS_OP_INDEX_ASSIGN
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_INDEX_ASSIGN_INTERMEDIATE
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_DOT
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_COMPARE_EQUAL
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_COMPARE_NOT_EQUAL
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_COMPARE_LESS
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_COMPARE_LESS_EQUAL
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_COMPARE_GREATER
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_COMPARE_GREATER_EQUAL
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_INVERT
-        { DIS_ARG_WORD, DIS_ARG_NONE }, // DIS_OP_AND
-        { DIS_ARG_WORD, DIS_ARG_NONE }, // DIS_OP_OR
-        { DIS_ARG_WORD, DIS_ARG_NONE }, // DIS_OP_JUMP
-        { DIS_ARG_WORD, DIS_ARG_NONE }, // DIS_OP_IF_FALSE_JUMP
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_FN_CALL
-        { DIS_ARG_WORD, DIS_ARG_NONE }, // DIS_OP_FN_RETURN
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_POP_STACK
-        { DIS_ARG_NONE, DIS_ARG_NONE }, // DIS_OP_TERNARY
+const uint8_t OP_ARGS[DIS_OP_END_OPCODES][3] = {
+      // |  first arg  | second arg | jump |
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_EOF
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_PASS
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_ASSERT
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_PRINT
+        { DIS_ARG_BYTE, DIS_ARG_NONE, false }, // DIS_OP_LITERAL
+        { DIS_ARG_WORD, DIS_ARG_NONE, false }, // DIS_OP_LITERAL_LONG
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_LITERAL_RAW
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_NEGATE
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_ADDITION
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_SUBTRACTION
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_MULTIPLICATION
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_DIVISION
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_MODULO
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_GROUPING_BEGIN
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_GROUPING_END
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_SCOPE_BEGIN
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_SCOPE_END
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_TYPE_DECL_removed
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_TYPE_DECL_LONG_removed
+        { DIS_ARG_BYTE, DIS_ARG_BYTE, false }, // DIS_OP_VAR_DECL
+        { DIS_ARG_WORD, DIS_ARG_WORD, false }, // DIS_OP_VAR_DECL_LONG
+        { DIS_ARG_BYTE, DIS_ARG_BYTE, false }, // DIS_OP_FN_DECL
+        { DIS_ARG_WORD, DIS_ARG_WORD, false }, // DIS_OP_FN_DECL_LONG
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_VAR_ASSIGN
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_VAR_ADDITION_ASSIGN
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_VAR_SUBTRACTION_ASSIGN
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_VAR_MULTIPLICATION_ASSIGN
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_VAR_DIVISION_ASSIGN
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_VAR_MODULO_ASSIGN
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_TYPE_CAST
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_TYPE_OF
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_IMPORT
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_EXPORT_removed
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_INDEX
+        { DIS_ARG_BYTE, DIS_ARG_NONE, false }, // DIS_OP_INDEX_ASSIGN
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_INDEX_ASSIGN_INTERMEDIATE
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_DOT
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_COMPARE_EQUAL
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_COMPARE_NOT_EQUAL
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_COMPARE_LESS
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_COMPARE_LESS_EQUAL
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_COMPARE_GREATER
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_COMPARE_GREATER_EQUAL
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_INVERT
+        { DIS_ARG_WORD, DIS_ARG_NONE, true  }, // DIS_OP_AND
+        { DIS_ARG_WORD, DIS_ARG_NONE, true  }, // DIS_OP_OR
+        { DIS_ARG_WORD, DIS_ARG_NONE, true  }, // DIS_OP_JUMP
+        { DIS_ARG_WORD, DIS_ARG_NONE, true  }, // DIS_OP_IF_FALSE_JUMP
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_FN_CALL
+        { DIS_ARG_WORD, DIS_ARG_NONE, false }, // DIS_OP_FN_RETURN
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_POP_STACK
+        { DIS_ARG_NONE, DIS_ARG_NONE, false }, // DIS_OP_TERNARY
 };
 
 typedef struct dis_program_s {
@@ -173,6 +174,8 @@ typedef struct fun_code_s {
     uint32_t len;
     char *fun;
 } fun_code_t;
+
+uint32_t jump_label;
 
 static void dis_print_opcode(uint8_t op);
 
@@ -290,29 +293,29 @@ static void dis_print_opcode(uint8_t op) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#define S_OP(n) \
+#define S_OP(n, p) \
 		switch (OP_ARGS[opcode][n]) { \
 		    case DIS_ARG_NONE: \
 		    break; \
 		    case DIS_ARG_BYTE: \
 		        uint = readByte((*prg)->program, &pc); \
-		        printf(" b(%d)", uint); \
+		        if (p) printf(" b(%d)", uint); \
 		    break; \
 		    case DIS_ARG_WORD: \
 		        uint = readWord((*prg)->program, &pc);\
-		        printf(" w(%d)", uint); \
+		        if (p) printf(" w(%d)", uint); \
 		    break; \
 		    case DIS_ARG_INTEGER: \
 		        intg = readInt((*prg)->program, &pc); \
-		        printf(" i(%d)", intg); \
+		        if (p) printf(" i(%d)", intg); \
 		    break; \
 		    case DIS_ARG_FLOAT: \
 		        flt = readFloat((*prg)->program, &pc); \
-		        printf(" f(%f)", flt); \
+		        if (p) printf(" f(%f)", flt); \
 		    break; \
 		    case DIS_ARG_STRING: \
 		        str = readString((*prg)->program, &pc); \
-		        printf(" s(%s)", str); \
+		        if (p) printf(" s(%s)", str); \
 		    break; \
 		    default: \
 		        printf("ERROR, unknown argument type\n"); \
@@ -320,13 +323,13 @@ static void dis_print_opcode(uint8_t op) {
 		}
 
 static void dis_disassemble_section(dis_program_t **prg, uint32_t pc, uint32_t len, uint8_t spaces, bool is_function, bool alt_fmt) {
-    uint8_t opcode;
-    uint32_t uint;
-    int32_t intg;
-    float flt;
-    char *str;
+    uint8_t opcode = 0;
+    uint16_t uint = 0;
+    int32_t intg = 0;
+    float flt = 0;
+    char *str = NULL;
 
-    //first 4 bytes of the program section within a function are actually specifying the parameter and return lists
+    // first 4 bytes of the program section within a function are actually specifying the parameter and return lists
     if (is_function) {
         printf("\n");
         uint16_t args = readWord((*prg)->program, &pc);
@@ -335,12 +338,60 @@ static void dis_disassemble_section(dis_program_t **prg, uint32_t pc, uint32_t l
             SPC(spaces);
             printf("| ");
         } else
-            printf("  .comment args [%d], rets [%d]", args, rets);
+            printf(".comment args:%d, rets:%d", args, rets);
     }
 
     uint32_t pc_start = pc;
+
+    uint32_t labels_qty = 0;
+    uint16_t *label_line = NULL;
+    uint32_t *label_id = NULL;
+    if (alt_fmt) {
+        // first pass: search jump labels
+        label_line = malloc(sizeof(uint16_t));
+        label_id = malloc(sizeof(uint32_t));
+
+        while (pc < len) {
+            label_line = realloc(label_line, (labels_qty + 1) * sizeof(uint16_t));
+            label_id = realloc(label_id, (labels_qty + 1) * sizeof(uint32_t));
+
+            opcode = (*prg)->program[pc];
+            if (alt_fmt && (opcode == 255 || opcode == 0)) {
+                ++pc;
+                continue;
+            }
+
+            if (opcode > DIS_OP_END_OPCODES)
+                continue;
+
+            ++pc;
+
+            S_OP(0, 0);
+
+            if (OP_ARGS[opcode][2]) {
+                label_line[labels_qty] = uint;
+                label_id[labels_qty] = jump_label++;
+                ++labels_qty;
+            }
+
+            S_OP(1, 0);
+        }
+
+        pc = pc_start;
+    }
+
     while (pc < len) {
         opcode = (*prg)->program[pc];
+
+        if (alt_fmt) {
+            for (uint32_t lbl = 0; lbl < labels_qty; lbl++) {
+                if (pc - pc_start == label_line[lbl]) {
+                    printf("\nJL_%04d_:", label_id[lbl]);
+                    break;
+                }
+            }
+        }
+
         if (alt_fmt && (opcode == 255 || opcode == 0)) {
             ++pc;
             continue;
@@ -352,18 +403,39 @@ static void dis_disassemble_section(dis_program_t **prg, uint32_t pc, uint32_t l
             printf("| ");
             printf("[%05d](%03d) ", (pc++) - pc_start, opcode);
         } else {
-            printf("  ");
-            printf("[%05d] ", (pc++) - pc_start);
+            printf("    ");
+            pc++;
         }
 
         dis_print_opcode(opcode);
 
-        if (opcode > DIS_OP_END_OPCODES)
+        if (opcode >= DIS_OP_END_OPCODES)
             continue;
 
-        S_OP(0);
-        S_OP(1);
+        if (alt_fmt) {
+            if (OP_ARGS[opcode][2]) {
+                uint = readWord((*prg)->program, &pc);
+                for (uint32_t lbl = 0; lbl < labels_qty; lbl++) {
+                    if (uint == label_line[lbl]) {
+                        printf(" JL_%04d_", label_id[lbl]);
+                        break;
+                    }
+                }
+            } else
+                S_OP(0, 1);
+        } else
+            S_OP(0, 1);
+
+        S_OP(1, 1);
     }
+
+    if (alt_fmt) {
+        free(label_line);
+        free(label_id);
+    }
+
+    if (alt_fmt && (*prg)->program[pc - 5] != DIS_OP_FN_RETURN)
+        printf("\n    FN_RETURN w(0)");
 }
 
 #define LIT_ADD(a, b, c)  b[c] = a;  ++c;
@@ -392,7 +464,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     printf("| | ");
                     printf("[%05d] ( null )\n", i);
                 } else {
-                    printf("  ");
+                    printf("    ");
                     printf(".lit NULL\n");
                 }
 
@@ -406,7 +478,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     printf("| | ");
                     printf("[%05d] ( boolean %s )\n", i, b ? "true" : "false");
                 } else {
-                    printf("  ");
+                    printf("    ");
                     printf(".lit BOOLEAN %s\n", b ? "true" : "false");
                 }
             }
@@ -420,7 +492,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     printf("| | ");
                     printf("[%05d] ( integer %d )\n", i, d);
                 } else {
-                    printf("  ");
+                    printf("    ");
                     printf(".lit INTEGER %d\n", d);
                 }
             }
@@ -434,7 +506,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     printf("| | ");
                     printf("[%05d] ( float %f )\n", i, f);
                 } else {
-                    printf("  ");
+                    printf("    ");
                     printf(".lit FLOAT %f\n", f);
                 }
             }
@@ -448,7 +520,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     printf("| | ");
                     printf("[%05d] ( string \"%s\" )\n", i, s);
                 } else {
-                    printf("  ");
+                    printf("    ");
                     printf(".lit STRING \"%s\"\n", s);
                 }
             }
@@ -462,7 +534,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     printf("| | ");
                     printf("[%05d] ( array ", i);
                 } else {
-                    printf("  ");
+                    printf("    ");
                     printf(".lit ARRAY ");
                 }
 
@@ -476,7 +548,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                             SPC(spaces);
                             printf("| | ");
                         } else
-                            printf("  ");
+                            printf("    ");
                         printf("           ");
                     }
                 }
@@ -496,7 +568,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     printf("| | ");
                     printf("[%05d] ( dictionary ", i);
                 } else {
-                    printf("  ");
+                    printf("    ");
                     printf(".lit DICTIONARY ");
                 }
                 for (int i = 0; i < length / 2; i++) {
@@ -514,7 +586,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                             SPC(spaces);
                             printf("| | ");
                         } else
-                            printf("  ");
+                            printf("    ");
                         printf("                ");
                     }
                 }
@@ -533,7 +605,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     printf("| | ");
                     printf("[%05d] ( function index: %d )\n", i, index);
                 } else {
-                    printf("  ");
+                    printf("    ");
                     printf(".lit FUNCTION %d\n", index);
                 }
             }
@@ -547,7 +619,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     printf("| | ");
                     printf("[%05d] ( identifier %s )\n", i, str);
                 } else {
-                    printf("  ");
+                    printf("    ");
                     printf(".lit IDENTIFIER %s\n", str);
                 }
             }
@@ -562,7 +634,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     printf("| | ");
                     printf("[%05d] ( type %s: %d)\n", i, (LIT_STR[literalType] + 12), constant);
                 } else {
-                    printf("  ");
+                    printf("    ");
                     printf(".lit TYPE %s %d", (LIT_STR[literalType] + 12), constant);
                 }
 
@@ -600,9 +672,10 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     SPC(spaces);
                     printf("| | ");
                     printf("[%05d] ( blank )\n", i);
-                } else
+                } else {
+                    printf("    ");
                     printf(".lit BLANK\n");
-
+                }
                 break;
         }
     }
@@ -707,6 +780,7 @@ void disassemble(const char *filename, bool alt_fmt) {
     dis_program_t *prg;
     queue_front = NULL;
     queue_rear = NULL;
+    jump_label = 0;
 
     dis_disassembler_init(&prg);
     if (dis_load_file(filename, &prg, alt_fmt)) {
