@@ -715,7 +715,7 @@ static int nativeMode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 static int nativePath(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Too many arguments name() expects zero arguments\n");
+		interpreter->errorOutput("Too many arguments path() expects zero arguments\n");
 		return -1;
 	}
 
@@ -729,7 +729,7 @@ static int nativePath(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 
 	// check self type
 	if (!TOY_IS_OPAQUE(selfLiteral) && TOY_GET_OPAQUE_TAG(selfLiteral) != TOY_OPAQUE_TAG_FILE) {
-		interpreter->errorOutput("Incorrect self type mode() expects a file type\n");
+		interpreter->errorOutput("Incorrect self type path() expects a file type\n");
 		Toy_freeLiteral(selfLiteral);
 		
 		return -1;
