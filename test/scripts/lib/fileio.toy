@@ -1,0 +1,163 @@
+import fileio;
+
+var PATH: string const = "scripts:/lib/file/fileio.txt";
+
+// reset file to orginal state
+fn reset() {
+    var writer = open(PATH, "w");
+    writer.write("Hello, World!\n");
+
+    writer.close();
+}
+
+// test global constants
+{
+    assert MAX_FILENAME_SIZE > 0, "MAX_FILENAME_SIZE failed";
+    assert MAX_FILES_OPEN > 0, "MAX_FILES_OPEN failed";
+    assert END_OF_FILE == -1, "END_OF_FILE failed";
+}
+
+// test read
+{
+    var reader = open("scripts:/lib/file/inputs.txt", "r");
+
+    assert reader.read(bool) == true, "read true bool failed";
+    assert reader.read(int) == 8, "read int failed";
+    assert reader.read(float) == 12.5, "read float failed";
+    assert reader.read(string) == "\ntest", "read string failed";
+
+    // invaild types
+    assert reader.read(type) == null, "read type failed";
+    assert reader.read(any) == null, "read any failed";
+
+    reader.close();
+}
+
+// test write
+{
+    var writer = open("scripts:/lib/file/outputs.txt", "w");
+    assert writer.write(false) == true, "write bool failed";
+    assert writer.write(8) == true, "write int failed";
+    assert writer.write("\n") == true, "write string failed";
+    assert writer.write(12.5) == true, "write float failed";
+    assert writer.write("\nLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n") == true, "write long string failed";
+
+    // invaild types
+    assert writer.write([0, 1, 2]) == false, "write array failed";
+    assert writer.write(["hi": "world"]) == false, "write dict failed";
+
+    writer.close();
+}
+
+// test open and close
+{
+    var reader = open(PATH);
+    assert reader != null, "open failed in reading mode";
+
+    assert reader.close() == true, "close failed";
+
+    var file = open("scripts:/doesNotExist", "r");
+    assert file == null, "open failed on nonexisting file";
+}
+
+// test append
+{
+    var appender = open(PATH, "a");
+    assert appender != null, "open failed on appending file";
+
+    assert appender.write("appended text") == true, "append failed";
+
+    appender.close();
+    reset();
+}
+
+// test read extended
+{
+    var reader = open(PATH, "r+");
+    assert reader != null, "open failed on read extended mode";
+
+    assert reader.write("writen text") == true, "write in read extended failed";
+    
+    var result = reader.read(string);
+    // print result;
+    // assert (result == "d!\n" || result == "d!\\r\n"), "read in read extended failed";
+
+    reader.close();
+    reset();
+}
+
+// test write extended
+{
+    var writer = open(PATH, "w+");
+    assert writer != null, "open failed on write extended mode";
+
+    assert writer.write("writen text") == true, "write in write extended failed";
+
+    writer.seek("bgn", 0);
+
+    assert writer.read(string) == "writen text", "read in write extended failed";
+
+    writer.close();
+    reset();
+}
+
+// test rename
+{
+    var reader = open(PATH, "r");
+    assert reader.rename("scripts:/lib/file/newName.txt") == true, "rename failed";
+
+    reader.rename(PATH);
+    reader.close();
+}
+
+// test seek
+{
+    var reader = open(PATH, "r");
+    assert reader.seek("bgn", 6) == true, "seek from bgn failed";
+
+    var contents = reader.read(string);
+    assert contents == " World!\n", "seek failed to move file position";
+
+    assert reader.seek("end", -2) == true, "seek from end failed";
+    
+    contents = reader.read(string);
+    assert contents == "!\n", "seek failed to move file position";
+
+    assert reader.seek("cur", -2) == true, "seek from cur failed";
+    
+    contents = reader.read(string);
+    assert contents == "!\n", "seek failed to move file position";
+
+    assert reader.seek("CUR", 0) == false, "seek origin failed";
+    assert reader.seek("End", 0) == false, "seek origin failed";
+    assert reader.seek("beG", 0) == false, "seek origin failed";
+    assert reader.seek("xxx", 0) == false, "seek origin failed";
+
+    reader.close();
+}
+
+// test accessors
+{
+    var reader = open(PATH, "r");
+
+    assert reader.error() == false, "error failed";
+    assert reader.completed() == false, "completed failed";
+    assert reader.position() == 0, "position failed";
+    assert reader.size() == 14, "size failed";
+    assert reader.mode() == "r", "mode failed";
+
+    reader.read(string);
+
+    assert reader.error() == false, "error failed";
+    assert reader.completed() == true, "completed after read failed";
+    assert reader.position() == 14, "position failed";
+    assert reader.size() == 14, "size failed";
+    assert reader.mode() == "r", "mode failed";
+
+    reader.close();
+}
+
+input.close();
+output.close();
+
+print "All good";

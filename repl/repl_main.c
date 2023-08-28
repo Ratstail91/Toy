@@ -4,6 +4,7 @@
 #include "lib_standard.h"
 #include "lib_random.h"
 #include "lib_runner.h"
+#include "lib_fileio.h"
 #include "lib_math.h"
 
 #include "toy_console_colors.h"
@@ -31,6 +32,7 @@ void repl(const char* initialInput) {
 	Toy_injectNativeHook(&interpreter, "standard", Toy_hookStandard);
 	Toy_injectNativeHook(&interpreter, "random", Toy_hookRandom);
 	Toy_injectNativeHook(&interpreter, "runner", Toy_hookRunner);
+	Toy_injectNativeHook(&interpreter, "fileio", Toy_hookFileIO);
 	Toy_injectNativeHook(&interpreter, "math", Toy_hookMath);
 
 	for(;;) {
