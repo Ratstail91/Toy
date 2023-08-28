@@ -44,7 +44,7 @@ void runBinaryWithLibrary(const unsigned char* tb, size_t size, const char* libr
 	Toy_initInterpreter(&interpreter);
 
 	//NOTE: supress print output for testing
-	Toy_setInterpreterPrint(&interpreter, noPrintFn);
+	// Toy_setInterpreterPrint(&interpreter, noPrintFn);
 	Toy_setInterpreterAssert(&interpreter, assertWrapper);
 	Toy_setInterpreterError(&interpreter, errorWrapper);
 

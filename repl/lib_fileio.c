@@ -235,10 +235,10 @@ static int nativeRead(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments)
 			break;
 		}
 
-		case TOY_LITERAL_STRING: {
+		case TOY_LITERAL_STRING: { //BUG: needs a terminator to show how much to read
 			char value[TOY_MAX_STRING_LENGTH] = {0};
-			fread(value, sizeof(char), TOY_MAX_STRING_LENGTH - 1, file->fp);
-			value[TOY_MAX_STRING_LENGTH - 1] = '\0';
+			size_t size = fread(value, sizeof(char), TOY_MAX_STRING_LENGTH - 1, file->fp);
+			value[size] = '\0';
 
 			resultLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString(value));
 

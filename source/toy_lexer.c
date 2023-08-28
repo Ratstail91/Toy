@@ -178,7 +178,6 @@ static Toy_Token makeIntegerOrFloat(Toy_Lexer* lexer) {
 static bool isEscapableCharacter(char c) {
 	switch (c) {
 		case 'n':
-		case 'r':
 		case 't':
 		case '\\':
 		case '"':
