@@ -116,22 +116,22 @@ fn reset() {
     assert reader.seek("bgn", 6) == true, "seek from bgn failed";
 
     var contents = reader.read(string);
-    assert contents == " World!\n", "seek failed to move file position";
+    assert contents == " World!\n", "seek failed to move file position (1st)";
 
     assert reader.seek("end", -2) == true, "seek from end failed";
     
     contents = reader.read(string);
-    assert contents == "!\n", "seek failed to move file position";
+    assert (contents == "!\n" || contents == "\r\n"), "seek failed to move file position (2nd)";
 
     assert reader.seek("cur", -2) == true, "seek from cur failed";
     
     contents = reader.read(string);
-    assert contents == "!\n", "seek failed to move file position";
+    assert (contents == "!\n" || contents == "\r\n"), "seek failed to move file position (3rd)";
 
-    assert reader.seek("CUR", 0) == false, "seek origin failed";
-    assert reader.seek("End", 0) == false, "seek origin failed";
-    assert reader.seek("beG", 0) == false, "seek origin failed";
-    assert reader.seek("xxx", 0) == false, "seek origin failed";
+    assert reader.seek("CUR", 0) == false, "seek origin failed (1st)";
+    assert reader.seek("End", 0) == false, "seek origin failed (2nd)";
+    assert reader.seek("beG", 0) == false, "seek origin failed (3rd)";
+    assert reader.seek("xxx", 0) == false, "seek origin failed (4th)";
 
     reader.close();
 }
