@@ -7,46 +7,54 @@
  * Further modified by Kayne Ruse, and added to the Toy Programming Language tool repository.
  */
 
-#include "stdio.h"
-#include "stdlib.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "disassembler_utils.h"
 
-struct disassembler_node_s *queue_front, *queue_rear;
+void dis_enqueue(void *x, queue_node_t **queue_front, queue_node_t **queue_rear, uint32_t *len) {
+    queue_node_t *temp;
 
-void disassembler_enqueue(void *x) {
-	struct disassembler_node_s *temp;
+    temp = (queue_node_t*) malloc(sizeof(struct queue_node_s));
+    temp->data = x;
+    temp->next = NULL;
 
-	temp = (struct disassembler_node_s*) malloc(sizeof(struct disassembler_node_s));
-	temp->data = x;
-	temp->next = NULL;
+    if ((*queue_front) == NULL && (*queue_rear) == NULL) {
+        (*queue_front) = (*queue_rear) = temp;
+        ++(*len);
+        return;
+    }
+    (*queue_rear)->next = temp;
+    (*queue_rear) = temp;
 
-	if (queue_front == NULL && queue_rear == NULL) {
-		queue_front = queue_rear = temp;
-		return;
-	}
-	queue_rear->next = temp;
-	queue_rear = temp;
-
+    ++(*len);
 }
 
-void disassembler_dequeue(void) {
-	struct disassembler_node_s *temp = queue_front;
+void dis_dequeue(queue_node_t **queue_front, queue_node_t **queue_rear, uint32_t *len) {
+    struct queue_node_s *temp = (*queue_front);
 
-	if (queue_front == NULL) {
-		printf("Error : QUEUE is empty!!");
-		return;
-	}
-	if (queue_front == queue_rear)
-		queue_front = queue_rear = NULL;
+    if ((*queue_front) == NULL) {
+        printf("Error : QUEUE is empty!!");
+        return;
+    }
+    if ((*queue_front) == (*queue_rear))
+        (*queue_front) = (*queue_rear) = NULL;
 
-	else
-		queue_front = queue_front->next;
+    else
+        (*queue_front) = (*queue_front)->next;
 
-	free(temp->data);
-	free(temp);
+    --(*len);
+    free(temp->data);
+    free(temp);
 }
 
-void* disassembler_front(void) {
-	return queue_front->data;
+///
+
+void str_append(char **str, const char *app) {
+    if ((*str) == NULL)
+        return;
+
+    *str = realloc(*str, (strlen(*str) + strlen(app) + 1) * sizeof(char));
+    memcpy((*str) + strlen(*str), app, strlen(app) + 1);
 }
