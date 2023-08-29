@@ -676,7 +676,7 @@ static void dis_read_interpreter_sections(dis_program_t **prg, uint32_t *pc, uin
                     printf("[%05d] ( type %s: %d)\n", i, (LIT_STR[literalType] + 12), constant);
                 } else {
                     char s[100];
-                    sprintf(s, ".lit TYPE %s %d", (LIT_STR[literalType] + 12), constant);
+                    sprintf(s, "    .lit TYPE %s %d", (LIT_STR[literalType] + 12), constant);
                     str_append(&lit_str, s);
                 }
 
