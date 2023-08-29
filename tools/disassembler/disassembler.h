@@ -10,6 +10,11 @@
 #ifndef DISASSEMBLER_H_
 #define DISASSEMBLER_H_
 
+typedef struct options_s {
+    bool alt_format_flag;
+    bool group_flag;
+} options_t;
+
 typedef enum DIS_OPCODES {
     DIS_OP_EOF,                        //
 
@@ -123,6 +128,6 @@ typedef enum DIS_LITERAL_TYPE {
     DIS_LITERAL_INDEX_BLANK,             // for blank indexing i.e. arr[:]
 } dis_literal_type_t;
 
-extern void disassemble(const char *filename, bool alt_fmt);
+extern void disassemble(const char *filename, options_t config);
 
 #endif /* DISASSEMBLER_H_ */
