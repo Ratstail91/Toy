@@ -906,7 +906,8 @@ void disassemble(const char *filename, options_t config) {
 
             if (!strcmp(litf->fun, "MAIN")) {
                 printf("MAIN:\n");
-                printf("%s", litf->str);
+                printf("%s", str_replace_substr_all(litf->str, ".lit FUNCTION ", ".lit FUNCTION (code=FUN_) "));
+
                 dis_disassemble_section(&prg, prg->pc, prg->len, 0, false, config);
                 free(litf->fun);
                 free(litf->str);
@@ -915,8 +916,10 @@ void disassemble(const char *filename, options_t config) {
                 continue;
             }
 
-            printf("FUNCTION_%s:\n", litf->fun);
-            printf("%s", litf->str);
+            printf("FUN_%s:\n", litf->fun);
+            char sbtr[strlen(litf->fun) +  19];
+            sprintf(sbtr, ".lit FUNCTION (code=FUN_%s_) ", litf->fun);
+            printf("%s", str_replace_substr_all(litf->str, ".lit FUNCTION ", sbtr));
 
             queue_node_t *fqf = function_queue_front;
             while (fqf != NULL) {
