@@ -21,5 +21,6 @@ void dis_enqueue(void *x, queue_node_t **queue_front, queue_node_t **queue_rear,
 void dis_dequeue(queue_node_t **queue_front, queue_node_t **queue_rear, uint32_t *len);
 
 void str_append(char **str, const char *app);
+char* str_replace_substr_all(char *mainstr, char *substr, char *newstr);
 
 #endif /* UTILS_H_ */

@@ -58,3 +58,35 @@ void str_append(char **str, const char *app) {
     *str = realloc(*str, (strlen(*str) + strlen(app) + 1) * sizeof(char));
     memcpy((*str) + strlen(*str), app, strlen(app) + 1);
 }
+
+char* str_replace_substr_all(char *mainstr, char *substr, char *newstr) {
+    int lenmain, lensub, i, j, lennew, startindex = -1, c;
+    lenmain = strlen(mainstr);
+    lensub = strlen(substr);
+    lennew = strlen(newstr);
+    char *result = (char*) malloc(sizeof(char) * (lenmain + 200));
+    for (c = 0, i = 0; i < lenmain; i++) {
+        if (lenmain - i >= lensub && *(mainstr + i) == *(substr)) {
+            startindex = i;
+            for (j = 1; j < lensub; j++)
+                if (*(mainstr + i + j) != *(substr + j)) {
+                    startindex = -1;
+                    break;
+                }
+            if (startindex != -1) {
+                for (j = 0; j < lennew; j++, c++) {
+                    *(result + c) = *(newstr + j);
+                }
+                i = i + lensub - 1;
+            } else {
+                *(result + c) = *(mainstr + i);
+                c++;
+            }
+        } else {
+            *(result + c) = *(mainstr + i);
+            c++;
+        }
+    }
+    *(result + c) = '\0';
+    return result;
+}
