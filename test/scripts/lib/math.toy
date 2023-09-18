@@ -1,6 +1,59 @@
 import math;
 
 
+// test exp2
+{
+	assert exp2(5) == 32, "exp2(5) failed";
+	assert exp2(1024) == INFINITY, "exp2(1024) failed";
+	assert exp2(-INFINITY) == 0, "exp2(-INFINITY) failed";
+}
+
+
+// test expm1
+{
+	assert epsilionCompare(expm1(1), 1.718282), "expm1(1) failed";
+	assert expm1(-INFINITY) == -1, "expm1(-INFINITY) failed";
+	assert expm1(710) == INFINITY, "expm1(710) failed";
+}
+
+
+// test log
+{
+	assert log(1) == 0, "log(1) failed";
+	assert log(125) / log(5) == 3, "log(125)/log(5) failed";
+	assert log(INFINITY) == INFINITY, "log(INFINITY) failed";
+}
+// 
+
+// test log10
+{
+	assert log10(1000) == 3, "log10(1000) failed";
+	assert log10(0.001) == -3, "log10(0.001) failed";
+	assert log10(1) == 0, "log10(1) failed";
+	assert log10(INFINITY) == INFINITY, "log10(INFINITY) failed";
+	assert log10(0) == -INFINITY, "log10(0) failed";
+}
+
+
+// test log2
+{
+	assert log2(65536) == 16, "log2(65536) failed";
+	assert log2(0.125) == -3, "log2(0.125) failed";
+	assert log2(1) == 0, "log2(1) failed";
+	assert log2(INFINITY) == INFINITY, "log2(INFINITY) failed";
+	assert log2(0) == -INFINITY, "log2(0) failed";
+}
+
+
+// test log1p
+{
+	assert log1p(0) == 0, "log1p(0) failed";
+	assert log1p(-0) == -0, "log1p(-0) failed";
+	assert log1p(INFINITY) == INFINITY, "log1p(INFINITY) failed";
+	assert log1p(-1) == -INFINITY, "log2(-1) failed";
+}
+
+
 // test pow
 {
 	assert pow(5, 3) == 125, "pow(5, 3) failed";
@@ -9,6 +62,7 @@ import math;
 	assert pow(0, 1) == 0.0, "pow(0, 1) failed";
 	assert pow(-0.0, 1) == -0.0, "pow(0, 1) failed";
 }
+
 
 // test sqrt
 {
@@ -19,6 +73,7 @@ import math;
 	assert sqrt(0) == 0, "sqrt(0) failed";
 }
 
+
 // test cbrt
 {
 	assert cbrt(64) == 4, "cbrt(64) failed";
@@ -28,10 +83,12 @@ import math;
 	assert cbrt(0) == 0, "cbrt(0) failed";
 }
 
+
 // test hypot
 {
 	assert hypot(3, 4) == 5, "hypot(3, 4) failed";
 }
+
 
 // test toRad
 {
@@ -48,6 +105,7 @@ import math;
 	assert toDegrees(2 * PI) == 360, "toDegrees(2*PI) failed";
 }
 
+
 // test sin
 {
 	assert epsilionCompare(sin(PI), 0), "sin(PI) failed";
@@ -62,6 +120,7 @@ import math;
 	assert epsilionCompare(cos(PI / 2), 0), "cos(PI/2) failed";
 	assert epsilionCompare(cos(0), 1), "cos(0) failed";
 }
+
 
 // test tan
 {
@@ -175,6 +234,7 @@ import math;
 	assert checkIsInfinite(0.0) == false, "checkIsInfinite(0.0) failed";
 	assert checkIsInfinite(1) == false, "checkIsInfinite(1) failed";
 }
+
 
 // test epsilionCompare
 {
