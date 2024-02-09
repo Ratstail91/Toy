@@ -100,7 +100,7 @@ This function takes either an array or a dictionary as the `self` argument, and 
 This function takes either an array or a dictionary as the `self` argument, and a function as `func`. The argument `func` must take two arguments - the first is the index/key of the array/dictionary, and the second is the value. The contents of `self` are passed into `func`, one element at a time.
 
 ```
-import compound;
+import standard;
 
 fn p(i, x) {
     print x;
@@ -132,7 +132,7 @@ This function returns the first index within `self` that is equal to `value`, or
 This function takes either an array or a dictionary as the `self` argument, and a function as `func`. The argument `func` must take two arguments - the first is the index/key of the array/dictionary, and the second is the value. It returns an array with the results of each call - the order of the results when called on a dictionary are undefined.
 
 ```
-import compound;
+import standard;
 
 fn increment(k, v) {
     return v + 1;
@@ -148,7 +148,7 @@ print a.map(increment); //prints [2,3,4];
 This function takes either an array or a dictionary as the `self` argument, a default value, and a function as `func`. The argument `func` takes three arguments - the first is the accumulator, the second is the index/key and the third is the value. It applies the given function to every element of the array/dictionary, passing the result of each call as the accumulator to the next (the default value is used for the first call). Finally, the final value of the accumulator is returned to the caller.
 
 ```
-import compound;
+import standard;
 
 fn f(acc, k, v) {
 	return acc + v;
@@ -168,7 +168,7 @@ This function takes either an array or a dictionary as the `self` argument, and 
 This function takes an array as the `self` argument, and a comparison function as `func`. The argument `func` must take two arguments, and return a truthy or falsy value. The contents of the array in `self` are sorted based on the results of `func`, as though the function were the less comparator function.
 
 ```
-import compound;
+import standard;
 
 fn less(a, b) {
     return a < b;
