@@ -14,7 +14,7 @@ print "Hello World";
 
 ## Names and Variables
 
-Variables can store data of any kind, unless a type is specified; see [types](types). Names can be up to 256 characters long; see [Reserved Keywords](#reserved-keywords) for a list of keywords that can't be used as a name.
+Variables can store data of any kind, unless a type is specified; see [types](getting-started/types). Names can be up to 256 characters long; see [Reserved Keywords](#reserved-keywords) for a list of keywords that can't be used as a name.
 
 ```
 var b = true;
