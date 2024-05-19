@@ -18,15 +18,15 @@ This repository holds the reference implementation for Toy, written in C.
 * Re-direct output, error and assertion failure messages
 * Open source under the zlib license
 
+## Syntax
+
+*Omitted for review.*
+
 ## Building
 
 *Omitted for review.*
 
 ## Tools
-
-*Omitted for review.*
-
-## Syntax
 
 *Omitted for review.*
 
