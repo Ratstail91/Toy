@@ -661,7 +661,7 @@ static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 		}
 
 		//get the combined length for the new string
-		size_t length = TOY_AS_STRING(selfLiteral)->length + TOY_AS_STRING(otherLiteral)->length + 1;
+		size_t length = TOY_AS_STRING(selfLiteral)->length + TOY_AS_STRING(otherLiteral)->length;
 
 		if (length > TOY_MAX_STRING_LENGTH) {
 			interpreter->errorOutput("Can't concatenate these strings, result is too long (error found in concat)\n");
@@ -671,8 +671,8 @@ static int nativeConcat(Toy_Interpreter* interpreter, Toy_LiteralArray* argument
 		}
 
 		//allocate the space and generate
-		char* buffer = TOY_ALLOCATE(char, length);
-		snprintf(buffer, length, "%s%s", Toy_toCString(TOY_AS_STRING(selfLiteral)), Toy_toCString(TOY_AS_STRING(otherLiteral)));
+		char* buffer = TOY_ALLOCATE(char, length + 1);
+		snprintf(buffer, length + 1, "%s%s", Toy_toCString(TOY_AS_STRING(selfLiteral)), Toy_toCString(TOY_AS_STRING(otherLiteral)));
 
 		Toy_Literal result = TOY_TO_STRING_LITERAL(Toy_createRefString(buffer));
 

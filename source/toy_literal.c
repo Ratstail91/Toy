@@ -455,8 +455,8 @@ static void printToBuffer(const char* str) {
 		globalPrintBuffer = TOY_GROW_ARRAY(char, globalPrintBuffer, oldCapacity, globalPrintCapacity);
 	}
 
-	snprintf(globalPrintBuffer + globalPrintCount, strlen(str) + 1, "%s", str ? str : "\0");
-	globalPrintCount += strlen(str);
+	size_t total = snprintf(globalPrintBuffer + globalPrintCount, strlen(str) + 1, "%s", str ? str : "");
+	globalPrintCount += total;
 }
 
 //exposed functions

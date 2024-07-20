@@ -362,8 +362,8 @@ void Toy_emitASTNodeAnd(Toy_ASTNode** nodeHandle, Toy_ASTNode* rhs) {
 	Toy_ASTNode* tmp = TOY_ALLOCATE(Toy_ASTNode, 1);
 
 	tmp->type = TOY_AST_NODE_AND;
-	tmp->binary.left = *nodeHandle;
-	tmp->binary.right = rhs;
+	tmp->pathAnd.left = *nodeHandle;
+	tmp->pathAnd.right = rhs;
 
 	*nodeHandle = tmp;
 }
@@ -372,8 +372,8 @@ void Toy_emitASTNodeOr(Toy_ASTNode** nodeHandle, Toy_ASTNode* rhs) {
 	Toy_ASTNode* tmp = TOY_ALLOCATE(Toy_ASTNode, 1);
 
 	tmp->type = TOY_AST_NODE_OR;
-	tmp->binary.left = *nodeHandle;
-	tmp->binary.right = rhs;
+	tmp->pathOr.left = *nodeHandle;
+	tmp->pathOr.right = rhs;
 
 	*nodeHandle = tmp;
 }
