@@ -28,10 +28,12 @@
 
 #endif
 
-//bytecode version specifiers
+//bytecode version specifiers, embedded as the header
 #define TOY_VERSION_MAJOR 2
 #define TOY_VERSION_MINOR 0
 #define TOY_VERSION_PATCH 0
+
+//defined as a function, for technical reasons
 #define TOY_VERSION_BUILD Toy_private_version_build()
 TOY_API const char* Toy_private_version_build();
 

@@ -1,24 +1,29 @@
 ---
 name: Bug Report
-about: Create a bug report to help us improve
+about: Create a report to help us improve
 labels: bug
 ---
 
-## Describe The Bug
+## Describe the bug
 
-A clear and concise description of the bug.
+A clear and concise description of what the bug is.
 
-## How To Reproduce
+## To Reproduce
 
-How did you encounter the bug? Please provide step-by-step details if needed.
+Steps to reproduce the behaviour:
 
-## Version
+1. run `git pull` on the repository
+2. run `make rebuild` on the code
+3. ...
 
-What version of Toy is displaying this bug?
+You can include some screenshots here if you'd like!
 
-What platform are you operating on?
+## Versioning
 
-### Additional Context
+- OS: [for example MacOS, Windows, iOS, Android]
+- Version: [What version of Toy was this running?]
 
-If there's anything else you'd like to add, please add it here.
+### Additional context
+
+Add any other context about the problem here.
 
