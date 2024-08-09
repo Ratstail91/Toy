@@ -4,7 +4,7 @@
 
 [![Running Comprehensive Tests](https://github.com/Ratstail91/Toy/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/Ratstail91/Toy/actions/workflows/c-cpp.yml)
 
-**Notice**: Toy is undergoing a complete rewrite. These docs are valid for version 1.x only.
+***Notice**: Toy is undergoing a complete rewrite. These docs are valid for version 1.x only.*
 
 # Preamble
 
