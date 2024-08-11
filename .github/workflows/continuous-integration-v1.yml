@@ -1,12 +1,20 @@
-name: Comprehensive Tests
+name: Continuous Integration v1.x
 
+#trigger when these occur
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   pull_request:
-    branches: [ "main" ]
+    types:
+      - opened
+      - edited
+      - reopened
+    branches:
+      - main
   workflow_dispatch:
 
+#testing the CI workflows under multiple supported conditions
 jobs:
   test-valgrind:
     runs-on: ubuntu-latest
