@@ -1,0 +1,25 @@
+name: Continuous Integration v2.x
+
+#trigger when these occur
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+    branches:
+      - dev
+  workflow_dispatch:
+
+#testing the CI workflows while nothing is functional yet
+jobs:
+  test-ubuntu-latest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: make tests
+        run: make tests
