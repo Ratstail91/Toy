@@ -1,9 +1,9 @@
 #determine the branch name
 env:
- BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+ BRANCH_NAME: ${{github.head_ref||github.ref_name}}
 
 #set the name of the tests
-name: Comprehensive Tests; branch ${{ env.BRANCH_NAME }}
+name: Comprehensive Tests; branch ${{env.BRANCH_NAME}}
 
 #trigger when these occur
 on:
@@ -26,5 +26,5 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: make test (placeholder)
-      run: echo ""
+    - name: make test
+      run: make tests
