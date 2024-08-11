@@ -2,7 +2,8 @@
   <image src="toylogo.png" />
 </div>
 
-[![Running Comprehensive Tests](https://github.com/Ratstail91/Toy/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/Ratstail91/Toy/actions/workflows/c-cpp.yml)
+[![Continuous Integration v1.x](https://github.com/Ratstail91/Toy/actions/workflows/continuous-integration-v1.yml/badge.svg)](https://github.com/Ratstail91/Toy/actions/workflows/continuous-integration-v1.yml)  
+[![Continuous Integration v2.x](https://github.com/Ratstail91/Toy/actions/workflows/continuous-integration-v2.yml/badge.svg?branch=dev)](https://github.com/Ratstail91/Toy/actions/workflows/continuous-integration-v2.yml)  
 
 ***Notice**: Toy is undergoing a complete rewrite. These docs are valid for version 1.x only.*
 
