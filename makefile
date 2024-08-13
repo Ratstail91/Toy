@@ -1,4 +1,5 @@
 #compiler settings
+CC=gcc
 CFLAGS+=-std=c17 -pedantic -Werror
 LIBS=-lm
 
@@ -42,9 +43,9 @@ ifeq ($(shell uname),Linux)
 	find . -type d -name 'out' -delete
 	find . -type d -name 'obj' -delete
 else ifeq ($(OS),Windows_NT)
-	del *.o *.a *.exe *.dll *.lib *.so *.dylib
-	del /s out
-	del /s obj
+	$(RM) *.o *.a *.exe *.dll *.lib *.so *.dylib
+	$(RM) out
+	$(RM) obj
 else ifeq ($(shell uname),Darwin)
 	find . -type f -name '*.o' -delete
 	find . -type f -name '*.a' -delete

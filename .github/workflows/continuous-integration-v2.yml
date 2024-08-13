@@ -21,5 +21,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: make tests
+      - name: make tests (ubuntu)
         run: make tests
+  
+  test-windows-latest:
+    runs-on: windows-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      - name: make tests (windows)
+        run: make tests
+
