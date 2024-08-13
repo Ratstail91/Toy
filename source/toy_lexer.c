@@ -317,13 +317,13 @@ static void trim(char** s, int* l) { //util
 void Toy_private_printToken(Toy_Token* token) {
 	//print errors
 	if (token->type == TOY_TOKEN_ERROR) {
-		printf(TOY_CC_ERROR "Error\t%d\t%.*s\n" TOY_CC_RESET, token->line, token->length, token->lexeme);
+		printf(TOY_CC_ERROR "ERROR: \t%d\t%.*s\n" TOY_CC_RESET, token->line, token->length, token->lexeme);
 		return;
 	}
 
 	//read pass token, even though it isn't generated
 	if (token->type == TOY_TOKEN_PASS) {
-		printf(TOY_CC_NOTICE "Error\t%d\t%.*s\n" TOY_CC_RESET, token->line, token->length, token->lexeme);
+		printf(TOY_CC_NOTICE "PASS: \t%d\t%.*s\n" TOY_CC_RESET, token->line, token->length, token->lexeme);
 		return;
 	}
 

@@ -1,14 +1,14 @@
+#compiler settings
+CFLAGS+=-std=c17 -pedantic -Werror
+LIBS=-lm
+
 #directories
 export TOY_SOURCEDIR=source
 export TOY_OUTDIR=out
 export TOY_OBJDIR=obj
 
-#compiler settings
-CFLAGS+=-std=c17 -pedantic -Werror
-LIBS=-lm
-
 #file names
-TOY_SOURCEFILES=$(wildcard $(TOY_SOURCEDIR)/*.c)
+export TOY_SOURCEFILES=$(wildcard $(TOY_SOURCEDIR)/*.c)
 
 #targets
 all: clean tests

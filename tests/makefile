@@ -3,14 +3,15 @@ CFLAGS=-g -Wall -Werror -Wno-unused-parameter -Wno-unused-function -Wno-unused-v
 LIBS=-lm
 
 #directories
-TEST_SOURCEDIR=../$(TOY_SOURCEDIR)
+TEST_ROOTDIR=..
+TEST_SOURCEDIR=$(TEST_ROOTDIR)/$(TOY_SOURCEDIR)
 TEST_CASESDIR=cases
 
 TEST_OUTDIR=out
 TEST_OBJDIR=obj
 
 #file names
-TEST_SOURCEFILES=$(wildcard $(TEST_SOURCEDIR)/*.c)
+TEST_SOURCEFILES=$(addprefix $(TOY_ROOTDIR)/,$(TOY_SOURCEFILES))
 TEST_CASESFILES=$(wildcard $(TEST_CASESDIR)/*.c)
 
 #build the object files, compile the test cases, and run
@@ -39,7 +40,7 @@ $(TEST_OBJDIR)/%.o: $(TEST_CASESDIR)/%.c
 
 #final linking step (with extra flags to strip dead code)
 $(TEST_OUTDIR)/%.exe: $(TEST_OBJDIR)/%.o
-	@$(CC) -o $@ $(shell find $(TEST_OBJDIR) -name '*.o') $(CFLAGS) $(LIBS) -Wl,--gc-sections
+	@$(CC) -o $@ $< $(addprefix $(TEST_OBJDIR)/,$(notdir $(TEST_SOURCEFILES:.c=.o))) $(CFLAGS) $(LIBS) -Wl,--gc-sections
 	$@
 
 #util commands
