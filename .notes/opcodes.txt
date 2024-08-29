@@ -1,0 +1,80 @@
+The following opcodes would be embedded into the final bytecode
+
+===
+
+//idk
+EOF, PASS, ERROR,
+
+//general commands
+READ_INTO
+	[register] //read from the bytecode into the stack
+LOAD_INTO
+	[register, data] //load from the data section into the stack
+ASSERT
+	[register, "message"] //message could be embedded, possibly in a data section
+PRINT
+	[register]
+
+//can double as "assign"
+ADD
+	[lhs, rhs, dest]
+SUBTRACT
+	[lhs, rhs, dest]
+MULTIPLY
+	[lhs, rhs, dest]
+DIVIDE
+	[lhs, rhs, dest]
+MODULO
+	[lhs, rhs, dest]
+
+//GT can be replaced, probably
+COMPARE_EQUAL
+	[lhs, rhs, dest]
+COMPARE_NOT
+	[lhs, rhs, dest]
+COMPARE_LESS
+	[lhs, rhs, dest]
+COMPARE_LESS_EQUAL
+	[lhs, rhs, dest]
+COMPARE_GREATER
+	[lhs, rhs, dest]
+COMPARE_GREATER_EQUAL
+	[lhs, rhs, dest]
+
+COMPARE_TRUTHY
+	[lhs, dest]
+AND
+	[lhs, rhs, dest]
+OR
+	[lhs, rhs, dest]
+INVERT
+	[lhs, dest]
+
+//jump around the bytecode
+JUMP
+	[pos]
+JUMP_IF_FALSE
+	[pos, lhs]
+FN_CALL
+	//push args and move
+FN_RETURN
+	//push results and move - closures are required
+
+
+
+CONCAT?
+	[lhs, rhs, dest]
+
+
+IMPORT? (as?)
+
+RETURN? //some kind of jump with a return value
+
+
+
+SCOPE_BEGIN?
+SCOPE_END?
+
+cast?
+rest?
+index access and assign?
