@@ -1,0 +1,173 @@
+SECD = State, Environment, Control, Dump
+
+The idea of "Landin's SECD Machine" is to store the working memory in S, the variable-value bindings in E, the code/instructions in C, and the program stack in D.
+
+Notes:
+	DEFINE = DECLARE + SET
+
+	The environment, denoted with an E, is created on routine start, and destroyed on routine end - however, it uses the parent routine's environment as the starting point for it's creation, so closures work as expected
+
+	unlike version 1, identifiers are not a valid datatype.
+
+	placeholder opcodes - EOF, PASS, ERROR,
+
+Things to consider later:
+	type cast?
+	rest parameter?
+	index access and assign?
+
+===
+
+//general instructions
+READ
+	read one value from C onto S
+LOAD
+	read one value from .data onto S
+ASSERT
+	if S(-1) is falsy, print S(0) and exit
+PRINT
+	pop S(0), and print the output
+SET
+	read one word from C, saves the key E[word] to the value S(0), popping S(0)
+GET
+	read one word from C, finds the value of E[word], leaves the value on S
+DECLARE
+	read two words from C, create a new entry in E with the key E[word1], the type defined by word2, the value 'null'
+DEFINE
+	read two words from C, create a new entry in E with the key E[word1], the type defined by word2, the value popped from S(0)
+
+
+//arithmetic instructions
+ADD
+	performs the specified operation on S(-1) and S(0), popping both, leaving the result on S
+SUBTRACT
+	performs the specified operation on S(-1) and S(0), popping both, leaving the result on S
+MULTIPLY
+	performs the specified operation on S(-1) and S(0), popping both, leaving the result on S
+DIVIDE
+	performs the specified operation on S(-1) and S(0), popping both, leaving the result on S
+MODULO
+	performs the specified operation on S(-1) and S(0), popping both, leaving the result on S
+
+
+//comparison instructions
+COMPARE_EQUAL
+	pops S(-1) and S(0), replacing it with TRUE or FALSE, depending on equality
+COMPARE_LESS
+	pops S(-1) and S(0), replacing it with TRUE or FALSE, depending on comparisoncomparison
+COMPARE_LESS_EQUAL
+	pops S(-1) and S(0), replacing it with TRUE or FALSE, depending on comparison
+COMPARE_GREATER
+	pops S(-1) and S(0), replacing it with TRUE or FALSE, depending on comparison
+COMPARE_GREATER_EQUAL
+	pops S(-1) and S(0), replacing it with TRUE or FALSE, depending on comparison
+
+
+//logical instructions
+AND
+	pops S(-1) and S(0), replacing it with TRUE or FALSE, depending on truthiness
+OR
+	pops S(-1) and S(0), replacing it with TRUE or FALSE, depending on truthiness
+TRUTHY
+	pops S(0), replacing it with TRUE or FALSE, depending on truthiness
+INVERT
+	pops S(0), replacing it with TRUE or FALSE, depending on truthiness
+
+
+//control instructions
+JUMP
+	read one value from C, and move the program counter to that location
+JUMP_IF_FALSE
+	read one value from C, pops S(0), and move the program counter to that location if the popped value is falsy
+FN_CALL
+	*read a list of arguments specified in C into 'A', store (S, E, C, D) as D, wipe S and E, move the stack pointer to the specified routine, set E based on the contents of 'A'
+FN_RETURN
+	*read a list of return values specified in C into 'R', wipe S and E, restoroutine re (S, E, C, D) from D(0) popping it, store the contents of 'R' in E or S based on the next few parts of C
+
+//bespoke utility instructions
+IMPORT
+	//invoke an external library into the current scope
+CONCAT
+	//combine two strings
+SCOPE_BEGIN
+	//push an inner environment to E, which should be automatically popped at the routine's end
+SCOPE_END
+	//pop an inner environment from E, only if it was created with SCOPE_BEGIN
+
+===
+
+FN_CALLonly
+	read word: read the following N arguments
+
+		for 0 to N do:
+			read word as match: # this allows literals and identifiers as arguments
+				stack: then pop S(0) into 'A'
+				**env: then read word, load E[word]*** into 'A'
+
+	read word:
+		store (S,E,C,D) as D
+		wipe S and E
+		jump C to routines[word]
+
+	read word:
+		read the following N parameter names, storing each member of 'A' as their value in E[name]***
+
+	continue
+
+FN_RETURN
+	read word: read the following N return values
+
+		for 0 to N do:
+			read word as match: # this allows literals and identifiers as arguments
+				stack: then pop S(0) into 'R'
+				**env: then read word, load E[word]*** into 'R'
+
+	restore (S,E,C,D) from D(0), popping it # this wipes S and C from the routine, and returns C to the pre-call position
+
+	read word: read the following N storage locations for the values within `R`
+
+		for 0 to N do:
+			read word as match: # you're effectively reversing the prior reads
+				stack: then push from 'R' onto S
+				**env: then read word, save 'R' into E[word]***
+
+**This could work by listing the sources as e.g. "SSSExS" - three stacks and one environment variable loaded onto the stack, then one more stack for a total of four values
+
+***E[word] would more accurately be E[.data[word]], where '.data' is for the currently loaded routine
+
+Notes:
+	the bytecode of a funtion call would look like:
+	
+		FN_CALL N [stack|env word]... N [stack|env word]...
+	
+	the value of C stored in D points to the second N, while it waits to pick up where it left off
+
+===
+
+.header:
+	N total length
+	N .args count
+	N .data count
+	N .routine count
+	.args start
+	.code start
+	.datatable start
+	.data start
+	.routine start
+	//any additional metadata can go here
+
+.args: # these keys stored in E before execution begins
+
+.code:
+	READ 0
+	LOAD 0
+	ASSERT
+
+.datatable: # could list the starts as a jump table, since members of data and routines have unknown sizes
+	0 -> 0x00
+
+.data:
+	"Hello world"
+
+.routines: # this stores inner routines, in sequence
+
