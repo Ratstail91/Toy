@@ -1,0 +1,71 @@
+The bytecode format
+
+===
+
+There are four components in the bytecode header:
+
+TOY_VERSION_MAJOR
+TOY_VERSION_MINOR
+TOY_VERSION_PATCH
+TOY_VERSION_BUILD
+
+The first three are each one unsigned byte, and the fourth is a null terminated C-string.
+
+ * Under no circumstance, should you ever run bytecode whose major version is different
+ * Under no circumstance, should you ever run bytecode whose minor version is above the interpreter’s minor version
+ * You may, at your own risk, attempt to run bytecode whose patch version is different from the interpreter’s patch version
+ * You may, at your own risk, attempt to run bytecode whose build version is different from the interpreter’s build version
+
+An additional note: The contents of the build string may be anything, such as:
+
+ * the compilation date and time of the interpreter
+ * a marker identifying the current fork and/or branch
+ * identification information, such as the developer's copyright
+ * a link to Risk Astley's "Never Gonna Give You Up" on YouTube
+
+===
+
+At this time, a 'module' consists of a single 'routine', which acts as its global scope.
+
+Additional information may be added later, or multiple 'modules' listed sequentially may be a possibility.
+
+===
+
+# the routine structure, which is potentially recursive
+
+# symbol shorthand : 'module::identifier'
+# where 'module' can be omitted if it's local to this module ('identifier' within the symbols is calculated at the module level, it's always unique)
+
+.header:
+	total size         # size of this routine, including all data and subroutines
+	N .param count     # the number of parameter fields expected
+	N .data count      # the number of data fields expected
+	N .routine count   # the number of routines present
+	.param start       # absolute address of .param;     omitted if not needed
+	.code start        # absolute address of .code;      mandatory
+	.datatable start   # absolute address of .datatable; omitted if not needed
+	.data start        # absolute address of .data;      omitted if not needed
+	.routine start     # absolute address of .routine;   omitted if not needed
+	# additional metadata fields can be added later
+
+.param:
+	# a list of symbols to be used as keys in the environment
+
+.code:
+	# instructions read and 'executed' by the interpreter
+	READ 0
+	LOAD 0
+	ASSERT
+
+.datatable:
+	# a 'symbol -> pointer' jumptable for quickly looking up values in .data and .routines
+	0 -> {string, 0x00}
+	1 -> {fn, 0xFF}
+
+.data:
+	# data that can't really be embedded into .code
+	"Hello world"
+
+.routines:
+	# inner routines, each of which conforms to this spec
+

@@ -1,3 +1,7 @@
+This file is messy and confusing, and makes sense to nobody but me - so don't worry about understanding it too much - better docs will come later.
+
+===
+
 SECD = State, Environment, Control, Dump
 
 The idea of "Landin's SECD Machine" is to store the working memory in S, the variable-value bindings in E, the code/instructions in C, and the program stack in D.
@@ -7,9 +11,15 @@ Notes:
 
 	The environment, denoted with an E, is created on routine start, and destroyed on routine end - however, it uses the parent routine's environment as the starting point for it's creation, so closures work as expected
 
-	unlike version 1, identifiers are not a valid datatype.
+	unlike version 1, identifiers are not a valid datatype - they're just an index representing a symbol, like "standard::clock"
 
 	placeholder opcodes - EOF, PASS, ERROR,
+
+	a "value" can be of any valid datatype, and may point to various parts of memory to define it's value
+
+	Symbols will be awkward... I suspect the symbol table might need to be rebuilt on startup, as the order of the modules will not necessarily be the same each time
+
+	The various instances of S could be the same array in memory, simply marked as "unused"? You could stick C on there as a value before "pushing" for a new routine
 
 Things to consider later:
 	type cast?
@@ -28,13 +38,13 @@ ASSERT
 PRINT
 	pop S(0), and print the output
 SET
-	read one word from C, saves the key E[word] to the value S(0), popping S(0)
+	read one word from C, saves the key E[SYMBOL(word)] to the value S(0), popping S(0)
 GET
-	read one word from C, finds the value of E[word], leaves the value on S
+	read one word from C, finds the value of E[SYMBOL(word)], leaves the value on S
 DECLARE
-	read two words from C, create a new entry in E with the key E[word1], the type defined by word2, the value 'null'
+	read two words from C, create a new entry in E with the key E[SYMBOL(word1)], the type defined by word2, the value 'null'
 DEFINE
-	read two words from C, create a new entry in E with the key E[word1], the type defined by word2, the value popped from S(0)
+	read two words from C, create a new entry in E with the key E[SYMBOL(word1)], the type defined by word2, the value popped from S(0)
 
 
 //arithmetic instructions
@@ -54,7 +64,7 @@ MODULO
 COMPARE_EQUAL
 	pops S(-1) and S(0), replacing it with TRUE or FALSE, depending on equality
 COMPARE_LESS
-	pops S(-1) and S(0), replacing it with TRUE or FALSE, depending on comparisoncomparison
+	pops S(-1) and S(0), replacing it with TRUE or FALSE, depending on comparison
 COMPARE_LESS_EQUAL
 	pops S(-1) and S(0), replacing it with TRUE or FALSE, depending on comparison
 COMPARE_GREATER
@@ -76,13 +86,14 @@ INVERT
 
 //control instructions
 JUMP
-	read one value from C, and move the program counter to that location
+	read one value from C, and move the program counter to that location (relative to the current position)
 JUMP_IF_FALSE
-	read one value from C, pops S(0), and move the program counter to that location if the popped value is falsy
+	read one value from C, pops S(0), and move the program counter to that location (relative to the current position) if the popped value is falsy
 FN_CALL
-	*read a list of arguments specified in C into 'A', store (S, E, C, D) as D, wipe S and E, move the stack pointer to the specified routine, set E based on the contents of 'A'
+	*read a list of arguments specified in C into 'A', store (S, E, C, D) as D, push S, move the stack pointer to the specified routine, push a new E based on the contents of 'A'
 FN_RETURN
-	*read a list of return values specified in C into 'R', wipe S and E, restoroutine re (S, E, C, D) from D(0) popping it, store the contents of 'R' in E or S based on the next few parts of C
+This 
+	*read a list of return values specified in C into 'R', pop S, restore (S, E, C, D) from D(0) popping it, store the contents of 'R' in E or S based on the next few parts of C
 
 //bespoke utility instructions
 IMPORT
@@ -96,21 +107,21 @@ SCOPE_END
 
 ===
 
-FN_CALLonly
+FN_CALL
 	read word: read the following N arguments
 
 		for 0 to N do:
 			read word as match: # this allows literals and identifiers as arguments
 				stack: then pop S(0) into 'A'
-				**env: then read word, load E[word]*** into 'A'
+				**env: then read word, load E[SYMBOL(word)] into 'A'
 
 	read word:
-		store (S,E,C,D) as D
-		wipe S and E
-		jump C to routines[word]
+		determine where the routine is (is it new or is it a value?) and hold it for a moment
+		push E and C into a frame marker on S
+		jump C to the routine
 
 	read word:
-		read the following N parameter names, storing each member of 'A' as their value in E[name]***
+		read the following N parameter names, storing each member of 'A' as their value in E[SYMBOL(name)]
 
 	continue
 
@@ -120,20 +131,19 @@ FN_RETURN
 		for 0 to N do:
 			read word as match: # this allows literals and identifiers as arguments
 				stack: then pop S(0) into 'R'
-				**env: then read word, load E[word]*** into 'R'
+				**env: then read word, load E[SYMBOL(word)] into 'R'
 
-	restore (S,E,C,D) from D(0), popping it # this wipes S and C from the routine, and returns C to the pre-call position
+	pop E and S
+	extract and restore E and C from the frame marker on S
 
 	read word: read the following N storage locations for the values within `R`
 
 		for 0 to N do:
 			read word as match: # you're effectively reversing the prior reads
 				stack: then push from 'R' onto S
-				**env: then read word, save 'R' into E[word]***
+				**env: then read word, save 'R' into E[SYMBOL(word)]
 
 **This could work by listing the sources as e.g. "SSSExS" - three stacks and one environment variable loaded onto the stack, then one more stack for a total of four values
-
-***E[word] would more accurately be E[.data[word]], where '.data' is for the currently loaded routine
 
 Notes:
 	the bytecode of a funtion call would look like:
@@ -143,31 +153,4 @@ Notes:
 	the value of C stored in D points to the second N, while it waits to pick up where it left off
 
 ===
-
-.header:
-	N total length
-	N .args count
-	N .data count
-	N .routine count
-	.args start
-	.code start
-	.datatable start
-	.data start
-	.routine start
-	//any additional metadata can go here
-
-.args: # these keys stored in E before execution begins
-
-.code:
-	READ 0
-	LOAD 0
-	ASSERT
-
-.datatable: # could list the starts as a jump table, since members of data and routines have unknown sizes
-	0 -> 0x00
-
-.data:
-	"Hello world"
-
-.routines: # this stores inner routines, in sequence
 
