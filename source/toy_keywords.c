@@ -23,7 +23,7 @@ const Toy_KeywordTypeTuple Toy_private_keywords[] = {
 	{TOY_TOKEN_KEYWORD_ASSERT, "assert"},
 	{TOY_TOKEN_KEYWORD_BREAK, "break"},
 	{TOY_TOKEN_KEYWORD_CLASS, "class"},
-	{TOY_TOKEN_KEYWORD_CONST, "const"}, //TODO: investigate the constness of types
+	{TOY_TOKEN_KEYWORD_CONST, "const"},
 	{TOY_TOKEN_KEYWORD_CONTINUE, "continue"},
 	{TOY_TOKEN_KEYWORD_DO, "do"},
 	{TOY_TOKEN_KEYWORD_ELSE, "else"},

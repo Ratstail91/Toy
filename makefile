@@ -17,7 +17,7 @@ all: clean tests
 
 .PHONY: tests
 tests:
-	$(MAKE) -C tests
+	$(MAKE) -C tests -k
 
 #util targets
 $(TOY_OUTDIR):

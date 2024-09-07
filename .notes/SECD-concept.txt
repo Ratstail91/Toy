@@ -13,7 +13,7 @@ Notes:
 
 	unlike version 1, identifiers are not a valid datatype - they're just an index representing a symbol, like "standard::clock"
 
-	placeholder opcodes - EOF, PASS, ERROR,
+	meta opcodes - EOF, PASS, ERROR,
 
 	a "value" can be of any valid datatype, and may point to various parts of memory to define it's value
 

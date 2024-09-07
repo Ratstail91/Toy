@@ -14,6 +14,7 @@ typedef enum Toy_ValueType {
 	TOY_VALUE_OPAQUE,
 } Toy_ValueType;
 
+//4 bytes in size
 typedef struct Toy_Value {
 	union {
 		bool boolean; //1
@@ -26,7 +27,7 @@ typedef struct Toy_Value {
 		//TODO: opaque
 	} as; //4
 
-	Toy_ValueType type; //4 bytes
+	Toy_ValueType type; //4
 } Toy_Value;
 
 #define TOY_VALUE_IS_NULL(value)				((value).type == TOY_VALUE_NULL)
