@@ -261,7 +261,7 @@ Toy_Token Toy_private_scanLexer(Toy_Lexer* lexer) {
 		case '/': return makeToken(lexer, match(lexer, '=') ? TOY_TOKEN_OPERATOR_DIVIDE_ASSIGN : TOY_TOKEN_OPERATOR_DIVIDE);
 		case '%': return makeToken(lexer, match(lexer, '=') ? TOY_TOKEN_OPERATOR_MODULO_ASSIGN : 	TOY_TOKEN_OPERATOR_MODULO);
 
-		case '!': return makeToken(lexer, match(lexer, '=') ? TOY_TOKEN_OPERATOR_COMPARE_NOT : TOY_TOKEN_OPERATOR_INVERT);
+		case '!': return makeToken(lexer, match(lexer, '=') ? TOY_TOKEN_OPERATOR_COMPARE_NOT : TOY_TOKEN_OPERATOR_NEGATE);
 		case '=': return makeToken(lexer, match(lexer, '=') ? TOY_TOKEN_OPERATOR_COMPARE_EQUAL : TOY_TOKEN_OPERATOR_ASSIGN);
 
 		case '<': return makeToken(lexer, match(lexer, '=') ? TOY_TOKEN_OPERATOR_COMPARE_LESS_EQUAL : TOY_TOKEN_OPERATOR_COMPARE_LESS);

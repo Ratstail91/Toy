@@ -14,7 +14,7 @@ typedef enum Toy_ValueType {
 	TOY_VALUE_OPAQUE,
 } Toy_ValueType;
 
-//4 bytes in size
+//8 bytes in size
 typedef struct Toy_Value {
 	union {
 		bool boolean; //1
