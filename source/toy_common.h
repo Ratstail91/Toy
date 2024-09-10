@@ -5,27 +5,37 @@
 #include <stdint.h>
 #include <stddef.h>
 
-
 //TOY_API is platform-dependant, and marks publicly usable API functions
-#if defined(__linux__) || defined(__MINGW32__) || defined(__GNUC__)
-
-//GCC support
-#define TOY_API extern
-
+#if defined(__GNUC__)
+	#define TOY_API extern
 #elif defined(_MSC_VER)
-
-//MSVC support
-#ifndef TOY_EXPORT
-#define TOY_API __declspec(dllimport)
+	#ifndef TOY_EXPORT
+		#define TOY_API __declspec(dllimport)
+	#else
+		#define TOY_API __declspec(dllexport)
+	#endif
 #else
-#define TOY_API __declspec(dllexport)
+	//generic solution
+	#define TOY_API extern
 #endif
 
+//TOY_BITNESS is used to encourage memory-cache friendliness
+//source: https://www.linuxquestions.org/questions/programming-9/c-preprocessor-define-for-32-vs-64-bit-long-int-4175658579/
+#if defined(__GNUC__)
+	#if defined(__x86_64)
+		#define TOY_BITNESS 64
+	#else
+		#define TOY_BITNESS 32
+	#endif
+#elif defined(_MSC_VER)
+	#if defined(_M_X64)
+		#define TOY_BITNESS 64
+	#else
+		#define TOY_BITNESS 32
+	#endif
 #else
-
-//generic
-#define TOY_API extern
-
+	//generic solution
+	#define TOY_BITNESS -1
 #endif
 
 //bytecode version specifiers, embedded as the header

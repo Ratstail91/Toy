@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-int test_sizeof_ast() {
+int test_sizeof_ast_32bit() {
 #define TEST_SIZEOF(type, size) \
 	if (sizeof(type) != size) { \
 		fprintf(stderr, TOY_CC_ERROR "ERROR: sizeof(" #type ") is %d, expected %d\n" TOY_CC_RESET, (int)sizeof(type), size); \
@@ -223,12 +223,16 @@ int main() {
 	//run each test set, returning the total errors given
 	int total = 0, res = 0;
 
-	res = test_sizeof_ast();
+#if TOY_BITNESS == 32
+	res = test_sizeof_ast_32bit();
 	total += res;
 
 	if (res == 0) {
 		printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 	}
+#else
+	fprintf(stderr, TOY_CC_WARN "WARNING: Skipping test_sizeof_ast_32bit(); Can't determine the 'bitness' of this platform\n" TOY_CC_RESET);
+#endif
 
 	res = test_type_emission();
 	total += res;
