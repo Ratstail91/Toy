@@ -41,28 +41,34 @@ void Toy_private_emitAstValue(Toy_Bucket** bucket, Toy_Ast** handle, Toy_Value v
 }
 
 //TODO: flag range checks
-void Toy_private_emitAstUnary(Toy_Bucket** bucket, Toy_Ast** handle, Toy_AstFlag flag, Toy_Ast* child) {
-	(*handle) = (Toy_Ast*)Toy_partBucket(bucket, sizeof(Toy_Ast));
+void Toy_private_emitAstUnary(Toy_Bucket** bucket, Toy_Ast** handle, Toy_AstFlag flag) {
+	Toy_Ast* tmp = (Toy_Ast*)Toy_partBucket(bucket, sizeof(Toy_Ast));
 
-	(*handle)->unary.type = TOY_AST_UNARY;
-	(*handle)->unary.flag = flag;
-	(*handle)->unary.child = child;
+	tmp->unary.type = TOY_AST_UNARY;
+	tmp->unary.flag = flag;
+	tmp->unary.child = *handle;
+
+	(*handle) = tmp;
 }
 
-void Toy_private_emitAstBinary(Toy_Bucket** bucket, Toy_Ast** handle, Toy_AstFlag flag, Toy_Ast* left, Toy_Ast* right) {
-	(*handle) = (Toy_Ast*)Toy_partBucket(bucket, sizeof(Toy_Ast));
+void Toy_private_emitAstBinary(Toy_Bucket** bucket, Toy_Ast** handle, Toy_AstFlag flag, Toy_Ast* right) {
+	Toy_Ast* tmp = (Toy_Ast*)Toy_partBucket(bucket, sizeof(Toy_Ast));
 
-	(*handle)->binary.type = TOY_AST_BINARY;
-	(*handle)->binary.flag = flag;
-	(*handle)->binary.left = left;
-	(*handle)->binary.right = right;
+	tmp->binary.type = TOY_AST_BINARY;
+	tmp->binary.flag = flag;
+	tmp->binary.left = *handle; //left-recursive
+	tmp->binary.right = right;
+
+	(*handle) = tmp;
 }
 
-void Toy_private_emitAstGroup(Toy_Bucket** bucket, Toy_Ast** handle, Toy_Ast* child) {
-	(*handle) = (Toy_Ast*)Toy_partBucket(bucket, sizeof(Toy_Ast));
+void Toy_private_emitAstGroup(Toy_Bucket** bucket, Toy_Ast** handle) {
+	Toy_Ast* tmp = (Toy_Ast*)Toy_partBucket(bucket, sizeof(Toy_Ast));
 
-	(*handle)->group.type = TOY_AST_GROUP;
-	(*handle)->group.child = child;
+	tmp->group.type = TOY_AST_GROUP;
+	tmp->group.child = (*handle);
+
+	(*handle) = tmp;
 }
 
 void Toy_private_emitAstPass(Toy_Bucket** bucket, Toy_Ast** handle) {

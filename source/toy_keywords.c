@@ -14,7 +14,7 @@ const Toy_KeywordTypeTuple Toy_private_keywords[] = {
 	{TOY_TOKEN_TYPE_STRING, "string"},
 	// TOY_TOKEN_TYPE_ARRAY,
 	// TOY_TOKEN_TYPE_DICTIONARY,
-	{TOY_TOKEN_TYPE_FUNCTION, "fn"},
+	// TOY_TOKEN_TYPE_FUNCTION,
 	{TOY_TOKEN_TYPE_OPAQUE, "opaque"},
 	{TOY_TOKEN_TYPE_ANY, "any"},
 
@@ -30,6 +30,7 @@ const Toy_KeywordTypeTuple Toy_private_keywords[] = {
 	{TOY_TOKEN_KEYWORD_EXPORT, "export"},
 	{TOY_TOKEN_KEYWORD_FOR, "for"},
 	{TOY_TOKEN_KEYWORD_FOREACH, "foreach"},
+	{TOY_TOKEN_KEYWORD_FUNCTION, "fn"},
 	{TOY_TOKEN_KEYWORD_IF, "if"},
 	{TOY_TOKEN_KEYWORD_IMPORT, "import"},
 	{TOY_TOKEN_KEYWORD_IN, "in"},

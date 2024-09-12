@@ -20,12 +20,20 @@ typedef enum Toy_AstType {
 
 //flags are handled differently by different types
 typedef enum Toy_AstFlag {
+	TOY_AST_FLAG_NONE,
+
 	//binary flags
 	TOY_AST_FLAG_ADD,
 	TOY_AST_FLAG_SUBTRACT,
 	TOY_AST_FLAG_MULTIPLY,
 	TOY_AST_FLAG_DIVIDE,
 	TOY_AST_FLAG_MODULO,
+	TOY_AST_FLAG_ADD_ASSIGN,
+	TOY_AST_FLAG_SUBTRACT_ASSIGN,
+	TOY_AST_FLAG_MULTIPLY_ASSIGN,
+	TOY_AST_FLAG_DIVIDE_ASSIGN,
+	TOY_AST_FLAG_MODULO_ASSIGN,
+	TOY_AST_FLAG_ASSIGN,
 	TOY_AST_FLAG_COMPARE_EQUAL,
 	TOY_AST_FLAG_COMPARE_NOT,
 	TOY_AST_FLAG_COMPARE_LESS,
@@ -50,9 +58,9 @@ void Toy_private_initAstBlock(Toy_Bucket** bucket, Toy_Ast** handle);
 void Toy_private_appendAstBlock(Toy_Bucket** bucket, Toy_Ast** handle, Toy_Ast* child);
 
 void Toy_private_emitAstValue(Toy_Bucket** bucket, Toy_Ast** handle, Toy_Value value);
-void Toy_private_emitAstUnary(Toy_Bucket** bucket, Toy_Ast** handle, Toy_AstFlag flag, Toy_Ast* child);
-void Toy_private_emitAstBinary(Toy_Bucket** bucket, Toy_Ast** handle,Toy_AstFlag flag, Toy_Ast* left, Toy_Ast* right);
-void Toy_private_emitAstGroup(Toy_Bucket** bucket, Toy_Ast** handle, Toy_Ast* child);
+void Toy_private_emitAstUnary(Toy_Bucket** bucket, Toy_Ast** handle, Toy_AstFlag flag);
+void Toy_private_emitAstBinary(Toy_Bucket** bucket, Toy_Ast** handle,Toy_AstFlag flag, Toy_Ast* right);
+void Toy_private_emitAstGroup(Toy_Bucket** bucket, Toy_Ast** handle);
 
 void Toy_private_emitAstPass(Toy_Bucket** bucket, Toy_Ast** handle);
 void Toy_private_emitAstError(Toy_Bucket** bucket, Toy_Ast** handle);

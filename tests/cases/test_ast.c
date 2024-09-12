@@ -62,9 +62,8 @@ int test_type_emission() {
 
 		//build the AST
 		Toy_Ast* ast = NULL;
-		Toy_Ast* child = NULL;
-		Toy_private_emitAstValue(&bucket, &child, TOY_VALUE_TO_INTEGER(42));
-		Toy_private_emitAstUnary(&bucket, &ast, TOY_AST_FLAG_NEGATE, child);
+		Toy_private_emitAstValue(&bucket, &ast, TOY_VALUE_TO_INTEGER(42));
+		Toy_private_emitAstUnary(&bucket, &ast, TOY_AST_FLAG_NEGATE);
 
 		//check if it worked
 		if (
@@ -90,11 +89,10 @@ int test_type_emission() {
 
 		//build the AST
 		Toy_Ast* ast = NULL;
-		Toy_Ast* left = NULL;
 		Toy_Ast* right = NULL;
-		Toy_private_emitAstValue(&bucket, &left, TOY_VALUE_TO_INTEGER(42));
+		Toy_private_emitAstValue(&bucket, &ast, TOY_VALUE_TO_INTEGER(42));
 		Toy_private_emitAstValue(&bucket, &right, TOY_VALUE_TO_INTEGER(69));
-		Toy_private_emitAstBinary(&bucket, &ast, TOY_AST_FLAG_ADD, left, right);
+		Toy_private_emitAstBinary(&bucket, &ast, TOY_AST_FLAG_ADD, right);
 
 		//check if it worked
 		if (
@@ -122,13 +120,11 @@ int test_type_emission() {
 
 		//build the AST
 		Toy_Ast* ast = NULL;
-		Toy_Ast* addition = NULL;
-		Toy_Ast* left = NULL;
 		Toy_Ast* right = NULL;
-		Toy_private_emitAstValue(&bucket, &left, TOY_VALUE_TO_INTEGER(42));
+		Toy_private_emitAstValue(&bucket, &ast, TOY_VALUE_TO_INTEGER(42));
 		Toy_private_emitAstValue(&bucket, &right, TOY_VALUE_TO_INTEGER(69));
-		Toy_private_emitAstBinary(&bucket, &addition, TOY_AST_FLAG_ADD, left, right);
-		Toy_private_emitAstGroup(&bucket, &ast, addition);
+		Toy_private_emitAstBinary(&bucket, &ast, TOY_AST_FLAG_ADD, right);
+		Toy_private_emitAstGroup(&bucket, &ast);
 
 		//check if it worked
 		if (
@@ -164,13 +160,11 @@ int test_type_emission() {
 		for (int i = 0; i < 5; i++) {
 			//build the AST
 			Toy_Ast* ast = NULL;
-			Toy_Ast* addition = NULL;
-			Toy_Ast* left = NULL;
 			Toy_Ast* right = NULL;
-			Toy_private_emitAstValue(&bucket, &left, TOY_VALUE_TO_INTEGER(42));
+			Toy_private_emitAstValue(&bucket, &ast, TOY_VALUE_TO_INTEGER(42));
 			Toy_private_emitAstValue(&bucket, &right, TOY_VALUE_TO_INTEGER(69));
-			Toy_private_emitAstBinary(&bucket, &addition, TOY_AST_FLAG_ADD, left, right);
-			Toy_private_emitAstGroup(&bucket, &ast, addition);
+			Toy_private_emitAstBinary(&bucket, &ast, TOY_AST_FLAG_ADD, right);
+			Toy_private_emitAstGroup(&bucket, &ast);
 
 			Toy_private_appendAstBlock(&bucket, &block, ast);
 		}
