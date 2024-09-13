@@ -16,6 +16,7 @@ typedef enum Toy_AstType {
 
 	TOY_AST_PASS,
 	TOY_AST_ERROR,
+	TOY_AST_END,
 } Toy_AstType;
 
 //flags are handled differently by different types
@@ -64,6 +65,7 @@ void Toy_private_emitAstGroup(Toy_Bucket** bucket, Toy_Ast** handle);
 
 void Toy_private_emitAstPass(Toy_Bucket** bucket, Toy_Ast** handle);
 void Toy_private_emitAstError(Toy_Bucket** bucket, Toy_Ast** handle);
+void Toy_private_emitAstEnd(Toy_Bucket** bucket, Toy_Ast** handle);
 
 typedef struct Toy_AstBlock {
 	Toy_AstType type;
@@ -85,8 +87,8 @@ typedef struct Toy_AstUnary {
 
 typedef struct Toy_AstBinary {
 	Toy_AstType type;
-	Toy_Ast* left;
 	Toy_AstFlag flag;
+	Toy_Ast* left;
 	Toy_Ast* right;
 } Toy_AstBinary;
 
@@ -104,6 +106,10 @@ typedef struct Toy_AstError {
 	//TODO: more data regarding the error
 } Toy_AstError;
 
+typedef struct Toy_AstEnd {
+	Toy_AstType type;
+} Toy_AstEnd;
+
 union Toy_Ast {
 	Toy_AstType type; //4
 	Toy_AstBlock block; //12
@@ -113,4 +119,5 @@ union Toy_Ast {
 	Toy_AstGroup group; //8
 	Toy_AstPass pass; //4
 	Toy_AstError error; //4
+	Toy_AstEnd end; //4
 }; //16

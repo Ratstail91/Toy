@@ -24,8 +24,8 @@
 TOY_API void* Toy_reallocate(void* pointer, size_t oldSize, size_t newSize);
 
 //immobile "bucket" memory structure for custom allocators
-#define TOY_BUCKET_INIT(type, bucket, capacity) \
-	Toy_initBucket(&(bucket), sizeof(type)*(capacity))
+#define TOY_BUCKET_INIT(type, bucket, count) \
+	Toy_initBucket(&(bucket), sizeof(type)*(count))
 
 #define TOY_BUCKET_PART(type, bucket) \
 	(type*)Toy_partBucket(&(bucket), sizeof(type))

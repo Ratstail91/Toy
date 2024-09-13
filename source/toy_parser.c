@@ -235,7 +235,8 @@ static Toy_AstFlag atomic(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** roo
 			do {
 				buffer[i] = parser->previous.lexeme[o];
 				if (buffer[i] != '_') i++;
-			} while (parser->previous.lexeme[o++]);
+			} while (parser->previous.lexeme[o++] && i < parser->previous.length);
+			buffer[i] = '\0'; //BUGFIX
 
 			int value = 0;
 			sscanf(buffer, "%d", &value);
@@ -251,7 +252,8 @@ static Toy_AstFlag atomic(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** roo
 			do {
 				buffer[i] = parser->previous.lexeme[o];
 				if (buffer[i] != '_') i++;
-			} while (parser->previous.lexeme[o++]);
+			} while (parser->previous.lexeme[o++] && i < parser->previous.length);
+			buffer[i] = '\0'; //BUGFIX
 
 			float value = 0;
 			sscanf(buffer, "%f", &value);
@@ -267,12 +269,36 @@ static Toy_AstFlag atomic(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** roo
 }
 
 static Toy_AstFlag unary(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root) {
-	if (parser->previous.type == TOY_TOKEN_OPERATOR_SUBTRACT || parser->previous.type == TOY_TOKEN_OPERATOR_NEGATE) {
-		//read what to negate
+	//'subtract' can only be applied to numbers and groups, while 'negate' can only be applied to booleans and groups
+	//this function takes the libery of peeking into the uppermost node, to see if it can apply this to it
+
+	if (parser->previous.type == TOY_TOKEN_OPERATOR_SUBTRACT) {
 		parsePrecedence(bucket, parser, root, PREC_UNARY);
 
-		//actually emit the negation node
-		Toy_private_emitAstUnary(bucket, root, TOY_AST_FLAG_NEGATE);
+		//negative numbers
+		if ((*root)->type == TOY_AST_VALUE && TOY_VALUE_IS_INTEGER((*root)->value.value)) {
+			(*root)->value.value = TOY_VALUE_TO_INTEGER( -TOY_VALUE_AS_INTEGER((*root)->value.value) );
+		}
+		else if ((*root)->type == TOY_AST_VALUE && TOY_VALUE_IS_FLOAT((*root)->value.value)) {
+			(*root)->value.value = TOY_VALUE_TO_FLOAT( -TOY_VALUE_AS_FLOAT((*root)->value.value) );
+		}
+		else {
+			//actually emit the negation node
+			Toy_private_emitAstUnary(bucket, root, TOY_AST_FLAG_NEGATE);
+		}
+	}
+
+	else if (parser->previous.type == TOY_TOKEN_OPERATOR_NEGATE) {
+		parsePrecedence(bucket, parser, root, PREC_UNARY);
+
+		//inverted booleans
+		if ((*root)->type == TOY_AST_VALUE && TOY_VALUE_IS_BOOLEAN((*root)->value.value)) {
+			(*root)->value.value = TOY_VALUE_TO_BOOLEAN( !TOY_VALUE_AS_BOOLEAN((*root)->value.value) );
+		}
+		else {
+			//actually emit the negation node
+			Toy_private_emitAstUnary(bucket, root, TOY_AST_FLAG_NEGATE);
+		}
 	}
 
 	else {
@@ -300,17 +326,17 @@ static Toy_AstFlag binary(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** roo
 		}
 
 		case TOY_TOKEN_OPERATOR_MULTIPLY: {
-			parsePrecedence(bucket, parser, root, PREC_TERM + 1);
+			parsePrecedence(bucket, parser, root, PREC_FACTOR + 1);
 			return TOY_AST_FLAG_MULTIPLY;
 		}
 
 		case TOY_TOKEN_OPERATOR_DIVIDE: {
-			parsePrecedence(bucket, parser, root, PREC_TERM + 1);
+			parsePrecedence(bucket, parser, root, PREC_FACTOR + 1);
 			return TOY_AST_FLAG_DIVIDE;
 		}
 
 		case TOY_TOKEN_OPERATOR_MODULO: {
-			parsePrecedence(bucket, parser, root, PREC_TERM + 1);
+			parsePrecedence(bucket, parser, root, PREC_FACTOR + 1);
 			return TOY_AST_FLAG_MODULO;
 		}
 
@@ -524,17 +550,20 @@ static void makeBlockStmt(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** roo
 void Toy_bindParser(Toy_Parser* parser, Toy_Lexer* lexer) {
 	Toy_resetParser(parser);
 	parser->lexer = lexer;
+	advance(parser);
 }
 
 Toy_Ast* Toy_scanParser(Toy_Bucket** bucket, Toy_Parser* parser) {
+	Toy_Ast* root = NULL;
+
 	//check for EOF
 	if (match(parser, TOY_TOKEN_EOF)) {
-		return NULL;
+		Toy_private_emitAstEnd(bucket, &root);
+		return root;
 	}
 
 	//TODO: better errors, check for unbound parser, etc.
 
-	Toy_Ast* root = NULL;
 	makeBlockStmt(bucket, parser, &root);
 
 	return root;

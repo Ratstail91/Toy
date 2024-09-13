@@ -82,3 +82,9 @@ void Toy_private_emitAstError(Toy_Bucket** bucket, Toy_Ast** handle) {
 
 	(*handle)->error.type = TOY_AST_ERROR;
 }
+
+void Toy_private_emitAstEnd(Toy_Bucket** bucket, Toy_Ast** handle) {
+	(*handle) = (Toy_Ast*)Toy_partBucket(bucket, sizeof(Toy_Ast));
+
+	(*handle)->error.type = TOY_AST_END;
+}

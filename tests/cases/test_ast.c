@@ -29,13 +29,9 @@ int test_sizeof_ast_32bit() {
 	return -err;
 }
 
-int test_type_emission() {
+int test_type_emission(Toy_Bucket* bucket) {
 	//emit value
 	{
-		//bucket setup
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 8);
-
 		//emit to an AST
 		Toy_Ast* ast = NULL;
 		Toy_private_emitAstValue(&bucket, &ast, TOY_VALUE_TO_INTEGER(42));
@@ -49,17 +45,10 @@ int test_type_emission() {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to emit a value as 'Toy_Ast', state unknown\n" TOY_CC_RESET);
 			return -1;
 		}
-
-		//bucket free
-		TOY_BUCKET_FREE(bucket);
 	}
 
 	//emit unary
 	{
-		//bucket setup
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 8);
-
 		//build the AST
 		Toy_Ast* ast = NULL;
 		Toy_private_emitAstValue(&bucket, &ast, TOY_VALUE_TO_INTEGER(42));
@@ -76,17 +65,10 @@ int test_type_emission() {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to emit a unary as 'Toy_Ast', state unknown\n" TOY_CC_RESET);
 			return -1;
 		}
-
-		//bucket free
-		TOY_BUCKET_FREE(bucket);
 	}
 
 	//emit binary
 	{
-		//bucket setup
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 8);
-
 		//build the AST
 		Toy_Ast* ast = NULL;
 		Toy_Ast* right = NULL;
@@ -107,17 +89,10 @@ int test_type_emission() {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to emit a binary as 'Toy_Ast', state unknown\n" TOY_CC_RESET);
 			return -1;
 		}
-
-		//bucket free
-		TOY_BUCKET_FREE(bucket);
 	}
 
 	//emit group
 	{
-		//bucket setup
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 8);
-
 		//build the AST
 		Toy_Ast* ast = NULL;
 		Toy_Ast* right = NULL;
@@ -141,17 +116,10 @@ int test_type_emission() {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to emit a group as 'Toy_Ast', state unknown\n" TOY_CC_RESET);
 			return -1;
 		}
-
-		//bucket free
-		TOY_BUCKET_FREE(bucket);
 	}
 
 	//emit and append blocks of code
 	{
-		//bucket setup
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 8);
-
 		//initialize the root block
 		Toy_Ast* block = NULL;
 		Toy_private_initAstBlock(&bucket, &block);
@@ -191,23 +159,6 @@ int test_type_emission() {
 
 			iter = iter->block.next;
 		}
-
-		//additional check: count the bucket's total allocations
-		Toy_Bucket* biter = bucket;
-		int total = 0;
-
-		while(biter != NULL) {
-			total += biter->count;
-			biter = biter->next;
-		}
-
-		if (total != 25 * (int)sizeof(Toy_Ast)) {
-			fprintf(stderr, TOY_CC_ERROR "ERROR: unexpected number of allocations found in a bucket, expected %d, found %d\n" TOY_CC_RESET, 25 * (int)sizeof(Toy_Ast), total);
-			return -1;
-		}
-
-		//bucket free
-		TOY_BUCKET_FREE(bucket);
 	}
 
 	return 0;
@@ -228,11 +179,15 @@ int main() {
 	fprintf(stderr, TOY_CC_WARN "WARNING: Skipping test_sizeof_ast_32bit(); Can't determine the 'bitness' of this platform\n" TOY_CC_RESET);
 #endif
 
-	res = test_type_emission();
-	total += res;
-
-	if (res == 0) {
-		printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
+	{
+		Toy_Bucket* bucket = NULL;
+		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
+		res = test_type_emission(bucket);
+		TOY_BUCKET_FREE(bucket);
+		if (res == 0) {
+			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
+		}
+		total += res;
 	}
 
 	return total;
