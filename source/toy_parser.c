@@ -263,7 +263,7 @@ static Toy_AstFlag atomic(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** roo
 
 		default:
 			printError(parser, parser->previous, "Unexpected token passed to atomic precedence rule");
-			Toy_private_emitAstError(bucket, root); //TODO: better error message here?
+			Toy_private_emitAstError(bucket, root);
 			return TOY_AST_FLAG_NONE;
 	}
 }
@@ -303,7 +303,7 @@ static Toy_AstFlag unary(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root
 
 	else {
 		printError(parser, parser->previous, "Unexpected token passed to unary precedence rule");
-		Toy_private_emitAstError(bucket, root); //TODO: better error message here?
+		Toy_private_emitAstError(bucket, root);
 	}
 
 	return TOY_AST_FLAG_NONE;
@@ -404,7 +404,7 @@ static Toy_AstFlag binary(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** roo
 
 		default:
 			printError(parser, parser->previous, "Unexpected token passed to binary precedence rule");
-			Toy_private_emitAstError(bucket, root); //TODO: better error message here?
+			Toy_private_emitAstError(bucket, root);
 			return TOY_AST_FLAG_NONE;
 	}
 }
@@ -415,12 +415,13 @@ static Toy_AstFlag group(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root
 		parsePrecedence(bucket, parser, root, PREC_GROUP);
 		consume(parser, TOY_TOKEN_OPERATOR_PAREN_RIGHT, "Expected ')' at end of group");
 
-		Toy_private_emitAstGroup(bucket, root);
+		//Toy_AstGroup is omitted from generation, as an optimisation
+		// Toy_private_emitAstGroup(bucket, root);
 	}
 
 	else {
 		printError(parser, parser->previous, "Unexpected token passed to grouping precedence rule");
-		Toy_private_emitAstError(bucket, root); //TODO: better error message here?
+		Toy_private_emitAstError(bucket, root);
 	}
 
 	return TOY_AST_FLAG_NONE;
@@ -440,7 +441,7 @@ static void parsePrecedence(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** r
 
 	if (prefix == NULL) {
 		printError(parser, parser->previous, "Expected expression");
-		Toy_private_emitAstError(bucket, root); //TODO: better error message here?
+		Toy_private_emitAstError(bucket, root);
 		return;
 	}
 
@@ -452,7 +453,7 @@ static void parsePrecedence(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** r
 
 		if (infix == NULL) {
 			printError(parser, parser->previous, "Expected operator");
-			Toy_private_emitAstError(bucket, root); //TODO: better error message here?
+			Toy_private_emitAstError(bucket, root);
 			return;
 		}
 
@@ -537,7 +538,7 @@ static void makeBlockStmt(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** roo
 			synchronize(parser);
 
 			Toy_Ast* err = NULL;
-			Toy_private_emitAstError(bucket, &err); //TODO: better error message here?
+			Toy_private_emitAstError(bucket, &err);
 			Toy_private_appendAstBlock(bucket, root, err);
 
 			continue;
@@ -561,8 +562,6 @@ Toy_Ast* Toy_scanParser(Toy_Bucket** bucket, Toy_Parser* parser) {
 		Toy_private_emitAstEnd(bucket, &root);
 		return root;
 	}
-
-	//TODO: better errors, check for unbound parser, etc.
 
 	makeBlockStmt(bucket, parser, &root);
 
