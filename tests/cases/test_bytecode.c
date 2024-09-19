@@ -24,6 +24,9 @@ int test_bytecode_header(Toy_Bucket* bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to write the bytecode header correctly:\n" TOY_CC_RESET);
 			fprintf(stderr, TOY_CC_ERROR "\t%d.%d.%d.%s\n" TOY_CC_RESET, bc.ptr[0], bc.ptr[1], bc.ptr[2], (char*)(bc.ptr + 3));
 			fprintf(stderr, TOY_CC_ERROR "\t%d.%d.%d.%s\n" TOY_CC_RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, TOY_VERSION_BUILD);
+
+			//cleanup and return
+			Toy_freeBytecode(bc);
 			return -1;
 		}
 
@@ -35,6 +38,8 @@ int test_bytecode_header(Toy_Bucket* bucket) {
 }
 
 int main() {
+	fprintf(stderr, TOY_CC_WARN "WARNING: Bytecode implementation incomplete\n" TOY_CC_RESET);
+
 	//run each test set, returning the total errors given
 	int total = 0, res = 0;
 

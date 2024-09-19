@@ -1,13 +1,14 @@
 #include "toy_bytecode.h"
 
 #include "toy_memory.h"
+#include "toy_routine.h"
 
 #include <stdio.h>
 #include <string.h>
 
 //utils
 static void expand(Toy_Bytecode* bc, int amount) {
-	if (bc->count + amount > bc->capacity) {
+	while (bc->count + amount > bc->capacity) {
 		int oldCapacity = bc->capacity;
 
 		bc->capacity = TOY_GROW_CAPACITY(oldCapacity);
@@ -21,7 +22,7 @@ static void emitByte(Toy_Bytecode* bc, unsigned char byte) {
 }
 
 static void writeModule(Toy_Bytecode* bc, Toy_Ast* ast) {
-	//
+	//TODO: routines
 }
 
 //bytecode
