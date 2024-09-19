@@ -41,7 +41,7 @@ Additional information may be added later, or multiple 'modules' listed sequenti
 	N .param count     # the number of parameter fields expected
 	N .data count      # the number of data fields expected
 	N .routine count   # the number of routines present
-	.param start       # absolute address of .param;     omitted if not needed
+	.param start       # absolute addess of .param;     omitted if not needed
 	.code start        # absolute address of .code;      mandatory
 	.datatable start   # absolute address of .datatable; omitted if not needed
 	.data start        # absolute address of .data;      omitted if not needed
@@ -64,7 +64,7 @@ Additional information may be added later, or multiple 'modules' listed sequenti
 
 .data:
 	# data that can't really be embedded into .code
-	"Hello world"
+	<STRING>,"Hello world"
 
 .routines:
 	# inner routines, each of which conforms to this spec
