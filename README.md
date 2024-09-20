@@ -4,18 +4,18 @@
 
 # Toy
 
-The Toy programming language is an imperative, bytecode-interpreted, embedded scripting language. Rather than functioning independently, it serves as part of another program, the "host". This design allows for straightforward customization by both the host’s developer and end users, achieved by exposing program logic through text files.
+The Toy programming language is an imperative, bytecode-interpreted, embeddable scripting language. Rather than functioning independently, it serves as part of another program, the "host". This design allows for straightforward customization by both the host’s developer and end users, achieved by exposing program logic through text files.
 
 This repository holds the reference implementation for Toy version 2.x, written in C.
 
 # Nifty Features
 
 * Simple C-like syntax
-* Intermediate bytecode interpretation
+* Intermediate AST and bytecode
 * Strong, but optional type system
 * First-class and higher-order functions
 * Extensible via external libraries
-* Re-direct output, error and assertion failure messages
+* Can re-direct output, error and assertion failure messages
 * Open source under the zlib license
 
 ## Syntax
