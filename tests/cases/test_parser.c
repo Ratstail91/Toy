@@ -283,7 +283,7 @@ int test_unary(Toy_Bucket* bucket) {
 		}
 	}
 
-	//ensure unary negation doesn't affect other things (such as group)
+	//ensure unary negation doesn't occur with a group
 	{
 		Toy_Ast* ast = makeAstFromSource(&bucket, "-(42);");
 
@@ -292,11 +292,25 @@ int test_unary(Toy_Bucket* bucket) {
 			ast == NULL ||
 			ast->type != TOY_AST_BLOCK ||
 			ast->block.child == NULL ||
-			ast->block.child->type != TOY_AST_VALUE ||
-			TOY_VALUE_IS_INTEGER(ast->block.child->value.value) == false ||
-			TOY_VALUE_AS_INTEGER(ast->block.child->value.value) != -42)
+			ast->block.child->type == TOY_AST_VALUE)
 		{
 			fprintf(stderr, TOY_CC_ERROR "ERROR: unexpected successful unary negation in parser with grouped value -(42)\n" TOY_CC_RESET);
+			return -1;
+		}
+	}
+
+	//ensure unary negation doesn't occur with a space
+	{
+		Toy_Ast* ast = makeAstFromSource(&bucket, "- 42;");
+
+		//check if it worked
+		if (
+			ast == NULL ||
+			ast->type != TOY_AST_BLOCK ||
+			ast->block.child == NULL ||
+			ast->block.child->type == TOY_AST_VALUE)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: unexpected successful unary negation in parser with space character '- 42'\n" TOY_CC_RESET);
 			return -1;
 		}
 	}

@@ -273,13 +273,15 @@ static Toy_AstFlag unary(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root
 	//this function takes the libery of peeking into the uppermost node, to see if it can apply this to it
 
 	if (parser->previous.type == TOY_TOKEN_OPERATOR_SUBTRACT) {
+
+		bool connectedDigit = parser->previous.lexeme[1] >= '0' && parser->previous.lexeme[1] <= '9'; //BUGFIX: '- 1' should not be optimised into a negative
 		parsePrecedence(bucket, parser, root, PREC_UNARY);
 
 		//negative numbers
-		if ((*root)->type == TOY_AST_VALUE && TOY_VALUE_IS_INTEGER((*root)->value.value)) {
+		if ((*root)->type == TOY_AST_VALUE && TOY_VALUE_IS_INTEGER((*root)->value.value) && connectedDigit) {
 			(*root)->value.value = TOY_VALUE_TO_INTEGER( -TOY_VALUE_AS_INTEGER((*root)->value.value) );
 		}
-		else if ((*root)->type == TOY_AST_VALUE && TOY_VALUE_IS_FLOAT((*root)->value.value)) {
+		else if ((*root)->type == TOY_AST_VALUE && TOY_VALUE_IS_FLOAT((*root)->value.value) && connectedDigit) {
 			(*root)->value.value = TOY_VALUE_TO_FLOAT( -TOY_VALUE_AS_FLOAT((*root)->value.value) );
 		}
 		else {

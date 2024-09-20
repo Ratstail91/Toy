@@ -11,10 +11,12 @@
 
 //utils
 static void expand(void** handle, int* capacity, int* count, int amount) {
-	while ((*count) + amount > (*capacity)) {
+	if ((*count) + amount > (*capacity)) {
 		int oldCapacity = (*capacity);
 
-		(*capacity) = TOY_GROW_CAPACITY(oldCapacity); //TODO: don't need GROW
+		while ((*count) + amount > (*capacity)) {
+			(*capacity) = TOY_GROW_CAPACITY(*capacity);
+		}
 		(*handle) = TOY_GROW_ARRAY(unsigned char, (*handle), oldCapacity, (*capacity));
 	}
 }
@@ -95,73 +97,73 @@ static void writeInstructionBinary(Toy_Routine** rt, Toy_AstBinary ast) {
 	if (ast.flag == TOY_AST_FLAG_ADD) {
 		EMIT_BYTE(rt, TOY_OPCODE_ADD);
 	}
-	if (ast.flag == TOY_AST_FLAG_SUBTRACT) {
+	else if (ast.flag == TOY_AST_FLAG_SUBTRACT) {
 		EMIT_BYTE(rt, TOY_OPCODE_SUBTRACT);
 	}
-	if (ast.flag == TOY_AST_FLAG_MULTIPLY) {
+	else if (ast.flag == TOY_AST_FLAG_MULTIPLY) {
 		EMIT_BYTE(rt, TOY_OPCODE_MULTIPLY);
 	}
-	if (ast.flag == TOY_AST_FLAG_DIVIDE) {
+	else if (ast.flag == TOY_AST_FLAG_DIVIDE) {
 		EMIT_BYTE(rt, TOY_OPCODE_DIVIDE);
 	}
-	if (ast.flag == TOY_AST_FLAG_MODULO) {
+	else if (ast.flag == TOY_AST_FLAG_MODULO) {
 		EMIT_BYTE(rt, TOY_OPCODE_MODULO);
 	}
 
-	// if (ast.flag == TOY_AST_FLAG_ASSIGN) {
+	// else if (ast.flag == TOY_AST_FLAG_ASSIGN) {
 	// 	EMIT_BYTE(rt, TOY_OPCODE_ASSIGN);
 	// 	//TODO: emit the env symbol to store TOP(S) within
 	// }
-	// if (ast.flag == TOY_AST_FLAG_ADD_ASSIGN) {
+	// else if (ast.flag == TOY_AST_FLAG_ADD_ASSIGN) {
 	// 	EMIT_BYTE(rt, TOY_OPCODE_ADD);
 	// 	EMIT_BYTE(rt, TOY_OPCODE_ASSIGN);
 	// 	//TODO: emit the env symbol to store TOP(S) within
 	// }
-	// if (ast.flag == TOY_AST_FLAG_SUBTRACT_ASSIGN) {
+	// else if (ast.flag == TOY_AST_FLAG_SUBTRACT_ASSIGN) {
 	// 	EMIT_BYTE(rt, TOY_OPCODE_SUBTRACT);
 	// 	EMIT_BYTE(rt, TOY_OPCODE_ASSIGN);
 	// 	//TODO: emit the env symbol to store TOP(S) within
 	// }
-	// if (ast.flag == TOY_AST_FLAG_MULTIPLY_ASSIGN) {
+	// else if (ast.flag == TOY_AST_FLAG_MULTIPLY_ASSIGN) {
 	// 	EMIT_BYTE(rt, TOY_OPCODE_MULTIPLY);
 	// 	EMIT_BYTE(rt, TOY_OPCODE_ASSIGN);
 	// 	//TODO: emit the env symbol to store TOP(S) within
 	// }
-	// if (ast.flag == TOY_AST_FLAG_DIVIDE_ASSIGN) {
+	// else if (ast.flag == TOY_AST_FLAG_DIVIDE_ASSIGN) {
 	// 	EMIT_BYTE(rt, TOY_OPCODE_DIVIDE);
 	// 	EMIT_BYTE(rt, TOY_OPCODE_ASSIGN);
 	// 	//TODO: emit the env symbol to store TOP(S) within
 	// }
-	// if (ast.flag == TOY_AST_FLAG_MODULO_ASSIGN) {
+	// else if (ast.flag == TOY_AST_FLAG_MODULO_ASSIGN) {
 	// 	EMIT_BYTE(rt, TOY_OPCODE_MODULO);
 	// 	EMIT_BYTE(rt, TOY_OPCODE_ASSIGN);
 	// 	//TODO: emit the env symbol to store TOP(S) within
 	// }
 
-	if (ast.flag == TOY_AST_FLAG_COMPARE_EQUAL) {
+	else if (ast.flag == TOY_AST_FLAG_COMPARE_EQUAL) {
 		EMIT_BYTE(rt, TOY_OPCODE_COMPARE_EQUAL);
 	}
-	if (ast.flag == TOY_AST_FLAG_COMPARE_NOT) {
+	else if (ast.flag == TOY_AST_FLAG_COMPARE_NOT) {
 		EMIT_BYTE(rt, TOY_OPCODE_COMPARE_EQUAL);
 		EMIT_BYTE(rt, TOY_OPCODE_NEGATE);
 	}
-	if (ast.flag == TOY_AST_FLAG_COMPARE_LESS) {
+	else if (ast.flag == TOY_AST_FLAG_COMPARE_LESS) {
 		EMIT_BYTE(rt, TOY_OPCODE_COMPARE_LESS);
 	}
-	if (ast.flag == TOY_AST_FLAG_COMPARE_LESS_EQUAL) {
+	else if (ast.flag == TOY_AST_FLAG_COMPARE_LESS_EQUAL) {
 		EMIT_BYTE(rt, TOY_OPCODE_COMPARE_LESS_EQUAL);
 	}
-	if (ast.flag == TOY_AST_FLAG_COMPARE_GREATER) {
+	else if (ast.flag == TOY_AST_FLAG_COMPARE_GREATER) {
 		EMIT_BYTE(rt, TOY_OPCODE_COMPARE_GREATER);
 	}
-	if (ast.flag == TOY_AST_FLAG_COMPARE_GREATER_EQUAL) {
+	else if (ast.flag == TOY_AST_FLAG_COMPARE_GREATER_EQUAL) {
 		EMIT_BYTE(rt, TOY_OPCODE_COMPARE_GREATER_EQUAL);
 	}
 
-	if (ast.flag == TOY_AST_FLAG_AND) {
+	else if (ast.flag == TOY_AST_FLAG_AND) {
 		EMIT_BYTE(rt, TOY_OPCODE_AND);
 	}
-	if (ast.flag == TOY_AST_FLAG_OR) {
+	else if (ast.flag == TOY_AST_FLAG_OR) {
 		EMIT_BYTE(rt, TOY_OPCODE_OR);
 	}
 	else {

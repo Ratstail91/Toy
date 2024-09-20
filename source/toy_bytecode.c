@@ -9,10 +9,12 @@
 
 //utils
 static void expand(Toy_Bytecode* bc, int amount) {
-	while (bc->count + amount > bc->capacity) {
+	if (bc->count + amount > bc->capacity) {
 		int oldCapacity = bc->capacity;
 
-		bc->capacity = TOY_GROW_CAPACITY(oldCapacity);
+		while (bc->count + amount > bc->capacity) {
+			bc->capacity = TOY_GROW_CAPACITY(bc->capacity);
+		}
 		bc->ptr = TOY_GROW_ARRAY(unsigned char, bc->ptr, oldCapacity, bc->capacity);
 	}
 }
