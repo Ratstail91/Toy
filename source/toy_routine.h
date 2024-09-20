@@ -3,7 +3,7 @@
 #include "toy_common.h"
 #include "toy_ast.h"
 
-//routine - holds the individual parts of a compiled routine
+//routine - internal structure that holds the individual parts of a compiled routine
 typedef struct Toy_Routine {
 	unsigned char* param; //c-string params in sequence
 	int paramCapacity;
@@ -13,16 +13,17 @@ typedef struct Toy_Routine {
 	int codeCapacity;
 	int codeCount;
 
+	int* jumps; //each 'jump' is the starting address of an element within 'data'
+	int jumpsCapacity;
+	int jumpsCount;
+
 	unsigned char* data; //{type,val} tuples of data
 	int dataCapacity;
 	int dataCount;
 
-	int* jump; //each 'jump' is the starting address of an element within 'data'
-	int jumpCapacity;
-	int jumpCount;
-
-	//TODO: duplicate the data and jumps for subroutines
+	unsigned char* subs; //subroutines, recursively
+	int subsCapacity;
+	int subsCount;
 } Toy_Routine;
 
-TOY_API Toy_Routine Toy_compileRoutine(Toy_Ast* ast);
-TOY_API void Toy_freeRoutine(Toy_Routine routine);
+TOY_API void* Toy_compileRoutine(Toy_Ast* ast);

@@ -28,24 +28,17 @@ Things to consider later:
 
 ===
 
-//general instructions
+//variable instructions
 READ
 	read one value from C onto S
 LOAD
 	read one value from .data onto S
-ASSERT
-	if S(-1) is falsy, print S(0) and exit
-PRINT
-	pop S(0), and print the output
-SET
-	read one word from C, saves the key E[SYMBOL(word)] to the value S(0), popping S(0)
-GET
-	read one word from C, finds the value of E[SYMBOL(word)], leaves the value on S
 DECLARE
 	read two words from C, create a new entry in E with the key E[SYMBOL(word1)], the type defined by word2, the value 'null'
 DEFINE
-	read two words from C, create a new entry in E with the key E[SYMBOL(word1)], the type defined by word2, the value popped from S(0)
-
+	read one word from C, saves the pre-existing key E[SYMBOL(word)] to the value S(0), popping S(0)
+ACCESS
+	read one word from C, finds the pre-existing value of E[SYMBOL(word)], leaves the value on S
 
 //arithmetic instructions
 ADD
@@ -80,7 +73,7 @@ OR
 	pops S(-1) and S(0), replacing it with TRUE or FALSE, depending on truthiness
 TRUTHY
 	pops S(0), replacing it with TRUE or FALSE, depending on truthiness
-INVERT
+NEGATE
 	pops S(0), replacing it with TRUE or FALSE, depending on truthiness
 
 
@@ -92,10 +85,13 @@ JUMP_IF_FALSE
 FN_CALL
 	*read a list of arguments specified in C into 'A', store (S, E, C, D) as D, push S, move the stack pointer to the specified routine, push a new E based on the contents of 'A'
 FN_RETURN
-This 
 	*read a list of return values specified in C into 'R', pop S, restore (S, E, C, D) from D(0) popping it, store the contents of 'R' in E or S based on the next few parts of C
 
 //bespoke utility instructions
+ASSERT
+	if S(-1) is falsy, print S(0) and exit
+PRINT
+	pop S(0), and print the output
 IMPORT
 	//invoke an external library into the current scope
 CONCAT

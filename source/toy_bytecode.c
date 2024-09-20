@@ -1,4 +1,5 @@
 #include "toy_bytecode.h"
+#include "toy_console_colors.h"
 
 #include "toy_memory.h"
 #include "toy_routine.h"
@@ -21,10 +22,6 @@ static void emitByte(Toy_Bytecode* bc, unsigned char byte) {
 	bc->ptr[bc->count++] = byte;
 }
 
-static void writeModule(Toy_Bytecode* bc, Toy_Ast* ast) {
-	//TODO: routines
-}
-
 //bytecode
 static void writeBytecodeHeader(Toy_Bytecode* bc) {
 	emitByte(bc, TOY_VERSION_MAJOR);
@@ -36,7 +33,7 @@ static void writeBytecodeHeader(Toy_Bytecode* bc) {
 	int len = (int)strlen(build) + 1;
 
 	expand(bc, len);
-	sprintf((char*)(bc->ptr + bc->count), "%.*s", len, build);
+	memcpy(bc->ptr + bc->count, build, len);
 	bc->count += len;
 }
 
@@ -44,7 +41,13 @@ static void writeBytecodeBody(Toy_Bytecode* bc, Toy_Ast* ast) {
 	//a 'module' is a routine that runs at the root-level of a file
 	//since routines can be recursive, this distinction is important
 	//eventually, the bytecode may support multiple modules packed into one file
-	writeModule(bc, ast);
+	void* module = Toy_compileRoutine(ast);
+
+	int len = ((int*)module)[0];
+
+	expand(bc, len);
+	memcpy(bc->ptr + bc->count, module, len);
+	bc->count += len;
 }
 
 //exposed functions

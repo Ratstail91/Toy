@@ -37,7 +37,7 @@ Additional information may be added later, or multiple 'modules' listed sequenti
 # where 'module' can be omitted if it's local to this module ('identifier' within the symbols is calculated at the module level, it's always unique)
 
 .header:
-	total size         # size of this routine, including all data and subroutines
+	N total size         # size of this routine, including all data and subroutines
 	N .param count     # the number of parameter fields expected
 	N .data count      # the number of data fields expected
 	N .routine count   # the number of routines present

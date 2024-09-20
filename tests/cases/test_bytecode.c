@@ -38,8 +38,6 @@ int test_bytecode_header(Toy_Bucket* bucket) {
 }
 
 int main() {
-	fprintf(stderr, TOY_CC_WARN "WARNING: Bytecode implementation incomplete\n" TOY_CC_RESET);
-
 	//run each test set, returning the total errors given
 	int total = 0, res = 0;
 
