@@ -5,7 +5,7 @@
 [![Continuous Integration v1.x](https://github.com/Ratstail91/Toy/actions/workflows/continuous-integration-v1.yml/badge.svg)](https://github.com/Ratstail91/Toy/actions/workflows/continuous-integration-v1.yml)  
 [![Continuous Integration v2.x](https://github.com/Ratstail91/Toy/actions/workflows/continuous-integration-v2.yml/badge.svg?branch=dev)](https://github.com/Ratstail91/Toy/actions/workflows/continuous-integration-v2.yml)  
 
-***Notice**: Toy is undergoing a complete rewrite. These docs are valid for version 1.x only.*
+***Notice**: Toy is undergoing a complete rewrite for v2. These docs are valid for version 1.x only. A discussion of the upcoming changes can be found [here](https://github.com/Ratstail91/Toy/discussions/124).*
 
 # Preamble
 
