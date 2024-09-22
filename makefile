@@ -19,6 +19,10 @@ all: clean tests
 tests:
 	$(MAKE) -C tests -k
 
+.PHONY: tests-gdb
+tests-gdb:
+	$(MAKE) -C tests all-gdb -k
+
 #util targets
 $(TOY_OUTDIR):
 	mkdir $(TOY_OUTDIR)

@@ -3,6 +3,33 @@
 
 #include <stdio.h>
 
+int test_sizeof_ast_64bit() {
+#define TEST_SIZEOF(type, size) \
+	if (sizeof(type) != size) { \
+		fprintf(stderr, TOY_CC_ERROR "ERROR: sizeof(" #type ") is %d, expected %d\n" TOY_CC_RESET, (int)sizeof(type), size); \
+		++err; \
+	}
+
+	//count errors
+	int err = 0;
+
+	//run for each type
+	TEST_SIZEOF(Toy_AstType, 4);
+	TEST_SIZEOF(Toy_AstBlock, 32);
+	TEST_SIZEOF(Toy_AstValue, 12);
+	TEST_SIZEOF(Toy_AstUnary, 16);
+	TEST_SIZEOF(Toy_AstBinary, 24);
+	TEST_SIZEOF(Toy_AstGroup, 16);
+	TEST_SIZEOF(Toy_AstPass, 4);
+	TEST_SIZEOF(Toy_AstError, 4);
+	TEST_SIZEOF(Toy_AstEnd, 4);
+	TEST_SIZEOF(Toy_Ast, 32);
+
+#undef TEST_SIZEOF
+
+	return -err;
+}
+
 int test_sizeof_ast_32bit() {
 #define TEST_SIZEOF(type, size) \
 	if (sizeof(type) != size) { \
@@ -22,6 +49,7 @@ int test_sizeof_ast_32bit() {
 	TEST_SIZEOF(Toy_AstGroup, 8);
 	TEST_SIZEOF(Toy_AstPass, 4);
 	TEST_SIZEOF(Toy_AstError, 4);
+	TEST_SIZEOF(Toy_AstEnd, 4);
 	TEST_SIZEOF(Toy_Ast, 16);
 
 #undef TEST_SIZEOF
@@ -168,7 +196,15 @@ int main() {
 	//run each test set, returning the total errors given
 	int total = 0, res = 0;
 
-#if TOY_BITNESS == 32
+
+#if TOY_BITNESS == 64
+	res = test_sizeof_ast_64bit();
+	total += res;
+
+	if (res == 0) {
+		printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
+	}
+#elif TOY_BITNESS == 32
 	res = test_sizeof_ast_32bit();
 	total += res;
 
@@ -176,7 +212,7 @@ int main() {
 		printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 	}
 #else
-	fprintf(stderr, TOY_CC_WARN "WARNING: Skipping test_sizeof_ast_32bit(); Can't determine the 'bitness' of this platform\n" TOY_CC_RESET);
+	fprintf(stderr, TOY_CC_WARN "WARNING: Skipping test_sizeof_ast_*bit(); Can't determine the 'bitness' of this platform (seems to be %d)\n" TOY_CC_RESET, TOY_BITNESS);
 #endif
 
 	{

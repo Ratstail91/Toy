@@ -41,6 +41,7 @@ const Toy_KeywordTypeTuple Toy_private_keywords[] = {
 	{TOY_TOKEN_KEYWORD_TYPEOF, "typeof"},
 	{TOY_TOKEN_KEYWORD_VAR, "var"},
 	{TOY_TOKEN_KEYWORD_WHILE, "while"},
+	{TOY_TOKEN_KEYWORD_YIELD, "yield"},
 
 	//literal values
 	{TOY_TOKEN_LITERAL_TRUE, "true"},

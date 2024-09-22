@@ -281,12 +281,12 @@ static void* writeRoutine(Toy_Routine* rt, Toy_Ast* ast) {
 		expand(&buffer, &capacity, &count, rt->codeCount);
 		memcpy((buffer + count), rt->code, rt->codeCount);
 
-		((int*)buffer)[codeAddr] = count;
+		*((int*)(buffer + codeAddr)) = count;
 		count += rt->codeCount;
 	}
 
 	//finally, record the total size, and return the result
-	((int*)buffer)[0] = count;
+	*((int*)buffer) = count;
 
 	return buffer;
 }

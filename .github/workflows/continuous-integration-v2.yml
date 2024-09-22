@@ -14,21 +14,24 @@ on:
       - dev
   workflow_dispatch:
 
-#testing the CI workflows while nothing is functional yet
+#CI workflows using a matrix
 jobs:
-  test-ubuntu-latest:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: make tests (ubuntu)
-        run: make tests
-  
-  test-windows-latest:
-    runs-on: windows-latest
+  run-test-suites:
+    strategy:
+      matrix:
+        platforms:
+          - { os: ubuntu-latest, preinstall: sudo apt-get install gdb, gdb_skip: false }
+          - { os: windows-latest, preinstall: , gdb_skip: false }
+          - { os: macos-latest, preinstall: , gdb_skip: true }
+        commands:
+          - make tests
+          - make tests-gdb
     
+    runs-on: ${{ matrix.platforms.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: make tests (windows)
-        run: make tests
-
+      - name: Preinstall dependencies
+        run: ${{ matrix.platforms.preinstall }}
+      - name: run the test suites
+        if: matrix.platforms.gdb_skip != true
+        run: ${{ matrix.commands }}

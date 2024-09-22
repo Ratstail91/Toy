@@ -110,14 +110,14 @@ typedef struct Toy_AstEnd {
 	Toy_AstType type;
 } Toy_AstEnd;
 
-union Toy_Ast {
-	Toy_AstType type; //4
-	Toy_AstBlock block; //12
-	Toy_AstValue value; //12
-	Toy_AstUnary unary; //12
-	Toy_AstBinary binary; //16
-	Toy_AstGroup group; //8
-	Toy_AstPass pass; //4
-	Toy_AstError error; //4
-	Toy_AstEnd end; //4
-}; //16
+union Toy_Ast {             //32 | 64 BITNESS
+	Toy_AstType type;       //4  | 4
+	Toy_AstBlock block;     //16 | 32
+	Toy_AstValue value;     //12 | 12
+	Toy_AstUnary unary;     //12 | 16
+	Toy_AstBinary binary;   //16 | 24
+	Toy_AstGroup group;     //8  | 16
+	Toy_AstPass pass;       //4  | 4
+	Toy_AstError error;     //4  | 4
+	Toy_AstEnd end;         //4  | 4
+};                          //16 | 32

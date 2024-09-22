@@ -36,5 +36,5 @@ typedef enum Toy_OpcodeType {
 	//meta instructions
 	TOY_OPCODE_PASS,
 	TOY_OPCODE_ERROR,
-	TOY_OPCODE_EOF,
+	TOY_OPCODE_EOF = 255,
 } Toy_OpcodeType;

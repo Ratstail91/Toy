@@ -3,6 +3,16 @@ CC=gcc
 CFLAGS=-g -Wall -Werror -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
 LIBS=-lm
 
+ifeq ($(shell uname),Linux)
+LDFLAG=-Wl,--gc-sections
+else ifeq ($(OS),Windows_NT)
+LDFLAG=-Wl,--gc-sections
+else ifeq ($(shell uname),Darwin)
+LDFLAG=-Wl,-dead_strip
+else
+	@echo "LDFLAG set failed - what platform is this?"
+endif
+
 #directories
 TEST_ROOTDIR=..
 TEST_SOURCEDIR=$(TEST_ROOTDIR)/$(TOY_SOURCEDIR)
@@ -16,14 +26,20 @@ TEST_SOURCEFILES=$(addprefix $(TOY_ROOTDIR)/,$(TOY_SOURCEFILES))
 TEST_CASESFILES=$(wildcard $(TEST_CASESDIR)/*.c)
 
 #build the object files, compile the test cases, and run
-all: clean build-source build-cases $(addprefix $(TEST_OUTDIR)/,$(notdir $(TEST_CASESFILES:%.c=%.exe)))
+all: clean build-source build-cases build-link build-run
 
-#targets for each set of source files
+#targets for each step
 .PHONY: build-source
 build-source: $(TEST_OUTDIR) $(TEST_OBJDIR) $(addprefix $(TEST_OBJDIR)/,$(notdir $(TEST_SOURCEFILES:.c=.o)))
 
 .PHONY: build-cases
-build-cases: $(TEST_OUTDIR) $(TEST_OBJDIR) $(addprefix $(TEST_OBJDIR)/,$(notdir $(TEST_CASESFILES:.c=.o))) 
+build-cases: $(TEST_OUTDIR) $(TEST_OBJDIR) $(addprefix $(TEST_OBJDIR)/,$(notdir $(TEST_CASESFILES:.c=.o)))
+
+.PHONY: build-link
+build-link: $(TEST_OUTDIR) $(TEST_OBJDIR) $(addprefix $(TEST_OUTDIR)/,$(notdir $(TEST_CASESFILES:%.c=%.exe)))
+
+.PHONY: build-run
+build-run: $(addprefix $(TEST_OUTDIR)/,$(notdir $(TEST_CASESFILES:%.c=%.exe))) $(addprefix $(TEST_OUTDIR)/,$(notdir $(TEST_CASESFILES:%.c=%.run)))
 
 #util targets
 $(TEST_OUTDIR):
@@ -32,17 +48,29 @@ $(TEST_OUTDIR):
 $(TEST_OBJDIR):
 	mkdir $(TEST_OBJDIR)
 
-#compilation step
+#compilation steps
 $(TEST_OBJDIR)/%.o: $(TEST_SOURCEDIR)/%.c
 	$(CC) -c -o $@ $< $(addprefix -I,$(TEST_SOURCEDIR)) $(CFLAGS) -fdata-sections -ffunction-sections
 
 $(TEST_OBJDIR)/%.o: $(TEST_CASESDIR)/%.c
 	$(CC) -c -o $@ $< $(addprefix -I,$(TEST_SOURCEDIR) $(TEST_CASESDIR)) $(CFLAGS) -fdata-sections -ffunction-sections
 
-#final linking step (with extra flags to strip dead code)
 $(TEST_OUTDIR)/%.exe: $(TEST_OBJDIR)/%.o
-	@$(CC) -o $@ $< $(addprefix $(TEST_OBJDIR)/,$(notdir $(TEST_SOURCEFILES:.c=.o))) $(CFLAGS) $(LIBS) -Wl,--gc-sections
-	$@
+	@$(CC) -o $@ $< $(addprefix $(TEST_OBJDIR)/,$(notdir $(TEST_SOURCEFILES:.c=.o))) $(CFLAGS) $(LIBS) $(LDFLAGS)
+
+.PRECIOUS: $(TEST_OUTDIR)/%.run
+$(TEST_OUTDIR)/%.run: $(TEST_OUTDIR)/%.exe
+	$<
+
+#debugging targets
+all-gdb: clean build-source build-cases build-link build-run-gdb
+
+.PHONY: build-run-gdb
+build-run-gdb: $(addprefix $(TEST_OUTDIR)/,$(notdir $(TEST_CASESFILES:%.c=%.exe))) $(addprefix $(TEST_OUTDIR)/,$(notdir $(TEST_CASESFILES:%.c=%.run-gdb)))
+
+.PRECIOUS: $(TEST_OUTDIR)/%.run-gdb
+$(TEST_OUTDIR)/%.run-gdb: $(TEST_OUTDIR)/%.exe
+	gdb $< -ex "run" --batch
 
 #util commands
 .PHONY: clean
