@@ -4,14 +4,14 @@ name: Continuous Integration v2.x
 on:
   push:
     branches:
-      - dev
+      - v2
   pull_request:
     types:
       - opened
       - edited
       - reopened
     branches:
-      - dev
+      - v2
   workflow_dispatch:
 
 #CI workflows using a matrix
