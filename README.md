@@ -2,7 +2,7 @@
   <image src="toylogo.png" />
 </p>
 
-# Toy
+# Toy v1
 
 The Toy programming language is an imperative bytecode-intermediate embedded scripting language. It isn't intended to operate on its own, but rather as part of another program, the "host". This process is intended to allow a decent amount of easy customisation by the host's end user, by exposing logic in script files. Alternatively, binary files in a custom format can be used as well.
 
