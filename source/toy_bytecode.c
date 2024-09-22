@@ -34,6 +34,11 @@ static void writeBytecodeHeader(Toy_Bytecode* bc) {
 	const char* build = Toy_private_version_build();
 	int len = (int)strlen(build) + 1;
 
+	//BUGFIX: ensure the end of the header has 4-byte alignment
+	if (len % 4 != 1) { //1 to fill the 4th byte above
+		len += 4 - (len % 4) +1; //ceil
+	}
+
 	expand(bc, len);
 	memcpy(bc->ptr + bc->count, build, len);
 	bc->count += len;

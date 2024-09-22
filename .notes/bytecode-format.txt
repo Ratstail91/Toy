@@ -23,6 +23,8 @@ An additional note: The contents of the build string may be anything, such as:
  * identification information, such as the developer's copyright
  * a link to Risk Astley's "Never Gonna Give You Up" on YouTube
 
+Please note that in the final bytecode, if the null terminator of TOY_VERSION_BUILD is not 4-byte aligned, extra space will be allocated to round out the header's size to a multiple of 4. The contents of the extra bytes are undefined.
+
 ===
 
 At this time, a 'module' consists of a single 'routine', which acts as its global scope.
@@ -39,6 +41,7 @@ Additional information may be added later, or multiple 'modules' listed sequenti
 .header:
 	N total size         # size of this routine, including all data and subroutines
 	N .param count     # the number of parameter fields expected
+	N .jumps count     # the number of entries in the jump table (should be data count + routine count)
 	N .data count      # the number of data fields expected
 	N .routine count   # the number of routines present
 	.param start       # absolute addess of .param;     omitted if not needed
@@ -57,7 +60,7 @@ Additional information may be added later, or multiple 'modules' listed sequenti
 	LOAD 0
 	ASSERT
 
-.datatable:
+.jumptable:
 	# a 'symbol -> pointer' jumptable for quickly looking up values in .data and .routines
 	0 -> {string, 0x00}
 	1 -> {fn, 0xFF}

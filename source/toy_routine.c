@@ -60,14 +60,29 @@ static void writeInstructionValue(Toy_Routine** rt, Toy_AstValue ast) {
 	//emit the raw value based on the type
 	if (TOY_VALUE_IS_NULL(ast.value)) {
 		//NOTHING - null's type data is enough
+
+		//BUGFIX: 4-byte alignment
+		EMIT_BYTE(rt, 0);
+		EMIT_BYTE(rt, 0);
 	}
 	else if (TOY_VALUE_IS_BOOLEAN(ast.value)) {
 		EMIT_BYTE(rt, TOY_VALUE_AS_BOOLEAN(ast.value));
+
+		//BUGFIX: 4-byte alignment
+		EMIT_BYTE(rt, 0);
 	}
 	else if (TOY_VALUE_IS_INTEGER(ast.value)) {
+		//BUGFIX: 4-byte alignment
+		EMIT_BYTE(rt, 0);
+		EMIT_BYTE(rt, 0);
+
 		EMIT_INT(rt, code, TOY_VALUE_AS_INTEGER(ast.value));
 	}
 	else if (TOY_VALUE_IS_FLOAT(ast.value)) {
+		//BUGFIX: 4-byte alignment
+		EMIT_BYTE(rt, 0);
+		EMIT_BYTE(rt, 0);
+
 		EMIT_FLOAT(rt, code, TOY_VALUE_AS_FLOAT(ast.value));
 	}
 	else {
@@ -82,6 +97,11 @@ static void writeInstructionUnary(Toy_Routine** rt, Toy_AstUnary ast) {
 
 	if (ast.flag == TOY_AST_FLAG_NEGATE) {
 		EMIT_BYTE(rt, TOY_OPCODE_NEGATE);
+
+		//BUGFIX: 4-byte alignment
+		EMIT_BYTE(rt, 0);
+		EMIT_BYTE(rt, 0);
+		EMIT_BYTE(rt, 0);
 	}
 	else {
 		fprintf(stderr, TOY_CC_ERROR "Invalid AST unary flag found\n" TOY_CC_RESET);
@@ -145,7 +165,16 @@ static void writeInstructionBinary(Toy_Routine** rt, Toy_AstBinary ast) {
 	}
 	else if (ast.flag == TOY_AST_FLAG_COMPARE_NOT) {
 		EMIT_BYTE(rt, TOY_OPCODE_COMPARE_EQUAL);
-		EMIT_BYTE(rt, TOY_OPCODE_NEGATE);
+		EMIT_BYTE(rt, 0);
+		EMIT_BYTE(rt, 0);
+		EMIT_BYTE(rt, 0);
+
+		EMIT_BYTE(rt, TOY_OPCODE_NEGATE); //TODO: squeeze these into one word
+		EMIT_BYTE(rt, 0);
+		EMIT_BYTE(rt, 0);
+		EMIT_BYTE(rt, 0);
+
+		return;
 	}
 	else if (ast.flag == TOY_AST_FLAG_COMPARE_LESS) {
 		EMIT_BYTE(rt, TOY_OPCODE_COMPARE_LESS);
@@ -170,6 +199,11 @@ static void writeInstructionBinary(Toy_Routine** rt, Toy_AstBinary ast) {
 		fprintf(stderr, TOY_CC_ERROR "Invalid AST binary flag found\n" TOY_CC_RESET);
 		exit(-1);
 	}
+
+	//BUGFIX: 4-byte alignment (covers most cases)
+	EMIT_BYTE(rt, 0);
+	EMIT_BYTE(rt, 0);
+	EMIT_BYTE(rt, 0);
 }
 
 //routine structure
@@ -236,12 +270,15 @@ static void writeRoutineCode(Toy_Routine** rt, Toy_Ast* ast) {
 
 static void* writeRoutine(Toy_Routine* rt, Toy_Ast* ast) {
 	//build the routine's parts
-	//param
+	//TODO: param
 	//code
 	writeRoutineCode(&rt, ast);
 	EMIT_BYTE(&rt, TOY_OPCODE_RETURN); //temp terminator
-	//jumps
-	//data
+	EMIT_BYTE(&rt, 0); //BUGFIX: 4-byte alignment
+	EMIT_BYTE(&rt, 0);
+	EMIT_BYTE(&rt, 0);
+	//TODO: jumps
+	//TODO: data
 
 	//write the header and combine the parts
 	void* buffer = TOY_ALLOCATE(unsigned char, 16);
@@ -251,6 +288,7 @@ static void* writeRoutine(Toy_Routine* rt, Toy_Ast* ast) {
 
 	emitInt(&buffer, &capacity, &count, 0); //total size (overwritten later)
 	emitInt(&buffer, &capacity, &count, rt->paramCount); //param count
+	emitInt(&buffer, &capacity, &count, rt->jumpsCount); //jumps count
 	emitInt(&buffer, &capacity, &count, rt->dataCount); //data count
 	emitInt(&buffer, &capacity, &count, rt->subsCount); //routine count
 
@@ -285,7 +323,7 @@ static void* writeRoutine(Toy_Routine* rt, Toy_Ast* ast) {
 		count += rt->codeCount;
 	}
 
-	//finally, record the total size, and return the result
+	//finally, record the total size within the header, and return the result
 	*((int*)buffer) = count;
 
 	return buffer;

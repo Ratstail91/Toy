@@ -3,9 +3,9 @@
 #include "toy_common.h"
 #include "toy_ast.h"
 
-//routine - internal structure that holds the individual parts of a compiled routine
+//internal structure that holds the individual parts of a compiled routine
 typedef struct Toy_Routine {
-	unsigned char* param; //c-string params in sequence
+	unsigned char* param; //c-string params in sequence (could be moved below the jump table?)
 	int paramCapacity;
 	int paramCount;
 
