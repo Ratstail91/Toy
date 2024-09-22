@@ -4,14 +4,14 @@ name: Continuous Integration v1.x
 on:
   push:
     branches:
-      - main
+      - v1
   pull_request:
     types:
       - opened
       - edited
       - reopened
     branches:
-      - main
+      - v1
   workflow_dispatch:
 
 #testing the CI workflows under multiple supported conditions
