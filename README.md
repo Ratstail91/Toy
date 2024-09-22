@@ -1,8 +1,10 @@
+*For the feature complete version 1, [click here](https://github.com/Ratstail91/Toy/tree/v1).*
+
 <p align="center">
   <image src="toylogo.png" />
 </p>
 
-# Toy
+# Toy v2.x
 
 The Toy programming language is an imperative, bytecode-interpreted, embeddable scripting language. Rather than functioning independently, it serves as part of another program, the "host". This design allows for straightforward customization by both the host’s developer and end users, achieved by exposing program logic through text files.
 
