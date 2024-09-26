@@ -86,7 +86,7 @@ static void writeInstructionValue(Toy_Routine** rt, Toy_AstValue ast) {
 		EMIT_FLOAT(rt, code, TOY_VALUE_AS_FLOAT(ast.value));
 	}
 	else {
-		fprintf(stderr, TOY_CC_ERROR "Invalid AST type found: Unknown value type\n" TOY_CC_RESET);
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid AST type found: Unknown value type\n" TOY_CC_RESET);
 		exit(-1);
 	}
 }
@@ -104,7 +104,7 @@ static void writeInstructionUnary(Toy_Routine** rt, Toy_AstUnary ast) {
 		EMIT_BYTE(rt, 0);
 	}
 	else {
-		fprintf(stderr, TOY_CC_ERROR "Invalid AST unary flag found\n" TOY_CC_RESET);
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid AST unary flag found\n" TOY_CC_RESET);
 		exit(-1);
 	}
 }
@@ -196,7 +196,7 @@ static void writeInstructionBinary(Toy_Routine** rt, Toy_AstBinary ast) {
 		EMIT_BYTE(rt, TOY_OPCODE_OR);
 	}
 	else {
-		fprintf(stderr, TOY_CC_ERROR "Invalid AST binary flag found\n" TOY_CC_RESET);
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid AST binary flag found\n" TOY_CC_RESET);
 		exit(-1);
 	}
 
@@ -237,24 +237,24 @@ static void writeRoutineCode(Toy_Routine** rt, Toy_Ast* ast) {
 
 		//other disallowed instructions
 		case TOY_AST_GROUP:
-			fprintf(stderr, TOY_CC_ERROR "Invalid AST type found: Group shouldn't be used\n" TOY_CC_RESET);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid AST type found: Group shouldn't be used\n" TOY_CC_RESET);
 			exit(-1);
 			break;
 
 		case TOY_AST_PASS:
 			//NOTE: this should be disallowed, but for now it's required for testing
-			// fprintf(stderr, TOY_CC_ERROR "Invalid AST type found: Unknown pass\n" TOY_CC_RESET);
+			// fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid AST type found: Unknown pass\n" TOY_CC_RESET);
 			// exit(-1);
 			break;
 
 		//meta instructions are disallowed
 		case TOY_AST_ERROR:
-			fprintf(stderr, TOY_CC_ERROR "Invalid AST type found: Unknown error\n" TOY_CC_RESET);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid AST type found: Unknown error\n" TOY_CC_RESET);
 			exit(-1);
 			break;
 
 		case TOY_AST_END:
-			fprintf(stderr, TOY_CC_ERROR "Invalid AST type found: Unknown end\n" TOY_CC_RESET);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid AST type found: Unknown end\n" TOY_CC_RESET);
 			exit(-1);
 			break;
 	}

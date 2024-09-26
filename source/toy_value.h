@@ -28,7 +28,7 @@ typedef struct Toy_Value {
 	} as; //4
 
 	Toy_ValueType type; //4
-} Toy_Value;
+} Toy_Value; //8
 
 #define TOY_VALUE_IS_NULL(value)				((value).type == TOY_VALUE_NULL)
 #define TOY_VALUE_IS_BOOLEAN(value)				((value).type == TOY_VALUE_BOOLEAN)
