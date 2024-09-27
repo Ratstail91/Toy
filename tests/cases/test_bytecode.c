@@ -86,7 +86,7 @@ int test_bytecode_from_source(Toy_Bucket* bucket) {
 		}
 
 		//check contents of the routine (this is copy/pasted from test_routine.c, and tweaked with the offset)
-		int offset = strlen(TOY_VERSION_BUILD) + 3;
+		int offset = 3 + strlen(TOY_VERSION_BUILD) + 1;
 		if (offset % 4 != 0) {
 			offset += 4 - (offset % 4); //ceil
 		}

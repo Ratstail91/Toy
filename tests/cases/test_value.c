@@ -33,6 +33,23 @@ int main() {
 		}
 	}
 
+	//test value equality
+	{
+		Toy_Value answer = TOY_VALUE_TO_INTEGER(42);
+		Toy_Value question = TOY_VALUE_TO_INTEGER(42);
+		Toy_Value nice = TOY_VALUE_TO_INTEGER(69);
+
+		if (!TOY_VALUE_IS_EQUAL(answer, question)) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: equality check failed, expected true\n" TOY_CC_RESET);
+			return -1;
+		}
+
+		if (TOY_VALUE_IS_EQUAL(answer, nice)) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: equality check failed, expected false\n" TOY_CC_RESET);
+			return -1;
+		}
+	}
+
 	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 	return 0;
 }

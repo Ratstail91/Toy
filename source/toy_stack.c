@@ -40,7 +40,7 @@ void Toy_pushStack(Toy_Stack* stack, Toy_Value value) {
 	//expand the capacity if needed
 	if (stack->count + 1 > stack->capacity) {
 		int oldCapacity = stack->capacity;
-		stack->capacity = TOY_GROW_CAPACITY(stack->capacity);
+		stack->capacity = stack->capacity < MIN_SIZE ? MIN_SIZE : stack->capacity * 2; //similar to TOY_GROW_CAPACITY, with a bigger initial size
 		stack->ptr = TOY_GROW_ARRAY(Toy_Value, stack->ptr, oldCapacity, stack->capacity);
 	}
 

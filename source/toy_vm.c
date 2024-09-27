@@ -11,13 +11,13 @@
 
 //utilities
 #define READ_BYTE(vm) \
-	vm->program[vm->programCounter++]
+	vm->routine[vm->routineCounter++]
 
 #define READ_INT(vm) \
-	*((int*)(vm->program + _read_postfix(&(vm->programCounter), 4)))
+	*((int*)(vm->routine + _read_postfix(&(vm->routineCounter), 4)))
 
 #define READ_FLOAT(vm) \
-	*((float*)(vm->program + _read_postfix(&(vm->programCounter), 4)))
+	*((float*)(vm->routine + _read_postfix(&(vm->routineCounter), 4)))
 
 static inline int _read_postfix(int* ptr, int amount) {
 	int ret = *ptr;
@@ -26,8 +26,8 @@ static inline int _read_postfix(int* ptr, int amount) {
 }
 
 static inline void fix_alignment(Toy_VM* vm) {
-	if (vm->programCounter % 4 != 0) {
-		vm->programCounter = (4 - vm->programCounter % 4);
+	if (vm->routineCounter % 4 != 0) {
+		vm->routineCounter += (4 - vm->routineCounter % 4);
 	}
 }
 
@@ -157,79 +157,133 @@ static void processArithmetic(Toy_VM* vm, Toy_OpcodeType opcode) {
 	Toy_pushStack(&vm->stack, result);
 }
 
+static void processComparison(Toy_VM* vm, Toy_OpcodeType opcode) {
+	Toy_Value right = Toy_popStack(&vm->stack);
+	Toy_Value left = Toy_popStack(&vm->stack);
+
+	//most things can be equal, so handle it separately
+	if (opcode == TOY_OPCODE_COMPARE_EQUAL) {
+		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN(TOY_VALUE_IS_EQUAL(left, right)) );
+		return;
+	}
+
+	//coerce ints into floats if needed
+	if (TOY_VALUE_IS_INTEGER(left) && TOY_VALUE_IS_FLOAT(right)) {
+		left = TOY_VALUE_TO_FLOAT( (float)TOY_VALUE_AS_INTEGER(left) );
+	}
+	else
+	if (TOY_VALUE_IS_FLOAT(left) && TOY_VALUE_IS_INTEGER(right)) {
+		right = TOY_VALUE_TO_FLOAT( (float)TOY_VALUE_AS_INTEGER(right) );
+	}
+
+	//other opcodes
+	if (opcode == TOY_OPCODE_COMPARE_LESS) {
+		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN(TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_AS_FLOAT(left) < TOY_VALUE_AS_FLOAT(right) : TOY_VALUE_AS_INTEGER(left) < TOY_VALUE_AS_INTEGER(right)) );
+	}
+	else if (opcode == TOY_OPCODE_COMPARE_LESS_EQUAL) {
+		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN(TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_AS_FLOAT(left) <= TOY_VALUE_AS_FLOAT(right) : TOY_VALUE_AS_INTEGER(left) <= TOY_VALUE_AS_INTEGER(right)) );
+	}
+	else if (opcode == TOY_OPCODE_COMPARE_GREATER) {
+		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN(TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_AS_FLOAT(left) > TOY_VALUE_AS_FLOAT(right) : TOY_VALUE_AS_INTEGER(left) > TOY_VALUE_AS_INTEGER(right)) );
+	}
+	else if (opcode == TOY_OPCODE_COMPARE_GREATER_EQUAL) {
+		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN(TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_AS_FLOAT(left) >= TOY_VALUE_AS_FLOAT(right) : TOY_VALUE_AS_INTEGER(left) >= TOY_VALUE_AS_INTEGER(right)) );
+	}
+	else {
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid opcode %d passed to processComparison, exiting\n" TOY_CC_RESET, opcode);
+		exit(-1);
+	}
+}
+
+static void processLogical(Toy_VM* vm, Toy_OpcodeType opcode) {
+	if (opcode == TOY_OPCODE_AND) {
+		Toy_Value right = Toy_popStack(&vm->stack);
+		Toy_Value left = Toy_popStack(&vm->stack);
+
+		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN( TOY_VALUE_IS_TRUTHY(left) && TOY_VALUE_IS_TRUTHY(right) ));
+	}
+	else if (opcode == TOY_OPCODE_OR) {
+		Toy_Value right = Toy_popStack(&vm->stack);
+		Toy_Value left = Toy_popStack(&vm->stack);
+
+		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN( TOY_VALUE_IS_TRUTHY(left) || TOY_VALUE_IS_TRUTHY(right) ));
+	}
+	else if (opcode == TOY_OPCODE_TRUTHY) {
+		Toy_Value top = Toy_popStack(&vm->stack);
+
+		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN( TOY_VALUE_IS_TRUTHY(top) ));
+	}
+	else if (opcode == TOY_OPCODE_NEGATE) {
+		Toy_Value top = Toy_popStack(&vm->stack);
+
+		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN( !TOY_VALUE_IS_TRUTHY(top) ));
+	}
+	else {
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid opcode %d passed to processLogical, exiting\n" TOY_CC_RESET, opcode);
+		exit(-1);
+	}
+}
+
 static void process(Toy_VM* vm) {
-	Toy_OpcodeType opcode = READ_BYTE(vm);
+	while(true) {
+		Toy_OpcodeType opcode = READ_BYTE(vm);
 
-	switch(opcode) {
-		case TOY_OPCODE_READ:
-			processRead(vm);
-			break;
+		switch(opcode) {
+			case TOY_OPCODE_READ:
+				processRead(vm);
+				break;
 
-		case TOY_OPCODE_ADD:
-		case TOY_OPCODE_SUBTRACT:
-		case TOY_OPCODE_MULTIPLY:
-		case TOY_OPCODE_DIVIDE:
-		case TOY_OPCODE_MODULO:
-			processArithmetic(vm, opcode);
-			break;
+			case TOY_OPCODE_ADD:
+			case TOY_OPCODE_SUBTRACT:
+			case TOY_OPCODE_MULTIPLY:
+			case TOY_OPCODE_DIVIDE:
+			case TOY_OPCODE_MODULO:
+				processArithmetic(vm, opcode);
+				break;
 
-		case TOY_OPCODE_COMPARE_EQUAL:
-			//
-			// break;
+			case TOY_OPCODE_COMPARE_EQUAL:
+			case TOY_OPCODE_COMPARE_LESS:
+			case TOY_OPCODE_COMPARE_LESS_EQUAL:
+			case TOY_OPCODE_COMPARE_GREATER:
+			case TOY_OPCODE_COMPARE_GREATER_EQUAL:
+				processComparison(vm, opcode);
+				break;
 
-		case TOY_OPCODE_COMPARE_LESS:
-			//
-			// break;
+			case TOY_OPCODE_AND:
+			case TOY_OPCODE_OR:
+			case TOY_OPCODE_TRUTHY:
+			case TOY_OPCODE_NEGATE: //TODO: squeeze into !=
+				processLogical(vm, opcode);
+				break;
 
-		case TOY_OPCODE_COMPARE_LESS_EQUAL:
-			//
-			// break;
+			case TOY_OPCODE_LOAD:
+			case TOY_OPCODE_LOAD_LONG:
+			case TOY_OPCODE_DECLARE:
+			case TOY_OPCODE_ASSIGN:
+			case TOY_OPCODE_ACCESS:
+			case TOY_OPCODE_PASS:
+			case TOY_OPCODE_ERROR:
+			case TOY_OPCODE_EOF:
+				fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid opcode %d found, exiting\n" TOY_CC_RESET, opcode);
+				exit(-1);
 
-		case TOY_OPCODE_COMPARE_GREATER:
-			//
-			// break;
+			case TOY_OPCODE_RETURN: //temp terminator, temp position
+				//
+				return;
+		}
 
-		case TOY_OPCODE_COMPARE_GREATER_EQUAL:
-			//
-			// break;
-
-		case TOY_OPCODE_AND:
-			//
-			// break;
-
-		case TOY_OPCODE_OR:
-			//
-			// break;
-
-		case TOY_OPCODE_TRUTHY:
-			//
-			// break;
-
-		case TOY_OPCODE_NEGATE: //TODO: squeeze into !=
-			//
-			// break;
-
-		case TOY_OPCODE_LOAD:
-		case TOY_OPCODE_LOAD_LONG:
-		case TOY_OPCODE_DECLARE:
-		case TOY_OPCODE_ASSIGN:
-		case TOY_OPCODE_ACCESS:
-		case TOY_OPCODE_PASS:
-		case TOY_OPCODE_ERROR:
-		case TOY_OPCODE_EOF:
-			fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid opcode %d found, exiting\n" TOY_CC_RESET, opcode);
-			exit(-1);
-
-		case TOY_OPCODE_RETURN: //temp terminator, temp position
-			//
-			// return;
+		//prepare for the next instruction
+		fix_alignment(vm);
 	}
 }
 
 //exposed functions
 void Toy_initVM(Toy_VM* vm) {
-	vm->program = NULL;
-	vm->programSize = 0;
+	vm->bc = NULL;
+	vm->bcSize = 0;
+
+	vm->routine = NULL;
+	vm->routineSize = 0;
 
 	vm->paramCount = 0;
 	vm->jumpsCount = 0;
@@ -242,17 +296,47 @@ void Toy_initVM(Toy_VM* vm) {
 	vm->dataAddr = 0;
 	vm->subsAddr = 0;
 
-	vm->programCounter = 0;
+	vm->routineCounter = 0;
 
 	//init the scope & stack
 	Toy_initStack(&vm->stack);
 }
 
-void Toy_bindVM(Toy_VM* vm, unsigned char* program) {
-	vm->program = program;
+void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode, int bytecodeSize) {
+	if (bytecode[0] != TOY_VERSION_MAJOR || bytecode[1] > TOY_VERSION_MINOR) {
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Wrong bytecode version found: expected %d.%d.%d found %d.%d.%d, exiting\n" TOY_CC_RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, bytecode[0], bytecode[1], bytecode[2]);
+		exit(-1);
+	}
+
+	if (bytecode[2] != TOY_VERSION_PATCH) {
+		fprintf(stderr, TOY_CC_WARN "WARNING: Wrong bytecode version found: expected %d.%d.%d found %d.%d.%d, continuing\n" TOY_CC_RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, bytecode[0], bytecode[1], bytecode[2]);
+	}
+
+	if (strcmp((char*)(bytecode + 3), TOY_VERSION_BUILD) != 0) {
+		fprintf(stderr, TOY_CC_WARN "WARNING: Wrong bytecode build info found: expected '%s' found '%s', continuing\n" TOY_CC_RESET, TOY_VERSION_BUILD, (char*)(bytecode + 3));
+	}
+
+	//offset by the header size
+	int offset = 3 + strlen(TOY_VERSION_BUILD) + 1;
+	if (offset % 4 != 0) {
+		offset += 4 - (offset % 4); //ceil
+	}
+
+	//delegate
+	Toy_bindVMToRoutine(vm, bytecode + offset);
+
+	//cache these
+	vm->bc = bytecode;
+	vm->bcSize = bytecodeSize;
+}
+
+void Toy_bindVMToRoutine(Toy_VM* vm, unsigned char* routine) {
+	Toy_initVM(vm);
+
+	vm->routine = routine;
 
 	//read the header metadata
-	vm->programSize = READ_INT(vm);
+	vm->routineSize = READ_INT(vm);
 	vm->paramCount = READ_INT(vm);
 	vm->jumpsCount = READ_INT(vm);
 	vm->dataCount = READ_INT(vm);
@@ -263,7 +347,7 @@ void Toy_bindVM(Toy_VM* vm, unsigned char* program) {
 		vm->paramAddr = READ_INT(vm);
 	}
 
-	vm->codeAddr = READ_INT(vm);
+	vm->codeAddr = READ_INT(vm); //required
 
 	if (vm->jumpsCount > 0) {
 		vm->jumpsAddr = READ_INT(vm);
@@ -284,8 +368,8 @@ void Toy_bindVM(Toy_VM* vm, unsigned char* program) {
 void Toy_runVM(Toy_VM* vm) {
 	//TODO: read params into scope
 
-	//prep the program counter for execution
-	vm->programCounter = vm->codeAddr;
+	//prep the routine counter for execution
+	vm->routineCounter = vm->codeAddr;
 
 	//begin
 	process(vm);
@@ -298,6 +382,6 @@ void Toy_freeVM(Toy_VM* vm) {
 	//TODO: clear the scope
 
 	//free the bytecode
-	TOY_FREE_ARRAY(unsigned char, vm->program, vm->programSize);
+	TOY_FREE_ARRAY(unsigned char, vm->bc, vm->bcSize);
 	Toy_initVM(vm);
 }

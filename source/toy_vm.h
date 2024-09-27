@@ -5,9 +5,13 @@
 #include "toy_stack.h"
 
 typedef struct Toy_VM {
-	//bytecode - raw instructions that are being executed
-	unsigned char* program;
-	int programSize;
+	//hold the raw bytecode
+	unsigned char* bc;
+	int bcSize;
+
+	//raw instructions to be executed
+	unsigned char* routine;
+	int routineSize;
 
 	int paramCount;
 	int jumpsCount;
@@ -20,7 +24,7 @@ typedef struct Toy_VM {
 	int dataAddr;
 	int subsAddr;
 
-	int programCounter;
+	int routineCounter;
 
 	//scope - block-level key/value pairs
 
@@ -29,7 +33,10 @@ typedef struct Toy_VM {
 } Toy_VM;
 
 TOY_API void Toy_initVM(Toy_VM* vm);
-TOY_API void Toy_bindVM(Toy_VM* vm, unsigned char* program);
+
+TOY_API void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode, int bytecodeSize); //process the version data
+TOY_API void Toy_bindVMToRoutine(Toy_VM* vm, unsigned char* routine); //process the routine only
+
 TOY_API void Toy_runVM(Toy_VM* vm);
 TOY_API void Toy_freeVM(Toy_VM* vm);
 
