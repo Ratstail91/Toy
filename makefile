@@ -1,22 +1,26 @@
 #compiler settings
 CC=gcc
 CFLAGS+=-std=c17 -pedantic -Werror
-LIBS=-lm
+LIBS+=-lm
 
 #directories
 export TOY_SOURCEDIR=source
 export TOY_OUTDIR=out
 export TOY_OBJDIR=obj
 
-#file names
-export TOY_SOURCEFILES=$(wildcard $(TOY_SOURCEDIR)/*.c)
-
 #targets
-all: clean tests
-	@echo no targets ready
+all: tests
+
+.PHONY: source
+source:
+	$(MAKE) -C source -k
+
+.PHONY: repl
+repl: source
+	$(MAKE) -C repl -k
 
 .PHONY: tests
-tests:
+tests: clean
 	$(MAKE) -C tests -k
 
 .PHONY: tests-gdb

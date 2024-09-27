@@ -22,7 +22,7 @@ TEST_OUTDIR=out
 TEST_OBJDIR=obj
 
 #file names
-TEST_SOURCEFILES=$(addprefix $(TOY_ROOTDIR)/,$(TOY_SOURCEFILES))
+TEST_SOURCEFILES=$(wildcard $(TEST_SOURCEDIR)/*.c)
 TEST_CASESFILES=$(wildcard $(TEST_CASESDIR)/*.c)
 
 #build the object files, compile the test cases, and run
