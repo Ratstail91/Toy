@@ -3,12 +3,72 @@
 #include <stdio.h>
 #include <string.h>
 
+//utilities
+unsigned char* readFile(char* path, int* size) {
+	//open the file
+	FILE* file = fopen(path, "rb");
+	if (file == NULL) {
+		*size = -1; //missing file error
+		return NULL;
+	}
+
+	//determine the file's length
+	fseek(file, 0L, SEEK_END);
+	*size = ftell(file);
+	rewind(file);
+
+	//make some space
+	unsigned char* buffer = TOY_ALLOCATE(unsigned char, *size + 1);
+	if (buffer == NULL) {
+		fclose(file);
+		return NULL;
+	}
+
+	//
+	if (fread(buffer, sizeof(unsigned char), *size, file) < *size) {
+		fclose(file);
+		*size = -2; //singal a read error
+		return NULL;
+	}
+
+	fclose(file);
+
+	buffer[(*size)++] = '\0';
+	return buffer;
+}
+
+int dir(char* dest, const char* src) {
+	//extract the directory from src, and store it in dest
+
+#if defined(_WIN32) || defined(_WIN64)
+	char* p = strrchr(src, '\\');
+#else
+	char* p = strrchr(src, '/');
+#endif
+
+	int len = p != NULL ? p - src + 1 : 0;
+	strncpy(dest, src, len);
+	dest[len] = '\0';
+
+	return len;
+}
+
+#define APPEND(dest, src) \
+	memcpy((dest) + (strlen(dest)), (src), strlen((src)));
+
+#if defined(_WIN32) || defined(_WIN64)
+	#define FLIPSLASH(str) for (int i = 0; str[i]; i++) str[i] = str[i] == '/' ? '\\' : str[i];
+#else
+	#define FLIPSLASH(str) for (int i = 0; str[i]; i++) str[i] = str[i] == '\\' ? '/' : str[i];
+#endif
+
 //handle command line arguments
 typedef struct CmdLine {
 	bool error;
 	bool help;
 	bool version;
-	const char* infile;
+	char* infile;
+	int infileLength;
 } CmdLine;
 
 void usageCmdLine(int argc, const char* argv[]) {
@@ -46,11 +106,11 @@ freely, subject to the following restrictions:\n\
    misrepresented as being the original software.\n\
 3. This notice may not be removed or altered from any source distribution.\n\n";
 
-	printf(license);
+	printf("%s",license);
 }
 
 CmdLine parseCmdLine(int argc, const char* argv[]) {
-	CmdLine cmd = { .error = false, .help = false, .version = false, .infile = NULL };
+	CmdLine cmd = { .error = false, .help = false, .version = false, .infile = NULL, .infileLength = 0 };
 
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
@@ -66,7 +126,18 @@ CmdLine parseCmdLine(int argc, const char* argv[]) {
 				cmd.error = true;
 			}
 			else {
-				cmd.infile = argv[++i];
+				if (cmd.infile != NULL) { //don't leak
+					TOY_FREE_ARRAY(char, cmd.infile, strlen(cmd.infile));
+				}
+
+				i++;
+
+				//total space to reserve - it's actually longer than needed, due to the exe name being removed
+				cmd.infileLength = strlen(argv[0]) + strlen(argv[i]);
+				cmd.infile = TOY_ALLOCATE(char, cmd.infileLength);
+				dir(cmd.infile, argv[0]);
+				APPEND(cmd.infile, argv[i]);
+				FLIPSLASH(cmd.infile);
 			}
 		}
 
@@ -77,49 +148,6 @@ CmdLine parseCmdLine(int argc, const char* argv[]) {
 
 	return cmd;
 }
-
-//utilities
-unsigned char* readFile(const char* path, int* size) {
-	//open the file
-	FILE* file = fopen(path, "rb");
-	if (file == NULL) {
-		*size = -1; //missing file error
-		return NULL;
-	}
-
-	//determine the file's length
-	fseek(file, 0L, SEEK_END);
-	*size = ftell(file);
-	rewind(file);
-
-	//make some space
-	unsigned char* buffer = TOY_ALLOCATE(unsigned char, *size);
-	if (buffer == NULL) {
-		fclose(file);
-		return NULL;
-	}
-
-	//
-	if (fread(buffer, sizeof(unsigned char), *size, file) < *size) {
-		fclose(file);
-		*size = -2; //singal a read error
-		return NULL;
-	}
-
-	fclose(file);
-	return buffer;
-}
-
-void dir(char* dest, const char* src) {
-	//extract the directory from src, and store it in dest
-	const char* p = strrchr(src, '/');
-	int len = p != NULL ? p - src + 1 : 0;
-	strncpy(dest, src, len);
-	dest[len] = '\0';
-}
-
-#define APPEND(dest, src) \
-	sprintf(dest + strlen(dest), src)
 
 //main file
 int main(int argc, const char* argv[]) {
@@ -138,6 +166,10 @@ int main(int argc, const char* argv[]) {
 		//run the given file
 		int size;
 		unsigned char* source = readFile(cmd.infile, &size);
+
+		TOY_FREE_ARRAY(char, cmd.infile, cmd.infileLength); //clean this up, since it's no longer needed
+		cmd.infile = NULL;
+		cmd.infileLength = 0;
 
 		//check the file
 		if (source == NULL) {
@@ -224,6 +256,5 @@ int main(int argc, const char* argv[]) {
 
 	return 0;
 }
-
 
 //TODO: simple and consistent way to print an AST and Toy_Value

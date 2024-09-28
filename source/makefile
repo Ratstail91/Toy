@@ -20,21 +20,21 @@ SRC_TARGETNAME=Toy
 #SRC_LIBLINE is a fancy way of making the linker work correctly
 ifeq ($(shell uname),Linux)
 	SRC_TARGETEXT=.so
-	SRC_LIBLINE=-Wl,-rpath,. -Wl,--out-implib=$(SRC_OUTDIR)/lib$(SRC_TARGETNAME).a -Wl,--whole-archive $(SRC_OBJFILES) -Wl,--no-whole-archive
+	SRC_LIBLINE=-shared -Wl,-rpath,. -Wl,--out-implib=$(SRC_OUTDIR)/lib$(SRC_TARGETNAME).a -Wl,--whole-archive $(SRC_OBJFILES) -Wl,--no-whole-archive
 	CFLAGS+=-fPIC
-# else ifeq ($(OS),Windows_NT)
-# 	SRC_TARGETEXT=.dll
-# 	SRC_LIBLINE=-Wl,-rpath,. -Wl,--out-implib=$(SRC_OUTDIR)/lib$(OUTNAME).dll.a -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--whole-archive $(SRC_OBJFILES) -Wl,--no-whole-archive
-# else ifeq ($(shell uname),Darwin)
-# 	SRC_TARGETEXT=.dylib
-# 	SRC_LIBLINE=$(SRC_OBJFILES)
+else ifeq ($(OS),Windows_NT)
+	SRC_TARGETEXT=.dll
+	SRC_LIBLINE=-shared -Wl,-rpath,. -Wl,--out-implib=$(SRC_OUTDIR)/lib$(SRC_TARGETNAME).a -Wl,--whole-archive $(SRC_OBJFILES) -Wl,--no-whole-archive -Wl,--export-all-symbols -Wl,--enable-auto-import
+else ifeq ($(shell uname),Darwin)
+	SRC_TARGETEXT=.dylib
+	SRC_LIBLINE=-shared -Wl,-rpath,.  $(SRC_OBJFILES)
 else
 	@echo "Platform test failed - what platform is this?"
 	exit 1
 endif
 
 #build the object files, compile the test cases, and run
-all: clean build link
+all: build link
 
 #targets for each step
 .PHONY: build
@@ -42,7 +42,7 @@ build: $(SRC_OUTDIR) $(SRC_OBJDIR) $(SRC_OBJFILES)
 
 .PHONY: link
 link: $(SRC_OUTDIR)
-	$(CC) -DTOY_EXPORT $(CFLAGS) -shared -o $(SRC_OUTDIR)/lib$(SRC_TARGETNAME)$(SRC_TARGETEXT) $(SRC_LIBLINE)
+	$(CC) -DTOY_EXPORT $(CFLAGS) -o $(SRC_OUTDIR)/lib$(SRC_TARGETNAME)$(SRC_TARGETEXT) $(SRC_LIBLINE)
 
 #util targets
 $(SRC_OUTDIR):

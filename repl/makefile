@@ -2,7 +2,7 @@
 CC=gcc
 CFLAGS+=-g -Wall -Werror -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
 LIBS+=-lm -lToy
-LDFLAGS+=-Wl,-R -Wl,'$$ORIGIN'
+LDFLAGS+=-Wl,-rpath,'$$ORIGIN'
 
 #directories
 REPL_ROOTDIR=..
@@ -18,10 +18,10 @@ REPL_OBJFILES=$(addprefix $(REPL_OBJDIR)/,$(notdir $(REPL_REPLFILES:.c=.o)))
 REPL_TARGETNAME=repl.exe
 
 #linker fix
-LDFLAGS+=-L$(realpath $(shell pwd)/$(REPL_OUTDIR))
+LDFLAGS+=-L$(realpath $(REPL_OUTDIR))
 
 #build the object files, compile the test cases, and run
-all: clean build link
+all: build link
 
 #targets for each step
 .PHONY: build
@@ -43,6 +43,12 @@ $(REPL_OBJDIR)/%.o: $(REPL_REPLDIR)/%.c
 
 $(REPL_OUTDIR)/$(REPL_TARGETNAME): $(REPL_OBJFILES)
 	$(CC) -DTOY_IMPORT $(CFLAGS) -o $@ $(REPL_OBJFILES) $(LDFLAGS) $(LIBS)
+ifeq ($(shell uname),Darwin) #dylib fix
+	otool -L $@
+	install_name_tool -add_rpath @executable_path/. $@
+	install_name_tool -change ../out/libToy.dylib @executable_path/libToy.dylib $@
+	otool -L $@
+endif
 
 #util commands
 .PHONY: clean

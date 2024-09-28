@@ -9,7 +9,7 @@ export TOY_OUTDIR=out
 export TOY_OBJDIR=obj
 
 #targets
-all: tests
+all:
 
 .PHONY: source
 source:
@@ -24,7 +24,7 @@ tests: clean
 	$(MAKE) -C tests -k
 
 .PHONY: tests-gdb
-tests-gdb:
+tests-gdb: clean
 	$(MAKE) -C tests all-gdb -k
 
 #util targets
@@ -33,9 +33,6 @@ $(TOY_OUTDIR):
 
 $(TOY_OBJDIR):
 	mkdir $(TOY_OBJDIR)
-
-$(TOY_OBJDIR)/%.o: $(TOY_SOURCEDIR)/%.c
-	$(CC) -c -o $@ $< $(addprefix -I,$(TOY_SOURCEDIR)) $(CFLAGS)
 
 #util commands
 .PHONY: clean
@@ -68,5 +65,3 @@ else
 	@echo "Deletion failed - what platform is this?"
 endif
 
-.PHONY: rebuild
-rebuild: clean all
