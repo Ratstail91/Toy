@@ -31,7 +31,7 @@ static void advance(Toy_Parser* parser) {
 	parser->current = Toy_private_scanLexer(parser->lexer);
 
 	if (parser->current.type == TOY_TOKEN_ERROR) {
-		printError(parser, parser->current, "Read error");
+		printError(parser, parser->current, "Can't read the source code");
 	}
 }
 

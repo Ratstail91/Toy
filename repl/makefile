@@ -2,7 +2,7 @@
 CC=gcc
 CFLAGS+=-g -Wall -Werror -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
 LIBS+=-lm -lToy
-LDFLAGS+=-Wl,-rpath,'.'
+LDFLAGS+=-Wl,-R -Wl,'$$ORIGIN'
 
 #directories
 REPL_ROOTDIR=..

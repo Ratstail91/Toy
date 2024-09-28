@@ -236,6 +236,10 @@ void Toy_bindLexer(Toy_Lexer* lexer, const char* source) {
 }
 
 Toy_Token Toy_private_scanLexer(Toy_Lexer* lexer) {
+	if (lexer->source == NULL) {
+		return makeErrorToken(lexer, "Missing source code in lexer");
+	}
+
 	eatWhitespace(lexer);
 
 	lexer->start = lexer->current;
