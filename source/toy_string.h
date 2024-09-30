@@ -12,6 +12,8 @@ typedef struct Toy_String {             //32 | 64 BITNESS
 	int length;                         //4  | 4
 	int refCount;                       //4  | 4
 
+	int _padding;                       //4  | 4
+
 	union {
 		struct {
 			struct Toy_String* left;    //4  | 8
@@ -19,11 +21,11 @@ typedef struct Toy_String {             //32 | 64 BITNESS
 		} node;                         //8  | 16
 
 		struct {
-			int dummy;                  //4  | 4
+			int _dummy;                 //4  | 4
 			char data[];                //-  | -
 		} leaf;                         //4  | 4
 	} as;                               //8  | 16
-} Toy_String;                           //20 | 28
+} Toy_String;                           //24 | 32
 
 TOY_API Toy_String* Toy_createString(Toy_Bucket** bucket, const char* cstring);
 TOY_API Toy_String* Toy_createStringLength(Toy_Bucket** bucket, const char* cstring, int length);

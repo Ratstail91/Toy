@@ -9,8 +9,8 @@
 int test_sizeof_string_64bit() {
 	//test for the correct size
 	{
-		if (sizeof(Toy_String) != 28) {
-			fprintf(stderr, TOY_CC_ERROR "ERROR: 'Toy_String' is an unexpected size in memory\n" TOY_CC_RESET);
+		if (sizeof(Toy_String) != 32) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: 'Toy_String' is an unexpected size in memory: expected 32, found %d \n" TOY_CC_RESET, (int)sizeof(Toy_String));
 			return -1;
 		}
 	}
@@ -21,8 +21,8 @@ int test_sizeof_string_64bit() {
 int test_sizeof_string_32bit() {
 	//test for the correct size
 	{
-		if (sizeof(Toy_String) != 20) {
-			fprintf(stderr, TOY_CC_ERROR "ERROR: 'Toy_String' is an unexpected size in memory\n" TOY_CC_RESET);
+		if (sizeof(Toy_String) != 24) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: 'Toy_String' is an unexpected size in memory: expected 24, found %d \n" TOY_CC_RESET, (int)sizeof(Toy_String));
 			return -1;
 		}
 	}
@@ -35,7 +35,7 @@ int test_string_allocation() {
 	{
 		//setup
 		Toy_Bucket* bucket = NULL;
-		Toy_initBucket(&bucket, 32);
+		Toy_initBucket(&bucket, 1024);
 
 		const char* cstring = "Hello world";
 		Toy_String* str = Toy_createString(&bucket, cstring);
@@ -55,7 +55,7 @@ int test_string_allocation() {
 		Toy_freeString(str);
 
 		//inspect the bucket
-		if (bucket->capacity != 32 ||
+		if (bucket->capacity != 1024 ||
 			bucket->count != sizeof(Toy_String) + 12 ||
 			bucket->next != NULL)
 		{
@@ -78,7 +78,7 @@ int test_string_allocation() {
 	{
 		//setup
 		Toy_Bucket* bucket = NULL;
-		Toy_initBucket(&bucket, 32);
+		Toy_initBucket(&bucket, 1024);
 
 		const char* cstring = "Hello world";
 		Toy_String* str = Toy_createString(&bucket, cstring);
@@ -105,7 +105,7 @@ int test_string_allocation() {
 	{
 		//setup
 		Toy_Bucket* bucket = NULL;
-		Toy_initBucket(&bucket, 32);
+		Toy_initBucket(&bucket, 1024);
 
 		const char* cstring = "";
 		Toy_String* str = Toy_createString(&bucket, cstring);

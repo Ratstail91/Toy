@@ -66,7 +66,7 @@ int test_buckets() {
 
 		//check
 		if (bucket == NULL || bucket->count != 4 * sizeof(int)) {
-			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to partition 'Toy_Bucket' correctly: count is %d, expected %d\n" TOY_CC_RESET, bucket->count, (int)(4*sizeof(int)));
+			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to partition 'Toy_Bucket' correctly: count is %d, expected %d\n" TOY_CC_RESET, (int)(bucket->count), (int)(4*sizeof(int)));
 			return -1;
 		}
 
