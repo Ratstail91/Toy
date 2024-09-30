@@ -36,8 +36,8 @@ TOY_API void* Toy_reallocate(void* pointer, size_t oldSize, size_t newSize);
 typedef struct Toy_Bucket {
 	struct Toy_Bucket* next;
 	void* contents;
-	int capacity;
-	int count;
+	size_t capacity;
+	size_t count;
 } Toy_Bucket;
 
 TOY_API void Toy_initBucket(Toy_Bucket** bucketHandle, size_t capacity);

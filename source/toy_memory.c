@@ -50,7 +50,7 @@ void* Toy_partBucket(Toy_Bucket** bucketHandle, size_t space) {
 
 	//if you try to allocate too much space
 	if ((*bucketHandle)->capacity < space) {
-		fprintf(stderr, TOY_CC_ERROR "[internal] ERROR: Failed to partition bucket memory, not enough capacity\n" TOY_CC_RESET);
+		fprintf(stderr, TOY_CC_ERROR "[internal] ERROR: Failed to partition bucket memory, not enough capacity: needed %d, only %d available\n" TOY_CC_RESET, (int)space, (int)((*bucketHandle)->capacity));
 		exit(1);
 	}
 
