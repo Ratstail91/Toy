@@ -9,12 +9,12 @@
 #include <string.h>
 
 //tests
-int test_bytecode_header(Toy_Bucket* bucket) {
+int test_bytecode_header(Toy_Bucket** bucket) {
 	//simple test to ensure the header looks right
 	{
 		//setup
 		Toy_Ast* ast = NULL;
-		Toy_private_emitAstPass(&bucket, &ast);
+		Toy_private_emitAstPass(bucket, &ast);
 
 		//run
 		Toy_Bytecode bc = Toy_compileBytecode(ast);
@@ -49,7 +49,7 @@ int test_bytecode_header(Toy_Bucket* bucket) {
 	return 0;
 }
 
-int test_bytecode_from_source(Toy_Bucket* bucket) {
+int test_bytecode_from_source(Toy_Bucket** bucket) {
 	{
 		//setup
 		const char* source = "(1 + 2) * (3 + 4);";
@@ -58,7 +58,7 @@ int test_bytecode_from_source(Toy_Bucket* bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
 
 		//run
 		Toy_Bytecode bc = Toy_compileBytecode(ast);
@@ -177,7 +177,7 @@ int main() {
 	{
 		Toy_Bucket* bucket = NULL;
 		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
-		res = test_bytecode_header(bucket);
+		res = test_bytecode_header(&bucket);
 		TOY_BUCKET_FREE(bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
@@ -188,7 +188,7 @@ int main() {
 	{
 		Toy_Bucket* bucket = NULL;
 		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
-		res = test_bytecode_from_source(bucket);
+		res = test_bytecode_from_source(&bucket);
 		TOY_BUCKET_FREE(bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);

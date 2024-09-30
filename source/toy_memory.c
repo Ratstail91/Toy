@@ -28,7 +28,7 @@ void Toy_initBucket(Toy_Bucket** bucketHandle, size_t capacity) {
 		exit(1);
 	}
 
-	(*bucketHandle) = malloc(sizeof(Toy_Bucket));
+	(*bucketHandle) = malloc(sizeof(Toy_Bucket)); //TODO: rework the bucket, so there's only one malloc() call instead of two when partitioning
 
 	if ((*bucketHandle) == NULL) {
 		fprintf(stderr, TOY_CC_ERROR "[internal] ERROR: Failed to allocate space for a bucket\n" TOY_CC_RESET);
@@ -45,6 +45,12 @@ void Toy_initBucket(Toy_Bucket** bucketHandle, size_t capacity) {
 void* Toy_partBucket(Toy_Bucket** bucketHandle, size_t space) {
 	if ((*bucketHandle) == NULL) {
 		fprintf(stderr, TOY_CC_ERROR "[internal] ERROR: Expected bucket, received NULL\n" TOY_CC_RESET);
+		exit(1);
+	}
+
+	//if you try to allocate too much space
+	if ((*bucketHandle)->capacity < space) {
+		fprintf(stderr, TOY_CC_ERROR "[internal] ERROR: Failed to partition bucket memory, not enough capacity\n" TOY_CC_RESET);
 		exit(1);
 	}
 

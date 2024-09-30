@@ -15,7 +15,7 @@ Toy_Ast* makeAstFromSource(Toy_Bucket** bucket, const char* source) {
 }
 
 //tests
-int test_simple_empty_parsers(Toy_Bucket* bucket) {
+int test_simple_empty_parsers(Toy_Bucket** bucket) {
 	//simple parser setup and cleanup
 	{
 		//raw source code and lexer
@@ -27,7 +27,7 @@ int test_simple_empty_parsers(Toy_Bucket* bucket) {
 		Toy_Parser parser;
 		Toy_bindParser(&parser, &lexer);
 
-		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
 
 		//check if it worked
 		if (
@@ -50,7 +50,7 @@ int test_simple_empty_parsers(Toy_Bucket* bucket) {
 		Toy_Parser parser;
 		Toy_bindParser(&parser, &lexer);
 
-		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
 
 		//check if it worked
 		if (
@@ -75,7 +75,7 @@ int test_simple_empty_parsers(Toy_Bucket* bucket) {
 		Toy_Parser parser;
 		Toy_bindParser(&parser, &lexer);
 
-		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
 
 		Toy_Ast* iter = ast;
 
@@ -98,10 +98,10 @@ int test_simple_empty_parsers(Toy_Bucket* bucket) {
 	return 0;
 }
 
-int test_values(Toy_Bucket* bucket) {
+int test_values(Toy_Bucket** bucket) {
 	//test boolean true
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "true;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "true;");
 
 		//check if it worked
 		if (
@@ -119,7 +119,7 @@ int test_values(Toy_Bucket* bucket) {
 
 	//test boolean false (just to be safe)
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "false;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "false;");
 
 		//check if it worked
 		if (
@@ -137,7 +137,7 @@ int test_values(Toy_Bucket* bucket) {
 
 	//test integer
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "42;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "42;");
 
 		//check if it worked
 		if (
@@ -155,7 +155,7 @@ int test_values(Toy_Bucket* bucket) {
 
 	//test float
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "3.1415;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "3.1415;");
 
 		//check if it worked
 		if (
@@ -173,7 +173,7 @@ int test_values(Toy_Bucket* bucket) {
 
 	//test integer with separators
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "1_234_567_890;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "1_234_567_890;");
 
 		//check if it worked
 		if (
@@ -191,7 +191,7 @@ int test_values(Toy_Bucket* bucket) {
 
 	//test float with separators
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "3.141_592_65;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "3.141_592_65;");
 
 		//check if it worked
 		if (
@@ -210,10 +210,10 @@ int test_values(Toy_Bucket* bucket) {
 	return 0;
 }
 
-int test_unary(Toy_Bucket* bucket) {
+int test_unary(Toy_Bucket** bucket) {
 	//test unary boolean negation (!true)
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "!true;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "!true;");
 
 		//check if it worked
 		if (
@@ -231,7 +231,7 @@ int test_unary(Toy_Bucket* bucket) {
 
 	//test unary boolean negation (!false, just to be safe)
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "!false;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "!false;");
 
 		//check if it worked
 		if (
@@ -249,7 +249,7 @@ int test_unary(Toy_Bucket* bucket) {
 
 	//test unary integer negation
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "-42;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "-42;");
 
 		//check if it worked
 		if (
@@ -267,7 +267,7 @@ int test_unary(Toy_Bucket* bucket) {
 
 	//test unary float negation
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "-3.1415;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "-3.1415;");
 
 		//check if it worked
 		if (
@@ -285,7 +285,7 @@ int test_unary(Toy_Bucket* bucket) {
 
 	//ensure unary negation doesn't occur with a group
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "-(42);");
+		Toy_Ast* ast = makeAstFromSource(bucket, "-(42);");
 
 		//check if it worked
 		if (
@@ -301,7 +301,7 @@ int test_unary(Toy_Bucket* bucket) {
 
 	//ensure unary negation doesn't occur with a space
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "- 42;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "- 42;");
 
 		//check if it worked
 		if (
@@ -318,10 +318,10 @@ int test_unary(Toy_Bucket* bucket) {
 	return 0;
 }
 
-int test_binary(Toy_Bucket* bucket) {
+int test_binary(Toy_Bucket** bucket) {
 	//test binary add (term); also covers subtract
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "1 + 2;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "1 + 2;");
 
 		//check if it worked
 		if (
@@ -348,7 +348,7 @@ int test_binary(Toy_Bucket* bucket) {
 
 	//test binary multiply (factor); also covers divide and modulo
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "3 * 5;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "3 * 5;");
 
 		//check if it worked
 		if (
@@ -375,7 +375,7 @@ int test_binary(Toy_Bucket* bucket) {
 
 	//test binary assign (using numbers for now, as identifiers aren't coded yet)
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "1 = 2;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "1 = 2;");
 
 		//check if it worked
 		if (
@@ -402,7 +402,7 @@ int test_binary(Toy_Bucket* bucket) {
 
 	//test binary compare (equality)
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "42 == 69;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "42 == 69;");
 
 		//check if it worked
 		if (
@@ -430,10 +430,10 @@ int test_binary(Toy_Bucket* bucket) {
 	return 0;
 }
 
-int test_precedence(Toy_Bucket* bucket) {
+int test_precedence(Toy_Bucket** bucket) {
 	//test term-factor precedence
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "1 * 2 + 3 * 4;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "1 * 2 + 3 * 4;");
 
 		//check if it worked
 		if (
@@ -474,7 +474,7 @@ int test_precedence(Toy_Bucket* bucket) {
 
 	//test left-recrusive precedence
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "1 + 2 + 3 + 4 + 5 + 6;");
+		Toy_Ast* ast = makeAstFromSource(bucket, "1 + 2 + 3 + 4 + 5 + 6;");
 
 		//check if it worked
 		if (
@@ -531,7 +531,7 @@ int test_precedence(Toy_Bucket* bucket) {
 
 	//test group precedence
 	{
-		Toy_Ast* ast = makeAstFromSource(&bucket, "(1 + 2) * (3 + 4);");
+		Toy_Ast* ast = makeAstFromSource(bucket, "(1 + 2) * (3 + 4);");
 
 		//check if it worked
 		if (
@@ -580,7 +580,7 @@ int main() {
 	{
 		Toy_Bucket* bucket = NULL;
 		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
-		res = test_simple_empty_parsers(bucket);
+		res = test_simple_empty_parsers(&bucket);
 		TOY_BUCKET_FREE(bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
@@ -591,7 +591,7 @@ int main() {
 	{
 		Toy_Bucket* bucket = NULL;
 		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
-		res = test_values(bucket);
+		res = test_values(&bucket);
 		TOY_BUCKET_FREE(bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
@@ -602,7 +602,7 @@ int main() {
 	{
 		Toy_Bucket* bucket = NULL;
 		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
-		res = test_unary(bucket);
+		res = test_unary(&bucket);
 		TOY_BUCKET_FREE(bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
@@ -613,7 +613,7 @@ int main() {
 	{
 		Toy_Bucket* bucket = NULL;
 		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
-		res = test_binary(bucket);
+		res = test_binary(&bucket);
 		TOY_BUCKET_FREE(bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
@@ -624,7 +624,7 @@ int main() {
 	{
 		Toy_Bucket* bucket = NULL;
 		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
-		res = test_precedence(bucket);
+		res = test_precedence(&bucket);
 		TOY_BUCKET_FREE(bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);

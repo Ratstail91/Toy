@@ -26,7 +26,15 @@ This repository holds the reference implementation for Toy version 2.x, written 
 
 ## Building
 
-*Omitted for review.*
+Supported platforms are: `linux-latest`, `windows-latest`, `macos-latest`, using [GitHub's standard runners](https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories).
+
+To build the library, run `make source`.
+
+To build the library and repl, run `make repl`.
+
+To build and run the test cases, run `make tests`.
+
+To build and run the test cases under gdb, run `make tests-gdb`.
 
 ## Tools
 

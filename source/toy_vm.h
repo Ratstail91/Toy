@@ -26,7 +26,8 @@ typedef struct Toy_VM {
 
 	int routineCounter;
 
-	//scope - block-level key/value pairs
+	//heap - block-level key/value pairs
+	//TODO: needs string util for identifiers
 
 	//stack - immediate-level values only
 	Toy_Stack stack;

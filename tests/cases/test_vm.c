@@ -23,7 +23,7 @@ Toy_Bytecode makeBytecodeFromSource(Toy_Bucket** bucket, const char* source) {
 }
 
 //tests
-int test_setup_and_teardown(Toy_Bucket* bucket) {
+int test_setup_and_teardown(Toy_Bucket** bucket) {
 	//basic init & quit
 	{
 		//generate bytecode for testing
@@ -35,7 +35,7 @@ int test_setup_and_teardown(Toy_Bucket* bucket) {
 		Toy_Parser parser;
 		Toy_bindParser(&parser, &lexer);
 
-		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
 
 		Toy_Bytecode bc = Toy_compileBytecode(ast);
 
@@ -75,7 +75,7 @@ int test_setup_and_teardown(Toy_Bucket* bucket) {
 }
 
 //tests
-int test_simple_execution(Toy_Bucket* bucket) {
+int test_simple_execution(Toy_Bucket** bucket) {
 	//basic init & quit
 	{
 		//generate bytecode for testing
@@ -87,7 +87,7 @@ int test_simple_execution(Toy_Bucket* bucket) {
 		Toy_Parser parser;
 		Toy_bindParser(&parser, &lexer);
 
-		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
 
 		Toy_Bytecode bc = Toy_compileBytecode(ast);
 
@@ -126,7 +126,7 @@ int main() {
 	{
 		Toy_Bucket* bucket = NULL;
 		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
-		res = test_setup_and_teardown(bucket);
+		res = test_setup_and_teardown(&bucket);
 		TOY_BUCKET_FREE(bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
@@ -137,7 +137,7 @@ int main() {
 	{
 		Toy_Bucket* bucket = NULL;
 		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
-		res = test_simple_execution(bucket);
+		res = test_simple_execution(&bucket);
 		TOY_BUCKET_FREE(bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);

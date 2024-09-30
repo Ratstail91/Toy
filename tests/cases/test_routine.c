@@ -9,12 +9,12 @@
 #include <string.h>
 
 //tests
-int test_routine_header_and_values(Toy_Bucket* bucket) {
+int test_routine_header_and_values(Toy_Bucket** bucket) {
 	//simple test to ensure the header looks right with an empty ast
 	{
 		//setup
 		Toy_Ast* ast = NULL;
-		Toy_private_emitAstPass(&bucket, &ast);
+		Toy_private_emitAstPass(bucket, &ast);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -63,7 +63,7 @@ int test_routine_header_and_values(Toy_Bucket* bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -112,7 +112,7 @@ int test_routine_header_and_values(Toy_Bucket* bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -165,7 +165,7 @@ int test_routine_header_and_values(Toy_Bucket* bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -218,7 +218,7 @@ int test_routine_header_and_values(Toy_Bucket* bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -272,7 +272,7 @@ int test_routine_header_and_values(Toy_Bucket* bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -320,11 +320,11 @@ int test_routine_header_and_values(Toy_Bucket* bucket) {
 	return 0;
 }
 
-// int test_routine_unary(Toy_Bucket* bucket) {
+// int test_routine_unary(Toy_Bucket** bucket) {
 // 	//TODO: Nothing produces a unary instruction yet
 // }
 
-int test_routine_binary(Toy_Bucket* bucket) {
+int test_routine_binary(Toy_Bucket** bucket) {
 	//produce a simple algorithm
 	{
 		//setup
@@ -334,7 +334,7 @@ int test_routine_binary(Toy_Bucket* bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -400,7 +400,7 @@ int test_routine_binary(Toy_Bucket* bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -466,7 +466,7 @@ int test_routine_binary(Toy_Bucket* bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -537,7 +537,7 @@ int test_routine_binary(Toy_Bucket* bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -630,7 +630,7 @@ int main() {
 	{
 		Toy_Bucket* bucket = NULL;
 		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
-		res = test_routine_header_and_values(bucket);
+		res = test_routine_header_and_values(&bucket);
 		TOY_BUCKET_FREE(bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
@@ -641,7 +641,7 @@ int main() {
 	{
 		Toy_Bucket* bucket = NULL;
 		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
-		res = test_routine_binary(bucket);
+		res = test_routine_binary(&bucket);
 		TOY_BUCKET_FREE(bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
