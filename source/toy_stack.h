@@ -4,8 +4,8 @@
 #include "toy_value.h"
 
 typedef struct Toy_Stack { //32 | 64 BITNESS
-	size_t capacity;       //4  | 4
-	size_t count;          //4  | 4
+	unsigned int capacity; //4  | 4
+	unsigned int count;    //4  | 4
 	char data[];           //-  | -
 } Toy_Stack;               //8  | 8
 

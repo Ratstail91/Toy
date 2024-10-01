@@ -40,7 +40,7 @@ void Toy_pushStack(Toy_Stack** stack, Toy_Value value) {
 			(*stack)->capacity = (*stack)->capacity < MIN_CAPACITY ? MIN_CAPACITY : (*stack)->capacity * 2;
 		}
 
-		size_t newCapacity = (*stack)->capacity;
+		unsigned int newCapacity = (*stack)->capacity;
 
 		(*stack) = realloc((*stack), newCapacity * sizeof(Toy_Value) + sizeof(Toy_Stack));
 
@@ -72,7 +72,7 @@ Toy_Value Toy_popStack(Toy_Stack** stack) {
 	//shrink if possible
 	if ((*stack)->count > MIN_CAPACITY && (*stack)->count < (*stack)->capacity / 4) {
 		(*stack)->capacity /= 2;
-		size_t newCapacity = (*stack)->capacity;
+		unsigned int newCapacity = (*stack)->capacity;
 
 		(*stack) = realloc((*stack), (*stack)->capacity * sizeof(Toy_Value) + sizeof(Toy_Stack));
 

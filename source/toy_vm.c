@@ -12,13 +12,16 @@
 #define READ_BYTE(vm) \
 	vm->routine[vm->routineCounter++]
 
+#define READ_UNSIGNED_INT(vm) \
+	*((unsigned int*)(vm->routine + _read_postfix(&(vm->routineCounter), 4)))
+
 #define READ_INT(vm) \
 	*((int*)(vm->routine + _read_postfix(&(vm->routineCounter), 4)))
 
 #define READ_FLOAT(vm) \
 	*((float*)(vm->routine + _read_postfix(&(vm->routineCounter), 4)))
 
-static inline int _read_postfix(int* ptr, int amount) {
+static inline int _read_postfix(unsigned int* ptr, int amount) {
 	int ret = *ptr;
 	*ptr += amount;
 	return ret;
@@ -277,7 +280,7 @@ static void process(Toy_VM* vm) {
 }
 
 //exposed functions
-void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode, int bytecodeSize) {
+void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode, unsigned int bytecodeSize) {
 	if (bytecode[0] != TOY_VERSION_MAJOR || bytecode[1] > TOY_VERSION_MINOR) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Wrong bytecode version found: expected %d.%d.%d found %d.%d.%d, exiting\n" TOY_CC_RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, bytecode[0], bytecode[1], bytecode[2]);
 		exit(-1);
@@ -311,29 +314,29 @@ void Toy_bindVMToRoutine(Toy_VM* vm, unsigned char* routine) {
 	vm->routine = routine;
 
 	//read the header metadata
-	vm->routineSize = READ_INT(vm);
-	vm->paramCount = READ_INT(vm);
-	vm->jumpsCount = READ_INT(vm);
-	vm->dataCount = READ_INT(vm);
-	vm->subsCount = READ_INT(vm);
+	vm->routineSize = READ_UNSIGNED_INT(vm);
+	vm->paramCount = READ_UNSIGNED_INT(vm);
+	vm->jumpsCount = READ_UNSIGNED_INT(vm);
+	vm->dataCount = READ_UNSIGNED_INT(vm);
+	vm->subsCount = READ_UNSIGNED_INT(vm);
 
 	//read the header addresses
 	if (vm->paramCount > 0) {
-		vm->paramAddr = READ_INT(vm);
+		vm->paramAddr = READ_UNSIGNED_INT(vm);
 	}
 
-	vm->codeAddr = READ_INT(vm); //required
+	vm->codeAddr = READ_UNSIGNED_INT(vm); //required
 
 	if (vm->jumpsCount > 0) {
-		vm->jumpsAddr = READ_INT(vm);
+		vm->jumpsAddr = READ_UNSIGNED_INT(vm);
 	}
 
 	if (vm->dataCount > 0) {
-		vm->dataAddr = READ_INT(vm);
+		vm->dataAddr = READ_UNSIGNED_INT(vm);
 	}
 
 	if (vm->subsCount > 0) {
-		vm->subsAddr = READ_INT(vm);
+		vm->subsAddr = READ_UNSIGNED_INT(vm);
 	}
 
 	//preallocate the scope & stack

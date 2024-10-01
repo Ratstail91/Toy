@@ -7,24 +7,24 @@
 typedef struct Toy_VM {
 	//hold the raw bytecode
 	unsigned char* bc;
-	int bcSize;
+	unsigned int bcSize;
 
 	//raw instructions to be executed
 	unsigned char* routine;
-	int routineSize;
+	unsigned int routineSize;
 
-	int paramCount;
-	int jumpsCount;
-	int dataCount;
-	int subsCount;
+	unsigned int paramCount;
+	unsigned int jumpsCount;
+	unsigned int dataCount;
+	unsigned int subsCount;
 
-	int paramAddr;
-	int codeAddr;
-	int jumpsAddr;
-	int dataAddr;
-	int subsAddr;
+	unsigned int paramAddr;
+	unsigned int codeAddr;
+	unsigned int jumpsAddr;
+	unsigned int dataAddr;
+	unsigned int subsAddr;
 
-	int routineCounter;
+	unsigned int routineCounter;
 
 	//heap - block-level key/value pairs
 	//TODO: needs string util for identifiers
@@ -33,7 +33,7 @@ typedef struct Toy_VM {
 	Toy_Stack* stack;
 } Toy_VM;
 
-TOY_API void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode, int bytecodeSize); //process the version data
+TOY_API void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode, unsigned int bytecodeSize); //process the version data
 TOY_API void Toy_bindVMToRoutine(Toy_VM* vm, unsigned char* routine); //process the routine only
 
 TOY_API void Toy_runVM(Toy_VM* vm);

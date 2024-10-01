@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-Toy_Array* Toy_resizeArray(Toy_Array* paramArray, size_t capacity) {
+Toy_Array* Toy_resizeArray(Toy_Array* paramArray, unsigned int capacity) {
 	if (capacity == 0) {
 		free(paramArray);
 		return NULL;

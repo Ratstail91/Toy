@@ -174,28 +174,28 @@ int main(int argc, const char* argv[]) {
 		int size;
 		unsigned char* source = readFile(cmd.infile, &size);
 
-		free(cmd.infile);
-
-		cmd.infile = NULL;
-		cmd.infileLength = 0;
-
 		//check the file
 		if (source == NULL) {
 			if (size == 0) {
-				fprintf(stderr, TOY_CC_ERROR "ERROR: Could not parse an empty file, exiting\n" TOY_CC_RESET);
+				fprintf(stderr, TOY_CC_ERROR "ERROR: Could not parse an empty file '%s', exiting\n" TOY_CC_RESET, cmd.infile);
 				return -1;
 			}
 
 			else if (size == -1) {
-				fprintf(stderr, TOY_CC_ERROR "ERROR: File not found, exiting\n" TOY_CC_RESET);
+				fprintf(stderr, TOY_CC_ERROR "ERROR: File not found '%s', exiting\n" TOY_CC_RESET, cmd.infile);
 				return -1;
 			}
 
 			else {
-				fprintf(stderr, TOY_CC_ERROR "ERROR: Unknown error while reading file, exiting\n" TOY_CC_RESET);
+				fprintf(stderr, TOY_CC_ERROR "ERROR: Unknown error while reading file '%s', exiting\n" TOY_CC_RESET, cmd.infile);
 				return -1;
 			}
 		}
+
+		free(cmd.infile);
+
+		cmd.infile = NULL;
+		cmd.infileLength = 0;
 
 		Toy_Lexer lexer;
 		Toy_bindLexer(&lexer, (char*)source);

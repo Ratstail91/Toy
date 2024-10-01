@@ -54,8 +54,8 @@ Toy_String* Toy_createStringLength(Toy_Bucket** bucket, const char* cstring, int
 }
 
 Toy_String* Toy_copyString(Toy_Bucket** bucket, Toy_String* str) {
-	if (str->refCount <= 0) {
-		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't copy a string with refcount below or equal to zero\n" TOY_CC_RESET);
+	if (str->refCount == 0) {
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't copy a string with refcount of zero\n" TOY_CC_RESET);
 		exit(-1);
 	}
 	incrementRefCount(str);
@@ -63,8 +63,8 @@ Toy_String* Toy_copyString(Toy_Bucket** bucket, Toy_String* str) {
 }
 
 Toy_String* Toy_deepCopyString(Toy_Bucket** bucket, Toy_String* str) {
-	if (str->refCount <= 0) {
-		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't deep copy a string with refcount below or equal to zero\n" TOY_CC_RESET);
+	if (str->refCount == 0) {
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't deep copy a string with refcount of zero\n" TOY_CC_RESET);
 		exit(-1);
 	}
 	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucket, sizeof(Toy_String) + str->length + 1); //TODO: compensate for partitioning more space than bucket capacity
@@ -80,8 +80,8 @@ Toy_String* Toy_deepCopyString(Toy_Bucket** bucket, Toy_String* str) {
 }
 
 Toy_String* Toy_concatString(Toy_Bucket** bucket, Toy_String* left, Toy_String* right) {
-	if (left->refCount <= 0 || right->refCount <= 0) {
-		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't concatenate a string with refcount below or equal to zero\n" TOY_CC_RESET);
+	if (left->refCount == 0 || right->refCount == 0) {
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't concatenate a string with refcount of zero\n" TOY_CC_RESET);
 		exit(-1);
 	}
 
@@ -112,8 +112,8 @@ int Toy_getStringRefCount(Toy_String* str) {
 }
 
 char* Toy_getStringRawBuffer(Toy_String* str) {
-	if (str->refCount <= 0) {
-		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't get raw string buffer of a string with refcount below or equal to zero\n" TOY_CC_RESET);
+	if (str->refCount == 0) {
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't get raw string buffer of a string with refcount of zero\n" TOY_CC_RESET);
 		exit(-1);
 	}
 

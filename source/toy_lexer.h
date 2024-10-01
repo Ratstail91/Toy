@@ -5,17 +5,17 @@
 
 //lexers are bound to a string of code
 typedef struct {
-	size_t start; //start of the current token
-	size_t current; //current position of the lexer
-	size_t line; //track this for error handling
+	unsigned int start; //start of the current token
+	unsigned int current; //current position of the lexer
+	unsigned int line; //track this for error handling
 	const char* source;
 } Toy_Lexer;
 
 //tokens are intermediaries between lexers and parsers
 typedef struct {
 	Toy_TokenType type;
-	size_t length;
-	size_t line;
+	unsigned int length;
+	unsigned int line;
 	const char* lexeme;
 } Toy_Token;
 

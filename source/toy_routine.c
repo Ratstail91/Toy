@@ -9,7 +9,7 @@
 #include <string.h>
 
 //utils
-static void expand(void** handle, size_t* capacity, size_t* count, size_t amount) {
+static void expand(void** handle, unsigned int* capacity, unsigned int* count, unsigned int amount) {
 	if ((*count) + amount > (*capacity)) {
 		while ((*count) + amount > (*capacity)) {
 			(*capacity) = (*capacity) < 8 ? 8 : (*capacity) * 2;
@@ -23,12 +23,12 @@ static void expand(void** handle, size_t* capacity, size_t* count, size_t amount
 	}
 }
 
-static void emitByte(void** handle, size_t* capacity, size_t* count, unsigned char byte) {
+static void emitByte(void** handle, unsigned int* capacity, unsigned int* count, unsigned char byte) {
 	expand(handle, capacity, count, 1);
 	((unsigned char*)(*handle))[(*count)++] = byte;
 }
 
-static void emitInt(void** handle, size_t* capacity, size_t* count, size_t bytes) {
+static void emitInt(void** handle, unsigned int* capacity, unsigned int* count, unsigned int bytes) {
 	char* ptr = (char*)&bytes;
 	emitByte(handle, capacity, count, *(ptr++));
 	emitByte(handle, capacity, count, *(ptr++));
@@ -36,7 +36,7 @@ static void emitInt(void** handle, size_t* capacity, size_t* count, size_t bytes
 	emitByte(handle, capacity, count, *(ptr++));
 }
 
-static void emitFloat(void** handle, size_t* capacity, size_t* count, float bytes) {
+static void emitFloat(void** handle, unsigned int* capacity, unsigned int* count, float bytes) {
 	char* ptr = (char*)&bytes;
 	emitByte(handle, capacity, count, *(ptr++));
 	emitByte(handle, capacity, count, *(ptr++));
@@ -284,7 +284,7 @@ static void* writeRoutine(Toy_Routine* rt, Toy_Ast* ast) {
 
 	//write the header and combine the parts
 	void* buffer = NULL;
-	size_t capacity = 0, count = 0;
+	unsigned int capacity = 0, count = 0;
 	// int paramAddr = 0, codeAddr = 0, jumpsAddr = 0, dataAddr = 0, subsAddr = 0;
 	int codeAddr = 0;
 

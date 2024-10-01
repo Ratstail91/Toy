@@ -8,7 +8,7 @@
 #include <string.h>
 
 //utils
-static void expand(Toy_Bytecode* bc, size_t amount) {
+static void expand(Toy_Bytecode* bc, unsigned int amount) {
 	if (bc->count + amount > bc->capacity) {
 
 		while (bc->count + amount > bc->capacity) { //expand as much as needed

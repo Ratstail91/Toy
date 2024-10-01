@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 //buckets of fun
-Toy_Bucket* Toy_allocateBucket(size_t capacity) {
+Toy_Bucket* Toy_allocateBucket(unsigned int capacity) {
 	if (capacity == 0) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Cannot allocate a 'Toy_Bucket' with zero capacity\n" TOY_CC_RESET);
 		exit(1);
@@ -26,7 +26,7 @@ Toy_Bucket* Toy_allocateBucket(size_t capacity) {
 	return bucket;
 }
 
-void* Toy_partitionBucket(Toy_Bucket** bucketHandle, size_t amount) {
+void* Toy_partitionBucket(Toy_Bucket** bucketHandle, unsigned int amount) {
 	if ((*bucketHandle) == NULL) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Expected a 'Toy_Bucket', received NULL\n" TOY_CC_RESET);
 		exit(1);

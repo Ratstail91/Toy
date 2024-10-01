@@ -9,8 +9,8 @@ typedef struct Toy_String {             //32 | 64 BITNESS
 		TOY_STRING_LEAF,
 	} type;                             //4  | 4
 
-	int length;                         //4  | 4
-	int refCount;                       //4  | 4
+	unsigned int length;                //4  | 4
+	unsigned int refCount;              //4  | 4
 
 	int _padding;                       //4  | 4
 

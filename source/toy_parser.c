@@ -232,7 +232,7 @@ static Toy_AstFlag atomic(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** roo
 			//filter the '_' character
 			char buffer[parser->previous.length];
 
-			size_t i = 0, o = 0;
+			unsigned int i = 0, o = 0;
 			do {
 				buffer[i] = parser->previous.lexeme[o];
 				if (buffer[i] != '_') i++;
@@ -249,7 +249,7 @@ static Toy_AstFlag atomic(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** roo
 			//filter the '_' character
 			char buffer[parser->previous.length];
 
-			size_t i = 0, o = 0;
+			unsigned int i = 0, o = 0;
 			do {
 				buffer[i] = parser->previous.lexeme[o];
 				if (buffer[i] != '_') i++;

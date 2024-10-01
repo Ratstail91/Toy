@@ -205,7 +205,7 @@ static Toy_Token makeKeywordOrIdentifier(Toy_Lexer* lexer) {
 	//scan for a keyword
 	for (int i = 0; Toy_private_keywords[i].keyword; i++) {
 		//WONTFIX: could squeeze miniscule performance gain from this, but ROI isn't worth it
-		if (strlen(Toy_private_keywords[i].keyword) == (size_t)(lexer->current - lexer->start) && !strncmp(Toy_private_keywords[i].keyword, &lexer->source[lexer->start], lexer->current - lexer->start)) {
+		if (strlen(Toy_private_keywords[i].keyword) == (lexer->current - lexer->start) && !strncmp(Toy_private_keywords[i].keyword, &lexer->source[lexer->start], lexer->current - lexer->start)) {
 			//make token (keyword)
 			Toy_Token token;
 
@@ -312,7 +312,7 @@ Toy_Token Toy_private_scanLexer(Toy_Lexer* lexer) {
 	}
 }
 
-static void trim(char** s, size_t* l) { //util
+static void trim(char** s, unsigned int* l) { //util
 	while( isspace(( (*((unsigned char**)(s)))[(*l) - 1] )) ) (*l)--;
 	while(**s && isspace( **(unsigned char**)(s)) ) { (*s)++; (*l)--; }
 }
@@ -344,7 +344,7 @@ void Toy_private_printToken(Toy_Token* token) {
 			printf("%s", keyword);
 		} else {
 			char* str = (char*)token->lexeme; //strip const-ness for trimming
-			size_t length = token->length;
+			unsigned int length = token->length;
 			trim(&str, &length);
 			printf("%.*s", (int)length, str);
 		}
