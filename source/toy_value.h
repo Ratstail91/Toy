@@ -15,20 +15,20 @@ typedef enum Toy_ValueType {
 } Toy_ValueType;
 
 //8 bytes in size
-typedef struct Toy_Value {
+typedef struct Toy_Value {      //32 | 64 BITNESS
 	union {
-		bool boolean; //1
-		int integer; //4
-		float number; //4
+		bool boolean;           //1  | 1
+		int integer;            //4  | 4
+		float number;           //4  | 4
 		//TODO: strings
 		//TODO: arrays
 		//TODO: dictonaries
 		//TODO: functions
 		//TODO: opaque
-	} as; //4
+	} as;                       //4  | 4
 
-	Toy_ValueType type; //4
-} Toy_Value; //8
+	Toy_ValueType type;         //4  | 4
+} Toy_Value;                    //8  | 8
 
 #define TOY_VALUE_IS_NULL(value)				((value).type == TOY_VALUE_NULL)
 #define TOY_VALUE_IS_BOOLEAN(value)				((value).type == TOY_VALUE_BOOLEAN)

@@ -13,47 +13,44 @@ This repository holds the reference implementation for Toy version 2.x, written 
 # Nifty Features
 
 * Simple C-like syntax
-* Intermediate AST and bytecode
+* Intermediate AST representation and bytecode formats
 * Strong, but optional type system
 * First-class and higher-order functions
 * Extensible via external libraries
 * Can re-direct output, error and assertion failure messages
 * Open source under the zlib license
 
-## Syntax
+# Syntax
 
-*Omitted for review.*
+*Coming Soon.*
 
-## Building
+# Building
 
 Supported platforms are: `linux-latest`, `windows-latest`, `macos-latest`, using [GitHub's standard runners](https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories).
 
-To build the library, run `make source`.
+To build the library, run `make source`.  
+To build the library and repl, run `make repl`.  
+To build and run the test cases, run `make tests`.  
+To build and run the test cases under gdb, run `make tests-gdb`.  
 
-To build the library and repl, run `make repl`.
+# Tools
 
-To build and run the test cases, run `make tests`.
-
-To build and run the test cases under gdb, run `make tests-gdb`.
-
-## Tools
-
-*Omitted for review.*
+*Coming Soon.*
 
 # License
 
 This source code is covered by the zlib license (see [LICENSE](LICENSE)).
 
-# Past and Current Contributors
+# Contributors and Special Thanks
 
-@hiperiondev - Disassembler, porting support and feedback  
-@add00 - Library support  
-@gruelingpine185 - Unofficial MacOS support  
-@solar-mist - Minor bugfixes  
-Unnamed Individuals - Feedback  
+@hiperiondev - v1 Disassembler, v1 porting support and feedback  
+@add00 - v1 Library support  
+@gruelingpine185 - Unofficial v1 MacOS support  
+@solar-mist - v1 Minor bugfixes  
+The Ratbags - Feedback  
+@munificent - For [writing the book](http://craftinginterpreters.com/) that sparked my interest in langdev
 
-# Patrons via Patreon
+# Patreon Contributors
 
 * Seth A. Robinson
 
-Special thanks to Robert Nystrom of http://craftinginterpreters.com/ for their fantastic book that set me on this path.
