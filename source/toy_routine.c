@@ -1,7 +1,6 @@
 #include "toy_routine.h"
 #include "toy_console_colors.h"
 
-#include "toy_memory.h"
 #include "toy_opcodes.h"
 #include "toy_value.h"
 
@@ -10,23 +9,26 @@
 #include <string.h>
 
 //utils
-static void expand(void** handle, int* capacity, int* count, int amount) {
+static void expand(void** handle, size_t* capacity, size_t* count, size_t amount) {
 	if ((*count) + amount > (*capacity)) {
-		int oldCapacity = (*capacity);
-
 		while ((*count) + amount > (*capacity)) {
-			(*capacity) = TOY_GROW_CAPACITY(*capacity);
+			(*capacity) = (*capacity) < 8 ? 8 : (*capacity) * 2;
 		}
-		(*handle) = TOY_GROW_ARRAY(unsigned char, (*handle), oldCapacity, (*capacity));
+		(*handle) = realloc((*handle), (*capacity));
+
+		if ((*handle) == NULL) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to allocate a 'Toy_Routine' of %d capacity\n" TOY_CC_RESET, (int)(*capacity));
+			exit(1);
+		}
 	}
 }
 
-static void emitByte(void** handle, int* capacity, int* count, unsigned char byte) {
+static void emitByte(void** handle, size_t* capacity, size_t* count, unsigned char byte) {
 	expand(handle, capacity, count, 1);
 	((unsigned char*)(*handle))[(*count)++] = byte;
 }
 
-static void emitInt(void** handle, int* capacity, int* count, int bytes) {
+static void emitInt(void** handle, size_t* capacity, size_t* count, size_t bytes) {
 	char* ptr = (char*)&bytes;
 	emitByte(handle, capacity, count, *(ptr++));
 	emitByte(handle, capacity, count, *(ptr++));
@@ -34,7 +36,7 @@ static void emitInt(void** handle, int* capacity, int* count, int bytes) {
 	emitByte(handle, capacity, count, *(ptr++));
 }
 
-static void emitFloat(void** handle, int* capacity, int* count, float bytes) {
+static void emitFloat(void** handle, size_t* capacity, size_t* count, float bytes) {
 	char* ptr = (char*)&bytes;
 	emitByte(handle, capacity, count, *(ptr++));
 	emitByte(handle, capacity, count, *(ptr++));
@@ -281,8 +283,8 @@ static void* writeRoutine(Toy_Routine* rt, Toy_Ast* ast) {
 	//TODO: data
 
 	//write the header and combine the parts
-	void* buffer = TOY_ALLOCATE(unsigned char, 16);
-	int capacity = 0, count = 0;
+	void* buffer = NULL;
+	size_t capacity = 0, count = 0;
 	// int paramAddr = 0, codeAddr = 0, jumpsAddr = 0, dataAddr = 0, subsAddr = 0;
 	int codeAddr = 0;
 
@@ -357,12 +359,13 @@ void* Toy_compileRoutine(Toy_Ast* ast) {
 	//build
 	void * buffer = writeRoutine(&rt, ast);
 
+
 	//cleanup the temp object
-	TOY_FREE_ARRAY(unsigned char, rt.param, rt.paramCapacity);
-	TOY_FREE_ARRAY(unsigned char, rt.code, rt.codeCapacity);
-	TOY_FREE_ARRAY(int, rt.jumps, rt.jumpsCapacity);
-	TOY_FREE_ARRAY(unsigned char, rt.data, rt.dataCapacity);
-	TOY_FREE_ARRAY(unsigned char, rt.subs, rt.subsCapacity);
+	free(rt.param);
+	free(rt.code);
+	free(rt.jumps);
+	free(rt.data);
+	free(rt.subs);
 
 	return buffer;
 }

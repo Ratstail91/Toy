@@ -1,21 +1,26 @@
 #include "toy_bytecode.h"
 #include "toy_console_colors.h"
 
-#include "toy_memory.h"
 #include "toy_routine.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 //utils
-static void expand(Toy_Bytecode* bc, int amount) {
+static void expand(Toy_Bytecode* bc, size_t amount) {
 	if (bc->count + amount > bc->capacity) {
-		int oldCapacity = bc->capacity;
 
-		while (bc->count + amount > bc->capacity) {
-			bc->capacity = TOY_GROW_CAPACITY(bc->capacity);
+		while (bc->count + amount > bc->capacity) { //expand as much as needed
+			bc->capacity = bc->capacity < 8 ? 8 : bc->capacity * 2;
 		}
-		bc->ptr = TOY_GROW_ARRAY(unsigned char, bc->ptr, oldCapacity, bc->capacity);
+
+		bc->ptr = realloc(bc->ptr, bc->capacity);
+
+		if (bc->ptr == NULL) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to allocate a 'Toy_Bytecode' of %d capacity\n" TOY_CC_RESET, (int)(bc->capacity));
+			exit(1);
+		}
 	}
 }
 
@@ -32,7 +37,7 @@ static void writeBytecodeHeader(Toy_Bytecode* bc) {
 
 	//check strlen for the build string
 	const char* build = Toy_private_version_build();
-	int len = (int)strlen(build) + 1;
+	size_t len = strlen(build) + 1;
 
 	//BUGFIX: ensure the end of the header has 4-byte alignment
 	if (len % 4 != 1) { //1 to fill the 4th byte above
@@ -42,6 +47,8 @@ static void writeBytecodeHeader(Toy_Bytecode* bc) {
 	expand(bc, len);
 	memcpy(bc->ptr + bc->count, build, len);
 	bc->count += len;
+
+	bc->ptr[bc->count] = '\0';
 }
 
 static void writeBytecodeBody(Toy_Bytecode* bc, Toy_Ast* ast) {
@@ -50,7 +57,7 @@ static void writeBytecodeBody(Toy_Bytecode* bc, Toy_Ast* ast) {
 	//eventually, the bytecode may support multiple modules packed into one file
 	void* module = Toy_compileRoutine(ast);
 
-	int len = ((int*)module)[0];
+	size_t len = (size_t)(((int*)module)[0]);
 
 	expand(bc, len);
 	memcpy(bc->ptr + bc->count, module, len);
@@ -74,5 +81,5 @@ Toy_Bytecode Toy_compileBytecode(Toy_Ast* ast) {
 }
 
 void Toy_freeBytecode(Toy_Bytecode bc) {
-	TOY_FREE_ARRAY(unsigned char, bc.ptr, bc.capacity);
+	free(bc.ptr);
 }

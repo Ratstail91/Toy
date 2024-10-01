@@ -5,8 +5,8 @@
 
 typedef struct Toy_Bytecode {
 	unsigned char* ptr;
-	int capacity;
-	int count;
+	size_t capacity;
+	size_t count;
 } Toy_Bytecode;
 
 TOY_API Toy_Bytecode Toy_compileBytecode(Toy_Ast* ast);

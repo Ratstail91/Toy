@@ -1,7 +1,6 @@
 #include "toy_vm.h"
 #include "toy_console_colors.h"
 
-#include "toy_memory.h"
 #include "toy_opcodes.h"
 #include "toy_value.h"
 
@@ -278,30 +277,6 @@ static void process(Toy_VM* vm) {
 }
 
 //exposed functions
-void Toy_initVM(Toy_VM* vm) {
-	vm->bc = NULL;
-	vm->bcSize = 0;
-
-	vm->routine = NULL;
-	vm->routineSize = 0;
-
-	vm->paramCount = 0;
-	vm->jumpsCount = 0;
-	vm->dataCount = 0;
-	vm->subsCount = 0;
-
-	vm->paramAddr = 0;
-	vm->codeAddr = 0;
-	vm->jumpsAddr = 0;
-	vm->dataAddr = 0;
-	vm->subsAddr = 0;
-
-	vm->routineCounter = 0;
-
-	//init the scope & stack
-	Toy_initStack(&vm->stack);
-}
-
 void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode, int bytecodeSize) {
 	if (bytecode[0] != TOY_VERSION_MAJOR || bytecode[1] > TOY_VERSION_MINOR) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Wrong bytecode version found: expected %d.%d.%d found %d.%d.%d, exiting\n" TOY_CC_RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, bytecode[0], bytecode[1], bytecode[2]);
@@ -331,7 +306,7 @@ void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode, int bytecodeSize) {
 }
 
 void Toy_bindVMToRoutine(Toy_VM* vm, unsigned char* routine) {
-	Toy_initVM(vm);
+	Toy_resetVM(vm);
 
 	vm->routine = routine;
 
@@ -362,7 +337,7 @@ void Toy_bindVMToRoutine(Toy_VM* vm, unsigned char* routine) {
 	}
 
 	//preallocate the scope & stack
-	Toy_preallocateStack(&vm->stack);
+	vm->stack = Toy_allocateStack();
 }
 
 void Toy_runVM(Toy_VM* vm) {
@@ -377,11 +352,36 @@ void Toy_runVM(Toy_VM* vm) {
 
 void Toy_freeVM(Toy_VM* vm) {
 	//clear the stack
-	Toy_freeStack(&vm->stack);
+	Toy_freeStack(vm->stack);
 
 	//TODO: clear the scope
 
 	//free the bytecode
-	TOY_FREE_ARRAY(unsigned char, vm->bc, vm->bcSize);
-	Toy_initVM(vm);
+
+	free(vm->bc);
+	Toy_resetVM(vm);
+}
+
+void Toy_resetVM(Toy_VM* vm) {
+	vm->bc = NULL;
+	vm->bcSize = 0;
+
+	vm->routine = NULL;
+	vm->routineSize = 0;
+
+	vm->paramCount = 0;
+	vm->jumpsCount = 0;
+	vm->dataCount = 0;
+	vm->subsCount = 0;
+
+	vm->paramAddr = 0;
+	vm->codeAddr = 0;
+	vm->jumpsAddr = 0;
+	vm->dataAddr = 0;
+	vm->subsAddr = 0;
+
+	vm->routineCounter = 0;
+
+	//init the scope & stack
+	vm->stack = NULL;
 }

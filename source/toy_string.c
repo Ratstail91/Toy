@@ -42,7 +42,7 @@ Toy_String* Toy_createString(Toy_Bucket** bucket, const char* cstring) {
 }
 
 Toy_String* Toy_createStringLength(Toy_Bucket** bucket, const char* cstring, int length) {
-	Toy_String* ret = (Toy_String*)Toy_partBucket(bucket, sizeof(Toy_String) + length + 1); //TODO: compensate for partitioning more space than bucket capacity
+	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucket, sizeof(Toy_String) + length + 1); //TODO: compensate for partitioning more space than bucket capacity
 
 	ret->type = TOY_STRING_LEAF;
 	ret->length = length;
@@ -67,7 +67,7 @@ Toy_String* Toy_deepCopyString(Toy_Bucket** bucket, Toy_String* str) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't deep copy a string with refcount below or equal to zero\n" TOY_CC_RESET);
 		exit(-1);
 	}
-	Toy_String* ret = (Toy_String*)Toy_partBucket(bucket, sizeof(Toy_String) + str->length + 1); //TODO: compensate for partitioning more space than bucket capacity
+	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucket, sizeof(Toy_String) + str->length + 1); //TODO: compensate for partitioning more space than bucket capacity
 
 	//TODO
 	ret->type = TOY_STRING_LEAF;
@@ -85,7 +85,7 @@ Toy_String* Toy_concatString(Toy_Bucket** bucket, Toy_String* left, Toy_String* 
 		exit(-1);
 	}
 
-	Toy_String* ret = (Toy_String*)Toy_partBucket(bucket, sizeof(Toy_String));
+	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucket, sizeof(Toy_String));
 
 	ret->type = TOY_STRING_NODE;
 	ret->length = left->length + right->length;
@@ -117,7 +117,7 @@ char* Toy_getStringRawBuffer(Toy_String* str) {
 		exit(-1);
 	}
 
-	char* buffer = TOY_ALLOCATE(char, str->length + 1);
+	char* buffer = malloc(str->length + 1);
 
 	deepCopyUtil(buffer, str);
 	buffer[str->length] = '\0';

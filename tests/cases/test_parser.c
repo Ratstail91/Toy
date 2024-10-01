@@ -578,10 +578,9 @@ int main() {
 	int total = 0, res = 0;
 
 	{
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
 		res = test_simple_empty_parsers(&bucket);
-		TOY_BUCKET_FREE(bucket);
+		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 		}
@@ -589,10 +588,9 @@ int main() {
 	}
 
 	{
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
 		res = test_values(&bucket);
-		TOY_BUCKET_FREE(bucket);
+		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 		}
@@ -600,10 +598,9 @@ int main() {
 	}
 
 	{
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
 		res = test_unary(&bucket);
-		TOY_BUCKET_FREE(bucket);
+		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 		}
@@ -611,10 +608,9 @@ int main() {
 	}
 
 	{
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
 		res = test_binary(&bucket);
-		TOY_BUCKET_FREE(bucket);
+		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 		}
@@ -622,10 +618,9 @@ int main() {
 	}
 
 	{
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
 		res = test_precedence(&bucket);
-		TOY_BUCKET_FREE(bucket);
+		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 		}

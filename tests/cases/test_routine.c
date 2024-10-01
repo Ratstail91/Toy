@@ -6,6 +6,7 @@
 #include "toy_parser.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 //tests
@@ -32,7 +33,7 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine header, ast: PASS\n" TOY_CC_RESET);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
@@ -46,12 +47,12 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine code, ast: PASS\n" TOY_CC_RESET);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
 		//cleanup
-		TOY_FREE_ARRAY(unsigned char, buffer, len);
+		free(buffer);
 	}
 
 	//rerun the test with a more complex ast, derived from a snippet of source
@@ -81,7 +82,7 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine header, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
@@ -95,12 +96,12 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine code, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
 		//cleanup
-		TOY_FREE_ARRAY(unsigned char, buffer, len);
+		free(buffer);
 	}
 
 	//produce a null value
@@ -130,7 +131,7 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine header, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
@@ -148,12 +149,12 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine code, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
 		//cleanup
-		TOY_FREE_ARRAY(unsigned char, buffer, len);
+		free(buffer);
 	}
 
 	//produce a boolean value
@@ -183,7 +184,7 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine header, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
@@ -201,12 +202,12 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine code, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
 		//cleanup
-		TOY_FREE_ARRAY(unsigned char, buffer, len);
+		free(buffer);
 	}
 
 	//produce an integer value
@@ -236,7 +237,7 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine header, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
@@ -255,12 +256,12 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine code, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
 		//cleanup
-		TOY_FREE_ARRAY(unsigned char, buffer, len);
+		free(buffer);
 	}
 
 	//produce a float value
@@ -290,7 +291,7 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine header, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
@@ -309,12 +310,12 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine code, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
 		//cleanup
-		TOY_FREE_ARRAY(unsigned char, buffer, len);
+		free(buffer);
 	}
 
 	return 0;
@@ -352,7 +353,7 @@ int test_routine_binary(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine header, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
@@ -383,12 +384,12 @@ int test_routine_binary(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine code, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
 		//cleanup
-		TOY_FREE_ARRAY(unsigned char, buffer, len);
+		free(buffer);
 	}
 
 	//produce a simple comparison
@@ -418,7 +419,7 @@ int test_routine_binary(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine header, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
@@ -449,12 +450,12 @@ int test_routine_binary(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine code, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
 		//cleanup
-		TOY_FREE_ARRAY(unsigned char, buffer, len);
+		free(buffer);
 	}
 
 	//produce a simple comparison
@@ -484,7 +485,7 @@ int test_routine_binary(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine header, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
@@ -520,12 +521,12 @@ int test_routine_binary(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine code, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
 		//cleanup
-		TOY_FREE_ARRAY(unsigned char, buffer, len);
+		free(buffer);
 	}
 
 	//produce a more complex algorithm
@@ -555,7 +556,7 @@ int test_routine_binary(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine header, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
@@ -612,12 +613,12 @@ int test_routine_binary(Toy_Bucket** bucket) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine code, source: %s\n" TOY_CC_RESET, source);
 
 			//cleanup and return
-			TOY_FREE_ARRAY(unsigned char, buffer, len);
+			free(buffer);
 			return -1;
 		}
 
 		//cleanup
-		TOY_FREE_ARRAY(unsigned char, buffer, len);
+		free(buffer);
 	}
 
 	return 0;
@@ -628,10 +629,9 @@ int main() {
 	int total = 0, res = 0;
 
 	{
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
 		res = test_routine_header_and_values(&bucket);
-		TOY_BUCKET_FREE(bucket);
+		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 		}
@@ -639,10 +639,9 @@ int main() {
 	}
 
 	{
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
 		res = test_routine_binary(&bucket);
-		TOY_BUCKET_FREE(bucket);
+		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 		}

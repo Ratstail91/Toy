@@ -6,24 +6,24 @@
 //internal structure that holds the individual parts of a compiled routine
 typedef struct Toy_Routine {
 	unsigned char* param; //c-string params in sequence (could be moved below the jump table?)
-	int paramCapacity;
-	int paramCount;
+	size_t paramCapacity;
+	size_t paramCount;
 
 	unsigned char* code; //the instruction set
-	int codeCapacity;
-	int codeCount;
+	size_t codeCapacity;
+	size_t codeCount;
 
-	int* jumps; //each 'jump' is the starting address of an element within 'data'
-	int jumpsCapacity;
-	int jumpsCount;
+	size_t* jumps; //each 'jump' is the starting address of an element within 'data'
+	size_t jumpsCapacity;
+	size_t jumpsCount;
 
 	unsigned char* data; //{type,val} tuples of data
-	int dataCapacity;
-	int dataCount;
+	size_t dataCapacity;
+	size_t dataCount;
 
 	unsigned char* subs; //subroutines, recursively
-	int subsCapacity;
-	int subsCount;
+	size_t subsCapacity;
+	size_t subsCount;
 } Toy_Routine;
 
 TOY_API void* Toy_compileRoutine(Toy_Ast* ast);

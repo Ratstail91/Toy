@@ -1,6 +1,7 @@
 #include "toy.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 //utilities
@@ -18,7 +19,7 @@ unsigned char* readFile(char* path, int* size) {
 	rewind(file);
 
 	//make some space
-	unsigned char* buffer = TOY_ALLOCATE(unsigned char, *size + 1);
+	unsigned char* buffer = malloc(*size + 1);
 	if (buffer == NULL) {
 		fclose(file);
 		return NULL;
@@ -127,14 +128,20 @@ CmdLine parseCmdLine(int argc, const char* argv[]) {
 			}
 			else {
 				if (cmd.infile != NULL) { //don't leak
-					TOY_FREE_ARRAY(char, cmd.infile, strlen(cmd.infile));
+					free(cmd.infile);
 				}
 
 				i++;
 
 				//total space to reserve - it's actually longer than needed, due to the exe name being removed
 				cmd.infileLength = strlen(argv[0]) + strlen(argv[i]);
-				cmd.infile = TOY_ALLOCATE(char, cmd.infileLength);
+				cmd.infile = malloc(cmd.infileLength);
+
+				if (cmd.infile == NULL) {
+					fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to allocate space while parsing the command line, exiting\n" TOY_CC_RESET);
+					exit(-1);
+				}
+
 				dir(cmd.infile, argv[0]);
 				APPEND(cmd.infile, argv[i]);
 				FLIPSLASH(cmd.infile);
@@ -167,7 +174,8 @@ int main(int argc, const char* argv[]) {
 		int size;
 		unsigned char* source = readFile(cmd.infile, &size);
 
-		TOY_FREE_ARRAY(char, cmd.infile, cmd.infileLength); //clean this up, since it's no longer needed
+		free(cmd.infile);
+
 		cmd.infile = NULL;
 		cmd.infileLength = 0;
 
@@ -195,15 +203,13 @@ int main(int argc, const char* argv[]) {
 		Toy_Parser parser;
 		Toy_bindParser(&parser, &lexer);
 
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
 		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
 
 		Toy_Bytecode bc = Toy_compileBytecode(ast);
 
 		//run the setup
 		Toy_VM vm;
-		Toy_initVM(&vm);
 		Toy_bindVM(&vm, bc.ptr, bc.capacity);
 
 		//run
@@ -211,8 +217,8 @@ int main(int argc, const char* argv[]) {
 
 		//debugging result
 		printf("printing the stack result\n\ntype\tvalue\n");
-		for (int i = 0; i < vm.stack.count; i++) {
-			Toy_Value v = vm.stack.ptr[i];
+		for (int i = 0; i < vm.stack->count; i++) {
+			Toy_Value v = ((Toy_Value*)(vm.stack + 1))[i];
 
 			printf(" %d\t ", v.type);
 
@@ -247,8 +253,8 @@ int main(int argc, const char* argv[]) {
 
 		//cleanup
 		Toy_freeVM(&vm);
-		TOY_BUCKET_FREE(bucket);
-		TOY_FREE_ARRAY(unsigned char, source, size);
+		Toy_freeBucket(&bucket);
+		free(source);
 	}
 	else {
 		usageCmdLine(argc, argv);

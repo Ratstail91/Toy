@@ -312,7 +312,7 @@ Toy_Token Toy_private_scanLexer(Toy_Lexer* lexer) {
 	}
 }
 
-static void trim(char** s, int* l) { //util
+static void trim(char** s, size_t* l) { //util
 	while( isspace(( (*((unsigned char**)(s)))[(*l) - 1] )) ) (*l)--;
 	while(**s && isspace( **(unsigned char**)(s)) ) { (*s)++; (*l)--; }
 }
@@ -321,22 +321,22 @@ static void trim(char** s, int* l) { //util
 void Toy_private_printToken(Toy_Token* token) {
 	//print errors
 	if (token->type == TOY_TOKEN_ERROR) {
-		printf(TOY_CC_ERROR "ERROR: \t%d\t%.*s\n" TOY_CC_RESET, token->line, token->length, token->lexeme);
+		printf(TOY_CC_ERROR "ERROR: \t%d\t%.*s\n" TOY_CC_RESET, (int)token->line, (int)token->length, token->lexeme);
 		return;
 	}
 
 	//read pass token, even though it isn't generated
 	if (token->type == TOY_TOKEN_PASS) {
-		printf(TOY_CC_NOTICE "PASS: \t%d\t%.*s\n" TOY_CC_RESET, token->line, token->length, token->lexeme);
+		printf(TOY_CC_NOTICE "PASS: \t%d\t%.*s\n" TOY_CC_RESET, (int)token->line, (int)token->length, token->lexeme);
 		return;
 	}
 
 	//print the line number
-	printf("\t%d\t%d\t", token->type, token->line);
+	printf("\t%d\t%d\t", token->type, (int)token->line);
 
 	//print based on type
 	if (token->type == TOY_TOKEN_IDENTIFIER || token->type == TOY_TOKEN_LITERAL_INTEGER || token->type == TOY_TOKEN_LITERAL_FLOAT || token->type == TOY_TOKEN_LITERAL_STRING) {
-		printf("%.*s\t", token->length, token->lexeme);
+		printf("%.*s\t", (int)token->length, token->lexeme);
 	} else {
 		const char* keyword = Toy_private_findKeywordByType(token->type);
 
@@ -344,9 +344,9 @@ void Toy_private_printToken(Toy_Token* token) {
 			printf("%s", keyword);
 		} else {
 			char* str = (char*)token->lexeme; //strip const-ness for trimming
-			int length = token->length;
+			size_t length = token->length;
 			trim(&str, &length);
-			printf("%.*s", length, str);
+			printf("%.*s", (int)length, str);
 		}
 	}
 

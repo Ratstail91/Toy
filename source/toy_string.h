@@ -1,6 +1,6 @@
 #include "toy_common.h"
 
-#include "toy_memory.h"
+#include "toy_bucket.h"
 
 //rope pattern
 typedef struct Toy_String {             //32 | 64 BITNESS

@@ -10,14 +10,14 @@ static void printError(Toy_Parser* parser, Toy_Token token, const char* errorMsg
 		return;
 	}
 
-	fprintf(stderr, TOY_CC_ERROR "[Line %d] Error ", token.line);
+	fprintf(stderr, TOY_CC_ERROR "[Line %d] Error ", (int)token.line);
 
 	//check type
 	if (token.type == TOY_TOKEN_EOF) {
 		fprintf(stderr, "at end");
 	}
 	else {
-		fprintf(stderr, "at '%.*s'", token.length, token.lexeme);
+		fprintf(stderr, "at '%.*s'", (int)token.length, token.lexeme);
 	}
 
 	//finally
@@ -232,7 +232,7 @@ static Toy_AstFlag atomic(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** roo
 			//filter the '_' character
 			char buffer[parser->previous.length];
 
-			int i = 0, o = 0;
+			size_t i = 0, o = 0;
 			do {
 				buffer[i] = parser->previous.lexeme[o];
 				if (buffer[i] != '_') i++;
@@ -249,7 +249,7 @@ static Toy_AstFlag atomic(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** roo
 			//filter the '_' character
 			char buffer[parser->previous.length];
 
-			int i = 0, o = 0;
+			size_t i = 0, o = 0;
 			do {
 				buffer[i] = parser->previous.lexeme[o];
 				if (buffer[i] != '_') i++;
@@ -542,11 +542,11 @@ static void makeBlockStmt(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** roo
 
 			Toy_Ast* err = NULL;
 			Toy_private_emitAstError(bucket, &err);
-			Toy_private_appendAstBlock(bucket, root, err);
+			Toy_private_appendAstBlock(bucket, *root, err);
 
 			continue;
 		}
-		Toy_private_appendAstBlock(bucket, root, stmt);
+		Toy_private_appendAstBlock(bucket, *root, stmt);
 	}
 }
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "toy_common.h"
-#include "toy_memory.h"
+
 #include "toy_lexer.h"
 #include "toy_ast.h"
 

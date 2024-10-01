@@ -1,5 +1,4 @@
 #include "toy_value.h"
-
 #include "toy_console_colors.h"
 
 #include <stdio.h>

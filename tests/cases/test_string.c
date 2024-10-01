@@ -1,9 +1,10 @@
 #include "toy_string.h"
 #include "toy_console_colors.h"
 
-#include "toy_memory.h"
+#include "toy_bucket.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 int test_sizeof_string_64bit() {
@@ -34,8 +35,7 @@ int test_string_allocation() {
 	//allocate a single string from a c-string
 	{
 		//setup
-		Toy_Bucket* bucket = NULL;
-		Toy_initBucket(&bucket, 1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(1024);
 
 		const char* cstring = "Hello world";
 		Toy_String* str = Toy_createString(&bucket, cstring);
@@ -77,8 +77,7 @@ int test_string_allocation() {
 	//copy and deep copy a string
 	{
 		//setup
-		Toy_Bucket* bucket = NULL;
-		Toy_initBucket(&bucket, 1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(1024);
 
 		const char* cstring = "Hello world";
 		Toy_String* str = Toy_createString(&bucket, cstring);
@@ -104,8 +103,7 @@ int test_string_allocation() {
 	//allocate a zero-length string
 	{
 		//setup
-		Toy_Bucket* bucket = NULL;
-		Toy_initBucket(&bucket, 1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(1024);
 
 		const char* cstring = "";
 		Toy_String* str = Toy_createString(&bucket, cstring);
@@ -133,8 +131,7 @@ int test_string_allocation() {
 
 int test_string_concatenation() {
 	//one big bucket o' fun
-	Toy_Bucket* bucket = NULL;
-	Toy_initBucket(&bucket, 1024);
+	Toy_Bucket* bucket = Toy_allocateBucket(1024);
 
 	//concatenate two strings, and check the refcounts
 	{
@@ -191,12 +188,12 @@ int test_string_concatenation() {
 			strcmp(buffer, "Hello world") != 0)
 		{
 			fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to get the raw buffer from concatenated string\n" TOY_CC_RESET);
-			TOY_FREE_ARRAY(char, buffer, result->length + 1);
+			free(buffer);
 			Toy_freeBucket(&bucket);
 			return -1;
 		}
 
-		TOY_FREE_ARRAY(char, buffer, result->length + 1);
+		free(buffer);
 		Toy_freeString(result);
 		Toy_freeString(first);
 		Toy_freeString(second);
@@ -224,8 +221,7 @@ int test_string_with_stressed_bucket() {
 		};
 
 		//setup
-		Toy_Bucket* bucket = NULL;
-		Toy_initBucket(&bucket, 128); //deliberately too short for one bucket
+		Toy_Bucket* bucket = Toy_allocateBucket(128);//deliberately too much data for one bucket
 
 		//stress
 		Toy_String* str = Toy_createString(&bucket, testData[0]);
@@ -250,7 +246,7 @@ int test_string_with_stressed_bucket() {
 			strlen(buffer) != 36)
 		{
 			fprintf(stderr, TOY_CC_ERROR "ERROR: Unexpected state of the raw buffer after string stress test: '%s'\n" TOY_CC_RESET, buffer);
-			Toy_reallocate(buffer, 0, 0); //direct call to free, regardless of size
+			free(buffer);
 			Toy_freeBucket(&bucket);
 			return -1;
 		}
@@ -258,13 +254,13 @@ int test_string_with_stressed_bucket() {
 		if (bucket->next == NULL) //just to make sure
 		{
 			fprintf(stderr, TOY_CC_ERROR "ERROR: Unexpected state of the bucket after string stress test\n" TOY_CC_RESET);
-			Toy_reallocate(buffer, 0, 0); //direct call to free, regardless of size
+			free(buffer);
 			Toy_freeBucket(&bucket);
 			return -1;
 		}
 
 		//clean up
-		TOY_FREE_ARRAY(char, buffer, str->length);
+		free(buffer);
 		Toy_freeBucket(&bucket);
 	}
 

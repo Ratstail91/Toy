@@ -26,7 +26,7 @@ int test_bytecode_header(Toy_Bucket** bucket) {
 			strcmp((char*)(bc.ptr + 3), TOY_VERSION_BUILD) != 0)
 		{
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to write the bytecode header correctly:\n" TOY_CC_RESET);
-			fprintf(stderr, TOY_CC_ERROR "\t%d.%d.%d.%s\n" TOY_CC_RESET, bc.ptr[0], bc.ptr[1], bc.ptr[2], (char*)(bc.ptr + 3));
+			fprintf(stderr, TOY_CC_ERROR "\t%d.%d.%d.%s\n" TOY_CC_RESET, (int)(bc.ptr[0]), (int)(bc.ptr[1]), (int)(bc.ptr[2]), (char*)(bc.ptr + 3));
 			fprintf(stderr, TOY_CC_ERROR "\t%d.%d.%d.%s\n" TOY_CC_RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, TOY_VERSION_BUILD);
 
 			//cleanup and return
@@ -35,7 +35,7 @@ int test_bytecode_header(Toy_Bucket** bucket) {
 		}
 
 		if (bc.count % 4 != 0) {
-			fprintf(stderr, TOY_CC_ERROR "ERROR: bytecode size is not a multiple of 4, size is: %d\n" TOY_CC_RESET, bc.count);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: bytecode size is not a multiple of 4, size is: %d\n" TOY_CC_RESET, (int)bc.count);
 
 			//cleanup and return
 			Toy_freeBytecode(bc);
@@ -65,7 +65,7 @@ int test_bytecode_from_source(Toy_Bucket** bucket) {
 
 		//check bytecode alignment
 		if (bc.count % 4 != 0) {
-			fprintf(stderr, TOY_CC_ERROR "ERROR: bytecode alignment is not a multiple of 4 (size is %d), source: %s\n" TOY_CC_RESET, bc.count, source);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: bytecode alignment is not a multiple of 4 (size is %d), source: %s\n" TOY_CC_RESET, (int)bc.count, source);
 
 			//cleanup and return
 			Toy_freeBytecode(bc);
@@ -175,10 +175,9 @@ int main() {
 	int total = 0, res = 0;
 
 	{
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
 		res = test_bytecode_header(&bucket);
-		TOY_BUCKET_FREE(bucket);
+		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 		}
@@ -186,10 +185,9 @@ int main() {
 	}
 
 	{
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
 		res = test_bytecode_from_source(&bucket);
-		TOY_BUCKET_FREE(bucket);
+		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 		}

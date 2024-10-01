@@ -162,7 +162,7 @@ int test_type_emission(Toy_Bucket** bucket) {
 			Toy_private_emitAstBinary(bucket, &ast, TOY_AST_FLAG_ADD, right);
 			Toy_private_emitAstGroup(bucket, &ast);
 
-			Toy_private_appendAstBlock(bucket, &block, ast);
+			Toy_private_appendAstBlock(bucket, block, ast);
 		}
 
 		//check if it worked
@@ -216,10 +216,9 @@ int main() {
 #endif
 
 	{
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
 		res = test_type_emission(&bucket);
-		TOY_BUCKET_FREE(bucket);
+		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 		}

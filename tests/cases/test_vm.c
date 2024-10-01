@@ -41,7 +41,6 @@ int test_setup_and_teardown(Toy_Bucket** bucket) {
 
 		//run the setup
 		Toy_VM vm;
-		Toy_initVM(&vm);
 		Toy_bindVM(&vm, bc.ptr, bc.capacity);
 
 		//check the header size
@@ -93,14 +92,14 @@ int test_simple_execution(Toy_Bucket** bucket) {
 
 		//run the setup
 		Toy_VM vm;
-		Toy_initVM(&vm);
 		Toy_bindVM(&vm, bc.ptr, bc.capacity);
 
 		//run
 		Toy_runVM(&vm);
 
 		//check the final state of the stack
-		if (vm.stack.count != 1 ||
+		if (vm.stack == NULL ||
+			vm.stack->count != 1 ||
 			TOY_VALUE_IS_INTEGER( Toy_peekStack(&vm.stack) ) != true ||
 			TOY_VALUE_AS_INTEGER( Toy_peekStack(&vm.stack) ) != 21
 		)
@@ -124,10 +123,9 @@ int main() {
 	int total = 0, res = 0;
 
 	{
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
 		res = test_setup_and_teardown(&bucket);
-		TOY_BUCKET_FREE(bucket);
+		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 		}
@@ -135,10 +133,9 @@ int main() {
 	}
 
 	{
-		Toy_Bucket* bucket = NULL;
-		TOY_BUCKET_INIT(Toy_Ast, bucket, 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
 		res = test_simple_execution(&bucket);
-		TOY_BUCKET_FREE(bucket);
+		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 		}
