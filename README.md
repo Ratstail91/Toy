@@ -13,9 +13,9 @@ This repository holds the reference implementation for Toy version 2.x, written 
 # Nifty Features
 
 * Simple C-like syntax
-* Intermediate AST representation and bytecode formats
+* Intermediate AST representation
 * Strong, but optional type system
-* First-class and higher-order functions
+* First-class functions
 * Extensible via external libraries
 * Can re-direct output, error and assertion failure messages
 * Open source under the zlib license
@@ -50,7 +50,7 @@ This source code is covered by the zlib license (see [LICENSE](LICENSE)).
 The Ratbags - Feedback  
 @munificent - For [writing the book](http://craftinginterpreters.com/) that sparked my interest in langdev
 
-# Patreon Contributors
+# Patreon Supporters
 
 * Seth A. Robinson
 
