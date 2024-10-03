@@ -56,3 +56,6 @@ TOY_API bool Toy_private_isTruthy(Toy_Value value);
 
 #define TOY_VALUE_IS_EQUAL(left, right) Toy_private_isEqual(left, right)
 TOY_API bool Toy_private_isEqual(Toy_Value left, Toy_Value right);
+
+unsigned int Toy_hashValue(Toy_Value value);
+

@@ -8,7 +8,7 @@ bool Toy_private_isTruthy(Toy_Value value) {
 	//null is an error
 	if (TOY_VALUE_IS_NULL(value)) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: 'null' is neither true nor false\n" TOY_CC_RESET);
-		exit(-1); //TODO: return false or exit()?
+		exit(-1); //TODO: #127
 	}
 
 	//only 'false' is falsy
@@ -59,6 +59,51 @@ bool Toy_private_isEqual(Toy_Value left, Toy_Value right) {
 		case TOY_VALUE_OPAQUE:
 		default:
 			fprintf(stderr, TOY_CC_ERROR "ERROR: Unknown types %d and %d in equality\n" TOY_CC_RESET, left.type, right.type);
+			exit(-1);
+	}
+}
+
+//hash utils
+static unsigned int hashCString(const char* string) {
+	unsigned int hash = 2166136261u;
+
+	for (unsigned int i = 0; string[i]; i++) {
+		hash *= string[i];
+		hash ^= 16777619;
+	}
+
+	return hash;
+}
+
+static unsigned int hashUInt(unsigned int x) {
+    x = ((x >> 16) ^ x) * 0x45d9f3b;
+    x = ((x >> 16) ^ x) * 0x45d9f3b;
+    x = (x >> 16) ^ x;
+    return x;
+}
+
+
+unsigned int Toy_hashValue(Toy_Value value) {
+	switch(value.type) {
+		case TOY_VALUE_NULL:
+			return 0;
+
+		case TOY_VALUE_BOOLEAN:
+			return TOY_VALUE_AS_BOOLEAN(value) ? 1 : 0;
+
+		case TOY_VALUE_INTEGER:
+			return hashUInt(TOY_VALUE_AS_INTEGER(value));
+
+		case TOY_VALUE_FLOAT:
+			return hashUInt( *((int*)(&TOY_VALUE_AS_FLOAT(value))) );
+
+		case TOY_VALUE_STRING:
+		case TOY_VALUE_ARRAY:
+		case TOY_VALUE_DICTIONARY:
+		case TOY_VALUE_FUNCTION:
+		case TOY_VALUE_OPAQUE:
+		default:
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Can't hash an unknown type %d\n" TOY_CC_RESET, value.type);
 			exit(-1);
 	}
 }

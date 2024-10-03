@@ -14,7 +14,7 @@ Toy_Array* Toy_resizeArray(Toy_Array* paramArray, unsigned int capacity) {
 
 	if (array == NULL) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to allocate a 'Toy_Array' of %d capacity\n" TOY_CC_RESET, (int)capacity);
-		exit(1);
+		exit(-1);
 	}
 
 	array->capacity = capacity;
