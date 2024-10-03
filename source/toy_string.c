@@ -69,7 +69,7 @@ Toy_String* Toy_deepCopyString(Toy_Bucket** bucket, Toy_String* str) {
 	}
 	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucket, sizeof(Toy_String) + str->length + 1); //TODO: compensate for partitioning more space than bucket capacity
 
-	//TODO
+	//
 	ret->type = TOY_STRING_LEAF;
 	ret->length = str->length;
 	ret->refCount = 1;

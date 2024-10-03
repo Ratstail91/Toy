@@ -167,12 +167,7 @@ static void writeInstructionBinary(Toy_Routine** rt, Toy_AstBinary ast) {
 	}
 	else if (ast.flag == TOY_AST_FLAG_COMPARE_NOT) {
 		EMIT_BYTE(rt, TOY_OPCODE_COMPARE_EQUAL);
-		EMIT_BYTE(rt, 0);
-		EMIT_BYTE(rt, 0);
-		EMIT_BYTE(rt, 0);
-
-		EMIT_BYTE(rt, TOY_OPCODE_NEGATE); //TODO: squeeze these into one word
-		EMIT_BYTE(rt, 0);
+		EMIT_BYTE(rt, TOY_OPCODE_NEGATE); //squeezed into one word
 		EMIT_BYTE(rt, 0);
 		EMIT_BYTE(rt, 0);
 

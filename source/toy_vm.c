@@ -165,7 +165,16 @@ static void processComparison(Toy_VM* vm, Toy_OpcodeType opcode) {
 
 	//most things can be equal, so handle it separately
 	if (opcode == TOY_OPCODE_COMPARE_EQUAL) {
-		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN(TOY_VALUE_IS_EQUAL(left, right)) );
+		bool equal = TOY_VALUE_IS_EQUAL(left, right);
+
+		//equality has an optional "negate" opcode within it's word
+		if (READ_BYTE(vm) != TOY_OPCODE_NEGATE) {
+			Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN(equal) );
+		}
+		else {
+			Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN(!equal) );
+		}
+
 		return;
 	}
 
@@ -254,7 +263,7 @@ static void process(Toy_VM* vm) {
 			case TOY_OPCODE_AND:
 			case TOY_OPCODE_OR:
 			case TOY_OPCODE_TRUTHY:
-			case TOY_OPCODE_NEGATE: //TODO: squeeze into !=
+			case TOY_OPCODE_NEGATE:
 				processLogical(vm, opcode);
 				break;
 

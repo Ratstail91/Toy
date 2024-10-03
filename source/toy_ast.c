@@ -42,7 +42,6 @@ void Toy_private_emitAstValue(Toy_Bucket** bucket, Toy_Ast** handle, Toy_Value v
 	(*handle) = tmp;
 }
 
-//TODO: flag range checks
 void Toy_private_emitAstUnary(Toy_Bucket** bucket, Toy_Ast** handle, Toy_AstFlag flag) {
 	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucket, sizeof(Toy_Ast));
 

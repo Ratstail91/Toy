@@ -322,7 +322,7 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 }
 
 // int test_routine_unary(Toy_Bucket** bucket) {
-// 	//TODO: Nothing produces a unary instruction yet
+// 	//Nothing produces a unary instruction yet
 // }
 
 int test_routine_binary(Toy_Bucket** bucket) {
@@ -476,7 +476,7 @@ int test_routine_binary(Toy_Bucket** bucket) {
 		//check header
 		int* ptr = (int*)buffer;
 
-		if ((ptr++)[0] != 52 || //total size
+		if ((ptr++)[0] != 48 || //total size
 			(ptr++)[0] != 0 || //param count
 			(ptr++)[0] != 0 || //jump count
 			(ptr++)[0] != 0 || //data count
@@ -503,19 +503,14 @@ int test_routine_binary(Toy_Bucket** bucket) {
 			*(int*)(buffer + 36) != 5 ||
 
 			*((unsigned char*)(buffer + 40)) != TOY_OPCODE_COMPARE_EQUAL ||
-			*((unsigned char*)(buffer + 41)) != 0 ||
+			*((unsigned char*)(buffer + 41)) != TOY_OPCODE_NEGATE ||
 			*((unsigned char*)(buffer + 42)) != 0 ||
 			*((unsigned char*)(buffer + 43)) != 0 ||
 
-			*((unsigned char*)(buffer + 44)) != TOY_OPCODE_NEGATE ||
+			*((unsigned char*)(buffer + 44)) != TOY_OPCODE_RETURN ||
 			*((unsigned char*)(buffer + 45)) != 0 ||
 			*((unsigned char*)(buffer + 46)) != 0 ||
-			*((unsigned char*)(buffer + 47)) != 0 ||
-
-			*((unsigned char*)(buffer + 48)) != TOY_OPCODE_RETURN ||
-			*((unsigned char*)(buffer + 49)) != 0 ||
-			*((unsigned char*)(buffer + 50)) != 0 ||
-			*((unsigned char*)(buffer + 51)) != 0
+			*((unsigned char*)(buffer + 47)) != 0
 		)
 		{
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine code, source: %s\n" TOY_CC_RESET, source);

@@ -262,5 +262,3 @@ int main(int argc, const char* argv[]) {
 
 	return 0;
 }
-
-//TODO: simple and consistent way to print an AST and Toy_Value

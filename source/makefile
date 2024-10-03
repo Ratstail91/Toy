@@ -16,7 +16,6 @@ SRC_SOURCEFILES=$(wildcard $(SRC_SOURCEDIR)/*.c)
 SRC_OBJFILES=$(addprefix $(SRC_OBJDIR)/,$(notdir $(SRC_SOURCEFILES:.c=.o)))
 SRC_TARGETNAME=Toy
 
-#TODO: fix windows & macos
 #SRC_LIBLINE is a fancy way of making the linker work correctly
 ifeq ($(shell uname),Linux)
 	SRC_TARGETEXT=.so
