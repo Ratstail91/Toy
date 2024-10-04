@@ -10,12 +10,12 @@
 #include <string.h>
 
 //tests
-int test_routine_header_and_values(Toy_Bucket** bucket) {
+int test_routine_header_and_values(Toy_Bucket** bucketHandle) {
 	//simple test to ensure the header looks right with an empty ast
 	{
 		//setup
 		Toy_Ast* ast = NULL;
-		Toy_private_emitAstPass(bucket, &ast);
+		Toy_private_emitAstPass(bucketHandle, &ast);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -64,7 +64,7 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -113,7 +113,7 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -166,7 +166,7 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -219,7 +219,7 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -273,7 +273,7 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -321,11 +321,11 @@ int test_routine_header_and_values(Toy_Bucket** bucket) {
 	return 0;
 }
 
-// int test_routine_unary(Toy_Bucket** bucket) {
+// int test_routine_unary(Toy_Bucket** bucketHandle) {
 // 	//Nothing produces a unary instruction yet
 // }
 
-int test_routine_binary(Toy_Bucket** bucket) {
+int test_routine_binary(Toy_Bucket** bucketHandle) {
 	//produce a simple algorithm
 	{
 		//setup
@@ -335,7 +335,7 @@ int test_routine_binary(Toy_Bucket** bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -401,7 +401,7 @@ int test_routine_binary(Toy_Bucket** bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -467,7 +467,7 @@ int test_routine_binary(Toy_Bucket** bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);
@@ -533,7 +533,7 @@ int test_routine_binary(Toy_Bucket** bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
 
 		//run
 		void* buffer = Toy_compileRoutine(ast);

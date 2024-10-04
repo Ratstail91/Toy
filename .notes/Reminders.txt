@@ -1,3 +1,0 @@
-Add these to the docs somewhere:
-
-double pointers are referred to as handles

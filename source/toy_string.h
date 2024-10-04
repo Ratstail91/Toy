@@ -27,13 +27,13 @@ typedef struct Toy_String {             //32 | 64 BITNESS
 	} as;                               //8  | 16
 } Toy_String;                           //24 | 32
 
-TOY_API Toy_String* Toy_createString(Toy_Bucket** bucket, const char* cstring);
-TOY_API Toy_String* Toy_createStringLength(Toy_Bucket** bucket, const char* cstring, int length);
+TOY_API Toy_String* Toy_createString(Toy_Bucket** bucketHandle, const char* cstring);
+TOY_API Toy_String* Toy_createStringLength(Toy_Bucket** bucketHandle, const char* cstring, int length);
 
-TOY_API Toy_String* Toy_copyString(Toy_Bucket** bucket, Toy_String* str);
-TOY_API Toy_String* Toy_deepCopyString(Toy_Bucket** bucket, Toy_String* str);
+TOY_API Toy_String* Toy_copyString(Toy_Bucket** bucketHandle, Toy_String* str);
+TOY_API Toy_String* Toy_deepCopyString(Toy_Bucket** bucketHandle, Toy_String* str);
 
-TOY_API Toy_String* Toy_concatString(Toy_Bucket** bucket, Toy_String* left, Toy_String* right);
+TOY_API Toy_String* Toy_concatString(Toy_Bucket** bucketHandle, Toy_String* left, Toy_String* right);
 
 TOY_API void Toy_freeString(Toy_String* str);
 

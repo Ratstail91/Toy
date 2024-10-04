@@ -35,14 +35,14 @@ static void decrementRefCount(Toy_String* str) {
 }
 
 //exposed functions
-Toy_String* Toy_createString(Toy_Bucket** bucket, const char* cstring) {
+Toy_String* Toy_createString(Toy_Bucket** bucketHandle, const char* cstring) {
 	int length = strlen(cstring);
 
-	return Toy_createStringLength(bucket, cstring, length);
+	return Toy_createStringLength(bucketHandle, cstring, length);
 }
 
-Toy_String* Toy_createStringLength(Toy_Bucket** bucket, const char* cstring, int length) {
-	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucket, sizeof(Toy_String) + length + 1); //TODO: compensate for partitioning more space than bucket capacity
+Toy_String* Toy_createStringLength(Toy_Bucket** bucketHandle, const char* cstring, int length) {
+	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucketHandle, sizeof(Toy_String) + length + 1); //TODO: compensate for partitioning more space than bucket capacity
 
 	ret->type = TOY_STRING_LEAF;
 	ret->length = length;
@@ -53,7 +53,7 @@ Toy_String* Toy_createStringLength(Toy_Bucket** bucket, const char* cstring, int
 	return ret;
 }
 
-Toy_String* Toy_copyString(Toy_Bucket** bucket, Toy_String* str) {
+Toy_String* Toy_copyString(Toy_Bucket** bucketHandle, Toy_String* str) {
 	if (str->refCount == 0) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't copy a string with refcount of zero\n" TOY_CC_RESET);
 		exit(-1);
@@ -62,12 +62,12 @@ Toy_String* Toy_copyString(Toy_Bucket** bucket, Toy_String* str) {
 	return str;
 }
 
-Toy_String* Toy_deepCopyString(Toy_Bucket** bucket, Toy_String* str) {
+Toy_String* Toy_deepCopyString(Toy_Bucket** bucketHandle, Toy_String* str) {
 	if (str->refCount == 0) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't deep copy a string with refcount of zero\n" TOY_CC_RESET);
 		exit(-1);
 	}
-	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucket, sizeof(Toy_String) + str->length + 1); //TODO: compensate for partitioning more space than bucket capacity
+	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucketHandle, sizeof(Toy_String) + str->length + 1); //TODO: compensate for partitioning more space than bucket capacity
 
 	//
 	ret->type = TOY_STRING_LEAF;
@@ -79,13 +79,13 @@ Toy_String* Toy_deepCopyString(Toy_Bucket** bucket, Toy_String* str) {
 	return ret;
 }
 
-Toy_String* Toy_concatString(Toy_Bucket** bucket, Toy_String* left, Toy_String* right) {
+Toy_String* Toy_concatString(Toy_Bucket** bucketHandle, Toy_String* left, Toy_String* right) {
 	if (left->refCount == 0 || right->refCount == 0) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't concatenate a string with refcount of zero\n" TOY_CC_RESET);
 		exit(-1);
 	}
 
-	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucket, sizeof(Toy_String));
+	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucketHandle, sizeof(Toy_String));
 
 	ret->type = TOY_STRING_NODE;
 	ret->length = left->length + right->length;

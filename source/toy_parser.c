@@ -97,7 +97,7 @@ typedef enum ParsingPrecedence {
 	PREC_PRIMARY,
 } ParsingPrecedence;
 
-typedef Toy_AstFlag (*ParsingRule)(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root);
+typedef Toy_AstFlag (*ParsingRule)(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle);
 
 typedef struct ParsingTuple {
 	ParsingPrecedence precedence;
@@ -105,12 +105,12 @@ typedef struct ParsingTuple {
 	ParsingRule infix;
 } ParsingTuple;
 
-static void parsePrecedence(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root, ParsingPrecedence precRule);
+static void parsePrecedence(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle, ParsingPrecedence precRule);
 
-static Toy_AstFlag atomic(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root);
-static Toy_AstFlag unary(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root);
-static Toy_AstFlag binary(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root);
-static Toy_AstFlag group(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root);
+static Toy_AstFlag atomic(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle);
+static Toy_AstFlag unary(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle);
+static Toy_AstFlag binary(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle);
+static Toy_AstFlag group(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle);
 
 //precedence definitions
 static ParsingTuple parsingRulesetTable[] = {
@@ -214,18 +214,18 @@ static ParsingTuple parsingRulesetTable[] = {
 	{PREC_NONE,NULL,NULL},// TOY_TOKEN_EOF,
 };
 
-static Toy_AstFlag atomic(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root) {
+static Toy_AstFlag atomic(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
 	switch(parser->previous.type) {
 		case TOY_TOKEN_NULL:
-			Toy_private_emitAstValue(bucket, root, TOY_VALUE_TO_NULL());
+			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_TO_NULL());
 			return TOY_AST_FLAG_NONE;
 
 		case TOY_TOKEN_LITERAL_TRUE:
-			Toy_private_emitAstValue(bucket, root, TOY_VALUE_TO_BOOLEAN(true));
+			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_TO_BOOLEAN(true));
 			return TOY_AST_FLAG_NONE;
 
 		case TOY_TOKEN_LITERAL_FALSE:
-			Toy_private_emitAstValue(bucket, root, TOY_VALUE_TO_BOOLEAN(false));
+			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_TO_BOOLEAN(false));
 			return TOY_AST_FLAG_NONE;
 
 		case TOY_TOKEN_LITERAL_INTEGER: {
@@ -241,7 +241,7 @@ static Toy_AstFlag atomic(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** roo
 
 			int value = 0;
 			sscanf(buffer, "%d", &value);
-			Toy_private_emitAstValue(bucket, root, TOY_VALUE_TO_INTEGER(value));
+			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_TO_INTEGER(value));
 			return TOY_AST_FLAG_NONE;
 		}
 
@@ -258,173 +258,173 @@ static Toy_AstFlag atomic(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** roo
 
 			float value = 0;
 			sscanf(buffer, "%f", &value);
-			Toy_private_emitAstValue(bucket, root, TOY_VALUE_TO_FLOAT(value));
+			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_TO_FLOAT(value));
 			return TOY_AST_FLAG_NONE;
 		}
 
 		default:
 			printError(parser, parser->previous, "Unexpected token passed to atomic precedence rule");
-			Toy_private_emitAstError(bucket, root);
+			Toy_private_emitAstError(bucketHandle, rootHandle);
 			return TOY_AST_FLAG_NONE;
 	}
 }
 
-static Toy_AstFlag unary(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root) {
+static Toy_AstFlag unary(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
 	//'subtract' can only be applied to numbers and groups, while 'negate' can only be applied to booleans and groups
 	//this function takes the libery of peeking into the uppermost node, to see if it can apply this to it
 
 	if (parser->previous.type == TOY_TOKEN_OPERATOR_SUBTRACT) {
 
 		bool connectedDigit = parser->previous.lexeme[1] >= '0' && parser->previous.lexeme[1] <= '9'; //BUGFIX: '- 1' should not be optimised into a negative
-		parsePrecedence(bucket, parser, root, PREC_UNARY);
+		parsePrecedence(bucketHandle, parser, rootHandle, PREC_UNARY);
 
 		//negative numbers
-		if ((*root)->type == TOY_AST_VALUE && TOY_VALUE_IS_INTEGER((*root)->value.value) && connectedDigit) {
-			(*root)->value.value = TOY_VALUE_TO_INTEGER( -TOY_VALUE_AS_INTEGER((*root)->value.value) );
+		if ((*rootHandle)->type == TOY_AST_VALUE && TOY_VALUE_IS_INTEGER((*rootHandle)->value.value) && connectedDigit) {
+			(*rootHandle)->value.value = TOY_VALUE_TO_INTEGER( -TOY_VALUE_AS_INTEGER((*rootHandle)->value.value) );
 		}
-		else if ((*root)->type == TOY_AST_VALUE && TOY_VALUE_IS_FLOAT((*root)->value.value) && connectedDigit) {
-			(*root)->value.value = TOY_VALUE_TO_FLOAT( -TOY_VALUE_AS_FLOAT((*root)->value.value) );
+		else if ((*rootHandle)->type == TOY_AST_VALUE && TOY_VALUE_IS_FLOAT((*rootHandle)->value.value) && connectedDigit) {
+			(*rootHandle)->value.value = TOY_VALUE_TO_FLOAT( -TOY_VALUE_AS_FLOAT((*rootHandle)->value.value) );
 		}
 		else {
 			//actually emit the negation node
-			Toy_private_emitAstUnary(bucket, root, TOY_AST_FLAG_NEGATE);
+			Toy_private_emitAstUnary(bucketHandle, rootHandle, TOY_AST_FLAG_NEGATE);
 		}
 	}
 
 	else if (parser->previous.type == TOY_TOKEN_OPERATOR_NEGATE) {
-		parsePrecedence(bucket, parser, root, PREC_UNARY);
+		parsePrecedence(bucketHandle, parser, rootHandle, PREC_UNARY);
 
 		//inverted booleans
-		if ((*root)->type == TOY_AST_VALUE && TOY_VALUE_IS_BOOLEAN((*root)->value.value)) {
-			(*root)->value.value = TOY_VALUE_TO_BOOLEAN( !TOY_VALUE_AS_BOOLEAN((*root)->value.value) );
+		if ((*rootHandle)->type == TOY_AST_VALUE && TOY_VALUE_IS_BOOLEAN((*rootHandle)->value.value)) {
+			(*rootHandle)->value.value = TOY_VALUE_TO_BOOLEAN( !TOY_VALUE_AS_BOOLEAN((*rootHandle)->value.value) );
 		}
 		else {
 			//actually emit the negation node
-			Toy_private_emitAstUnary(bucket, root, TOY_AST_FLAG_NEGATE);
+			Toy_private_emitAstUnary(bucketHandle, rootHandle, TOY_AST_FLAG_NEGATE);
 		}
 	}
 
 	else {
 		printError(parser, parser->previous, "Unexpected token passed to unary precedence rule");
-		Toy_private_emitAstError(bucket, root);
+		Toy_private_emitAstError(bucketHandle, rootHandle);
 	}
 
 	return TOY_AST_FLAG_NONE;
 }
 
-static Toy_AstFlag binary(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root) {
+static Toy_AstFlag binary(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
 	//infix must advance
 	advance(parser);
 
 	switch(parser->previous.type) {
 		//arithmetic
 		case TOY_TOKEN_OPERATOR_ADD: {
-			parsePrecedence(bucket, parser, root, PREC_TERM + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_TERM + 1);
 			return TOY_AST_FLAG_ADD;
 		}
 
 		case TOY_TOKEN_OPERATOR_SUBTRACT: {
-			parsePrecedence(bucket, parser, root, PREC_TERM + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_TERM + 1);
 			return TOY_AST_FLAG_SUBTRACT;
 		}
 
 		case TOY_TOKEN_OPERATOR_MULTIPLY: {
-			parsePrecedence(bucket, parser, root, PREC_FACTOR + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_FACTOR + 1);
 			return TOY_AST_FLAG_MULTIPLY;
 		}
 
 		case TOY_TOKEN_OPERATOR_DIVIDE: {
-			parsePrecedence(bucket, parser, root, PREC_FACTOR + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_FACTOR + 1);
 			return TOY_AST_FLAG_DIVIDE;
 		}
 
 		case TOY_TOKEN_OPERATOR_MODULO: {
-			parsePrecedence(bucket, parser, root, PREC_FACTOR + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_FACTOR + 1);
 			return TOY_AST_FLAG_MODULO;
 		}
 
 		//assignment
 		case TOY_TOKEN_OPERATOR_ASSIGN: {
-			parsePrecedence(bucket, parser, root, PREC_ASSIGNMENT + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_ASSIGNMENT + 1);
 			return TOY_AST_FLAG_ASSIGN;
 		}
 
 		case TOY_TOKEN_OPERATOR_ADD_ASSIGN: {
-			parsePrecedence(bucket, parser, root, PREC_ASSIGNMENT + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_ASSIGNMENT + 1);
 			return TOY_AST_FLAG_ADD_ASSIGN;
 		}
 
 		case TOY_TOKEN_OPERATOR_SUBTRACT_ASSIGN: {
-			parsePrecedence(bucket, parser, root, PREC_ASSIGNMENT + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_ASSIGNMENT + 1);
 			return TOY_AST_FLAG_SUBTRACT_ASSIGN;
 		}
 
 		case TOY_TOKEN_OPERATOR_MULTIPLY_ASSIGN: {
-			parsePrecedence(bucket, parser, root, PREC_ASSIGNMENT + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_ASSIGNMENT + 1);
 			return TOY_AST_FLAG_MULTIPLY_ASSIGN;
 		}
 
 		case TOY_TOKEN_OPERATOR_DIVIDE_ASSIGN: {
-			parsePrecedence(bucket, parser, root, PREC_ASSIGNMENT + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_ASSIGNMENT + 1);
 			return TOY_AST_FLAG_DIVIDE_ASSIGN;
 		}
 
 		case TOY_TOKEN_OPERATOR_MODULO_ASSIGN: {
-			parsePrecedence(bucket, parser, root, PREC_ASSIGNMENT + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_ASSIGNMENT + 1);
 			return TOY_AST_FLAG_MODULO_ASSIGN;
 		}
 
 		//comparison
 		case TOY_TOKEN_OPERATOR_COMPARE_EQUAL: {
-			parsePrecedence(bucket, parser, root, PREC_COMPARISON + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_COMPARISON + 1);
 			return TOY_AST_FLAG_COMPARE_EQUAL;
 		}
 
 		case TOY_TOKEN_OPERATOR_COMPARE_NOT: {
-			parsePrecedence(bucket, parser, root, PREC_COMPARISON + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_COMPARISON + 1);
 			return TOY_AST_FLAG_COMPARE_NOT;
 		}
 
 		case TOY_TOKEN_OPERATOR_COMPARE_LESS: {
-			parsePrecedence(bucket, parser, root, PREC_COMPARISON + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_COMPARISON + 1);
 			return TOY_AST_FLAG_COMPARE_LESS;
 		}
 
 		case TOY_TOKEN_OPERATOR_COMPARE_LESS_EQUAL: {
-			parsePrecedence(bucket, parser, root, PREC_COMPARISON + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_COMPARISON + 1);
 			return TOY_AST_FLAG_COMPARE_LESS_EQUAL;
 		}
 
 		case TOY_TOKEN_OPERATOR_COMPARE_GREATER: {
-			parsePrecedence(bucket, parser, root, PREC_COMPARISON + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_COMPARISON + 1);
 			return TOY_AST_FLAG_COMPARE_GREATER;
 		}
 
 		case TOY_TOKEN_OPERATOR_COMPARE_GREATER_EQUAL: {
-			parsePrecedence(bucket, parser, root, PREC_COMPARISON + 1);
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_COMPARISON + 1);
 			return TOY_AST_FLAG_COMPARE_GREATER_EQUAL;
 		}
 
 		default:
 			printError(parser, parser->previous, "Unexpected token passed to binary precedence rule");
-			Toy_private_emitAstError(bucket, root);
+			Toy_private_emitAstError(bucketHandle, rootHandle);
 			return TOY_AST_FLAG_NONE;
 	}
 }
 
-static Toy_AstFlag group(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root) {
+static Toy_AstFlag group(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
 	//groups are ()
 	if (parser->previous.type == TOY_TOKEN_OPERATOR_PAREN_LEFT) {
-		parsePrecedence(bucket, parser, root, PREC_GROUP);
+		parsePrecedence(bucketHandle, parser, rootHandle, PREC_GROUP);
 		consume(parser, TOY_TOKEN_OPERATOR_PAREN_RIGHT, "Expected ')' at end of group");
 
 		//Toy_AstGroup is omitted from generation, as an optimisation
-		// Toy_private_emitAstGroup(bucket, root);
+		// Toy_private_emitAstGroup(bucketHandle, rootHandle);
 	}
 
 	else {
 		printError(parser, parser->previous, "Unexpected token passed to grouping precedence rule");
-		Toy_private_emitAstError(bucket, root);
+		Toy_private_emitAstError(bucketHandle, rootHandle);
 	}
 
 	return TOY_AST_FLAG_NONE;
@@ -435,7 +435,7 @@ static ParsingTuple* getParsingRule(Toy_TokenType type) {
 }
 
 //grammar rules
-static void parsePrecedence(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root, ParsingPrecedence precRule) {
+static void parsePrecedence(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle, ParsingPrecedence precRule) {
 	//'step over' the token to parse
 	advance(parser);
 
@@ -444,11 +444,11 @@ static void parsePrecedence(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** r
 
 	if (prefix == NULL) {
 		printError(parser, parser->previous, "Expected expression");
-		Toy_private_emitAstError(bucket, root);
+		Toy_private_emitAstError(bucketHandle, rootHandle);
 		return;
 	}
 
-	prefix(bucket, parser, root);
+	prefix(bucketHandle, parser, rootHandle);
 
 	//infix rules are left-recursive
 	while (precRule <= getParsingRule(parser->current.type)->precedence) {
@@ -456,20 +456,20 @@ static void parsePrecedence(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** r
 
 		if (infix == NULL) {
 			printError(parser, parser->previous, "Expected operator");
-			Toy_private_emitAstError(bucket, root);
+			Toy_private_emitAstError(bucketHandle, rootHandle);
 			return;
 		}
 
 		Toy_Ast* ptr = NULL;
-		Toy_AstFlag flag = infix(bucket, parser, &ptr);
+		Toy_AstFlag flag = infix(bucketHandle, parser, &ptr);
 
 		//finished
 		if (flag == TOY_AST_FLAG_NONE) {
-			(*root) = ptr;
+			(*rootHandle) = ptr;
 			return;
 		}
 
-		Toy_private_emitAstBinary(bucket, root, flag, ptr);
+		Toy_private_emitAstBinary(bucketHandle, rootHandle, flag, ptr);
 	}
 
 	//can't assign below a certain precedence
@@ -478,22 +478,22 @@ static void parsePrecedence(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** r
 	}
 }
 
-static void makeExpr(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root) {
-	parsePrecedence(bucket, parser, root, PREC_ASSIGNMENT);
+static void makeExpr(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
+	parsePrecedence(bucketHandle, parser, rootHandle, PREC_ASSIGNMENT);
 }
 
-static void makeExprStmt(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root) {
+static void makeExprStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
 	//check for empty lines
 	if (match(parser, TOY_TOKEN_OPERATOR_SEMICOLON)) {
-		Toy_private_emitAstPass(bucket, root);
+		Toy_private_emitAstPass(bucketHandle, rootHandle);
 		return;
 	}
 
-	makeExpr(bucket, parser, root);
+	makeExpr(bucketHandle, parser, rootHandle);
 	consume(parser, TOY_TOKEN_OPERATOR_SEMICOLON, "Expected ';' at the end of expression statement");
 }
 
-static void makeStmt(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root) {
+static void makeStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
 	//block
 	//print
 	//assert
@@ -506,47 +506,47 @@ static void makeStmt(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root) {
 	//import
 
 	//default
-	makeExprStmt(bucket, parser, root);
+	makeExprStmt(bucketHandle, parser, rootHandle);
 }
 
-static void makeDeclarationStmt(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root) {
+static void makeDeclarationStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
 	// //variable declarations
 	// if (match(parser, TOY_TOKEN_KEYWORD_VAR)) {
-	// 	makeVariableDeclarationStmt(bucket, parser, root);
+	// 	makeVariableDeclarationStmt(bucketHandle, parser, rootHandle);
 	// }
 
 	// //function declarations
 	// else if (match(parser, TOY_TOKEN_KEYWORD_FUNCTION)) {
-	// 	makeFunctionDeclarationStmt(bucket, parser, root);
+	// 	makeFunctionDeclarationStmt(bucketHandle, parser, rootHandle);
 	// }
 
 	//otherwise
 	// else {
-		makeStmt(bucket, parser, root);
+		makeStmt(bucketHandle, parser, rootHandle);
 	// }
 }
 
-static void makeBlockStmt(Toy_Bucket** bucket, Toy_Parser* parser, Toy_Ast** root) {
+static void makeBlockStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
 	//begin the block
-	Toy_private_initAstBlock(bucket, root);
+	Toy_private_initAstBlock(bucketHandle, rootHandle);
 
 	//read a series of statements into the block
 	while (!match(parser, TOY_TOKEN_EOF)) {
 		//process the grammar rules
 		Toy_Ast* stmt = NULL;
-		makeDeclarationStmt(bucket, parser, &stmt);
+		makeDeclarationStmt(bucketHandle, parser, &stmt);
 
 		//if something went wrong
 		if (parser->panic) {
 			synchronize(parser);
 
 			Toy_Ast* err = NULL;
-			Toy_private_emitAstError(bucket, &err);
-			Toy_private_appendAstBlock(bucket, *root, err);
+			Toy_private_emitAstError(bucketHandle, &err);
+			Toy_private_appendAstBlock(bucketHandle, *rootHandle, err);
 
 			continue;
 		}
-		Toy_private_appendAstBlock(bucket, *root, stmt);
+		Toy_private_appendAstBlock(bucketHandle, *rootHandle, stmt);
 	}
 }
 
@@ -557,18 +557,18 @@ void Toy_bindParser(Toy_Parser* parser, Toy_Lexer* lexer) {
 	advance(parser);
 }
 
-Toy_Ast* Toy_scanParser(Toy_Bucket** bucket, Toy_Parser* parser) {
-	Toy_Ast* root = NULL;
+Toy_Ast* Toy_scanParser(Toy_Bucket** bucketHandle, Toy_Parser* parser) {
+	Toy_Ast* rootHandle = NULL;
 
 	//check for EOF
 	if (match(parser, TOY_TOKEN_EOF)) {
-		Toy_private_emitAstEnd(bucket, &root);
-		return root;
+		Toy_private_emitAstEnd(bucketHandle, &rootHandle);
+		return rootHandle;
 	}
 
-	makeBlockStmt(bucket, parser, &root);
+	makeBlockStmt(bucketHandle, parser, &rootHandle);
 
-	return root;
+	return rootHandle;
 }
 
 void Toy_resetParser(Toy_Parser* parser) {

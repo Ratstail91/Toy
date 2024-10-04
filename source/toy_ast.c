@@ -1,17 +1,17 @@
 #include "toy_ast.h"
 
-void Toy_private_initAstBlock(Toy_Bucket** bucket, Toy_Ast** handle) {
-	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucket, sizeof(Toy_Ast));
+void Toy_private_initAstBlock(Toy_Bucket** bucketHandle, Toy_Ast** astHandle) {
+	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucketHandle, sizeof(Toy_Ast));
 
 	tmp->type = TOY_AST_BLOCK;
 	tmp->block.child = NULL;
 	tmp->block.next = NULL;
 	tmp->block.tail = NULL;
 
-	(*handle) = tmp;
+	(*astHandle) = tmp;
 }
 
-void Toy_private_appendAstBlock(Toy_Bucket** bucket, Toy_Ast* block, Toy_Ast* child) {
+void Toy_private_appendAstBlock(Toy_Bucket** bucketHandle, Toy_Ast* block, Toy_Ast* child) {
 	//first, check if we're an empty head
 	if (block->block.child == NULL) {
 		block->block.child = child;
@@ -26,72 +26,72 @@ void Toy_private_appendAstBlock(Toy_Bucket** bucket, Toy_Ast* block, Toy_Ast* ch
 	}
 
 	//append a new link to the chain
-	Toy_private_initAstBlock(bucket, &(iter->block.next));
+	Toy_private_initAstBlock(bucketHandle, &(iter->block.next));
 
 	//store the child in the new link, prep the tail pointer
 	iter->block.next->block.child = child;
 	block->block.tail = iter->block.next;
 }
 
-void Toy_private_emitAstValue(Toy_Bucket** bucket, Toy_Ast** handle, Toy_Value value) {
-	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucket, sizeof(Toy_Ast));
+void Toy_private_emitAstValue(Toy_Bucket** bucketHandle, Toy_Ast** astHandle, Toy_Value value) {
+	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucketHandle, sizeof(Toy_Ast));
 
 	tmp->type = TOY_AST_VALUE;
 	tmp->value.value = value;
 
-	(*handle) = tmp;
+	(*astHandle) = tmp;
 }
 
-void Toy_private_emitAstUnary(Toy_Bucket** bucket, Toy_Ast** handle, Toy_AstFlag flag) {
-	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucket, sizeof(Toy_Ast));
+void Toy_private_emitAstUnary(Toy_Bucket** bucketHandle, Toy_Ast** astHandle, Toy_AstFlag flag) {
+	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucketHandle, sizeof(Toy_Ast));
 
 	tmp->type = TOY_AST_UNARY;
 	tmp->unary.flag = flag;
-	tmp->unary.child = *handle;
+	tmp->unary.child = *astHandle;
 
-	(*handle) = tmp;
+	(*astHandle) = tmp;
 }
 
-void Toy_private_emitAstBinary(Toy_Bucket** bucket, Toy_Ast** handle, Toy_AstFlag flag, Toy_Ast* right) {
-	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucket, sizeof(Toy_Ast));
+void Toy_private_emitAstBinary(Toy_Bucket** bucketHandle, Toy_Ast** astHandle, Toy_AstFlag flag, Toy_Ast* right) {
+	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucketHandle, sizeof(Toy_Ast));
 
 	tmp->type = TOY_AST_BINARY;
 	tmp->binary.flag = flag;
-	tmp->binary.left = *handle; //left-recursive
+	tmp->binary.left = *astHandle; //left-recursive
 	tmp->binary.right = right;
 
-	(*handle) = tmp;
+	(*astHandle) = tmp;
 }
 
-void Toy_private_emitAstGroup(Toy_Bucket** bucket, Toy_Ast** handle) {
-	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucket, sizeof(Toy_Ast));
+void Toy_private_emitAstGroup(Toy_Bucket** bucketHandle, Toy_Ast** astHandle) {
+	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucketHandle, sizeof(Toy_Ast));
 
 	tmp->type = TOY_AST_GROUP;
-	tmp->group.child = (*handle);
+	tmp->group.child = (*astHandle);
 
-	(*handle) = tmp;
+	(*astHandle) = tmp;
 }
 
-void Toy_private_emitAstPass(Toy_Bucket** bucket, Toy_Ast** handle) {
-	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucket, sizeof(Toy_Ast));
+void Toy_private_emitAstPass(Toy_Bucket** bucketHandle, Toy_Ast** astHandle) {
+	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucketHandle, sizeof(Toy_Ast));
 
 	tmp->type = TOY_AST_PASS;
 
-	(*handle) = tmp;
+	(*astHandle) = tmp;
 }
 
-void Toy_private_emitAstError(Toy_Bucket** bucket, Toy_Ast** handle) {
-	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucket, sizeof(Toy_Ast));
+void Toy_private_emitAstError(Toy_Bucket** bucketHandle, Toy_Ast** astHandle) {
+	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucketHandle, sizeof(Toy_Ast));
 
 	tmp->type = TOY_AST_ERROR;
 
-	(*handle) = tmp;
+	(*astHandle) = tmp;
 }
 
-void Toy_private_emitAstEnd(Toy_Bucket** bucket, Toy_Ast** handle) {
-	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucket, sizeof(Toy_Ast));
+void Toy_private_emitAstEnd(Toy_Bucket** bucketHandle, Toy_Ast** astHandle) {
+	Toy_Ast* tmp = (Toy_Ast*)Toy_partitionBucket(bucketHandle, sizeof(Toy_Ast));
 
 	tmp->type = TOY_AST_END;
 
-	(*handle) = tmp;
+	(*astHandle) = tmp;
 }

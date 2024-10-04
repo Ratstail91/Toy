@@ -9,21 +9,21 @@
 #include <string.h>
 
 //utils
-Toy_Bytecode makeBytecodeFromSource(Toy_Bucket** bucket, const char* source) {
+Toy_Bytecode makeBytecodeFromSource(Toy_Bucket** bucketHandle, const char* source) {
 	Toy_Lexer lexer;
 	Toy_bindLexer(&lexer, source);
 
 	Toy_Parser parser;
 	Toy_bindParser(&parser, &lexer);
 
-	Toy_Ast* ast = Toy_scanParser(bucket, &parser);
+	Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
 	Toy_Bytecode bc = Toy_compileBytecode(ast);
 
 	return bc;
 }
 
 //tests
-int test_setup_and_teardown(Toy_Bucket** bucket) {
+int test_setup_and_teardown(Toy_Bucket** bucketHandle) {
 	//basic init & quit
 	{
 		//generate bytecode for testing
@@ -35,7 +35,7 @@ int test_setup_and_teardown(Toy_Bucket** bucket) {
 		Toy_Parser parser;
 		Toy_bindParser(&parser, &lexer);
 
-		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
 
 		Toy_Bytecode bc = Toy_compileBytecode(ast);
 
@@ -73,7 +73,7 @@ int test_setup_and_teardown(Toy_Bucket** bucket) {
 	return 0;
 }
 
-int test_simple_execution(Toy_Bucket** bucket) {
+int test_simple_execution(Toy_Bucket** bucketHandle) {
 	//test execution
 	{
 		//generate bytecode for testing
@@ -85,7 +85,7 @@ int test_simple_execution(Toy_Bucket** bucket) {
 		Toy_Parser parser;
 		Toy_bindParser(&parser, &lexer);
 
-		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
 
 		Toy_Bytecode bc = Toy_compileBytecode(ast);
 
@@ -117,7 +117,7 @@ int test_simple_execution(Toy_Bucket** bucket) {
 	return 0;
 }
 
-int test_opcode_not_equal(Toy_Bucket** bucket) {
+int test_opcode_not_equal(Toy_Bucket** bucketHandle) {
 	//testing a specific opcode; '!=' is compressed into a single word, so lets check it works
 	{
 		//generate bytecode for testing
@@ -129,7 +129,7 @@ int test_opcode_not_equal(Toy_Bucket** bucket) {
 		Toy_Parser parser;
 		Toy_bindParser(&parser, &lexer);
 
-		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
 
 		Toy_Bytecode bc = Toy_compileBytecode(ast);
 

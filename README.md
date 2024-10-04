@@ -39,9 +39,11 @@ To build and run the test cases under gdb, run `make tests-gdb`.
 
 # License
 
-This source code is covered by the zlib license (see [LICENSE](LICENSE)).
+This source code is covered by the zlib license (see [LICENSE.md](LICENSE.md)).
 
 # Contributors and Special Thanks
+
+For a guide on how you can contribute, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 @hiperiondev - v1 Disassembler, v1 porting support and feedback  
 @add00 - v1 Library support  

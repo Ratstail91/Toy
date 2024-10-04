@@ -27,60 +27,60 @@ void Toy_freeStack(Toy_Stack* stack) {
 	free(stack);
 }
 
-void Toy_pushStack(Toy_Stack** stack, Toy_Value value) {
+void Toy_pushStack(Toy_Stack** stackHandle, Toy_Value value) {
 	//don't go overboard - limit to 1mb of capacity used
-	if ((*stack)->count >= 1024 * 1024 / sizeof(Toy_Value)) {
+	if ((*stackHandle)->count >= 1024 * 1024 / sizeof(Toy_Value)) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Stack overflow\n" TOY_CC_RESET);
 		exit(-1);
 	}
 
 	//expand the capacity if needed
-	if ((*stack)->count + 1 > (*stack)->capacity) {
-		while ((*stack)->count + 1 > (*stack)->capacity) {
-			(*stack)->capacity = (*stack)->capacity < MIN_CAPACITY ? MIN_CAPACITY : (*stack)->capacity * 2;
+	if ((*stackHandle)->count + 1 > (*stackHandle)->capacity) {
+		while ((*stackHandle)->count + 1 > (*stackHandle)->capacity) {
+			(*stackHandle)->capacity = (*stackHandle)->capacity < MIN_CAPACITY ? MIN_CAPACITY : (*stackHandle)->capacity * 2;
 		}
 
-		unsigned int newCapacity = (*stack)->capacity;
+		unsigned int newCapacity = (*stackHandle)->capacity;
 
-		(*stack) = realloc((*stack), newCapacity * sizeof(Toy_Value) + sizeof(Toy_Stack));
+		(*stackHandle) = realloc((*stackHandle), newCapacity * sizeof(Toy_Value) + sizeof(Toy_Stack));
 
-		if ((*stack) == NULL) {
+		if ((*stackHandle) == NULL) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to reallocate a 'Toy_Stack' of %d capacity (%d space in memory)\n" TOY_CC_RESET, (int)newCapacity, (int)(newCapacity * sizeof(Toy_Value) + sizeof(Toy_Stack)));
 			exit(1);
 		}
 	}
 
 	//Note: "pointer arithmetic in C/C++ is type-relative"
-	((Toy_Value*)((*stack) + 1))[(*stack)->count++] = value;
+	((Toy_Value*)((*stackHandle) + 1))[(*stackHandle)->count++] = value;
 }
 
-Toy_Value Toy_peekStack(Toy_Stack** stack) {
-	if ((*stack)->count == 0) {
+Toy_Value Toy_peekStack(Toy_Stack** stackHandle) {
+	if ((*stackHandle)->count == 0) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Stack underflow\n" TOY_CC_RESET);
 		exit(-1);
 	}
 
-	return ((Toy_Value*)((*stack) + 1))[(*stack)->count - 1];
+	return ((Toy_Value*)((*stackHandle) + 1))[(*stackHandle)->count - 1];
 }
 
-Toy_Value Toy_popStack(Toy_Stack** stack) {
-	if ((*stack)->count == 0) {
+Toy_Value Toy_popStack(Toy_Stack** stackHandle) {
+	if ((*stackHandle)->count == 0) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Stack underflow\n" TOY_CC_RESET);
 		exit(-1);
 	}
 
 	//shrink if possible
-	if ((*stack)->count > MIN_CAPACITY && (*stack)->count < (*stack)->capacity / 4) {
-		(*stack)->capacity /= 2;
-		unsigned int newCapacity = (*stack)->capacity;
+	if ((*stackHandle)->count > MIN_CAPACITY && (*stackHandle)->count < (*stackHandle)->capacity / 4) {
+		(*stackHandle)->capacity /= 2;
+		unsigned int newCapacity = (*stackHandle)->capacity;
 
-		(*stack) = realloc((*stack), (*stack)->capacity * sizeof(Toy_Value) + sizeof(Toy_Stack));
+		(*stackHandle) = realloc((*stackHandle), (*stackHandle)->capacity * sizeof(Toy_Value) + sizeof(Toy_Stack));
 
-		if ((*stack) == NULL) {
+		if ((*stackHandle) == NULL) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to reallocate a 'Toy_Stack' of %d capacity (%d space in memory)\n" TOY_CC_RESET, (int)newCapacity, (int)(newCapacity * sizeof(Toy_Value) + sizeof(Toy_Stack)));
 			exit(1);
 		}
 	}
 
-	return ((Toy_Value*)((*stack) + 1))[--(*stack)->count];
+	return ((Toy_Value*)((*stackHandle) + 1))[--(*stackHandle)->count];
 }

@@ -9,12 +9,12 @@
 #include <string.h>
 
 //tests
-int test_bytecode_header(Toy_Bucket** bucket) {
+int test_bytecode_header(Toy_Bucket** bucketHandle) {
 	//simple test to ensure the header looks right
 	{
 		//setup
 		Toy_Ast* ast = NULL;
-		Toy_private_emitAstPass(bucket, &ast);
+		Toy_private_emitAstPass(bucketHandle, &ast);
 
 		//run
 		Toy_Bytecode bc = Toy_compileBytecode(ast);
@@ -49,7 +49,7 @@ int test_bytecode_header(Toy_Bucket** bucket) {
 	return 0;
 }
 
-int test_bytecode_from_source(Toy_Bucket** bucket) {
+int test_bytecode_from_source(Toy_Bucket** bucketHandle) {
 	{
 		//setup
 		const char* source = "(1 + 2) * (3 + 4);";
@@ -58,7 +58,7 @@ int test_bytecode_from_source(Toy_Bucket** bucket) {
 
 		Toy_bindLexer(&lexer, source);
 		Toy_bindParser(&parser, &lexer);
-		Toy_Ast* ast = Toy_scanParser(bucket, &parser);
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
 
 		//run
 		Toy_Bytecode bc = Toy_compileBytecode(ast);

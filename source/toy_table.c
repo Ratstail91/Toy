@@ -9,46 +9,46 @@
 #define MIN_CAPACITY 16
 
 //utils
-static void probeAndInsert(Toy_Table** table, Toy_Value key, Toy_Value value) {
+static void probeAndInsert(Toy_Table** tableHandle, Toy_Value key, Toy_Value value) {
 	//make the entry
-	unsigned int probe = Toy_hashValue(key) % (*table)->capacity;
+	unsigned int probe = Toy_hashValue(key) % (*tableHandle)->capacity;
 	Toy_TableEntry entry = (Toy_TableEntry){ .key = key, .value = value, .psl = 0 };
 
 	//probe
 	while (true) {
 		//if we're overriding an existing value
-		if (TOY_VALUE_IS_EQUAL((*table)->data[probe].key, key)) {
-			(*table)->data[probe] = entry;
+		if (TOY_VALUE_IS_EQUAL((*tableHandle)->data[probe].key, key)) {
+			(*tableHandle)->data[probe] = entry;
 
 			//TODO: benchmark the psl optimisation
-			(*table)->minPsl = entry.psl < (*table)->minPsl ? entry.psl : (*table)->minPsl;
-			(*table)->maxPsl = entry.psl > (*table)->maxPsl ? entry.psl : (*table)->maxPsl;
+			(*tableHandle)->minPsl = entry.psl < (*tableHandle)->minPsl ? entry.psl : (*tableHandle)->minPsl;
+			(*tableHandle)->maxPsl = entry.psl > (*tableHandle)->maxPsl ? entry.psl : (*tableHandle)->maxPsl;
 
 			return;
 		}
 
 		//if this spot is free, insert and return
-		if (TOY_VALUE_IS_NULL((*table)->data[probe].key)) {
-			(*table)->data[probe] = entry;
+		if (TOY_VALUE_IS_NULL((*tableHandle)->data[probe].key)) {
+			(*tableHandle)->data[probe] = entry;
 
-			(*table)->count++;
+			(*tableHandle)->count++;
 
 			//TODO: benchmark the psl optimisation
-			(*table)->minPsl = entry.psl < (*table)->minPsl ? entry.psl : (*table)->minPsl;
-			(*table)->maxPsl = entry.psl > (*table)->maxPsl ? entry.psl : (*table)->maxPsl;
+			(*tableHandle)->minPsl = entry.psl < (*tableHandle)->minPsl ? entry.psl : (*tableHandle)->minPsl;
+			(*tableHandle)->maxPsl = entry.psl > (*tableHandle)->maxPsl ? entry.psl : (*tableHandle)->maxPsl;
 
 			return;
 		}
 
 		//if the new entry is "poorer", insert it and shift the old one
-		if ((*table)->data[probe].psl < entry.psl) {
-			Toy_TableEntry tmp = (*table)->data[probe];
-			(*table)->data[probe] = entry;
+		if ((*tableHandle)->data[probe].psl < entry.psl) {
+			Toy_TableEntry tmp = (*tableHandle)->data[probe];
+			(*tableHandle)->data[probe] = entry;
 			entry = tmp;
 		}
 
 		//adjust and continue
-		probe = (probe + 1) % (*table)->capacity;
+		probe = (probe + 1) % (*tableHandle)->capacity;
 		entry.psl++;
 	}
 }
@@ -97,86 +97,86 @@ void Toy_freeTable(Toy_Table* table) {
 	free(table);
 }
 
-void Toy_insertTable(Toy_Table** table, Toy_Value key, Toy_Value value) {
+void Toy_insertTable(Toy_Table** tableHandle, Toy_Value key, Toy_Value value) {
 	if (TOY_VALUE_IS_NULL(key) || TOY_VALUE_IS_BOOLEAN(key)) { //TODO: disallow functions and opaques
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Bad table key\n" TOY_CC_RESET);
 		exit(-1); //TODO: #127
 	}
 
 	//expand the capacity
-	if ((*table)->count > (*table)->capacity * 0.8) {
-		(*table) = adjustTableCapacity(*table, (*table)->capacity * 2);
+	if ((*tableHandle)->count > (*tableHandle)->capacity * 0.8) {
+		(*tableHandle) = adjustTableCapacity((*tableHandle), (*tableHandle)->capacity * 2);
 	}
 
-	probeAndInsert(table, key, value);
+	probeAndInsert(tableHandle, key, value);
 }
 
-Toy_Value Toy_lookupTable(Toy_Table** table, Toy_Value key) {
+Toy_Value Toy_lookupTable(Toy_Table** tableHandle, Toy_Value key) {
 	if (TOY_VALUE_IS_NULL(key) || TOY_VALUE_IS_BOOLEAN(key)) { //TODO: disallow functions and opaques
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Bad table key\n" TOY_CC_RESET);
 		exit(-1); //TODO: #127
 	}
 
 	//lookup
-	unsigned int probe = Toy_hashValue(key) % (*table)->capacity;
+	unsigned int probe = Toy_hashValue(key) % (*tableHandle)->capacity;
 
 	while (true) {
 		//found the entry
-		if (TOY_VALUE_IS_EQUAL((*table)->data[probe].key, key)) {
-			return (*table)->data[probe].value;
+		if (TOY_VALUE_IS_EQUAL((*tableHandle)->data[probe].key, key)) {
+			return (*tableHandle)->data[probe].value;
 		}
 
 		//if its an empty slot
-		if (TOY_VALUE_IS_NULL((*table)->data[probe].key)) {
+		if (TOY_VALUE_IS_NULL((*tableHandle)->data[probe].key)) {
 			return TOY_VALUE_TO_NULL();
 		}
 
 		//adjust and continue
-		probe = (probe + 1) % (*table)->capacity;
+		probe = (probe + 1) % (*tableHandle)->capacity;
 	}
 }
 
-void Toy_removeTable(Toy_Table** table, Toy_Value key) {
+void Toy_removeTable(Toy_Table** tableHandle, Toy_Value key) {
 	if (TOY_VALUE_IS_NULL(key) || TOY_VALUE_IS_BOOLEAN(key)) { //TODO: disallow functions and opaques
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Bad table key\n" TOY_CC_RESET);
 		exit(-1); //TODO: #127
 	}
 
 	//lookup
-	unsigned int probe = Toy_hashValue(key) % (*table)->capacity;
+	unsigned int probe = Toy_hashValue(key) % (*tableHandle)->capacity;
 	unsigned int wipe = probe; //wiped at the end
 
 	while (true) {
 		//found the entry
-		if (TOY_VALUE_IS_EQUAL((*table)->data[probe].key, key)) {
+		if (TOY_VALUE_IS_EQUAL((*tableHandle)->data[probe].key, key)) {
 			break;
 		}
 
 		//if its an empty slot
-		if (TOY_VALUE_IS_NULL((*table)->data[probe].key)) {
+		if (TOY_VALUE_IS_NULL((*tableHandle)->data[probe].key)) {
 			return;
 		}
 
 		//adjust and continue
-		probe = (probe + 1) % (*table)->capacity;
+		probe = (probe + 1) % (*tableHandle)->capacity;
 	}
 
 	//shift along the later entries
-	for (unsigned int i = (*table)->minPsl; i < (*table)->maxPsl; i++) {
-		unsigned int p = (probe + i + 0) % (*table)->capacity; //prev
-		unsigned int u = (probe + i + 1) % (*table)->capacity; //current
+	for (unsigned int i = (*tableHandle)->minPsl; i < (*tableHandle)->maxPsl; i++) {
+		unsigned int p = (probe + i + 0) % (*tableHandle)->capacity; //prev
+		unsigned int u = (probe + i + 1) % (*tableHandle)->capacity; //current
 
-		(*table)->data[p] = (*table)->data[u];
-		(*table)->data[p].psl--;
+		(*tableHandle)->data[p] = (*tableHandle)->data[u];
+		(*tableHandle)->data[p].psl--;
 
 		//if you hit something where it should be, or nothing at all, stop
-		if (TOY_VALUE_IS_NULL((*table)->data[u].key) || (*table)->data[p].psl == 0) {
+		if (TOY_VALUE_IS_NULL((*tableHandle)->data[u].key) || (*tableHandle)->data[p].psl == 0) {
 			wipe = u;
 			break;
 		}
 	}
 
 	//finally, wipe the removed entry
-	(*table)->data[wipe] = (Toy_TableEntry){ .key = TOY_VALUE_TO_NULL(), .value = TOY_VALUE_TO_NULL(), .psl = 0 };
-	(*table)->count--;
+	(*tableHandle)->data[wipe] = (Toy_TableEntry){ .key = TOY_VALUE_TO_NULL(), .value = TOY_VALUE_TO_NULL(), .psl = 0 };
+	(*tableHandle)->count--;
 }

@@ -110,14 +110,14 @@ union Toy_Ast {             //32 | 64 BITNESS
 	Toy_AstEnd end;         //4  | 4
 };                          //16 | 32
 
-void Toy_private_initAstBlock(Toy_Bucket** bucket, Toy_Ast** handle);
-void Toy_private_appendAstBlock(Toy_Bucket** bucket, Toy_Ast* block, Toy_Ast* child);
+void Toy_private_initAstBlock(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);
+void Toy_private_appendAstBlock(Toy_Bucket** bucketHandle, Toy_Ast* block, Toy_Ast* child);
 
-void Toy_private_emitAstValue(Toy_Bucket** bucket, Toy_Ast** handle, Toy_Value value);
-void Toy_private_emitAstUnary(Toy_Bucket** bucket, Toy_Ast** handle, Toy_AstFlag flag);
-void Toy_private_emitAstBinary(Toy_Bucket** bucket, Toy_Ast** handle,Toy_AstFlag flag, Toy_Ast* right);
-void Toy_private_emitAstGroup(Toy_Bucket** bucket, Toy_Ast** handle);
+void Toy_private_emitAstValue(Toy_Bucket** bucketHandle, Toy_Ast** astHandle, Toy_Value value);
+void Toy_private_emitAstUnary(Toy_Bucket** bucketHandle, Toy_Ast** astHandle, Toy_AstFlag flag);
+void Toy_private_emitAstBinary(Toy_Bucket** bucketHandle, Toy_Ast** astHandle,Toy_AstFlag flag, Toy_Ast* right);
+void Toy_private_emitAstGroup(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);
 
-void Toy_private_emitAstPass(Toy_Bucket** bucket, Toy_Ast** handle);
-void Toy_private_emitAstError(Toy_Bucket** bucket, Toy_Ast** handle);
-void Toy_private_emitAstEnd(Toy_Bucket** bucket, Toy_Ast** handle);
+void Toy_private_emitAstPass(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);
+void Toy_private_emitAstError(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);
+void Toy_private_emitAstEnd(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);
