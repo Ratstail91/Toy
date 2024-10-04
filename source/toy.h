@@ -10,7 +10,7 @@
 #include "toy_stack.h"
 #include "toy_bucket.h"
 #include "toy_string.h"
-//TODO: hashtable
+#include "toy_table.h"
 
 //IR structures and other components
 #include "toy_ast.h"
