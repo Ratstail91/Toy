@@ -575,7 +575,7 @@ int test_table_expansions_under_stress() {
 		int top = 300;
 
 		//insert keys and values
-		for (int i = 0; i < 300; i++) {
+		for (int i = 0; i < 400; i++) {
 			Toy_insertTable(&table, TOY_VALUE_TO_INTEGER(i), TOY_VALUE_TO_INTEGER(top - i));
 		}
 
@@ -584,7 +584,7 @@ int test_table_expansions_under_stress() {
 		//check the state
 		if (table == NULL ||
 			table->capacity != 512 ||
-			table->count != 300 ||
+			table->count != 400 ||
 
 			TOY_VALUE_IS_INTEGER(result) != true ||
 			TOY_VALUE_AS_INTEGER(result) != 35
