@@ -1,4 +1,5 @@
 #include "toy.h"
+#include "toy_print.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -156,8 +157,17 @@ CmdLine parseCmdLine(int argc, const char* argv[]) {
 	return cmd;
 }
 
+//callback
+static void errorAndExit(const char* msg) {
+	fprintf(stderr, "%s", msg);
+	exit(-1);
+}
+
 //main file
 int main(int argc, const char* argv[]) {
+	Toy_setErrorCallback(errorAndExit);
+	Toy_setAssertFailureCallback(errorAndExit);
+
 	CmdLine cmd = parseCmdLine(argc, argv);
 
 	if (cmd.error) {

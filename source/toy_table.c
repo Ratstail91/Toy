@@ -1,5 +1,6 @@
 #include "toy_table.h"
 #include "toy_console_colors.h"
+#include "toy_print.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,8 +59,7 @@ static Toy_Table* adjustTableCapacity(Toy_Table* oldTable, unsigned int newCapac
 	Toy_Table* newTable = malloc(newCapacity * sizeof(Toy_TableEntry) + sizeof(Toy_Table));
 
 	if (newTable == NULL) {
-		fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to allocate a 'Toy_Table' of %u capacity\n" TOY_CC_RESET, newCapacity);
-		exit(-1);
+		Toy_error(TOY_CC_ERROR "ERROR: Failed to allocate a 'Toy_Table'\n" TOY_CC_RESET);
 	}
 
 	newTable->capacity = newCapacity;
@@ -99,8 +99,7 @@ void Toy_freeTable(Toy_Table* table) {
 
 void Toy_insertTable(Toy_Table** tableHandle, Toy_Value key, Toy_Value value) {
 	if (TOY_VALUE_IS_NULL(key) || TOY_VALUE_IS_BOOLEAN(key)) { //TODO: disallow functions and opaques
-		fprintf(stderr, TOY_CC_ERROR "ERROR: Bad table key\n" TOY_CC_RESET);
-		exit(-1); //TODO: #127
+		Toy_error(TOY_CC_ERROR "ERROR: Bad table key\n" TOY_CC_RESET);
 	}
 
 	//expand the capacity
@@ -113,8 +112,7 @@ void Toy_insertTable(Toy_Table** tableHandle, Toy_Value key, Toy_Value value) {
 
 Toy_Value Toy_lookupTable(Toy_Table** tableHandle, Toy_Value key) {
 	if (TOY_VALUE_IS_NULL(key) || TOY_VALUE_IS_BOOLEAN(key)) { //TODO: disallow functions and opaques
-		fprintf(stderr, TOY_CC_ERROR "ERROR: Bad table key\n" TOY_CC_RESET);
-		exit(-1); //TODO: #127
+		Toy_error(TOY_CC_ERROR "ERROR: Bad table key\n" TOY_CC_RESET);
 	}
 
 	//lookup
@@ -138,8 +136,7 @@ Toy_Value Toy_lookupTable(Toy_Table** tableHandle, Toy_Value key) {
 
 void Toy_removeTable(Toy_Table** tableHandle, Toy_Value key) {
 	if (TOY_VALUE_IS_NULL(key) || TOY_VALUE_IS_BOOLEAN(key)) { //TODO: disallow functions and opaques
-		fprintf(stderr, TOY_CC_ERROR "ERROR: Bad table key\n" TOY_CC_RESET);
-		exit(-1); //TODO: #127
+		Toy_error(TOY_CC_ERROR "ERROR: Bad table key\n" TOY_CC_RESET);
 	}
 
 	//lookup

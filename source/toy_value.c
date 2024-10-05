@@ -1,14 +1,13 @@
 #include "toy_value.h"
 #include "toy_console_colors.h"
+#include "toy_print.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 
 bool Toy_private_isTruthy(Toy_Value value) {
 	//null is an error
 	if (TOY_VALUE_IS_NULL(value)) {
-		fprintf(stderr, TOY_CC_ERROR "ERROR: 'null' is neither true nor false\n" TOY_CC_RESET);
-		exit(-1); //TODO: #127
+		Toy_error(TOY_CC_ERROR "ERROR: 'null' is neither true nor false\n" TOY_CC_RESET);
 	}
 
 	//only 'false' is falsy
@@ -23,8 +22,7 @@ bool Toy_private_isTruthy(Toy_Value value) {
 bool Toy_private_isEqual(Toy_Value left, Toy_Value right) {
 	//temp check
 	if (right.type > TOY_VALUE_FLOAT) {
-		fprintf(stderr, TOY_CC_ERROR "ERROR: Unknown types %d and %d in equality\n" TOY_CC_RESET, left.type, right.type);
-		exit(-1);
+		Toy_error(TOY_CC_ERROR "ERROR: Unknown types in value equality comparison\n" TOY_CC_RESET); //TODO: varargs
 	}
 
 	switch(left.type) {
@@ -58,9 +56,10 @@ bool Toy_private_isEqual(Toy_Value left, Toy_Value right) {
 		case TOY_VALUE_FUNCTION:
 		case TOY_VALUE_OPAQUE:
 		default:
-			fprintf(stderr, TOY_CC_ERROR "ERROR: Unknown types %d and %d in equality\n" TOY_CC_RESET, left.type, right.type);
-			exit(-1);
+		Toy_error(TOY_CC_ERROR "ERROR: Unknown types in value equality comparison\n" TOY_CC_RESET); //TODO: varargs
 	}
+
+	return 0;
 }
 
 //hash utils
@@ -103,7 +102,8 @@ unsigned int Toy_hashValue(Toy_Value value) {
 		case TOY_VALUE_FUNCTION:
 		case TOY_VALUE_OPAQUE:
 		default:
-			fprintf(stderr, TOY_CC_ERROR "ERROR: Can't hash an unknown type %d\n" TOY_CC_RESET, value.type);
-			exit(-1);
+			Toy_error(TOY_CC_ERROR "ERROR: Can't hash an unknown type\n" TOY_CC_RESET);
 	}
+
+	return 0;
 }
