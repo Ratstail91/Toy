@@ -289,7 +289,7 @@ static void process(Toy_VM* vm) {
 }
 
 //exposed functions
-void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode, unsigned int bytecodeSize) {
+void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode) {
 	if (bytecode[0] != TOY_VERSION_MAJOR || bytecode[1] > TOY_VERSION_MINOR) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Wrong bytecode version found: expected %d.%d.%d found %d.%d.%d, exiting\n" TOY_CC_RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, bytecode[0], bytecode[1], bytecode[2]);
 		exit(-1);
@@ -314,7 +314,6 @@ void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode, unsigned int bytecodeSize) 
 
 	//cache these
 	vm->bc = bytecode;
-	vm->bcSize = bytecodeSize;
 }
 
 void Toy_bindVMToRoutine(Toy_VM* vm, unsigned char* routine) {
@@ -376,7 +375,6 @@ void Toy_freeVM(Toy_VM* vm) {
 
 void Toy_resetVM(Toy_VM* vm) {
 	vm->bc = NULL;
-	vm->bcSize = 0;
 
 	vm->routine = NULL;
 	vm->routineSize = 0;

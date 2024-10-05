@@ -7,7 +7,6 @@
 typedef struct Toy_VM {
 	//hold the raw bytecode
 	unsigned char* bc;
-	unsigned int bcSize;
 
 	//raw instructions to be executed
 	unsigned char* routine;
@@ -33,7 +32,7 @@ typedef struct Toy_VM {
 	Toy_Stack* stack;
 } Toy_VM;
 
-TOY_API void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode, unsigned int bytecodeSize); //process the version data
+TOY_API void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode); //process the version data
 TOY_API void Toy_bindVMToRoutine(Toy_VM* vm, unsigned char* routine); //process the routine only
 
 TOY_API void Toy_runVM(Toy_VM* vm);

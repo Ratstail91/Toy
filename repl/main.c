@@ -210,7 +210,7 @@ int main(int argc, const char* argv[]) {
 
 		//run the setup
 		Toy_VM vm;
-		Toy_bindVM(&vm, bc.ptr, bc.capacity);
+		Toy_bindVM(&vm, bc.ptr);
 
 		//run
 		Toy_runVM(&vm);

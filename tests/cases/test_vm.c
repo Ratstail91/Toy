@@ -41,7 +41,7 @@ int test_setup_and_teardown(Toy_Bucket** bucketHandle) {
 
 		//run the setup
 		Toy_VM vm;
-		Toy_bindVM(&vm, bc.ptr, bc.capacity);
+		Toy_bindVM(&vm, bc.ptr);
 
 		//check the header size
 		int headerSize = 3 + strlen(TOY_VERSION_BUILD) + 1;
@@ -91,7 +91,7 @@ int test_simple_execution(Toy_Bucket** bucketHandle) {
 
 		//run the setup
 		Toy_VM vm;
-		Toy_bindVM(&vm, bc.ptr, bc.capacity);
+		Toy_bindVM(&vm, bc.ptr);
 
 		//run
 		Toy_runVM(&vm);
@@ -135,7 +135,7 @@ int test_opcode_not_equal(Toy_Bucket** bucketHandle) {
 
 		//run the setup
 		Toy_VM vm;
-		Toy_bindVM(&vm, bc.ptr, bc.capacity);
+		Toy_bindVM(&vm, bc.ptr);
 
 		//run
 		Toy_runVM(&vm);
