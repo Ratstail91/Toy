@@ -79,7 +79,7 @@ Toy_String* Toy_deepCopyString(Toy_Bucket** bucketHandle, Toy_String* str) {
 	return ret;
 }
 
-Toy_String* Toy_concatString(Toy_Bucket** bucketHandle, Toy_String* left, Toy_String* right) {
+Toy_String* Toy_concatStrings(Toy_Bucket** bucketHandle, Toy_String* left, Toy_String* right) {
 	if (left->refCount == 0 || right->refCount == 0) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't concatenate a string with refcount of zero\n" TOY_CC_RESET);
 		exit(-1);
@@ -123,4 +123,90 @@ char* Toy_getStringRawBuffer(Toy_String* str) {
 	buffer[str->length] = '\0';
 
 	return buffer;
+}
+
+static int deepCompareUtil(Toy_String* left, Toy_String* right, const char** leftHead, const char** rightHead) {
+	//WARNING: this function can't handle strings of zero length
+	int result = 0;
+
+	//if it's the same object, of course they match
+	if (left == right) {
+		return result;
+	}
+
+	//BUGFIX: if we're not currently iterating through the left leaf (and leftHead is not null), skip out
+	if (left->type == TOY_STRING_LEAF && (*leftHead) != NULL && (**leftHead) != '\0' && ((*leftHead) < left->as.leaf.data || (*leftHead) > (left->as.leaf.data + strlen(left->as.leaf.data))) ) {
+		return result;
+	}
+
+	//BUGFIX: if we're not currently iterating through the right leaf (and rightHead is not null), skip out
+	if (right->type == TOY_STRING_LEAF && (*rightHead) != NULL && (**rightHead) != '\0' && ((*rightHead) < right->as.leaf.data || (*rightHead) > (right->as.leaf.data + strlen(right->as.leaf.data))) ) {
+		return result;
+	}
+
+	//dig into left
+	if (left->type == TOY_STRING_NODE) {
+		if ((result = deepCompareUtil(left->as.node.left, right, leftHead, rightHead)) != 0) {
+			return result;
+		}
+		if ((result = deepCompareUtil(left->as.node.right, right, leftHead, rightHead)) != 0) {
+			return result;
+		}
+
+		//return zero to keep going
+		return result;
+	}
+
+	//dig into right
+	if (right->type == TOY_STRING_NODE) {
+		if ((result = deepCompareUtil(left, right->as.node.left, leftHead, rightHead)) != 0) {
+			return result;
+		}
+
+		if ((result = deepCompareUtil(left, right->as.node.right, leftHead, rightHead)) != 0) {
+			return result;
+		}
+
+		//return zero to keep going
+		return result;
+	}
+
+	//keep comparing the leaves
+	if (left->type == TOY_STRING_LEAF && right->type == TOY_STRING_LEAF) {
+		//initial head states can be null, or null characters
+		if ((*leftHead) == NULL || (**leftHead) == '\0') {
+			(*leftHead) = left->as.leaf.data;
+		}
+
+		if ((*rightHead) == NULL || (**rightHead) == '\0') {
+			(*rightHead) = right->as.leaf.data;
+		}
+
+		//compare and increment
+		while (**leftHead && (**leftHead == **rightHead)) {
+			(*leftHead)++;
+			(*rightHead)++;
+		}
+
+		//if both are not null, then it's a real result
+		if ( (**leftHead == '\0' || **rightHead == '\0') == false) {
+			result = *(const unsigned char*)(*leftHead) - *(const unsigned char*)(*rightHead);
+		}
+	}
+
+	//if either are a null character, return 0 to check the next node
+	return result;
+}
+
+int Toy_compareStrings(Toy_String* left, Toy_String* right) {
+	//BUGFIX: since deepCompareUtil() can't handle strings of length zero, insert a check here
+	if (left->length == 0 || right->length == 0) {
+		return left->length - right->length;
+	}
+
+	//util pointers
+	const char* leftHead = NULL;
+	const char* rightHead = NULL;
+
+	return deepCompareUtil(left, right, &leftHead, &rightHead);
 }

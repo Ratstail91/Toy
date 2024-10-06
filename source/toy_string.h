@@ -33,7 +33,7 @@ TOY_API Toy_String* Toy_createStringLength(Toy_Bucket** bucketHandle, const char
 TOY_API Toy_String* Toy_copyString(Toy_Bucket** bucketHandle, Toy_String* str);
 TOY_API Toy_String* Toy_deepCopyString(Toy_Bucket** bucketHandle, Toy_String* str);
 
-TOY_API Toy_String* Toy_concatString(Toy_Bucket** bucketHandle, Toy_String* left, Toy_String* right);
+TOY_API Toy_String* Toy_concatStrings(Toy_Bucket** bucketHandle, Toy_String* left, Toy_String* right);
 
 TOY_API void Toy_freeString(Toy_String* str);
 
@@ -42,4 +42,4 @@ TOY_API int Toy_getStringRefCount(Toy_String* str);
 
 TOY_API char* Toy_getStringRawBuffer(Toy_String* str); //allocates the buffer on the heap, needs to be freed
 
-//TODO: compare
+TOY_API int Toy_compareStrings(Toy_String* left, Toy_String* right); //return value mimics strcmp()

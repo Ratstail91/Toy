@@ -140,7 +140,7 @@ int test_string_concatenation() {
 		Toy_String* second = Toy_createString(&bucket, "world");
 
 		//concatenate
-		Toy_String* result = Toy_concatString(&bucket, first, second);
+		Toy_String* result = Toy_concatStrings(&bucket, first, second);
 
 		//check the refcounts
 		if (first->refCount != 2 ||
@@ -179,7 +179,7 @@ int test_string_concatenation() {
 		Toy_String* second = Toy_createString(&bucket, "world");
 
 		//concatenate
-		Toy_String* result = Toy_concatString(&bucket, first, second);
+		Toy_String* result = Toy_concatStrings(&bucket, first, second);
 
 		char* buffer = Toy_getStringRawBuffer(result);
 
@@ -227,7 +227,7 @@ int test_string_with_stressed_bucket() {
 		Toy_String* str = Toy_createString(&bucket, testData[0]);
 		Toy_String* ptr = str;
 		for (int i = 1; testData[i]; i++) {
-			str = Toy_concatString(&bucket, str, Toy_createString(&bucket, testData[i]));
+			str = Toy_concatStrings(&bucket, str, Toy_createString(&bucket, testData[i]));
 		}
 
 		//check
@@ -268,6 +268,455 @@ int test_string_with_stressed_bucket() {
 	return 0;
 }
 
+int test_string_equality() {
+	//simple string equality (no concats)
+	{
+		//setup
+		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_String* helloWorldOne = Toy_createString(&bucket, "Hello world");
+		Toy_String* helloWorldTwo = Toy_createString(&bucket, "Hello world");
+		Toy_String* helloEveryone = Toy_createString(&bucket, "Hello everyone");
+
+		int result = 0; //for print the errors
+
+		//check match
+		if ((result = Toy_compareStrings(helloWorldOne, helloWorldTwo)) != 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloWorldTwo);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String equality '%s' == '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//check mismatch
+		if ((result = Toy_compareStrings(helloWorldOne, helloEveryone)) == 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloEveryone);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String equality '%s' != '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//check match (same object)
+		if ((result = Toy_compareStrings(helloWorldOne, helloWorldOne)) != 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String equality '%s' == '%s' is incorrect, found %s (these are the same object)\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//cleanup
+		Toy_freeBucket(&bucket);
+	}
+
+	//string equality (with concat left)
+	{
+		//setup
+		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_String* helloWorldOne = Toy_concatStrings(&bucket, Toy_createString(&bucket, "Hello "), Toy_createString(&bucket, "world"));
+		Toy_String* helloWorldTwo = Toy_createString(&bucket, "Hello world");
+		Toy_String* helloEveryone = Toy_createString(&bucket, "Hello everyone");
+
+		int result = 0; //for print the errors
+
+		//check match
+		if ((result = Toy_compareStrings(helloWorldOne, helloWorldTwo)) != 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloWorldTwo);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String concat left equality '%s' == '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//check mismatch
+		if ((result = Toy_compareStrings(helloWorldOne, helloEveryone)) == 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloEveryone);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String concat left equality '%s' != '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//check match (same object)
+		if ((result = Toy_compareStrings(helloWorldOne, helloWorldOne)) != 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String concat left equality '%s' == '%s' is incorrect, found %s (these are the same object)\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//cleanup
+		Toy_freeBucket(&bucket);
+	}
+
+	//string equality (with concat right)
+	{
+		//setup
+		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_String* helloWorldOne = Toy_createString(&bucket, "Hello world");
+		Toy_String* helloWorldTwo = Toy_concatStrings(&bucket, Toy_createString(&bucket, "Hello "), Toy_createString(&bucket, "world"));
+		Toy_String* helloEveryone = Toy_createString(&bucket, "Hello everyone");
+
+		int result = 0; //for print the errors
+
+		//check match
+		if ((result = Toy_compareStrings(helloWorldOne, helloWorldTwo)) != 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloWorldTwo);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String concat right equality '%s' == '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//cleanup
+		Toy_freeBucket(&bucket);
+	}
+
+	//string equality (with concat both)
+	{
+		//setup - these concat points are deliberately different
+		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_String* helloWorldOne = Toy_concatStrings(&bucket, Toy_createString(&bucket, "Hello "), Toy_createString(&bucket, "world"));
+		Toy_String* helloWorldTwo = Toy_concatStrings(&bucket, Toy_createString(&bucket, "Hello"), Toy_createString(&bucket, " world"));
+		Toy_String* helloEveryone = Toy_concatStrings(&bucket, Toy_createString(&bucket, "Hell"), Toy_createString(&bucket, "world"));
+
+		int result = 0; //for print the errors
+
+		//check match
+		if ((result = Toy_compareStrings(helloWorldOne, helloWorldTwo)) != 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloWorldTwo);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String concat both equality '%s' == '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//check mismatch
+		if ((result = Toy_compareStrings(helloWorldOne, helloEveryone)) == 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloEveryone);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String concat both equality '%s' != '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//cleanup
+		Toy_freeBucket(&bucket);
+	}
+
+	//string equality (with concat arbitrary)
+	{
+		//setup - The quick brown fox jumps over the lazy dog.
+		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_String* helloWorldOne = Toy_concatStrings(&bucket,
+			Toy_createString(&bucket, "The quick brown "),
+			Toy_concatStrings(&bucket,
+				Toy_createString(&bucket, "fox jumps o"),
+				Toy_createString(&bucket, "ver the lazy dog.")
+			)
+		);
+
+		Toy_String* helloWorldTwo = Toy_concatStrings(&bucket,
+			Toy_concatStrings(&bucket,
+				Toy_createString(&bucket, "The quick brown fox"),
+				Toy_concatStrings(&bucket,
+					Toy_createString(&bucket, " jumps ove"),
+					Toy_createString(&bucket, "r th")
+				)
+			),
+			Toy_concatStrings(&bucket,
+				Toy_createString(&bucket, "e lazy dog"),
+				Toy_createString(&bucket, ".")
+			)
+		);
+
+		Toy_String* helloEveryone = Toy_concatStrings(&bucket,
+			Toy_createString(&bucket, "The quick brown fox jumps over "),
+			Toy_concatStrings(&bucket,
+				Toy_createString(&bucket, "the lazy "),
+				Toy_createString(&bucket, "reddit mod.")
+			)
+		);
+
+		int result = 0; //for print the errors
+
+		//check match
+		if ((result = Toy_compareStrings(helloWorldOne, helloWorldTwo)) != 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloWorldTwo);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String concat arbitrary equality '%s' == '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//check mismatch
+		if ((result = Toy_compareStrings(helloWorldOne, helloEveryone)) == 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloEveryone);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String concat arbitrary equality '%s' != '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//cleanup
+		Toy_freeBucket(&bucket);
+	}
+
+	//string equality (empty strings, no concats)
+	{
+		//setup
+		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_String* helloWorldOne = Toy_createString(&bucket, "");
+		Toy_String* helloWorldTwo = Toy_createString(&bucket, "");
+		Toy_String* helloEveryone = Toy_createString(&bucket, "Hello everyone");
+
+		int result = 0; //for print the errors
+
+		//check match
+		if ((result = Toy_compareStrings(helloWorldOne, helloWorldTwo)) != 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloWorldTwo);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String equality empty '%s' == '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//check mismatch
+		if ((result = Toy_compareStrings(helloWorldOne, helloEveryone)) == 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloEveryone);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String equality empty '%s' != '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//check mismatch (same object)
+		if ((result = Toy_compareStrings(helloWorldOne, helloWorldOne)) != 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String equality empty '%s' == '%s' is incorrect, found %s (these are the same object)\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//cleanup
+		Toy_freeBucket(&bucket);
+	}
+
+	//string equality (empty strings, deep concats)
+	{
+		//setup
+		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_String* helloWorldOne = Toy_concatStrings(&bucket,
+			Toy_createString(&bucket, ""),
+			Toy_concatStrings(&bucket,
+				Toy_createString(&bucket, ""),
+				Toy_createString(&bucket, "")
+			)
+		);
+
+		Toy_String* helloWorldTwo = Toy_concatStrings(&bucket,
+			Toy_concatStrings(&bucket,
+				Toy_createString(&bucket, ""),
+				Toy_concatStrings(&bucket,
+					Toy_createString(&bucket, ""),
+					Toy_createString(&bucket, "")
+				)
+			),
+			Toy_concatStrings(&bucket,
+				Toy_createString(&bucket, ""),
+				Toy_createString(&bucket, "")
+			)
+		);
+
+		Toy_String* helloEveryone = Toy_concatStrings(&bucket,
+			Toy_createString(&bucket, "The quick brown fox jumps over "),
+			Toy_concatStrings(&bucket,
+				Toy_createString(&bucket, "the lazy "),
+				Toy_createString(&bucket, "reddit mod.")
+			)
+		);
+
+		int result = 0; //for print the errors
+
+		//check match
+		if ((result = Toy_compareStrings(helloWorldOne, helloWorldTwo)) != 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloWorldTwo);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String equality empty with concats '%s' == '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//check mismatch
+		if ((result = Toy_compareStrings(helloWorldOne, helloEveryone)) == 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloEveryone);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String equality empty with concats '%s' != '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//check match (same object)
+		if ((result = Toy_compareStrings(helloWorldOne, helloWorldOne)) != 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String equality empty with concats '%s' == '%s' is incorrect, found %s (these are the same object)\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//cleanup
+		Toy_freeBucket(&bucket);
+	}
+
+	return 0;
+}
+
+int test_string_diffs() {
+	//simple string diffs (no concats)
+	{
+		//setup
+		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_String* helloEveryone = Toy_createString(&bucket, "Hello everyone");
+		Toy_String* helloUniverse = Toy_createString(&bucket, "Hello universe");
+
+		int result = 0; //for print the errors
+
+		//check diff
+		if (((result = Toy_compareStrings(helloEveryone, helloUniverse)) < 0) == false)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloEveryone);
+			char* rightBuffer = Toy_getStringRawBuffer(helloUniverse);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String diff '%s' == '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//check diff (reversed)
+		if (((result = Toy_compareStrings(helloUniverse, helloEveryone)) > 0) == false)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloUniverse);
+			char* rightBuffer = Toy_getStringRawBuffer(helloEveryone);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String diff '%s' == '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//cleanup
+		Toy_freeBucket(&bucket);
+	}
+
+	//string diffs (with concat arbitrary)
+	{
+		//setup - The quick brown fox jumps over the lazy dog.
+		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_String* pangram = Toy_concatStrings(&bucket,
+			Toy_createString(&bucket, "The quick brown "),
+			Toy_concatStrings(&bucket,
+				Toy_createString(&bucket, "fox jumps o"),
+				Toy_createString(&bucket, "ver the lazy dog.")
+			)
+		);
+
+		Toy_String* neckbeard = Toy_concatStrings(&bucket,
+			Toy_createString(&bucket, "The quick brown fox jumps over "),
+			Toy_concatStrings(&bucket,
+				Toy_createString(&bucket, "the lazy "),
+				Toy_createString(&bucket, "reddit mod.")
+			)
+		);
+
+		int result = 0; //for print the errors
+
+		//check diff
+		if (((result = Toy_compareStrings(pangram, neckbeard)) < 0) == false)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(pangram);
+			char* rightBuffer = Toy_getStringRawBuffer(neckbeard);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String diff '%s' == '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//check diff (reversed)
+		if (((result = Toy_compareStrings(neckbeard, pangram)) > 0) == false)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(neckbeard);
+			char* rightBuffer = Toy_getStringRawBuffer(pangram);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: String diff '%s' == '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//cleanup
+		Toy_freeBucket(&bucket);
+	}
+
+	return 0;
+}
+
 int main() {
 	//run each test set, returning the total errors given
 	int total = 0, res = 0;
@@ -302,6 +751,22 @@ int main() {
 
 	{
 		res = test_string_with_stressed_bucket();
+		if (res == 0) {
+			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
+		}
+		total += res;
+	}
+
+	{
+		res = test_string_equality();
+		if (res == 0) {
+			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
+		}
+		total += res;
+	}
+
+	{
+		res = test_string_diffs();
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 		}
