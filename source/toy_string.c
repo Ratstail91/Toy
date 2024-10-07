@@ -53,6 +53,20 @@ Toy_String* Toy_createStringLength(Toy_Bucket** bucketHandle, const char* cstrin
 	return ret;
 }
 
+TOY_API Toy_String* Toy_createNameString(Toy_Bucket** bucketHandle, const char* cname) {
+	int length = strlen(cname);
+
+	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucketHandle, sizeof(Toy_String) + length + 1); //TODO: compensate for partitioning more space than bucket capacity
+
+	ret->type = TOY_STRING_NAME;
+	ret->length = length;
+	ret->refCount = 1;
+	memcpy(ret->as.name.data, cname, length);
+	ret->as.name.data[length] = '\0';
+
+	return ret;
+}
+
 Toy_String* Toy_copyString(Toy_Bucket** bucketHandle, Toy_String* str) {
 	if (str->refCount == 0) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't copy a string with refcount of zero\n" TOY_CC_RESET);
@@ -69,17 +83,30 @@ Toy_String* Toy_deepCopyString(Toy_Bucket** bucketHandle, Toy_String* str) {
 	}
 	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucketHandle, sizeof(Toy_String) + str->length + 1); //TODO: compensate for partitioning more space than bucket capacity
 
-	//
-	ret->type = TOY_STRING_LEAF;
-	ret->length = str->length;
-	ret->refCount = 1;
-	deepCopyUtil(ret->as.leaf.data, str); //copy each leaf into the buffer
-	ret->as.leaf.data[ret->length] = '\0';
+	if (str->type == TOY_STRING_NODE || str->type == TOY_STRING_LEAF) {
+		ret->type = TOY_STRING_LEAF;
+		ret->length = str->length;
+		ret->refCount = 1;
+		deepCopyUtil(ret->as.leaf.data, str); //copy each leaf into the buffer
+		ret->as.leaf.data[ret->length] = '\0';
+	}
+	else {
+		ret->type = TOY_STRING_NAME;
+		ret->length = str->length;
+		ret->refCount = 1;
+		memcpy(ret->as.name.data, str->as.name.data, str->length);
+		ret->as.name.data[ret->length] = '\0';
+	}
 
 	return ret;
 }
 
 Toy_String* Toy_concatStrings(Toy_Bucket** bucketHandle, Toy_String* left, Toy_String* right) {
+	if (left->type == TOY_STRING_NAME || right->type == TOY_STRING_NAME) {
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't concatenate a name string\n" TOY_CC_RESET);
+		exit(-1);
+	}
+
 	if (left->refCount == 0 || right->refCount == 0) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't concatenate a string with refcount of zero\n" TOY_CC_RESET);
 		exit(-1);
@@ -112,6 +139,11 @@ int Toy_getStringRefCount(Toy_String* str) {
 }
 
 char* Toy_getStringRawBuffer(Toy_String* str) {
+	if (str->type == TOY_STRING_NAME) {
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't get raw string buffer of a name string\n" TOY_CC_RESET);
+		exit(-1);
+	}
+
 	if (str->refCount == 0) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't get raw string buffer of a string with refcount of zero\n" TOY_CC_RESET);
 		exit(-1);
@@ -202,6 +234,15 @@ int Toy_compareStrings(Toy_String* left, Toy_String* right) {
 	//BUGFIX: since deepCompareUtil() can't handle strings of length zero, insert a check here
 	if (left->length == 0 || right->length == 0) {
 		return left->length - right->length;
+	}
+
+	if (left->type == TOY_STRING_NAME || right->type == TOY_STRING_NAME) {
+		if (left->type != right->type) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Can't compare a name string to a non-name string\n" TOY_CC_RESET);
+			exit(-1);
+		}
+
+		return strcmp(left->as.name.data, right->as.name.data);
 	}
 
 	//util pointers

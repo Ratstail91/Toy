@@ -1,12 +1,14 @@
 #include "toy_common.h"
 
 #include "toy_bucket.h"
+#include "toy_value.h"
 
 //rope pattern
 typedef struct Toy_String {             //32 | 64 BITNESS
 	enum Toy_StringType {
 		TOY_STRING_NODE,
 		TOY_STRING_LEAF,
+		TOY_STRING_NAME,
 	} type;                             //4  | 4
 
 	unsigned int length;                //4  | 4
@@ -24,11 +26,18 @@ typedef struct Toy_String {             //32 | 64 BITNESS
 			int _dummy;                 //4  | 4
 			char data[];                //-  | -
 		} leaf;                         //4  | 4
+
+		struct {
+			Toy_ValueType type;         //4  | 4
+			char data[];                //-  | -
+		} name;                         //4  | 4
 	} as;                               //8  | 16
 } Toy_String;                           //24 | 32
 
 TOY_API Toy_String* Toy_createString(Toy_Bucket** bucketHandle, const char* cstring);
 TOY_API Toy_String* Toy_createStringLength(Toy_Bucket** bucketHandle, const char* cstring, int length);
+
+TOY_API Toy_String* Toy_createNameString(Toy_Bucket** bucketHandle, const char* cname); //for variable names
 
 TOY_API Toy_String* Toy_copyString(Toy_Bucket** bucketHandle, Toy_String* str);
 TOY_API Toy_String* Toy_deepCopyString(Toy_Bucket** bucketHandle, Toy_String* str);

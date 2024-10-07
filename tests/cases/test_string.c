@@ -100,6 +100,32 @@ int test_string_allocation() {
 		Toy_freeBucket(&bucket);
 	}
 
+	//copy and deep copy a name string
+	{
+		//setup
+		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+
+		const char* cstring = "Hello world";
+		Toy_String* str = Toy_createNameString(&bucket, cstring);
+
+		//shallow and deep
+		Toy_String* shallow = Toy_copyString(&bucket, str);
+		Toy_String* deep = Toy_deepCopyString(&bucket, str);
+
+		if (str != shallow ||
+			str == deep ||
+			shallow->refCount != 2 ||
+			deep->refCount != 1 ||
+			strcmp(shallow->as.name.data, deep->as.name.data) != 0)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to copy a name string correctly\n" TOY_CC_RESET);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		Toy_freeBucket(&bucket);
+	}
+
 	//allocate a zero-length string
 	{
 		//setup
@@ -613,6 +639,56 @@ int test_string_equality() {
 			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
 			char* rightBuffer = Toy_getStringRawBuffer(helloWorldOne);
 			fprintf(stderr, TOY_CC_ERROR "ERROR: String equality empty with concats '%s' == '%s' is incorrect, found %s (these are the same object)\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//cleanup
+		Toy_freeBucket(&bucket);
+	}
+
+	//simple name equality
+	{
+		//setup
+		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_String* helloWorldOne = Toy_createNameString(&bucket, "Hello world");
+		Toy_String* helloWorldTwo = Toy_createNameString(&bucket, "Hello world");
+		Toy_String* helloEveryone = Toy_createNameString(&bucket, "Hello everyone");
+
+		int result = 0; //for print the errors
+
+		//check match
+		if ((result = Toy_compareStrings(helloWorldOne, helloWorldTwo)) != 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloWorldTwo);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Name string equality '%s' == '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//check mismatch
+		if ((result = Toy_compareStrings(helloWorldOne, helloEveryone)) == 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloEveryone);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Name string equality '%s' != '%s' is incorrect, found %s\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
+			free(leftBuffer);
+			free(rightBuffer);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//check match (same object)
+		if ((result = Toy_compareStrings(helloWorldOne, helloWorldOne)) != 0)
+		{
+			char* leftBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			char* rightBuffer = Toy_getStringRawBuffer(helloWorldOne);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Name string equality '%s' == '%s' is incorrect, found %s (these are the same object)\n" TOY_CC_RESET, leftBuffer, rightBuffer, result < 0 ? "<" : result == 0 ? "==" : ">");
 			free(leftBuffer);
 			free(rightBuffer);
 			Toy_freeBucket(&bucket);
