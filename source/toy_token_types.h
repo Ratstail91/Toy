@@ -106,3 +106,4 @@ typedef enum Toy_TokenType {
 	TOY_TOKEN_ERROR,
 	TOY_TOKEN_EOF,
 } Toy_TokenType;
+

@@ -25,3 +25,4 @@ TOY_API void Toy_freeTable(Toy_Table* table);
 TOY_API void Toy_insertTable(Toy_Table** tableHandle, Toy_Value key, Toy_Value value);
 TOY_API Toy_Value Toy_lookupTable(Toy_Table** tableHandle, Toy_Value key);
 TOY_API void Toy_removeTable(Toy_Table** tableHandle, Toy_Value key);
+

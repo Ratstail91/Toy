@@ -1,3 +1,5 @@
+#pragma once
+
 #include "toy_common.h"
 
 #include "toy_bucket.h"
@@ -13,8 +15,7 @@ typedef struct Toy_String {             //32 | 64 BITNESS
 
 	unsigned int length;                //4  | 4
 	unsigned int refCount;              //4  | 4
-
-	int _padding;                       //4  | 4
+	unsigned int cachedHash;            //4  | 4
 
 	union {
 		struct {
@@ -52,3 +53,4 @@ TOY_API int Toy_getStringRefCount(Toy_String* str);
 TOY_API char* Toy_getStringRawBuffer(Toy_String* str); //allocates the buffer on the heap, needs to be freed
 
 TOY_API int Toy_compareStrings(Toy_String* left, Toy_String* right); //return value mimics strcmp()
+

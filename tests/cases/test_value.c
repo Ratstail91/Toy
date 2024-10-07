@@ -1,6 +1,9 @@
 #include "toy_value.h"
 #include "toy_console_colors.h"
 
+#include "toy_bucket.h"
+#include "toy_string.h"
+
 #include <stdio.h>
 
 int main() {
@@ -14,7 +17,7 @@ int main() {
 
 	//test creating a null
 	{
-		Toy_Value v = TOY_VALUE_TO_NULL();
+		Toy_Value v = TOY_VALUE_FROM_NULL();
 
 		if (!TOY_VALUE_IS_NULL(v)) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: creating a 'null' value failed\n" TOY_CC_RESET);
@@ -24,8 +27,8 @@ int main() {
 
 	//test creating values
 	{
-		Toy_Value t = TOY_VALUE_TO_BOOLEAN(true);
-		Toy_Value f = TOY_VALUE_TO_BOOLEAN(false);
+		Toy_Value t = TOY_VALUE_FROM_BOOLEAN(true);
+		Toy_Value f = TOY_VALUE_FROM_BOOLEAN(false);
 
 		if (!TOY_VALUE_IS_TRUTHY(t) || TOY_VALUE_IS_TRUTHY(f)) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: 'boolean' value failed\n" TOY_CC_RESET);
@@ -35,19 +38,49 @@ int main() {
 
 	//test value equality
 	{
-		Toy_Value answer = TOY_VALUE_TO_INTEGER(42);
-		Toy_Value question = TOY_VALUE_TO_INTEGER(42);
-		Toy_Value nice = TOY_VALUE_TO_INTEGER(69);
+		Toy_Value answer = TOY_VALUE_FROM_INTEGER(42);
+		Toy_Value question = TOY_VALUE_FROM_INTEGER(42);
+		Toy_Value nice = TOY_VALUE_FROM_INTEGER(69);
 
-		if (!TOY_VALUE_IS_EQUAL(answer, question)) {
+		if (!TOY_VALUES_ARE_EQUAL(answer, question)) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: equality check failed, expected true\n" TOY_CC_RESET);
 			return -1;
 		}
 
-		if (TOY_VALUE_IS_EQUAL(answer, nice)) {
+		if (TOY_VALUES_ARE_EQUAL(answer, nice)) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: equality check failed, expected false\n" TOY_CC_RESET);
 			return -1;
 		}
+	}
+
+	//test value hashing
+	{
+		//setup
+		Toy_Bucket* bucket = Toy_allocateBucket(512);
+
+		//values
+		Toy_Value n = TOY_VALUE_FROM_NULL();
+		Toy_Value t = TOY_VALUE_FROM_BOOLEAN(true);
+		Toy_Value f = TOY_VALUE_FROM_BOOLEAN(false);
+		Toy_Value i = TOY_VALUE_FROM_INTEGER(42);
+		//skip float
+		Toy_Value s = TOY_VALUE_FROM_STRING(Toy_createString(&bucket, "Hello world"));
+
+		if (Toy_hashValue(n) != 0 ||
+			Toy_hashValue(t) != 1 ||
+			Toy_hashValue(f) != 0 ||
+			Toy_hashValue(i) != 4147366645 ||
+			Toy_hashValue(s) != 994097935 ||
+			TOY_VALUE_AS_STRING(s)->cachedHash == 0
+			)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Unexpected hash of a value\n" TOY_CC_RESET);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//cleanup
+		Toy_freeBucket(&bucket);
 	}
 
 	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);

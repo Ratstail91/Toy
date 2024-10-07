@@ -47,6 +47,7 @@ Toy_String* Toy_createStringLength(Toy_Bucket** bucketHandle, const char* cstrin
 	ret->type = TOY_STRING_LEAF;
 	ret->length = length;
 	ret->refCount = 1;
+	ret->cachedHash = 0; //don't calc until needed
 	memcpy(ret->as.leaf.data, cstring, length);
 	ret->as.leaf.data[length] = '\0';
 
@@ -61,6 +62,7 @@ TOY_API Toy_String* Toy_createNameString(Toy_Bucket** bucketHandle, const char* 
 	ret->type = TOY_STRING_NAME;
 	ret->length = length;
 	ret->refCount = 1;
+	ret->cachedHash = 0; //don't calc until needed
 	memcpy(ret->as.name.data, cname, length);
 	ret->as.name.data[length] = '\0';
 
@@ -87,6 +89,7 @@ Toy_String* Toy_deepCopyString(Toy_Bucket** bucketHandle, Toy_String* str) {
 		ret->type = TOY_STRING_LEAF;
 		ret->length = str->length;
 		ret->refCount = 1;
+		ret->cachedHash = str->cachedHash;
 		deepCopyUtil(ret->as.leaf.data, str); //copy each leaf into the buffer
 		ret->as.leaf.data[ret->length] = '\0';
 	}
@@ -94,6 +97,7 @@ Toy_String* Toy_deepCopyString(Toy_Bucket** bucketHandle, Toy_String* str) {
 		ret->type = TOY_STRING_NAME;
 		ret->length = str->length;
 		ret->refCount = 1;
+		ret->cachedHash = str->cachedHash;
 		memcpy(ret->as.name.data, str->as.name.data, str->length);
 		ret->as.name.data[ret->length] = '\0';
 	}
@@ -117,6 +121,7 @@ Toy_String* Toy_concatStrings(Toy_Bucket** bucketHandle, Toy_String* left, Toy_S
 	ret->type = TOY_STRING_NODE;
 	ret->length = left->length + right->length;
 	ret->refCount = 1;
+	ret->cachedHash = 0; //don't calc until needed
 	ret->as.node.left = left;
 	ret->as.node.right = right;
 

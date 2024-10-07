@@ -1,7 +1,7 @@
 #pragma once
 
-#include "toy_token_types.h"
 #include "toy_common.h"
+#include "toy_token_types.h"
 
 //lexers are bound to a string of code
 typedef struct {
@@ -25,3 +25,4 @@ TOY_API void Toy_private_printToken(Toy_Token* token); //debugging
 
 //util
 #define TOY_BLANK_TOKEN() ((Toy_Token){TOY_TOKEN_NULL, 0, 0, NULL})
+

@@ -38,7 +38,7 @@ static inline void fix_alignment(Toy_VM* vm) {
 static void processRead(Toy_VM* vm) {
 	Toy_ValueType type = READ_BYTE(vm);
 
-	Toy_Value value = TOY_VALUE_TO_NULL();
+	Toy_Value value = TOY_VALUE_FROM_NULL();
 
 	switch(type) {
 		case TOY_VALUE_NULL: {
@@ -47,19 +47,19 @@ static void processRead(Toy_VM* vm) {
 		}
 
 		case TOY_VALUE_BOOLEAN: {
-			value = TOY_VALUE_TO_BOOLEAN((bool)READ_BYTE(vm));
+			value = TOY_VALUE_FROM_BOOLEAN((bool)READ_BYTE(vm));
 			break;
 		}
 
 		case TOY_VALUE_INTEGER: {
 			fix_alignment(vm);
-			value = TOY_VALUE_TO_INTEGER(READ_INT(vm));
+			value = TOY_VALUE_FROM_INTEGER(READ_INT(vm));
 			break;
 		}
 
 		case TOY_VALUE_FLOAT: {
 			fix_alignment(vm);
-			value = TOY_VALUE_TO_FLOAT(READ_FLOAT(vm));
+			value = TOY_VALUE_FROM_FLOAT(READ_FLOAT(vm));
 			break;
 		}
 
@@ -126,30 +126,30 @@ static void processArithmetic(Toy_VM* vm, Toy_OpcodeType opcode) {
 
 	//coerce ints into floats if needed
 	if (TOY_VALUE_IS_INTEGER(left) && TOY_VALUE_IS_FLOAT(right)) {
-		left = TOY_VALUE_TO_FLOAT( (float)TOY_VALUE_AS_INTEGER(left) );
+		left = TOY_VALUE_FROM_FLOAT( (float)TOY_VALUE_AS_INTEGER(left) );
 	}
 	else
 	if (TOY_VALUE_IS_FLOAT(left) && TOY_VALUE_IS_INTEGER(right)) {
-		right = TOY_VALUE_TO_FLOAT( (float)TOY_VALUE_AS_INTEGER(right) );
+		right = TOY_VALUE_FROM_FLOAT( (float)TOY_VALUE_AS_INTEGER(right) );
 	}
 
 	//apply operation
-	Toy_Value result = TOY_VALUE_TO_NULL();
+	Toy_Value result = TOY_VALUE_FROM_NULL();
 
 	if (opcode == TOY_OPCODE_ADD) {
-		result = TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_TO_FLOAT( TOY_VALUE_AS_FLOAT(left) + TOY_VALUE_AS_FLOAT(right)) : TOY_VALUE_TO_INTEGER( TOY_VALUE_AS_INTEGER(left) + TOY_VALUE_AS_INTEGER(right) );
+		result = TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_FROM_FLOAT( TOY_VALUE_AS_FLOAT(left) + TOY_VALUE_AS_FLOAT(right)) : TOY_VALUE_FROM_INTEGER( TOY_VALUE_AS_INTEGER(left) + TOY_VALUE_AS_INTEGER(right) );
 	}
 	else if (opcode == TOY_OPCODE_SUBTRACT) {
-		result = TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_TO_FLOAT( TOY_VALUE_AS_FLOAT(left) - TOY_VALUE_AS_FLOAT(right)) : TOY_VALUE_TO_INTEGER( TOY_VALUE_AS_INTEGER(left) - TOY_VALUE_AS_INTEGER(right) );
+		result = TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_FROM_FLOAT( TOY_VALUE_AS_FLOAT(left) - TOY_VALUE_AS_FLOAT(right)) : TOY_VALUE_FROM_INTEGER( TOY_VALUE_AS_INTEGER(left) - TOY_VALUE_AS_INTEGER(right) );
 	}
 	else if (opcode == TOY_OPCODE_MULTIPLY) {
-		result = TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_TO_FLOAT( TOY_VALUE_AS_FLOAT(left) * TOY_VALUE_AS_FLOAT(right)) : TOY_VALUE_TO_INTEGER( TOY_VALUE_AS_INTEGER(left) * TOY_VALUE_AS_INTEGER(right) );
+		result = TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_FROM_FLOAT( TOY_VALUE_AS_FLOAT(left) * TOY_VALUE_AS_FLOAT(right)) : TOY_VALUE_FROM_INTEGER( TOY_VALUE_AS_INTEGER(left) * TOY_VALUE_AS_INTEGER(right) );
 	}
 	else if (opcode == TOY_OPCODE_DIVIDE) {
-		result = TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_TO_FLOAT( TOY_VALUE_AS_FLOAT(left) / TOY_VALUE_AS_FLOAT(right)) : TOY_VALUE_TO_INTEGER( TOY_VALUE_AS_INTEGER(left) / TOY_VALUE_AS_INTEGER(right) );
+		result = TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_FROM_FLOAT( TOY_VALUE_AS_FLOAT(left) / TOY_VALUE_AS_FLOAT(right)) : TOY_VALUE_FROM_INTEGER( TOY_VALUE_AS_INTEGER(left) / TOY_VALUE_AS_INTEGER(right) );
 	}
 	else if (opcode == TOY_OPCODE_MODULO) {
-		result = TOY_VALUE_TO_INTEGER( TOY_VALUE_AS_INTEGER(left) % TOY_VALUE_AS_INTEGER(right) );
+		result = TOY_VALUE_FROM_INTEGER( TOY_VALUE_AS_INTEGER(left) % TOY_VALUE_AS_INTEGER(right) );
 	}
 	else {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid opcode %d passed to processArithmetic, exiting\n" TOY_CC_RESET, opcode);
@@ -166,14 +166,14 @@ static void processComparison(Toy_VM* vm, Toy_OpcodeType opcode) {
 
 	//most things can be equal, so handle it separately
 	if (opcode == TOY_OPCODE_COMPARE_EQUAL) {
-		bool equal = TOY_VALUE_IS_EQUAL(left, right);
+		bool equal = TOY_VALUES_ARE_EQUAL(left, right);
 
 		//equality has an optional "negate" opcode within it's word
 		if (READ_BYTE(vm) != TOY_OPCODE_NEGATE) {
-			Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN(equal) );
+			Toy_pushStack(&vm->stack, TOY_VALUE_FROM_BOOLEAN(equal) );
 		}
 		else {
-			Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN(!equal) );
+			Toy_pushStack(&vm->stack, TOY_VALUE_FROM_BOOLEAN(!equal) );
 		}
 
 		return;
@@ -181,25 +181,25 @@ static void processComparison(Toy_VM* vm, Toy_OpcodeType opcode) {
 
 	//coerce ints into floats if needed
 	if (TOY_VALUE_IS_INTEGER(left) && TOY_VALUE_IS_FLOAT(right)) {
-		left = TOY_VALUE_TO_FLOAT( (float)TOY_VALUE_AS_INTEGER(left) );
+		left = TOY_VALUE_FROM_FLOAT( (float)TOY_VALUE_AS_INTEGER(left) );
 	}
 	else
 	if (TOY_VALUE_IS_FLOAT(left) && TOY_VALUE_IS_INTEGER(right)) {
-		right = TOY_VALUE_TO_FLOAT( (float)TOY_VALUE_AS_INTEGER(right) );
+		right = TOY_VALUE_FROM_FLOAT( (float)TOY_VALUE_AS_INTEGER(right) );
 	}
 
 	//other opcodes
 	if (opcode == TOY_OPCODE_COMPARE_LESS) {
-		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN(TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_AS_FLOAT(left) < TOY_VALUE_AS_FLOAT(right) : TOY_VALUE_AS_INTEGER(left) < TOY_VALUE_AS_INTEGER(right)) );
+		Toy_pushStack(&vm->stack, TOY_VALUE_FROM_BOOLEAN(TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_AS_FLOAT(left) < TOY_VALUE_AS_FLOAT(right) : TOY_VALUE_AS_INTEGER(left) < TOY_VALUE_AS_INTEGER(right)) );
 	}
 	else if (opcode == TOY_OPCODE_COMPARE_LESS_EQUAL) {
-		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN(TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_AS_FLOAT(left) <= TOY_VALUE_AS_FLOAT(right) : TOY_VALUE_AS_INTEGER(left) <= TOY_VALUE_AS_INTEGER(right)) );
+		Toy_pushStack(&vm->stack, TOY_VALUE_FROM_BOOLEAN(TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_AS_FLOAT(left) <= TOY_VALUE_AS_FLOAT(right) : TOY_VALUE_AS_INTEGER(left) <= TOY_VALUE_AS_INTEGER(right)) );
 	}
 	else if (opcode == TOY_OPCODE_COMPARE_GREATER) {
-		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN(TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_AS_FLOAT(left) > TOY_VALUE_AS_FLOAT(right) : TOY_VALUE_AS_INTEGER(left) > TOY_VALUE_AS_INTEGER(right)) );
+		Toy_pushStack(&vm->stack, TOY_VALUE_FROM_BOOLEAN(TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_AS_FLOAT(left) > TOY_VALUE_AS_FLOAT(right) : TOY_VALUE_AS_INTEGER(left) > TOY_VALUE_AS_INTEGER(right)) );
 	}
 	else if (opcode == TOY_OPCODE_COMPARE_GREATER_EQUAL) {
-		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN(TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_AS_FLOAT(left) >= TOY_VALUE_AS_FLOAT(right) : TOY_VALUE_AS_INTEGER(left) >= TOY_VALUE_AS_INTEGER(right)) );
+		Toy_pushStack(&vm->stack, TOY_VALUE_FROM_BOOLEAN(TOY_VALUE_IS_FLOAT(left) ? TOY_VALUE_AS_FLOAT(left) >= TOY_VALUE_AS_FLOAT(right) : TOY_VALUE_AS_INTEGER(left) >= TOY_VALUE_AS_INTEGER(right)) );
 	}
 	else {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid opcode %d passed to processComparison, exiting\n" TOY_CC_RESET, opcode);
@@ -212,23 +212,23 @@ static void processLogical(Toy_VM* vm, Toy_OpcodeType opcode) {
 		Toy_Value right = Toy_popStack(&vm->stack);
 		Toy_Value left = Toy_popStack(&vm->stack);
 
-		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN( TOY_VALUE_IS_TRUTHY(left) && TOY_VALUE_IS_TRUTHY(right) ));
+		Toy_pushStack(&vm->stack, TOY_VALUE_FROM_BOOLEAN( TOY_VALUE_IS_TRUTHY(left) && TOY_VALUE_IS_TRUTHY(right) ));
 	}
 	else if (opcode == TOY_OPCODE_OR) {
 		Toy_Value right = Toy_popStack(&vm->stack);
 		Toy_Value left = Toy_popStack(&vm->stack);
 
-		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN( TOY_VALUE_IS_TRUTHY(left) || TOY_VALUE_IS_TRUTHY(right) ));
+		Toy_pushStack(&vm->stack, TOY_VALUE_FROM_BOOLEAN( TOY_VALUE_IS_TRUTHY(left) || TOY_VALUE_IS_TRUTHY(right) ));
 	}
 	else if (opcode == TOY_OPCODE_TRUTHY) {
 		Toy_Value top = Toy_popStack(&vm->stack);
 
-		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN( TOY_VALUE_IS_TRUTHY(top) ));
+		Toy_pushStack(&vm->stack, TOY_VALUE_FROM_BOOLEAN( TOY_VALUE_IS_TRUTHY(top) ));
 	}
 	else if (opcode == TOY_OPCODE_NEGATE) {
 		Toy_Value top = Toy_popStack(&vm->stack);
 
-		Toy_pushStack(&vm->stack, TOY_VALUE_TO_BOOLEAN( !TOY_VALUE_IS_TRUTHY(top) ));
+		Toy_pushStack(&vm->stack, TOY_VALUE_FROM_BOOLEAN( !TOY_VALUE_IS_TRUTHY(top) ));
 	}
 	else {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid opcode %d passed to processLogical, exiting\n" TOY_CC_RESET, opcode);

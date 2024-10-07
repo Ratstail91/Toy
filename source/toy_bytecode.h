@@ -11,3 +11,4 @@ typedef struct Toy_Bytecode {
 
 TOY_API Toy_Bytecode Toy_compileBytecode(Toy_Ast* ast);
 TOY_API void Toy_freeBytecode(Toy_Bytecode bc);
+

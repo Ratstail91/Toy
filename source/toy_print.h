@@ -1,3 +1,5 @@
+#pragma once
+
 #include "toy_common.h"
 
 //handle callbacks for printing to the terminal, or elsewhere

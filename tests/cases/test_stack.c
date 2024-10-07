@@ -27,9 +27,9 @@ int test_stack_basics() {
 		Toy_Stack* stack = Toy_allocateStack();
 
 		//check if it worked (push)
-		Toy_pushStack(&stack, TOY_VALUE_TO_INTEGER(42));
-		Toy_pushStack(&stack, TOY_VALUE_TO_INTEGER(69));
-		Toy_pushStack(&stack, TOY_VALUE_TO_INTEGER(420));
+		Toy_pushStack(&stack, TOY_VALUE_FROM_INTEGER(42));
+		Toy_pushStack(&stack, TOY_VALUE_FROM_INTEGER(69));
+		Toy_pushStack(&stack, TOY_VALUE_FROM_INTEGER(420));
 		if (
 			stack == NULL ||
 			stack->capacity != 64 ||
@@ -89,7 +89,7 @@ int test_stack_stress() {
 
 		//allocate 500 values
 		for (int i = 0; i < 500; i++) {
-			Toy_pushStack(&stack, TOY_VALUE_TO_INTEGER(i));
+			Toy_pushStack(&stack, TOY_VALUE_FROM_INTEGER(i));
 		}
 
 		//check if it worked

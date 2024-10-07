@@ -1,8 +1,11 @@
 #include "toy_value.h"
 #include "toy_console_colors.h"
+
 #include "toy_print.h"
+#include "toy_string.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 bool Toy_private_isTruthy(Toy_Value value) {
 	//null is an error
@@ -21,7 +24,7 @@ bool Toy_private_isTruthy(Toy_Value value) {
 
 bool Toy_private_isEqual(Toy_Value left, Toy_Value right) {
 	//temp check
-	if (right.type > TOY_VALUE_FLOAT) {
+	if (right.type > TOY_VALUE_STRING) {
 		Toy_error(TOY_CC_ERROR "ERROR: Unknown types in value equality comparison\n" TOY_CC_RESET); //TODO: varargs
 	}
 
@@ -51,6 +54,11 @@ bool Toy_private_isEqual(Toy_Value left, Toy_Value right) {
 			return false;
 
 		case TOY_VALUE_STRING:
+			if (TOY_VALUE_IS_STRING(right)) {
+				return Toy_compareStrings(TOY_VALUE_AS_STRING(left), TOY_VALUE_AS_STRING(right)) == 0;
+			}
+			return false;
+
 		case TOY_VALUE_ARRAY:
 		case TOY_VALUE_DICTIONARY:
 		case TOY_VALUE_FUNCTION:
@@ -96,7 +104,28 @@ unsigned int Toy_hashValue(Toy_Value value) {
 		case TOY_VALUE_FLOAT:
 			return hashUInt( *((int*)(&TOY_VALUE_AS_FLOAT(value))) );
 
-		case TOY_VALUE_STRING:
+		case TOY_VALUE_STRING: {
+			Toy_String* str = TOY_VALUE_AS_STRING(value);
+
+			if (str->cachedHash != 0) {
+				return str->cachedHash;
+			}
+			else if (str->type == TOY_STRING_NODE) {
+				//TODO: I wonder it it would be possible to discretely swap the composite node string with a new leaf string here? Would that speed up other parts of the code by not having to walk the tree?
+				char* buffer = Toy_getStringRawBuffer(str);
+				str->cachedHash = hashCString(buffer);
+				free(buffer);
+			}
+			else if (str->type == TOY_STRING_LEAF) {
+				str->cachedHash = hashCString(str->as.leaf.data);
+			}
+			else if (str->type == TOY_STRING_NAME) {
+				str->cachedHash = hashCString(str->as.name.data);
+			}
+
+			return str->cachedHash;
+		}
+
 		case TOY_VALUE_ARRAY:
 		case TOY_VALUE_DICTIONARY:
 		case TOY_VALUE_FUNCTION:

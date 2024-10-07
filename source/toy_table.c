@@ -18,7 +18,7 @@ static void probeAndInsert(Toy_Table** tableHandle, Toy_Value key, Toy_Value val
 	//probe
 	while (true) {
 		//if we're overriding an existing value
-		if (TOY_VALUE_IS_EQUAL((*tableHandle)->data[probe].key, key)) {
+		if (TOY_VALUES_ARE_EQUAL((*tableHandle)->data[probe].key, key)) {
 			(*tableHandle)->data[probe] = entry;
 
 			//TODO: benchmark the psl optimisation
@@ -120,13 +120,13 @@ Toy_Value Toy_lookupTable(Toy_Table** tableHandle, Toy_Value key) {
 
 	while (true) {
 		//found the entry
-		if (TOY_VALUE_IS_EQUAL((*tableHandle)->data[probe].key, key)) {
+		if (TOY_VALUES_ARE_EQUAL((*tableHandle)->data[probe].key, key)) {
 			return (*tableHandle)->data[probe].value;
 		}
 
 		//if its an empty slot
 		if (TOY_VALUE_IS_NULL((*tableHandle)->data[probe].key)) {
-			return TOY_VALUE_TO_NULL();
+			return TOY_VALUE_FROM_NULL();
 		}
 
 		//adjust and continue
@@ -145,7 +145,7 @@ void Toy_removeTable(Toy_Table** tableHandle, Toy_Value key) {
 
 	while (true) {
 		//found the entry
-		if (TOY_VALUE_IS_EQUAL((*tableHandle)->data[probe].key, key)) {
+		if (TOY_VALUES_ARE_EQUAL((*tableHandle)->data[probe].key, key)) {
 			break;
 		}
 
@@ -174,6 +174,6 @@ void Toy_removeTable(Toy_Table** tableHandle, Toy_Value key) {
 	}
 
 	//finally, wipe the removed entry
-	(*tableHandle)->data[wipe] = (Toy_TableEntry){ .key = TOY_VALUE_TO_NULL(), .value = TOY_VALUE_TO_NULL(), .psl = 0 };
+	(*tableHandle)->data[wipe] = (Toy_TableEntry){ .key = TOY_VALUE_FROM_NULL(), .value = TOY_VALUE_FROM_NULL(), .psl = 0 };
 	(*tableHandle)->count--;
 }

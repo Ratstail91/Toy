@@ -217,15 +217,15 @@ static ParsingTuple parsingRulesetTable[] = {
 static Toy_AstFlag atomic(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
 	switch(parser->previous.type) {
 		case TOY_TOKEN_NULL:
-			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_TO_NULL());
+			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_FROM_NULL());
 			return TOY_AST_FLAG_NONE;
 
 		case TOY_TOKEN_LITERAL_TRUE:
-			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_TO_BOOLEAN(true));
+			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_FROM_BOOLEAN(true));
 			return TOY_AST_FLAG_NONE;
 
 		case TOY_TOKEN_LITERAL_FALSE:
-			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_TO_BOOLEAN(false));
+			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_FROM_BOOLEAN(false));
 			return TOY_AST_FLAG_NONE;
 
 		case TOY_TOKEN_LITERAL_INTEGER: {
@@ -241,7 +241,7 @@ static Toy_AstFlag atomic(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast
 
 			int value = 0;
 			sscanf(buffer, "%d", &value);
-			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_TO_INTEGER(value));
+			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_FROM_INTEGER(value));
 			return TOY_AST_FLAG_NONE;
 		}
 
@@ -258,7 +258,7 @@ static Toy_AstFlag atomic(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast
 
 			float value = 0;
 			sscanf(buffer, "%f", &value);
-			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_TO_FLOAT(value));
+			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_FROM_FLOAT(value));
 			return TOY_AST_FLAG_NONE;
 		}
 
@@ -280,10 +280,10 @@ static Toy_AstFlag unary(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast*
 
 		//negative numbers
 		if ((*rootHandle)->type == TOY_AST_VALUE && TOY_VALUE_IS_INTEGER((*rootHandle)->value.value) && connectedDigit) {
-			(*rootHandle)->value.value = TOY_VALUE_TO_INTEGER( -TOY_VALUE_AS_INTEGER((*rootHandle)->value.value) );
+			(*rootHandle)->value.value = TOY_VALUE_FROM_INTEGER( -TOY_VALUE_AS_INTEGER((*rootHandle)->value.value) );
 		}
 		else if ((*rootHandle)->type == TOY_AST_VALUE && TOY_VALUE_IS_FLOAT((*rootHandle)->value.value) && connectedDigit) {
-			(*rootHandle)->value.value = TOY_VALUE_TO_FLOAT( -TOY_VALUE_AS_FLOAT((*rootHandle)->value.value) );
+			(*rootHandle)->value.value = TOY_VALUE_FROM_FLOAT( -TOY_VALUE_AS_FLOAT((*rootHandle)->value.value) );
 		}
 		else {
 			//actually emit the negation node
@@ -296,7 +296,7 @@ static Toy_AstFlag unary(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast*
 
 		//inverted booleans
 		if ((*rootHandle)->type == TOY_AST_VALUE && TOY_VALUE_IS_BOOLEAN((*rootHandle)->value.value)) {
-			(*rootHandle)->value.value = TOY_VALUE_TO_BOOLEAN( !TOY_VALUE_AS_BOOLEAN((*rootHandle)->value.value) );
+			(*rootHandle)->value.value = TOY_VALUE_FROM_BOOLEAN( !TOY_VALUE_AS_BOOLEAN((*rootHandle)->value.value) );
 		}
 		else {
 			//actually emit the negation node

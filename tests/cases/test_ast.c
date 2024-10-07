@@ -64,7 +64,7 @@ int test_type_emission(Toy_Bucket** bucketHandle) {
 	{
 		//emit to an AST
 		Toy_Ast* ast = NULL;
-		Toy_private_emitAstValue(bucketHandle, &ast, TOY_VALUE_TO_INTEGER(42));
+		Toy_private_emitAstValue(bucketHandle, &ast, TOY_VALUE_FROM_INTEGER(42));
 
 		//check if it worked
 		if (
@@ -81,7 +81,7 @@ int test_type_emission(Toy_Bucket** bucketHandle) {
 	{
 		//build the AST
 		Toy_Ast* ast = NULL;
-		Toy_private_emitAstValue(bucketHandle, &ast, TOY_VALUE_TO_INTEGER(42));
+		Toy_private_emitAstValue(bucketHandle, &ast, TOY_VALUE_FROM_INTEGER(42));
 		Toy_private_emitAstUnary(bucketHandle, &ast, TOY_AST_FLAG_NEGATE);
 
 		//check if it worked
@@ -102,8 +102,8 @@ int test_type_emission(Toy_Bucket** bucketHandle) {
 		//build the AST
 		Toy_Ast* ast = NULL;
 		Toy_Ast* right = NULL;
-		Toy_private_emitAstValue(bucketHandle, &ast, TOY_VALUE_TO_INTEGER(42));
-		Toy_private_emitAstValue(bucketHandle, &right, TOY_VALUE_TO_INTEGER(69));
+		Toy_private_emitAstValue(bucketHandle, &ast, TOY_VALUE_FROM_INTEGER(42));
+		Toy_private_emitAstValue(bucketHandle, &right, TOY_VALUE_FROM_INTEGER(69));
 		Toy_private_emitAstBinary(bucketHandle, &ast, TOY_AST_FLAG_ADD, right);
 
 		//check if it worked
@@ -126,8 +126,8 @@ int test_type_emission(Toy_Bucket** bucketHandle) {
 		//build the AST
 		Toy_Ast* ast = NULL;
 		Toy_Ast* right = NULL;
-		Toy_private_emitAstValue(bucketHandle, &ast, TOY_VALUE_TO_INTEGER(42));
-		Toy_private_emitAstValue(bucketHandle, &right, TOY_VALUE_TO_INTEGER(69));
+		Toy_private_emitAstValue(bucketHandle, &ast, TOY_VALUE_FROM_INTEGER(42));
+		Toy_private_emitAstValue(bucketHandle, &right, TOY_VALUE_FROM_INTEGER(69));
 		Toy_private_emitAstBinary(bucketHandle, &ast, TOY_AST_FLAG_ADD, right);
 		Toy_private_emitAstGroup(bucketHandle, &ast);
 
@@ -153,8 +153,8 @@ int test_type_emission(Toy_Bucket** bucketHandle) {
 		//build the AST
 		Toy_Ast* ast = NULL;
 		Toy_Ast* right = NULL;
-		Toy_private_emitAstValue(bucketHandle, &ast, TOY_VALUE_TO_INTEGER(42));
-		Toy_private_emitAstValue(bucketHandle, &right, TOY_VALUE_TO_INTEGER(69));
+		Toy_private_emitAstValue(bucketHandle, &ast, TOY_VALUE_FROM_INTEGER(42));
+		Toy_private_emitAstValue(bucketHandle, &right, TOY_VALUE_FROM_INTEGER(69));
 		Toy_private_emitAstBinary(bucketHandle, &ast, TOY_AST_FLAG_ADD, right);
 		Toy_private_emitAstPrint(bucketHandle, &ast);
 
@@ -186,8 +186,8 @@ int test_type_emission(Toy_Bucket** bucketHandle) {
 			//build the AST
 			Toy_Ast* ast = NULL;
 			Toy_Ast* right = NULL;
-			Toy_private_emitAstValue(bucketHandle, &ast, TOY_VALUE_TO_INTEGER(42));
-			Toy_private_emitAstValue(bucketHandle, &right, TOY_VALUE_TO_INTEGER(69));
+			Toy_private_emitAstValue(bucketHandle, &ast, TOY_VALUE_FROM_INTEGER(42));
+			Toy_private_emitAstValue(bucketHandle, &right, TOY_VALUE_FROM_INTEGER(69));
 			Toy_private_emitAstBinary(bucketHandle, &ast, TOY_AST_FLAG_ADD, right);
 			Toy_private_emitAstGroup(bucketHandle, &ast);
 

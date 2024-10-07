@@ -131,3 +131,4 @@ void Toy_private_emitAstPrint(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);
 void Toy_private_emitAstPass(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);
 void Toy_private_emitAstError(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);
 void Toy_private_emitAstEnd(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);
+
