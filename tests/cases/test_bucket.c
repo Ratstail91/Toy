@@ -69,33 +69,6 @@ int test_buckets() {
 		Toy_freeBucket(&bucket);
 	}
 
-	//test partitioning a bucket, several times, with an internal expansion, and awkward sizes
-	{
-		//init
-		Toy_Bucket* bucket = Toy_allocateBucket(32);
-
-		//grab some memory
-		void* a = Toy_partitionBucket(&bucket, 16);
-		void* b = Toy_partitionBucket(&bucket, 10);
-		void* c = Toy_partitionBucket(&bucket, 10);
-		void* d = Toy_partitionBucket(&bucket, 10);
-
-		//checks - awkward and mismatched sizes is not officially supported, but it should work
-		if (
-			bucket->capacity != 32 ||
-			bucket->count != 20 ||
-			bucket->next == NULL ||
-			bucket->next->capacity != 32 ||
-			bucket->next->count != 26)
-		{
-			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to expand 'Toy_Bucket' with awkward/mismatched sizes correctly\n" TOY_CC_RESET);
-			return -1;
-		}
-
-		//cleanup
-		Toy_freeBucket(&bucket);
-	}
-
 	return 0;
 }
 

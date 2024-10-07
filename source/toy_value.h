@@ -15,23 +15,25 @@ typedef enum Toy_ValueType {
 	TOY_VALUE_DICTIONARY,
 	TOY_VALUE_FUNCTION,
 	TOY_VALUE_OPAQUE,
+
+	//TODO: type, any
 } Toy_ValueType;
 
 //8 bytes in size
-typedef struct Toy_Value {      //32 | 64 BITNESS
+typedef struct Toy_Value {          //32 | 64 BITNESS
 	union {
-		bool boolean;           //1  | 1
-		int integer;            //4  | 4
-		float number;           //4  | 4
-		struct Toy_String* string;     //4  | 8
+		bool boolean;               //1  | 1
+		int integer;                //4  | 4
+		float number;               //4  | 4
+		struct Toy_String* string;  //4  | 8
 		//TODO: arrays
 		//TODO: dictonaries
 		//TODO: functions
 		//TODO: opaque
-	} as;                       //4  | 8
+	} as;                           //4  | 8
 
-	Toy_ValueType type;         //4  | 4
-} Toy_Value;                    //8  | 12
+	Toy_ValueType type;             //4  | 4
+} Toy_Value;                        //8  | 16
 
 #define TOY_VALUE_IS_NULL(value)				((value).type == TOY_VALUE_NULL)
 #define TOY_VALUE_IS_BOOLEAN(value)				((value).type == TOY_VALUE_BOOLEAN)

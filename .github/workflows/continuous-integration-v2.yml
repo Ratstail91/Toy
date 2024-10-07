@@ -37,7 +37,7 @@ jobs:
         if: matrix.commands.gdb == false || matrix.platforms.gdb_skip == false
         run: ${{ matrix.commands.exec }}
 
-  #TODO: hook this up to real script files
+  #TODO: hook this up to real script files, preferably in the test section
   run-test-repl-scripts:
     continue-on-error: true
     needs: run-test-cases
@@ -49,6 +49,7 @@ jobs:
           - { os: macos-latest }
         commands:
           - { build: make repl, run: out/repl.exe -f '../scripts/example.toy' }
+          - { build: make repl, run: out/repl.exe -f '../scripts/example-print.toy' }
     
     runs-on: ${{ matrix.platforms.os }}
     steps:

@@ -45,6 +45,7 @@ typedef enum Toy_AstFlag {
 	TOY_AST_FLAG_COMPARE_GREATER_EQUAL,
 	TOY_AST_FLAG_AND,
 	TOY_AST_FLAG_OR,
+	TOY_AST_FLAG_CONCAT,
 
 	//unary flags
 	TOY_AST_FLAG_NEGATE,
@@ -108,7 +109,7 @@ typedef struct Toy_AstEnd {
 union Toy_Ast {             //32 | 64 BITNESS
 	Toy_AstType type;       //4  | 4
 	Toy_AstBlock block;     //16 | 32
-	Toy_AstValue value;     //12 | 12
+	Toy_AstValue value;     //12 | 24
 	Toy_AstUnary unary;     //12 | 16
 	Toy_AstBinary binary;   //16 | 24
 	Toy_AstGroup group;     //8  | 16

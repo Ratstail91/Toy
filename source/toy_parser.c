@@ -1,6 +1,9 @@
 #include "toy_parser.h"
 #include "toy_console_colors.h"
 
+#include "toy_value.h"
+#include "toy_string.h"
+
 #include <stdio.h>
 
 //utilities
@@ -107,14 +110,14 @@ typedef struct ParsingTuple {
 
 static void parsePrecedence(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle, ParsingPrecedence precRule);
 
-static Toy_AstFlag atomic(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle);
+static Toy_AstFlag literal(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle);
 static Toy_AstFlag unary(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle);
 static Toy_AstFlag binary(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle);
 static Toy_AstFlag group(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle);
 
 //precedence definitions
 static ParsingTuple parsingRulesetTable[] = {
-	{PREC_PRIMARY,atomic,NULL},// TOY_TOKEN_NULL,
+	{PREC_PRIMARY,literal,NULL},// TOY_TOKEN_NULL,
 
 	//variable names
 	{PREC_NONE,NULL,NULL},// TOY_TOKEN_IDENTIFIER,
@@ -157,11 +160,11 @@ static ParsingTuple parsingRulesetTable[] = {
 	{PREC_NONE,NULL,NULL},// TOY_TOKEN_KEYWORD_YIELD,
 
 	//literal values
-	{PREC_PRIMARY,atomic,NULL},// TOY_TOKEN_LITERAL_TRUE,
-	{PREC_PRIMARY,atomic,NULL},// TOY_TOKEN_LITERAL_FALSE,
-	{PREC_PRIMARY,atomic,NULL},// TOY_TOKEN_LITERAL_INTEGER,
-	{PREC_PRIMARY,atomic,NULL},// TOY_TOKEN_LITERAL_FLOAT,
-	{PREC_NONE,NULL,NULL},// TOY_TOKEN_LITERAL_STRING,
+	{PREC_PRIMARY,literal,NULL},// TOY_TOKEN_LITERAL_TRUE,
+	{PREC_PRIMARY,literal,NULL},// TOY_TOKEN_LITERAL_FALSE,
+	{PREC_PRIMARY,literal,NULL},// TOY_TOKEN_LITERAL_INTEGER,
+	{PREC_PRIMARY,literal,NULL},// TOY_TOKEN_LITERAL_FLOAT,
+	{PREC_PRIMARY,literal,NULL},// TOY_TOKEN_LITERAL_STRING,
 
 	//math operators
 	{PREC_TERM,NULL,binary},// TOY_TOKEN_OPERATOR_ADD,
@@ -201,7 +204,11 @@ static ParsingTuple parsingRulesetTable[] = {
 	{PREC_NONE,NULL,NULL},// TOY_TOKEN_OPERATOR_QUESTION,
 	{PREC_NONE,NULL,NULL},// TOY_TOKEN_OPERATOR_COLON,
 
-	{PREC_NONE,NULL,NULL},// TOY_TOKEN_OPERATOR_CONCAT, // ..
+	{PREC_NONE,NULL,NULL},// TOY_TOKEN_OPERATOR_SEMICOLON, // ;
+	{PREC_NONE,NULL,NULL},// TOY_TOKEN_OPERATOR_COMMA, // ,
+
+	{PREC_NONE,NULL,NULL},// TOY_TOKEN_OPERATOR_DOT, // .
+	{PREC_CALL,NULL,binary},// TOY_TOKEN_OPERATOR_CONCAT, // ..
 	{PREC_NONE,NULL,NULL},// TOY_TOKEN_OPERATOR_REST, // ...
 
 	//unused operators
@@ -214,7 +221,7 @@ static ParsingTuple parsingRulesetTable[] = {
 	{PREC_NONE,NULL,NULL},// TOY_TOKEN_EOF,
 };
 
-static Toy_AstFlag atomic(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
+static Toy_AstFlag literal(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
 	switch(parser->previous.type) {
 		case TOY_TOKEN_NULL:
 			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_FROM_NULL());
@@ -262,8 +269,40 @@ static Toy_AstFlag atomic(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast
 			return TOY_AST_FLAG_NONE;
 		}
 
+		case TOY_TOKEN_LITERAL_STRING: {
+			char buffer[parser->previous.length + 1];
+
+			unsigned int i = 0, o = 0;
+			do {
+				buffer[i] = parser->previous.lexeme[o];
+				if (buffer[i] == '\\' && parser->previous.lexeme[++o]) {
+					//also handle escape characters
+					switch(parser->previous.lexeme[o]) {
+						case 'n':
+							buffer[i] = '\n';
+							break;
+						case 't':
+							buffer[i] = '\t';
+							break;
+						case '\\':
+							buffer[i] = '\\';
+							break;
+						case '"':
+							buffer[i] = '"';
+							break;
+					}
+				}
+				i++;
+			} while (parser->previous.lexeme[o++] && i < parser->previous.length);
+
+			buffer[i] = '\0';
+			Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_FROM_STRING(Toy_createStringLength(bucketHandle, buffer, i)));
+
+			return TOY_AST_FLAG_NONE;
+		}
+
 		default:
-			printError(parser, parser->previous, "Unexpected token passed to atomic precedence rule");
+			printError(parser, parser->previous, "Unexpected token passed to literal precedence rule");
 			Toy_private_emitAstError(bucketHandle, rootHandle);
 			return TOY_AST_FLAG_NONE;
 	}
@@ -403,6 +442,11 @@ static Toy_AstFlag binary(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast
 		case TOY_TOKEN_OPERATOR_COMPARE_GREATER_EQUAL: {
 			parsePrecedence(bucketHandle, parser, rootHandle, PREC_COMPARISON + 1);
 			return TOY_AST_FLAG_COMPARE_GREATER_EQUAL;
+		}
+
+		case TOY_TOKEN_OPERATOR_CONCAT: {
+			parsePrecedence(bucketHandle, parser, rootHandle, PREC_CALL + 1);
+			return TOY_AST_FLAG_CONCAT;
 		}
 
 		default:
@@ -573,6 +617,11 @@ void Toy_bindParser(Toy_Parser* parser, Toy_Lexer* lexer) {
 
 Toy_Ast* Toy_scanParser(Toy_Bucket** bucketHandle, Toy_Parser* parser) {
 	Toy_Ast* rootHandle = NULL;
+
+	//double check bucket capacity for strings
+	if ((*bucketHandle)->capacity < TOY_STRING_MAX_LENGTH) {
+		fprintf(stderr, TOY_CC_WARN "WARNING: Bucket capacity in Toy_scanParser() is smaller than TOY_STRING_MAX_LENGTH" TOY_CC_RESET);
+	}
 
 	//check for EOF
 	if (match(parser, TOY_TOKEN_EOF)) {

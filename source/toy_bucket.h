@@ -20,3 +20,9 @@ TOY_API Toy_Bucket* Toy_allocateBucket(unsigned int capacity);
 TOY_API void* Toy_partitionBucket(Toy_Bucket** bucketHandle, unsigned int amount);
 TOY_API void Toy_freeBucket(Toy_Bucket** bucketHandle);
 
+//some useful bucket sizes
+#define TOY_BUCKET_SMALL 256
+#define TOY_BUCKET_MEDIUM 512
+#define TOY_BUCKET_LARGE 1024
+
+#define TOY_BUCKET_IDEAL 1024

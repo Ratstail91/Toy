@@ -175,7 +175,7 @@ int main() {
 	int total = 0, res = 0;
 
 	{
-		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		res = test_bytecode_header(&bucket);
 		Toy_freeBucket(&bucket);
 		if (res == 0) {
@@ -185,7 +185,7 @@ int main() {
 	}
 
 	{
-		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		res = test_bytecode_from_source(&bucket);
 		Toy_freeBucket(&bucket);
 		if (res == 0) {

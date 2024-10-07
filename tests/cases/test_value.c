@@ -9,7 +9,11 @@
 int main() {
 	//test for the correct size
 	{
+#if TOY_BITNESS == 64
+		if (sizeof(Toy_Value) != 16) {
+#else
 		if (sizeof(Toy_Value) != 8) {
+#endif
 			fprintf(stderr, TOY_CC_ERROR "ERROR: 'Toy_Value' is an unexpected size in memory\n" TOY_CC_RESET);
 			return -1;
 		}
@@ -56,7 +60,7 @@ int main() {
 	//test value hashing
 	{
 		//setup
-		Toy_Bucket* bucket = Toy_allocateBucket(512);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 
 		//values
 		Toy_Value n = TOY_VALUE_FROM_NULL();

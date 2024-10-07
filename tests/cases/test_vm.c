@@ -55,10 +55,10 @@ int test_setup_and_teardown(Toy_Bucket** bucketHandle) {
 		if (
 			vm.routine - vm.bc != headerSize ||
 			vm.routineSize != 72 ||
-			vm.paramCount != 0 ||
-			vm.jumpsCount != 0 ||
-			vm.dataCount != 0 ||
-			vm.subsCount != 0
+			vm.paramSize != 0 ||
+			vm.jumpsSize != 0 ||
+			vm.dataSize != 0 ||
+			vm.subsSize != 0
 		)
 		{
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to setup and teadown Toy_VM, source: %s\n" TOY_CC_RESET, source);
@@ -210,6 +210,89 @@ int test_keywords(Toy_Bucket** bucketHandle) {
 		//teadown
 		Toy_resetPrintCallback();
 		free(callbackUtilReceived);
+		callbackUtilReceived = NULL;
+		Toy_freeVM(&vm);
+	}
+
+	//test print with a string
+	{
+		//setup
+		Toy_setPrintCallback(callbackUtil);
+		const char* source = "print \"Hello world!\";";
+
+		Toy_Lexer lexer;
+		Toy_bindLexer(&lexer, source);
+
+		Toy_Parser parser;
+		Toy_bindParser(&parser, &lexer);
+
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
+		Toy_Bytecode bc = Toy_compileBytecode(ast);
+
+		Toy_VM vm;
+		Toy_bindVM(&vm, bc.ptr);
+
+		//run
+		Toy_runVM(&vm);
+
+		//check the final state of the stack
+		if (callbackUtilReceived == NULL ||
+			strcmp(callbackUtilReceived, "Hello world!") != 0)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Unexpected value '%s' passed to print keyword, source: %s\n" TOY_CC_RESET, callbackUtilReceived != NULL ? callbackUtilReceived : "NULL", source);
+
+			//cleanup and return
+			Toy_resetPrintCallback();
+			free(callbackUtilReceived);
+			Toy_freeVM(&vm);
+			return -1;
+		}
+
+		//teadown
+		Toy_resetPrintCallback();
+		free(callbackUtilReceived);
+		callbackUtilReceived = NULL;
+		Toy_freeVM(&vm);
+	}
+
+	//test print with a string concat
+	{
+		//setup
+		Toy_setPrintCallback(callbackUtil);
+		const char* source = "print \"Hello\" .. \"world!\";";
+
+		Toy_Lexer lexer;
+		Toy_bindLexer(&lexer, source);
+
+		Toy_Parser parser;
+		Toy_bindParser(&parser, &lexer);
+
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
+		Toy_Bytecode bc = Toy_compileBytecode(ast);
+
+		Toy_VM vm;
+		Toy_bindVM(&vm, bc.ptr);
+
+		//run
+		Toy_runVM(&vm);
+
+		//check the final state of the stack
+		if (callbackUtilReceived == NULL ||
+			strcmp(callbackUtilReceived, "Helloworld!") != 0)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Unexpected value '%s' passed to print keyword, source: %s\n" TOY_CC_RESET, callbackUtilReceived != NULL ? callbackUtilReceived : "NULL", source);
+
+			//cleanup and return
+			Toy_resetPrintCallback();
+			free(callbackUtilReceived);
+			Toy_freeVM(&vm);
+			return -1;
+		}
+
+		//teadown
+		Toy_resetPrintCallback();
+		free(callbackUtilReceived);
+		callbackUtilReceived = NULL;
 		Toy_freeVM(&vm);
 	}
 
@@ -221,7 +304,7 @@ int main() {
 	int total = 0, res = 0;
 
 	{
-		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		res = test_setup_and_teardown(&bucket);
 		Toy_freeBucket(&bucket);
 		if (res == 0) {
@@ -231,7 +314,7 @@ int main() {
 	}
 
 	{
-		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		res = test_simple_execution(&bucket);
 		Toy_freeBucket(&bucket);
 		if (res == 0) {
@@ -241,7 +324,7 @@ int main() {
 	}
 
 	{
-		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		res = test_opcode_not_equal(&bucket);
 		Toy_freeBucket(&bucket);
 		if (res == 0) {
@@ -251,7 +334,7 @@ int main() {
 	}
 
 	{
-		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		res = test_keywords(&bucket);
 		Toy_freeBucket(&bucket);
 		if (res == 0) {

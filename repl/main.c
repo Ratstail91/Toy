@@ -168,7 +168,7 @@ static void errorAndExitCallback(const char* msg) {
 }
 
 //main file
-int main(int argc, const char* argv[]) {
+int main(int argc, const char* argv[]) { //TODO: this needs an interactive terminal mode
 	Toy_setPrintCallback(printCallback);
 	Toy_setErrorCallback(errorAndExitCallback);
 	Toy_setAssertFailureCallback(errorAndExitCallback);
@@ -218,7 +218,7 @@ int main(int argc, const char* argv[]) {
 		Toy_Parser parser;
 		Toy_bindParser(&parser, &lexer);
 
-		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		Toy_Ast* ast = Toy_scanParser(&bucket, &parser);
 
 		Toy_Bytecode bc = Toy_compileBytecode(ast);

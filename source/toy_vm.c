@@ -4,6 +4,7 @@
 #include "toy_print.h"
 #include "toy_opcodes.h"
 #include "toy_value.h"
+#include "toy_string.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,8 +65,17 @@ static void processRead(Toy_VM* vm) {
 		}
 
 		case TOY_VALUE_STRING: {
-			//
-			// break;
+			fix_alignment(vm);
+			//grab the jump as an integer
+			unsigned int jump = *(unsigned int*)(vm->routine + vm->jumpsAddr + READ_INT(vm));
+
+			//jumps are relative to the data address
+			char* cstring = (char*)(vm->routine + vm->dataAddr + jump);
+
+			//build a string from the data section
+			value = TOY_VALUE_FROM_STRING(Toy_createString(&vm->stringBucket, cstring));
+
+			break;
 		}
 
 		case TOY_VALUE_ARRAY: {
@@ -264,7 +274,24 @@ static void processPrint(Toy_VM* vm) {
 			break;
 		}
 
-		case TOY_VALUE_STRING: //TODO: decide on how long strings, etc. live for in memory
+		case TOY_VALUE_STRING: {
+			Toy_String* str = TOY_VALUE_AS_STRING(value);
+
+			//TODO: decide on how long strings, etc. live for in memory
+			if (str->type == TOY_STRING_NODE) {
+				char* buffer = Toy_getStringRawBuffer(str);
+				Toy_print(buffer);
+				free(buffer);
+			}
+			else if (str->type == TOY_STRING_LEAF) {
+				Toy_print(str->as.leaf.data);
+			}
+			else if (str->type == TOY_STRING_NAME) {
+				Toy_print(str->as.name.data); //should this be a thing?
+			}
+			break;
+		}
+
 		case TOY_VALUE_ARRAY:
 		case TOY_VALUE_DICTIONARY:
 		case TOY_VALUE_FUNCTION:
@@ -272,6 +299,25 @@ static void processPrint(Toy_VM* vm) {
 			fprintf(stderr, TOY_CC_ERROR "ERROR: Unknown value type %d passed to processPrint, exiting\n" TOY_CC_RESET, value.type);
 			exit(-1);
 	}
+}
+
+static void processConcat(Toy_VM* vm) {
+	Toy_Value right = Toy_popStack(&vm->stack);
+	Toy_Value left = Toy_popStack(&vm->stack);
+
+	if (!TOY_VALUE_IS_STRING(left)) {
+		Toy_error("Failed to concatenate a value that is not a string");
+		return;
+	}
+
+	if (!TOY_VALUE_IS_STRING(left)) {
+		Toy_error("Failed to concatenate a value that is not a string");
+		return;
+	}
+
+	//all good
+	Toy_String* result = Toy_concatStrings(&vm->stringBucket, TOY_VALUE_AS_STRING(left), TOY_VALUE_AS_STRING(right));
+	Toy_pushStack(&vm->stack, TOY_VALUE_FROM_STRING(result));
 }
 
 static void process(Toy_VM* vm) {
@@ -318,6 +364,10 @@ static void process(Toy_VM* vm) {
 			//various action instructions
 			case TOY_OPCODE_PRINT:
 				processPrint(vm);
+				break;
+
+			case TOY_OPCODE_CONCAT:
+				processConcat(vm);
 				break;
 
 			//not yet implemented
@@ -373,32 +423,34 @@ void Toy_bindVMToRoutine(Toy_VM* vm, unsigned char* routine) {
 
 	//read the header metadata
 	vm->routineSize = READ_UNSIGNED_INT(vm);
-	vm->paramCount = READ_UNSIGNED_INT(vm);
-	vm->jumpsCount = READ_UNSIGNED_INT(vm);
-	vm->dataCount = READ_UNSIGNED_INT(vm);
-	vm->subsCount = READ_UNSIGNED_INT(vm);
+	vm->paramSize = READ_UNSIGNED_INT(vm);
+	vm->jumpsSize = READ_UNSIGNED_INT(vm);
+	vm->dataSize = READ_UNSIGNED_INT(vm);
+	vm->subsSize = READ_UNSIGNED_INT(vm);
 
 	//read the header addresses
-	if (vm->paramCount > 0) {
+	if (vm->paramSize > 0) {
 		vm->paramAddr = READ_UNSIGNED_INT(vm);
 	}
 
 	vm->codeAddr = READ_UNSIGNED_INT(vm); //required
 
-	if (vm->jumpsCount > 0) {
+	if (vm->jumpsSize > 0) {
 		vm->jumpsAddr = READ_UNSIGNED_INT(vm);
 	}
 
-	if (vm->dataCount > 0) {
+	if (vm->dataSize > 0) {
 		vm->dataAddr = READ_UNSIGNED_INT(vm);
 	}
 
-	if (vm->subsCount > 0) {
+	if (vm->subsSize > 0) {
 		vm->subsAddr = READ_UNSIGNED_INT(vm);
 	}
 
-	//preallocate the scope & stack
+	//allocate the stack, scope, and memory
 	vm->stack = Toy_allocateStack();
+	//TODO: scope
+	vm->stringBucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 }
 
 void Toy_runVM(Toy_VM* vm) {
@@ -412,13 +464,12 @@ void Toy_runVM(Toy_VM* vm) {
 }
 
 void Toy_freeVM(Toy_VM* vm) {
-	//clear the stack
+	//clear the stack, scope and memory
 	Toy_freeStack(vm->stack);
-
 	//TODO: clear the scope
+	Toy_freeBucket(&vm->stringBucket);
 
 	//free the bytecode
-
 	free(vm->bc);
 	Toy_resetVM(vm);
 }
@@ -429,10 +480,10 @@ void Toy_resetVM(Toy_VM* vm) {
 	vm->routine = NULL;
 	vm->routineSize = 0;
 
-	vm->paramCount = 0;
-	vm->jumpsCount = 0;
-	vm->dataCount = 0;
-	vm->subsCount = 0;
+	vm->paramSize = 0;
+	vm->jumpsSize = 0;
+	vm->dataSize = 0;
+	vm->subsSize = 0;
 
 	vm->paramAddr = 0;
 	vm->codeAddr = 0;

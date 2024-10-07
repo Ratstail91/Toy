@@ -16,7 +16,7 @@ int test_sizeof_ast_64bit() {
 	//run for each type
 	TEST_SIZEOF(Toy_AstType, 4);
 	TEST_SIZEOF(Toy_AstBlock, 32);
-	TEST_SIZEOF(Toy_AstValue, 12);
+	TEST_SIZEOF(Toy_AstValue, 24);
 	TEST_SIZEOF(Toy_AstUnary, 16);
 	TEST_SIZEOF(Toy_AstBinary, 24);
 	TEST_SIZEOF(Toy_AstGroup, 16);
@@ -245,7 +245,7 @@ int main() {
 #endif
 
 	{
-		Toy_Bucket* bucketHandle = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
+		Toy_Bucket* bucketHandle = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		res = test_type_emission(&bucketHandle);
 		Toy_freeBucket(&bucketHandle);
 		if (res == 0) {

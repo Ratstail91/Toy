@@ -3,6 +3,7 @@
 #include "toy_common.h"
 
 #include "toy_stack.h"
+#include "toy_bucket.h"
 
 typedef struct Toy_VM {
 	//hold the raw bytecode
@@ -12,10 +13,10 @@ typedef struct Toy_VM {
 	unsigned char* routine;
 	unsigned int routineSize;
 
-	unsigned int paramCount;
-	unsigned int jumpsCount;
-	unsigned int dataCount;
-	unsigned int subsCount;
+	unsigned int paramSize;
+	unsigned int jumpsSize;
+	unsigned int dataSize;
+	unsigned int subsSize;
 
 	unsigned int paramAddr;
 	unsigned int codeAddr;
@@ -30,6 +31,9 @@ typedef struct Toy_VM {
 
 	//stack - immediate-level values only
 	Toy_Stack* stack;
+
+	//easy access to memory
+	Toy_Bucket* stringBucket;
 } Toy_VM;
 
 TOY_API void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode); //process the version data

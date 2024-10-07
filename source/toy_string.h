@@ -5,6 +5,8 @@
 #include "toy_bucket.h"
 #include "toy_value.h"
 
+#define TOY_STRING_MAX_LENGTH 1000
+
 //rope pattern
 typedef struct Toy_String {             //32 | 64 BITNESS
 	enum Toy_StringType {

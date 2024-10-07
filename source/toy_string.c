@@ -42,13 +42,18 @@ Toy_String* Toy_createString(Toy_Bucket** bucketHandle, const char* cstring) {
 }
 
 Toy_String* Toy_createStringLength(Toy_Bucket** bucketHandle, const char* cstring, int length) {
+	if (length > TOY_STRING_MAX_LENGTH) {
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't create a string longer than %d\n" TOY_CC_RESET, TOY_STRING_MAX_LENGTH);
+		exit(-1);
+	}
+
 	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucketHandle, sizeof(Toy_String) + length + 1); //TODO: compensate for partitioning more space than bucket capacity
 
 	ret->type = TOY_STRING_LEAF;
 	ret->length = length;
 	ret->refCount = 1;
 	ret->cachedHash = 0; //don't calc until needed
-	memcpy(ret->as.leaf.data, cstring, length);
+	memcpy(ret->as.leaf.data, cstring, length + 1);
 	ret->as.leaf.data[length] = '\0';
 
 	return ret;
@@ -57,13 +62,18 @@ Toy_String* Toy_createStringLength(Toy_Bucket** bucketHandle, const char* cstrin
 TOY_API Toy_String* Toy_createNameString(Toy_Bucket** bucketHandle, const char* cname) {
 	int length = strlen(cname);
 
+	if (length > TOY_STRING_MAX_LENGTH) {
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't create a name string longer than %d\n" TOY_CC_RESET, TOY_STRING_MAX_LENGTH);
+		exit(-1);
+	}
+
 	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucketHandle, sizeof(Toy_String) + length + 1); //TODO: compensate for partitioning more space than bucket capacity
 
 	ret->type = TOY_STRING_NAME;
 	ret->length = length;
 	ret->refCount = 1;
 	ret->cachedHash = 0; //don't calc until needed
-	memcpy(ret->as.name.data, cname, length);
+	memcpy(ret->as.name.data, cname, length + 1);
 	ret->as.name.data[length] = '\0';
 
 	return ret;
@@ -98,7 +108,7 @@ Toy_String* Toy_deepCopyString(Toy_Bucket** bucketHandle, Toy_String* str) {
 		ret->length = str->length;
 		ret->refCount = 1;
 		ret->cachedHash = str->cachedHash;
-		memcpy(ret->as.name.data, str->as.name.data, str->length);
+		memcpy(ret->as.name.data, str->as.name.data, str->length + 1);
 		ret->as.name.data[ret->length] = '\0';
 	}
 
@@ -113,6 +123,11 @@ Toy_String* Toy_concatStrings(Toy_Bucket** bucketHandle, Toy_String* left, Toy_S
 
 	if (left->refCount == 0 || right->refCount == 0) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't concatenate a string with refcount of zero\n" TOY_CC_RESET);
+		exit(-1);
+	}
+
+	if (left->length + right->length > TOY_STRING_MAX_LENGTH) {
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't concat a string longer than %d\n" TOY_CC_RESET, TOY_STRING_MAX_LENGTH);
 		exit(-1);
 	}
 

@@ -17,7 +17,7 @@ typedef struct Toy_Routine {
 	unsigned int jumpsCapacity;
 	unsigned int jumpsCount;
 
-	unsigned char* data; //{type,val} tuples of data
+	unsigned char* data; //data for longer stuff
 	unsigned int dataCapacity;
 	unsigned int dataCount;
 

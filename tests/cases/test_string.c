@@ -35,7 +35,7 @@ int test_string_allocation() {
 	//allocate a single string from a c-string
 	{
 		//setup
-		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 
 		const char* cstring = "Hello world";
 		Toy_String* str = Toy_createString(&bucket, cstring);
@@ -77,7 +77,7 @@ int test_string_allocation() {
 	//copy and deep copy a string
 	{
 		//setup
-		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 
 		const char* cstring = "Hello world";
 		Toy_String* str = Toy_createString(&bucket, cstring);
@@ -103,7 +103,7 @@ int test_string_allocation() {
 	//copy and deep copy a name string
 	{
 		//setup
-		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 
 		const char* cstring = "Hello world";
 		Toy_String* str = Toy_createNameString(&bucket, cstring);
@@ -129,7 +129,7 @@ int test_string_allocation() {
 	//allocate a zero-length string
 	{
 		//setup
-		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 
 		const char* cstring = "";
 		Toy_String* str = Toy_createString(&bucket, cstring);
@@ -138,8 +138,7 @@ int test_string_allocation() {
 		if (str->type != TOY_STRING_LEAF ||
 			str->length != 0 ||
 			str->refCount != 1 ||
-			strcmp(str->as.leaf.data, "") != 0 ||
-			bucket->count != sizeof(Toy_String) + 1) //1 for the null character
+			strcmp(str->as.leaf.data, "") != 0)
 		{
 			fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to allocate a Toy_String with zero length\n" TOY_CC_RESET);
 			Toy_freeBucket(&bucket);
@@ -157,7 +156,7 @@ int test_string_allocation() {
 
 int test_string_concatenation() {
 	//one big bucket o' fun
-	Toy_Bucket* bucket = Toy_allocateBucket(1024);
+	Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 
 	//concatenate two strings, and check the refcounts
 	{
@@ -298,7 +297,7 @@ int test_string_equality() {
 	//simple string equality (no concats)
 	{
 		//setup
-		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		Toy_String* helloWorldOne = Toy_createString(&bucket, "Hello world");
 		Toy_String* helloWorldTwo = Toy_createString(&bucket, "Hello world");
 		Toy_String* helloEveryone = Toy_createString(&bucket, "Hello everyone");
@@ -348,7 +347,7 @@ int test_string_equality() {
 	//string equality (with concat left)
 	{
 		//setup
-		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		Toy_String* helloWorldOne = Toy_concatStrings(&bucket, Toy_createString(&bucket, "Hello "), Toy_createString(&bucket, "world"));
 		Toy_String* helloWorldTwo = Toy_createString(&bucket, "Hello world");
 		Toy_String* helloEveryone = Toy_createString(&bucket, "Hello everyone");
@@ -398,7 +397,7 @@ int test_string_equality() {
 	//string equality (with concat right)
 	{
 		//setup
-		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		Toy_String* helloWorldOne = Toy_createString(&bucket, "Hello world");
 		Toy_String* helloWorldTwo = Toy_concatStrings(&bucket, Toy_createString(&bucket, "Hello "), Toy_createString(&bucket, "world"));
 		Toy_String* helloEveryone = Toy_createString(&bucket, "Hello everyone");
@@ -424,7 +423,7 @@ int test_string_equality() {
 	//string equality (with concat both)
 	{
 		//setup - these concat points are deliberately different
-		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		Toy_String* helloWorldOne = Toy_concatStrings(&bucket, Toy_createString(&bucket, "Hello "), Toy_createString(&bucket, "world"));
 		Toy_String* helloWorldTwo = Toy_concatStrings(&bucket, Toy_createString(&bucket, "Hello"), Toy_createString(&bucket, " world"));
 		Toy_String* helloEveryone = Toy_concatStrings(&bucket, Toy_createString(&bucket, "Hell"), Toy_createString(&bucket, "world"));
@@ -462,7 +461,7 @@ int test_string_equality() {
 	//string equality (with concat arbitrary)
 	{
 		//setup - The quick brown fox jumps over the lazy dog.
-		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		Toy_String* helloWorldOne = Toy_concatStrings(&bucket,
 			Toy_createString(&bucket, "The quick brown "),
 			Toy_concatStrings(&bucket,
@@ -526,7 +525,7 @@ int test_string_equality() {
 	//string equality (empty strings, no concats)
 	{
 		//setup
-		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		Toy_String* helloWorldOne = Toy_createString(&bucket, "");
 		Toy_String* helloWorldTwo = Toy_createString(&bucket, "");
 		Toy_String* helloEveryone = Toy_createString(&bucket, "Hello everyone");
@@ -576,7 +575,7 @@ int test_string_equality() {
 	//string equality (empty strings, deep concats)
 	{
 		//setup
-		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		Toy_String* helloWorldOne = Toy_concatStrings(&bucket,
 			Toy_createString(&bucket, ""),
 			Toy_concatStrings(&bucket,
@@ -652,7 +651,7 @@ int test_string_equality() {
 	//simple name equality
 	{
 		//setup
-		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		Toy_String* helloWorldOne = Toy_createNameString(&bucket, "Hello world");
 		Toy_String* helloWorldTwo = Toy_createNameString(&bucket, "Hello world");
 		Toy_String* helloEveryone = Toy_createNameString(&bucket, "Hello everyone");
@@ -706,7 +705,7 @@ int test_string_diffs() {
 	//simple string diffs (no concats)
 	{
 		//setup
-		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		Toy_String* helloEveryone = Toy_createString(&bucket, "Hello everyone");
 		Toy_String* helloUniverse = Toy_createString(&bucket, "Hello universe");
 
@@ -743,7 +742,7 @@ int test_string_diffs() {
 	//string diffs (with concat arbitrary)
 	{
 		//setup - The quick brown fox jumps over the lazy dog.
-		Toy_Bucket* bucket = Toy_allocateBucket(1024);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		Toy_String* pangram = Toy_concatStrings(&bucket,
 			Toy_createString(&bucket, "The quick brown "),
 			Toy_concatStrings(&bucket,

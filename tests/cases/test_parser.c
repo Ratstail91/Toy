@@ -1,7 +1,9 @@
 #include "toy_parser.h"
 #include "toy_console_colors.h"
+#include "toy_string.h"
 
 #include <stdio.h>
+#include <string.h>
 
 //utils
 Toy_Ast* makeAstFromSource(Toy_Bucket** bucketHandle, const char* source) {
@@ -184,7 +186,7 @@ int test_values(Toy_Bucket** bucketHandle) {
 			TOY_VALUE_IS_INTEGER(ast->block.child->value.value) == false ||
 			TOY_VALUE_AS_INTEGER(ast->block.child->value.value) != 1234567890)
 		{
-			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to run the parser with integer value 42 with separators\n" TOY_CC_RESET);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to run the parser with integer value 1_234_567_890\n" TOY_CC_RESET);
 			return -1;
 		}
 	}
@@ -202,7 +204,26 @@ int test_values(Toy_Bucket** bucketHandle) {
 			TOY_VALUE_IS_FLOAT(ast->block.child->value.value) == false ||
 			TOY_VALUE_AS_FLOAT(ast->block.child->value.value) != 3.14159265f)
 		{
-			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to run the parser with float value 3.1415 with separators\n" TOY_CC_RESET);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to run the parser with float value 3.141_592_65\n" TOY_CC_RESET);
+			return -1;
+		}
+	}
+
+	//test string
+	{
+		Toy_Ast* ast = makeAstFromSource(bucketHandle, "\"Hello world!\";");
+
+		//check if it worked
+		if (
+			ast == NULL ||
+			ast->type != TOY_AST_BLOCK ||
+			ast->block.child == NULL ||
+			ast->block.child->type != TOY_AST_VALUE ||
+			TOY_VALUE_IS_STRING(ast->block.child->value.value) == false ||
+			TOY_VALUE_AS_STRING(ast->block.child->value.value)->type != TOY_STRING_LEAF ||
+			strcmp(TOY_VALUE_AS_STRING(ast->block.child->value.value)->as.leaf.data, "Hello world!") != 0)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to run the parser with string value 'Hello world!'\n" TOY_CC_RESET);
 			return -1;
 		}
 	}
@@ -578,7 +599,7 @@ int main() {
 	int total = 0, res = 0;
 
 	{
-		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		res = test_simple_empty_parsers(&bucket);
 		Toy_freeBucket(&bucket);
 		if (res == 0) {
@@ -588,7 +609,7 @@ int main() {
 	}
 
 	{
-		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		res = test_values(&bucket);
 		Toy_freeBucket(&bucket);
 		if (res == 0) {
@@ -598,7 +619,7 @@ int main() {
 	}
 
 	{
-		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		res = test_unary(&bucket);
 		Toy_freeBucket(&bucket);
 		if (res == 0) {
@@ -608,7 +629,7 @@ int main() {
 	}
 
 	{
-		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		res = test_binary(&bucket);
 		Toy_freeBucket(&bucket);
 		if (res == 0) {
@@ -618,7 +639,7 @@ int main() {
 	}
 
 	{
-		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		res = test_precedence(&bucket);
 		Toy_freeBucket(&bucket);
 		if (res == 0) {

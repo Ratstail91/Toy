@@ -32,6 +32,11 @@ void* Toy_partitionBucket(Toy_Bucket** bucketHandle, unsigned int amount) {
 		exit(1);
 	}
 
+	//BUGFIX: the endpoint must be aligned to the word size, otherwise you'll get a bus error from moving pointers
+	if (amount % 4 != 0) {
+		amount += 4 - (amount % 4); //ceil
+	}
+
 	//if you try to allocate too much space
 	if ((*bucketHandle)->capacity < amount) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to partition a 'Toy_Bucket': requested %d from a bucket of %d capacity\n" TOY_CC_RESET, (int)amount, (int)((*bucketHandle)->capacity));
