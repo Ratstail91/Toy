@@ -14,6 +14,8 @@ typedef enum Toy_AstType {
 	TOY_AST_BINARY,
 	TOY_AST_GROUP,
 
+	TOY_AST_PRINT,
+
 	TOY_AST_PASS,
 	TOY_AST_ERROR,
 	TOY_AST_END,
@@ -85,6 +87,11 @@ typedef struct Toy_AstGroup {
 	Toy_Ast* child;
 } Toy_AstGroup;
 
+typedef struct Toy_AstPrint {
+	Toy_AstType type;
+	Toy_Ast* child;
+} Toy_AstPrint;
+
 typedef struct Toy_AstPass {
 	Toy_AstType type;
 } Toy_AstPass;
@@ -105,6 +112,7 @@ union Toy_Ast {             //32 | 64 BITNESS
 	Toy_AstUnary unary;     //12 | 16
 	Toy_AstBinary binary;   //16 | 24
 	Toy_AstGroup group;     //8  | 16
+	Toy_AstPrint print;     //8  | 16
 	Toy_AstPass pass;       //4  | 4
 	Toy_AstError error;     //4  | 4
 	Toy_AstEnd end;         //4  | 4
@@ -117,6 +125,8 @@ void Toy_private_emitAstValue(Toy_Bucket** bucketHandle, Toy_Ast** astHandle, To
 void Toy_private_emitAstUnary(Toy_Bucket** bucketHandle, Toy_Ast** astHandle, Toy_AstFlag flag);
 void Toy_private_emitAstBinary(Toy_Bucket** bucketHandle, Toy_Ast** astHandle,Toy_AstFlag flag, Toy_Ast* right);
 void Toy_private_emitAstGroup(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);
+
+void Toy_private_emitAstPrint(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);
 
 void Toy_private_emitAstPass(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);
 void Toy_private_emitAstError(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);

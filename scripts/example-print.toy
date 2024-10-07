@@ -1,0 +1,5 @@
+//print statement
+print 42;
+
+//it can handle complex expressions
+print 3 * 5;

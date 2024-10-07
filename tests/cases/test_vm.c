@@ -4,8 +4,10 @@
 #include "toy_lexer.h"
 #include "toy_parser.h"
 #include "toy_bytecode.h"
+#include "toy_print.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 //utils
@@ -161,6 +163,59 @@ int test_opcode_not_equal(Toy_Bucket** bucketHandle) {
 	return 0;
 }
 
+static char* callbackUtilReceived = NULL;
+static void callbackUtil(const char* msg) {
+	if (msg != NULL) {
+		free(callbackUtilReceived);
+		callbackUtilReceived = (char*)malloc(strlen(msg) + 1);
+		strcpy(callbackUtilReceived, msg);
+	}
+}
+
+int test_keywords(Toy_Bucket** bucketHandle) {
+	//test print
+	{
+		//setup
+		Toy_setPrintCallback(callbackUtil);
+		const char* source = "print 42;";
+
+		Toy_Lexer lexer;
+		Toy_bindLexer(&lexer, source);
+
+		Toy_Parser parser;
+		Toy_bindParser(&parser, &lexer);
+
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
+		Toy_Bytecode bc = Toy_compileBytecode(ast);
+
+		Toy_VM vm;
+		Toy_bindVM(&vm, bc.ptr);
+
+		//run
+		Toy_runVM(&vm);
+
+		//check the final state of the stack
+		if (callbackUtilReceived == NULL ||
+			strcmp(callbackUtilReceived, "42") != 0)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Unexpected value '%s' passed to print keyword, source: %s\n" TOY_CC_RESET, callbackUtilReceived != NULL ? callbackUtilReceived : "NULL", source);
+
+			//cleanup and return
+			Toy_resetPrintCallback();
+			free(callbackUtilReceived);
+			Toy_freeVM(&vm);
+			return -1;
+		}
+
+		//teadown
+		Toy_resetPrintCallback();
+		free(callbackUtilReceived);
+		Toy_freeVM(&vm);
+	}
+
+	return 0;
+}
+
 int main() {
 	//run each test set, returning the total errors given
 	int total = 0, res = 0;
@@ -188,6 +243,16 @@ int main() {
 	{
 		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
 		res = test_opcode_not_equal(&bucket);
+		Toy_freeBucket(&bucket);
+		if (res == 0) {
+			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
+		}
+		total += res;
+	}
+
+	{
+		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
+		res = test_keywords(&bucket);
 		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);

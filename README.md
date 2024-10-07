@@ -22,7 +22,11 @@ This repository holds the reference implementation for Toy version 2.x, written 
 
 # Syntax
 
-*Coming Soon.*
+```toy
+print 42; //print is a built-in keyword
+
+//more examples to be added as the features are implemented
+```
 
 # Building
 

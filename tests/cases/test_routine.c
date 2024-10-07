@@ -10,7 +10,7 @@
 #include <string.h>
 
 //tests
-int test_routine_header_and_values(Toy_Bucket** bucketHandle) {
+int test_routine_expressions(Toy_Bucket** bucketHandle) {
 	//simple test to ensure the header looks right with an empty ast
 	{
 		//setup
@@ -248,7 +248,7 @@ int test_routine_header_and_values(Toy_Bucket** bucketHandle) {
 			*((unsigned char*)(buffer + 27)) != 0 ||
 			*(int*)(buffer + 28) != 42 ||
 			*((unsigned char*)(buffer + 32)) != TOY_OPCODE_RETURN ||
-			*((unsigned char*)(buffer + 23)) != 0 ||
+			*((unsigned char*)(buffer + 33)) != 0 ||
 			*((unsigned char*)(buffer + 34)) != 0 ||
 			*((unsigned char*)(buffer + 35)) != 0
 		)
@@ -302,7 +302,7 @@ int test_routine_header_and_values(Toy_Bucket** bucketHandle) {
 			*((unsigned char*)(buffer + 27)) != 0 ||
 			*(float*)(buffer + 28) != 3.1415f ||
 			*((unsigned char*)(buffer + 32)) != TOY_OPCODE_RETURN ||
-			*((unsigned char*)(buffer + 23)) != 0 ||
+			*((unsigned char*)(buffer + 33)) != 0 ||
 			*((unsigned char*)(buffer + 34)) != 0 ||
 			*((unsigned char*)(buffer + 35)) != 0
 		)
@@ -619,13 +619,75 @@ int test_routine_binary(Toy_Bucket** bucketHandle) {
 	return 0;
 }
 
+int test_routine_keywords(Toy_Bucket** bucketHandle) {
+	//print
+	{
+		//setup
+		const char* source = "print 42;";
+		Toy_Lexer lexer;
+		Toy_Parser parser;
+
+		Toy_bindLexer(&lexer, source);
+		Toy_bindParser(&parser, &lexer);
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
+
+		//run
+		void* buffer = Toy_compileRoutine(ast);
+		int len = ((int*)buffer)[0];
+
+		//check header
+		int* ptr = (int*)buffer;
+
+		if ((ptr++)[0] != 40 || //total size
+			(ptr++)[0] != 0 || //param count
+			(ptr++)[0] != 0 || //jump count
+			(ptr++)[0] != 0 || //data count
+			(ptr++)[0] != 0) //subs count
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine header, source: %s\n" TOY_CC_RESET, source);
+
+			//cleanup and return
+			free(buffer);
+			return -1;
+		}
+
+		//check code
+		if (*((unsigned char*)(buffer + 24)) != TOY_OPCODE_READ ||
+			*((unsigned char*)(buffer + 25)) != TOY_VALUE_INTEGER ||
+			*((unsigned char*)(buffer + 26)) != 0 ||
+			*((unsigned char*)(buffer + 27)) != 0 ||
+			*(int*)(buffer + 28) != 42 ||
+			*((unsigned char*)(buffer + 32)) != TOY_OPCODE_PRINT ||
+			*((unsigned char*)(buffer + 33)) != 0 ||
+			*((unsigned char*)(buffer + 34)) != 0 ||
+			*((unsigned char*)(buffer + 35)) != 0 ||
+			*((unsigned char*)(buffer + 36)) != TOY_OPCODE_RETURN ||
+			*((unsigned char*)(buffer + 37)) != 0 ||
+			*((unsigned char*)(buffer + 38)) != 0 ||
+			*((unsigned char*)(buffer + 39)) != 0
+		)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine code, source: %s\n" TOY_CC_RESET, source);
+
+			//cleanup and return
+			free(buffer);
+			return -1;
+		}
+
+		//cleanup
+		free(buffer);
+	}
+
+	return 0;
+}
+
 int main() {
 	//run each test set, returning the total errors given
 	int total = 0, res = 0;
 
 	{
 		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
-		res = test_routine_header_and_values(&bucket);
+		res = test_routine_expressions(&bucket);
 		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
@@ -636,6 +698,16 @@ int main() {
 	{
 		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
 		res = test_routine_binary(&bucket);
+		Toy_freeBucket(&bucket);
+		if (res == 0) {
+			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
+		}
+		total += res;
+	}
+
+		{
+		Toy_Bucket* bucket = Toy_allocateBucket(sizeof(Toy_Ast) * 32);
+		res = test_routine_keywords(&bucket);
 		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);

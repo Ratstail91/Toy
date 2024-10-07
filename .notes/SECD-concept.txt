@@ -87,7 +87,7 @@ FN_CALL
 FN_RETURN
 	*read a list of return values specified in C into 'R', pop S, restore (S, E, C, D) from D(0) popping it, store the contents of 'R' in E or S based on the next few parts of C
 
-//bespoke utility instructions
+//various action instructions
 ASSERT
 	if S(-1) is falsy, print S(0) and exit
 PRINT

@@ -482,20 +482,20 @@ static void makeExpr(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** ro
 	parsePrecedence(bucketHandle, parser, rootHandle, PREC_ASSIGNMENT);
 }
 
-static void makeExprStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
-	//check for empty lines
-	if (match(parser, TOY_TOKEN_OPERATOR_SEMICOLON)) {
-		Toy_private_emitAstPass(bucketHandle, rootHandle);
-		return;
-	}
+static void makePrintStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
+	makeExpr(bucketHandle, parser, rootHandle);
+	Toy_private_emitAstPrint(bucketHandle, rootHandle);
 
+	consume(parser, TOY_TOKEN_OPERATOR_SEMICOLON, "Expected ';' at the end of print statement");
+}
+
+static void makeExprStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
 	makeExpr(bucketHandle, parser, rootHandle);
 	consume(parser, TOY_TOKEN_OPERATOR_SEMICOLON, "Expected ';' at the end of expression statement");
 }
 
 static void makeStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
 	//block
-	//print
 	//assert
 	//if-then-else
 	//while-then
@@ -505,8 +505,22 @@ static void makeStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** ro
 	//return
 	//import
 
-	//default
-	makeExprStmt(bucketHandle, parser, rootHandle);
+	//check for empty lines
+	if (match(parser, TOY_TOKEN_OPERATOR_SEMICOLON)) {
+		Toy_private_emitAstPass(bucketHandle, rootHandle);
+		return;
+	}
+
+	else if (match(parser, TOY_TOKEN_KEYWORD_PRINT)) {
+		makePrintStmt(bucketHandle, parser, rootHandle);
+		return;
+	}
+
+	else {
+		//default
+		makeExprStmt(bucketHandle, parser, rootHandle);
+		return;
+	}
 }
 
 static void makeDeclarationStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {

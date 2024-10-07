@@ -58,4 +58,3 @@ TOY_API bool Toy_private_isTruthy(Toy_Value value);
 TOY_API bool Toy_private_isEqual(Toy_Value left, Toy_Value right);
 
 unsigned int Toy_hashValue(Toy_Value value);
-

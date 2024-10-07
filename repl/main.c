@@ -157,16 +157,21 @@ CmdLine parseCmdLine(int argc, const char* argv[]) {
 	return cmd;
 }
 
-//callback
-static void errorAndExit(const char* msg) {
-	fprintf(stderr, "%s", msg);
+//callbacks
+static void printCallback(const char* msg) {
+	fprintf(stdout, "%s\n", msg);
+}
+
+static void errorAndExitCallback(const char* msg) {
+	fprintf(stderr, "%s\n", msg);
 	exit(-1);
 }
 
 //main file
 int main(int argc, const char* argv[]) {
-	Toy_setErrorCallback(errorAndExit);
-	Toy_setAssertFailureCallback(errorAndExit);
+	Toy_setPrintCallback(printCallback);
+	Toy_setErrorCallback(errorAndExitCallback);
+	Toy_setAssertFailureCallback(errorAndExitCallback);
 
 	CmdLine cmd = parseCmdLine(argc, argv);
 
@@ -226,39 +231,41 @@ int main(int argc, const char* argv[]) {
 		Toy_runVM(&vm);
 
 		//debugging result
-		printf("printing the stack result\n\ntype\tvalue\n");
-		for (int i = 0; i < vm.stack->count; i++) {
-			Toy_Value v = ((Toy_Value*)(vm.stack + 1))[i];
+		if (vm.stack->count > 0) {
+			printf("Debug output of the stack after execution\n\ntype\tvalue\n");
+			for (int i = 0; i < vm.stack->count; i++) {
+				Toy_Value v = ((Toy_Value*)(vm.stack + 1))[i];
 
-			printf(" %d\t ", v.type);
+				printf(" %d\t ", v.type);
 
-			switch(v.type) {
-				case TOY_VALUE_NULL:
-					printf("null");
-					break;
+				switch(v.type) {
+					case TOY_VALUE_NULL:
+						printf("null");
+						break;
 
-				case TOY_VALUE_BOOLEAN:
-					printf("%s", TOY_VALUE_AS_BOOLEAN(v) ? "true" : "false");
-					break;
+					case TOY_VALUE_BOOLEAN:
+						printf("%s", TOY_VALUE_AS_BOOLEAN(v) ? "true" : "false");
+						break;
 
-				case TOY_VALUE_INTEGER:
-					printf("%d", TOY_VALUE_AS_INTEGER(v));
-					break;
+					case TOY_VALUE_INTEGER:
+						printf("%d", TOY_VALUE_AS_INTEGER(v));
+						break;
 
-				case TOY_VALUE_FLOAT:
-					printf("%f", TOY_VALUE_AS_FLOAT(v));
-					break;
+					case TOY_VALUE_FLOAT:
+						printf("%f", TOY_VALUE_AS_FLOAT(v));
+						break;
 
-				case TOY_VALUE_STRING:
-				case TOY_VALUE_ARRAY:
-				case TOY_VALUE_DICTIONARY:
-				case TOY_VALUE_FUNCTION:
-				case TOY_VALUE_OPAQUE:
-					printf("???");
-					break;
+					case TOY_VALUE_STRING:
+					case TOY_VALUE_ARRAY:
+					case TOY_VALUE_DICTIONARY:
+					case TOY_VALUE_FUNCTION:
+					case TOY_VALUE_OPAQUE:
+						printf("???");
+						break;
+				}
+
+				printf("\n");
 			}
-
-			printf("\n");
 		}
 
 		//cleanup

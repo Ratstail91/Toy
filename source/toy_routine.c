@@ -63,25 +63,25 @@ static void writeInstructionValue(Toy_Routine** rt, Toy_AstValue ast) {
 	if (TOY_VALUE_IS_NULL(ast.value)) {
 		//NOTHING - null's type data is enough
 
-		//BUGFIX: 4-byte alignment
+		//4-byte alignment
 		EMIT_BYTE(rt, 0);
 		EMIT_BYTE(rt, 0);
 	}
 	else if (TOY_VALUE_IS_BOOLEAN(ast.value)) {
 		EMIT_BYTE(rt, TOY_VALUE_AS_BOOLEAN(ast.value));
 
-		//BUGFIX: 4-byte alignment
+		//4-byte alignment
 		EMIT_BYTE(rt, 0);
 	}
 	else if (TOY_VALUE_IS_INTEGER(ast.value)) {
-		//BUGFIX: 4-byte alignment
+		//4-byte alignment
 		EMIT_BYTE(rt, 0);
 		EMIT_BYTE(rt, 0);
 
 		EMIT_INT(rt, code, TOY_VALUE_AS_INTEGER(ast.value));
 	}
 	else if (TOY_VALUE_IS_FLOAT(ast.value)) {
-		//BUGFIX: 4-byte alignment
+		//4-byte alignment
 		EMIT_BYTE(rt, 0);
 		EMIT_BYTE(rt, 0);
 
@@ -100,7 +100,7 @@ static void writeInstructionUnary(Toy_Routine** rt, Toy_AstUnary ast) {
 	if (ast.flag == TOY_AST_FLAG_NEGATE) {
 		EMIT_BYTE(rt, TOY_OPCODE_NEGATE);
 
-		//BUGFIX: 4-byte alignment
+		//4-byte alignment
 		EMIT_BYTE(rt, 0);
 		EMIT_BYTE(rt, 0);
 		EMIT_BYTE(rt, 0);
@@ -197,7 +197,20 @@ static void writeInstructionBinary(Toy_Routine** rt, Toy_AstBinary ast) {
 		exit(-1);
 	}
 
-	//BUGFIX: 4-byte alignment (covers most cases)
+	//4-byte alignment (covers most cases)
+	EMIT_BYTE(rt, 0);
+	EMIT_BYTE(rt, 0);
+	EMIT_BYTE(rt, 0);
+}
+
+static void writeInstructionPrint(Toy_Routine** rt, Toy_AstPrint ast) {
+	//the thing to print
+	writeRoutineCode(rt, ast.child);
+
+	//output the print opcode
+	EMIT_BYTE(rt, TOY_OPCODE_PRINT);
+
+	//4-byte alignment
 	EMIT_BYTE(rt, 0);
 	EMIT_BYTE(rt, 0);
 	EMIT_BYTE(rt, 0);
@@ -230,6 +243,10 @@ static void writeRoutineCode(Toy_Routine** rt, Toy_Ast* ast) {
 
 		case TOY_AST_BINARY:
 			writeInstructionBinary(rt, ast->binary);
+			break;
+
+		case TOY_AST_PRINT:
+			writeInstructionPrint(rt, ast->print);
 			break;
 
 		//other disallowed instructions
@@ -271,7 +288,7 @@ static void* writeRoutine(Toy_Routine* rt, Toy_Ast* ast) {
 	//code
 	writeRoutineCode(&rt, ast);
 	EMIT_BYTE(&rt, TOY_OPCODE_RETURN); //temp terminator
-	EMIT_BYTE(&rt, 0); //BUGFIX: 4-byte alignment
+	EMIT_BYTE(&rt, 0); //4-byte alignment
 	EMIT_BYTE(&rt, 0);
 	EMIT_BYTE(&rt, 0);
 	//TODO: jumps

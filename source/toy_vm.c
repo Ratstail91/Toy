@@ -1,6 +1,7 @@
 #include "toy_vm.h"
 #include "toy_console_colors.h"
 
+#include "toy_print.h"
 #include "toy_opcodes.h"
 #include "toy_value.h"
 
@@ -235,15 +236,55 @@ static void processLogical(Toy_VM* vm, Toy_OpcodeType opcode) {
 	}
 }
 
+static void processPrint(Toy_VM* vm) {
+	//print the value on top of the stack, popping it
+	Toy_Value value = Toy_popStack(&vm->stack);
+
+	//NOTE: don't append a newline - leave that choice to the host
+	switch(value.type) {
+		case TOY_VALUE_NULL:
+			Toy_print("null");
+			break;
+
+		case TOY_VALUE_BOOLEAN:
+			Toy_print(TOY_VALUE_AS_BOOLEAN(value) ? "true" : "false");
+			break;
+
+		case TOY_VALUE_INTEGER: {
+			char buffer[16];
+			sprintf(buffer, "%d", TOY_VALUE_AS_INTEGER(value));
+			Toy_print(buffer);
+			break;
+		}
+
+		case TOY_VALUE_FLOAT: {
+			char buffer[16];
+			sprintf(buffer, "%f", TOY_VALUE_AS_FLOAT(value));
+			Toy_print(buffer);
+			break;
+		}
+
+		case TOY_VALUE_STRING: //TODO: decide on how long strings, etc. live for in memory
+		case TOY_VALUE_ARRAY:
+		case TOY_VALUE_DICTIONARY:
+		case TOY_VALUE_FUNCTION:
+		case TOY_VALUE_OPAQUE:
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Unknown value type %d passed to processPrint, exiting\n" TOY_CC_RESET, value.type);
+			exit(-1);
+	}
+}
+
 static void process(Toy_VM* vm) {
 	while(true) {
 		Toy_OpcodeType opcode = READ_BYTE(vm);
 
 		switch(opcode) {
+			//variable instructions
 			case TOY_OPCODE_READ:
 				processRead(vm);
 				break;
 
+			//arithmetic instructions
 			case TOY_OPCODE_ADD:
 			case TOY_OPCODE_SUBTRACT:
 			case TOY_OPCODE_MULTIPLY:
@@ -252,6 +293,7 @@ static void process(Toy_VM* vm) {
 				processArithmetic(vm, opcode);
 				break;
 
+			//comparison instructions
 			case TOY_OPCODE_COMPARE_EQUAL:
 			case TOY_OPCODE_COMPARE_LESS:
 			case TOY_OPCODE_COMPARE_LESS_EQUAL:
@@ -260,6 +302,7 @@ static void process(Toy_VM* vm) {
 				processComparison(vm, opcode);
 				break;
 
+			//logical instructions
 			case TOY_OPCODE_AND:
 			case TOY_OPCODE_OR:
 			case TOY_OPCODE_TRUTHY:
@@ -267,6 +310,17 @@ static void process(Toy_VM* vm) {
 				processLogical(vm, opcode);
 				break;
 
+			//control instructions
+			case TOY_OPCODE_RETURN:
+				//temp terminator
+				return;
+
+			//various action instructions
+			case TOY_OPCODE_PRINT:
+				processPrint(vm);
+				break;
+
+			//not yet implemented
 			case TOY_OPCODE_LOAD:
 			case TOY_OPCODE_LOAD_LONG:
 			case TOY_OPCODE_DECLARE:
@@ -277,10 +331,6 @@ static void process(Toy_VM* vm) {
 			case TOY_OPCODE_EOF:
 				fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid opcode %d found, exiting\n" TOY_CC_RESET, opcode);
 				exit(-1);
-
-			case TOY_OPCODE_RETURN: //temp terminator, temp position
-				//
-				return;
 		}
 
 		//prepare for the next instruction

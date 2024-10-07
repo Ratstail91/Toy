@@ -33,6 +33,7 @@ void Toy_setPrintCallback(Toy_callbackType cb) {
 void Toy_setErrorCallback(Toy_callbackType cb) {
 	errorCallback = cb;
 }
+
 void Toy_setAssertFailureCallback(Toy_callbackType cb) {
 	assertCallback = cb;
 }
@@ -48,4 +49,3 @@ void Toy_resetErrorCallback() {
 void Toy_resetAssertFailureCallback() {
 	assertCallback = errDefault;
 }
-

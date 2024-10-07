@@ -20,6 +20,7 @@ int test_sizeof_ast_64bit() {
 	TEST_SIZEOF(Toy_AstUnary, 16);
 	TEST_SIZEOF(Toy_AstBinary, 24);
 	TEST_SIZEOF(Toy_AstGroup, 16);
+	TEST_SIZEOF(Toy_AstPrint, 16);
 	TEST_SIZEOF(Toy_AstPass, 4);
 	TEST_SIZEOF(Toy_AstError, 4);
 	TEST_SIZEOF(Toy_AstEnd, 4);
@@ -47,6 +48,7 @@ int test_sizeof_ast_32bit() {
 	TEST_SIZEOF(Toy_AstUnary, 12);
 	TEST_SIZEOF(Toy_AstBinary, 16);
 	TEST_SIZEOF(Toy_AstGroup, 8);
+	TEST_SIZEOF(Toy_AstPrint, 8);
 	TEST_SIZEOF(Toy_AstPass, 4);
 	TEST_SIZEOF(Toy_AstError, 4);
 	TEST_SIZEOF(Toy_AstEnd, 4);
@@ -142,6 +144,33 @@ int test_type_emission(Toy_Bucket** bucketHandle) {
 			TOY_VALUE_AS_INTEGER(ast->group.child->binary.right->value.value) != 69)
 		{
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to emit a group as 'Toy_Ast', state unknown\n" TOY_CC_RESET);
+			return -1;
+		}
+	}
+
+	//emit print keyword
+	{
+		//build the AST
+		Toy_Ast* ast = NULL;
+		Toy_Ast* right = NULL;
+		Toy_private_emitAstValue(bucketHandle, &ast, TOY_VALUE_TO_INTEGER(42));
+		Toy_private_emitAstValue(bucketHandle, &right, TOY_VALUE_TO_INTEGER(69));
+		Toy_private_emitAstBinary(bucketHandle, &ast, TOY_AST_FLAG_ADD, right);
+		Toy_private_emitAstPrint(bucketHandle, &ast);
+
+		//check if it worked
+		if (
+			ast == NULL ||
+			ast->type != TOY_AST_PRINT ||
+			ast->print.child == NULL ||
+			ast->print.child->type != TOY_AST_BINARY ||
+			ast->print.child->binary.flag != TOY_AST_FLAG_ADD ||
+			ast->print.child->binary.left->type != TOY_AST_VALUE ||
+			TOY_VALUE_AS_INTEGER(ast->print.child->binary.left->value.value) != 42 ||
+			ast->print.child->binary.right->type != TOY_AST_VALUE ||
+			TOY_VALUE_AS_INTEGER(ast->print.child->binary.right->value.value) != 69)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to emit a print as 'Toy_Ast', state unknown\n" TOY_CC_RESET);
 			return -1;
 		}
 	}
