@@ -23,7 +23,11 @@ This repository holds the reference implementation for Toy version 2.x, written 
 # Syntax
 
 ```toy
-print 42; //print is a built-in keyword
+//print is a built-in keyword, that can handle complex expressions
+print 6 * 7;
+
+//strings can be concatenated with the .. operator
+print "Hello" .. "world!";
 
 //more examples to be added as the features are implemented
 ```

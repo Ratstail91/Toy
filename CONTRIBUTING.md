@@ -26,10 +26,10 @@ These data structures should be as independent as they can be, but there are som
 
 ```mermaid
 graph TB
-    Toy_Value ---> Toy_Stack
-    Toy_Value ---> Toy_String
-    Toy_Value ---> Toy_Table
     Toy_Bucket ---> Toy_String
+    Toy_Value ---> Toy_String
+    Toy_Value ---> Toy_Stack
+    Toy_Value ---> Toy_Table
     Toy_Array
 ```
 

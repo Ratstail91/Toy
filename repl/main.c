@@ -186,6 +186,11 @@ int repl(const char* name) {
 			inputBuffer[--length] = '\0';
 		}
 
+		if (length == 0) {
+			printf("%s> ", name); //shows the terminal prompt
+			continue;
+		}
+
 		//end
 		if (strlen(inputBuffer) == 4 && (strncmp(inputBuffer, "exit", 4) == 0 || strncmp(inputBuffer, "quit", 4) == 0)) {
 			break;
