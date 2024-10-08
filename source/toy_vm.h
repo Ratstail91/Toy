@@ -26,21 +26,23 @@ typedef struct Toy_VM {
 
 	unsigned int routineCounter;
 
-	//heap - block-level key/value pairs
-	//TODO: needs string util for identifiers
-
 	//stack - immediate-level values only
 	Toy_Stack* stack;
+
+	//heap - block-level key/value pairs
+	//TODO: needs string util for identifiers
 
 	//easy access to memory
 	Toy_Bucket* stringBucket;
 } Toy_VM;
 
+TOY_API void Toy_initVM(Toy_VM* vm);
 TOY_API void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode); //process the version data
 TOY_API void Toy_bindVMToRoutine(Toy_VM* vm, unsigned char* routine); //process the routine only
 
 TOY_API void Toy_runVM(Toy_VM* vm);
 TOY_API void Toy_freeVM(Toy_VM* vm);
-TOY_API void Toy_resetVM(Toy_VM* vm);
+
+TOY_API void Toy_resetVM(Toy_VM* vm); //prepares for another run without deleting stack, scope and memory
 
 //TODO: inject extra data

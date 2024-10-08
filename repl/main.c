@@ -157,6 +157,85 @@ CmdLine parseCmdLine(int argc, const char* argv[]) {
 	return cmd;
 }
 
+//repl function
+static void errorAndContinueCallback(const char* msg) {
+	fprintf(stderr, "%s\n", msg);
+}
+
+int repl(const char* name) {
+	Toy_setErrorCallback(errorAndContinueCallback);
+	Toy_setAssertFailureCallback(errorAndContinueCallback);
+
+	//vars to use
+	unsigned int INPUT_BUFFER_SIZE = 4096;
+	char inputBuffer[INPUT_BUFFER_SIZE];
+	memset(inputBuffer, 0, INPUT_BUFFER_SIZE);
+
+	Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
+
+	Toy_VM vm;
+	Toy_initVM(&vm);
+
+	printf("%s> ", name); //shows the terminal prompt
+
+	//read from the terminal
+	while(fgets(inputBuffer, INPUT_BUFFER_SIZE, stdin)) {
+		//work around fgets() adding a newline
+		unsigned int length = strlen(inputBuffer);
+		if (inputBuffer[length - 1] == '\n') {
+			inputBuffer[--length] = '\0';
+		}
+
+		//end
+		if (strlen(inputBuffer) == 4 && (strncmp(inputBuffer, "exit", 4) == 0 || strncmp(inputBuffer, "quit", 4) == 0)) {
+			break;
+		}
+
+		//parse the input, prep the VM for run
+		Toy_Lexer lexer;
+		Toy_bindLexer(&lexer, inputBuffer);
+		Toy_Parser parser;
+		Toy_bindParser(&parser, &lexer);
+		Toy_Ast* ast = Toy_scanParser(&bucket, &parser); //Ast is in the bucket, so it doesn't need to be freed
+
+		//parsing error, retry
+		if (parser.error) {
+			printf("%s> ", name); //shows the terminal prompt
+			continue;
+		}
+
+		Toy_Bytecode bc = Toy_compileBytecode(ast);
+		Toy_bindVM(&vm, bc.ptr);
+
+		//run
+		Toy_runVM(&vm);
+
+		//free the bytecode, and leave the VM ready for the next loop
+		Toy_freeBytecode(bc);
+		Toy_resetVM(&vm);
+
+		//count the bucket memory - hang on, this this garbage collection??
+		Toy_Bucket* iter = bucket;
+		int depth = 0;
+		while (iter->next) {
+			iter = iter->next;
+			if (++depth >= 7) { //8 buckets in the chain total, about 8kb allocated
+				Toy_freeBucket(&bucket);
+				bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
+				break;
+			}
+		}
+
+		printf("%s> ", name); //shows the terminal prompt
+	}
+
+	//cleanp all memory
+	Toy_freeVM(&vm);
+	Toy_freeBucket(&bucket);
+
+	return 0;
+}
+
 //callbacks
 static void printCallback(const char* msg) {
 	fprintf(stdout, "%s\n", msg);
@@ -173,6 +252,12 @@ int main(int argc, const char* argv[]) { //TODO: this needs an interactive termi
 	Toy_setErrorCallback(errorAndExitCallback);
 	Toy_setAssertFailureCallback(errorAndExitCallback);
 
+	//repl
+	if (argc == 1) {
+		return repl(argv[0]);
+	}
+
+	//if there's args, process them
 	CmdLine cmd = parseCmdLine(argc, argv);
 
 	if (cmd.error) {
@@ -225,12 +310,13 @@ int main(int argc, const char* argv[]) { //TODO: this needs an interactive termi
 
 		//run the setup
 		Toy_VM vm;
+		Toy_initVM(&vm);
 		Toy_bindVM(&vm, bc.ptr);
 
 		//run
 		Toy_runVM(&vm);
 
-		//debugging result
+		//DEBUG: if there's anything left on the stack, print it
 		if (vm.stack->count > 0) {
 			printf("Debug output of the stack after execution\n\ntype\tvalue\n");
 			for (int i = 0; i < vm.stack->count; i++) {
@@ -255,7 +341,24 @@ int main(int argc, const char* argv[]) { //TODO: this needs an interactive termi
 						printf("%f", TOY_VALUE_AS_FLOAT(v));
 						break;
 
-					case TOY_VALUE_STRING:
+					case TOY_VALUE_STRING: {
+						Toy_String* str = TOY_VALUE_AS_STRING(v);
+
+						//print based on type
+						if (str->type == TOY_STRING_NODE) {
+							char* buffer = Toy_getStringRawBuffer(str);
+							printf("%s", buffer);
+							free(buffer);
+						}
+						else if (str->type == TOY_STRING_LEAF) {
+							printf("%s", str->as.leaf.data);
+						}
+						else if (str->type == TOY_STRING_NAME) {
+							printf("%s", str->as.name.data);
+						}
+						break;
+					}
+
 					case TOY_VALUE_ARRAY:
 					case TOY_VALUE_DICTIONARY:
 					case TOY_VALUE_FUNCTION:
@@ -270,6 +373,7 @@ int main(int argc, const char* argv[]) { //TODO: this needs an interactive termi
 
 		//cleanup
 		Toy_freeVM(&vm);
+		Toy_freeBytecode(bc);
 		Toy_freeBucket(&bucket);
 		free(source);
 	}

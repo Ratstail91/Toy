@@ -11,7 +11,7 @@
 #include <string.h>
 
 //utils
-Toy_Bytecode makeBytecodeFromSource(Toy_Bucket** bucketHandle, const char* source) {
+Toy_Bytecode makeBytecodeFromSource(Toy_Bucket** bucketHandle, const char* source) { //did I forget this?
 	Toy_Lexer lexer;
 	Toy_bindLexer(&lexer, source);
 
@@ -43,6 +43,7 @@ int test_setup_and_teardown(Toy_Bucket** bucketHandle) {
 
 		//run the setup
 		Toy_VM vm;
+		Toy_initVM(&vm);
 		Toy_bindVM(&vm, bc.ptr);
 
 		//check the header size
@@ -93,6 +94,7 @@ int test_simple_execution(Toy_Bucket** bucketHandle) {
 
 		//run the setup
 		Toy_VM vm;
+		Toy_initVM(&vm);
 		Toy_bindVM(&vm, bc.ptr);
 
 		//run
@@ -137,6 +139,7 @@ int test_opcode_not_equal(Toy_Bucket** bucketHandle) {
 
 		//run the setup
 		Toy_VM vm;
+		Toy_initVM(&vm);
 		Toy_bindVM(&vm, bc.ptr);
 
 		//run
@@ -189,6 +192,7 @@ int test_keywords(Toy_Bucket** bucketHandle) {
 		Toy_Bytecode bc = Toy_compileBytecode(ast);
 
 		Toy_VM vm;
+		Toy_initVM(&vm);
 		Toy_bindVM(&vm, bc.ptr);
 
 		//run
@@ -230,6 +234,7 @@ int test_keywords(Toy_Bucket** bucketHandle) {
 		Toy_Bytecode bc = Toy_compileBytecode(ast);
 
 		Toy_VM vm;
+		Toy_initVM(&vm);
 		Toy_bindVM(&vm, bc.ptr);
 
 		//run
@@ -271,6 +276,7 @@ int test_keywords(Toy_Bucket** bucketHandle) {
 		Toy_Bytecode bc = Toy_compileBytecode(ast);
 
 		Toy_VM vm;
+		Toy_initVM(&vm);
 		Toy_bindVM(&vm, bc.ptr);
 
 		//run
@@ -294,6 +300,81 @@ int test_keywords(Toy_Bucket** bucketHandle) {
 		free(callbackUtilReceived);
 		callbackUtilReceived = NULL;
 		Toy_freeVM(&vm);
+	}
+
+	return 0;
+}
+
+int test_vm_reuse(Toy_Bucket** bucketHandle) {
+	//run code in the same vm multiple times
+	{
+		Toy_setPrintCallback(callbackUtil);
+
+		Toy_VM vm;
+		Toy_initVM(&vm);
+
+		//run 1
+		Toy_Bytecode bc1 = makeBytecodeFromSource(bucketHandle, "print \"Hello world!\";");
+		Toy_bindVM(&vm, bc1.ptr);
+		Toy_runVM(&vm);
+		Toy_resetVM(&vm);
+
+		if (callbackUtilReceived == NULL || strcmp(callbackUtilReceived, "Hello world!") != 0) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Unexpected value '%s' found in VM reuse run 1\n" TOY_CC_RESET, callbackUtilReceived != NULL ? callbackUtilReceived : "NULL");
+
+			//cleanup and return
+			free(callbackUtilReceived);
+			callbackUtilReceived = NULL;
+			Toy_freeBytecode(bc1);
+			Toy_freeVM(&vm);
+			Toy_resetPrintCallback();
+			return -1;
+		}
+		Toy_freeBytecode(bc1);
+
+		//run 2
+		Toy_Bytecode bc2 = makeBytecodeFromSource(bucketHandle, "print \"Hello world!\";");
+		Toy_bindVM(&vm, bc2.ptr);
+		Toy_runVM(&vm);
+		Toy_resetVM(&vm);
+
+		if (callbackUtilReceived == NULL || strcmp(callbackUtilReceived, "Hello world!") != 0) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Unexpected value '%s' found in VM reuse run 2\n" TOY_CC_RESET, callbackUtilReceived != NULL ? callbackUtilReceived : "NULL");
+
+			//cleanup and return
+			free(callbackUtilReceived);
+			callbackUtilReceived = NULL;
+			Toy_freeBytecode(bc2);
+			Toy_freeVM(&vm);
+			Toy_resetPrintCallback();
+			return -1;
+		}
+		Toy_freeBytecode(bc2);
+
+		//run 3
+		Toy_Bytecode bc3 = makeBytecodeFromSource(bucketHandle, "print \"Hello world!\";");
+		Toy_bindVM(&vm, bc3.ptr);
+		Toy_runVM(&vm);
+		Toy_resetVM(&vm);
+
+		if (callbackUtilReceived == NULL || strcmp(callbackUtilReceived, "Hello world!") != 0) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Unexpected value '%s' found in VM reuse run 3\n" TOY_CC_RESET, callbackUtilReceived != NULL ? callbackUtilReceived : "NULL");
+
+			//cleanup and return
+			free(callbackUtilReceived);
+			callbackUtilReceived = NULL;
+			Toy_freeBytecode(bc3);
+			Toy_freeVM(&vm);
+			Toy_resetPrintCallback();
+			return -1;
+		}
+		Toy_freeBytecode(bc3);
+
+		//cleanup
+		Toy_freeVM(&vm);
+		free(callbackUtilReceived);
+		callbackUtilReceived = NULL;
+		Toy_resetPrintCallback();
 	}
 
 	return 0;
@@ -336,6 +417,16 @@ int main() {
 	{
 		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		res = test_keywords(&bucket);
+		Toy_freeBucket(&bucket);
+		if (res == 0) {
+			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
+		}
+		total += res;
+	}
+
+	{
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
+		res = test_vm_reuse(&bucket);
 		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);

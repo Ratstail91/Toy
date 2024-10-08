@@ -389,6 +389,15 @@ static void process(Toy_VM* vm) {
 }
 
 //exposed functions
+void Toy_initVM(Toy_VM* vm) {
+	//clear the stack, scope and memory
+	vm->stack = NULL;
+	//TODO: clear the scope
+	vm->stringBucket = NULL;
+
+	Toy_resetVM(vm);
+}
+
 void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode) {
 	if (bytecode[0] != TOY_VERSION_MAJOR || bytecode[1] > TOY_VERSION_MINOR) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Wrong bytecode version found: expected %d.%d.%d found %d.%d.%d, exiting\n" TOY_CC_RESET, TOY_VERSION_MAJOR, TOY_VERSION_MINOR, TOY_VERSION_PATCH, bytecode[0], bytecode[1], bytecode[2]);
@@ -417,8 +426,6 @@ void Toy_bindVM(Toy_VM* vm, unsigned char* bytecode) {
 }
 
 void Toy_bindVMToRoutine(Toy_VM* vm, unsigned char* routine) {
-	Toy_resetVM(vm);
-
 	vm->routine = routine;
 
 	//read the header metadata
@@ -471,6 +478,7 @@ void Toy_freeVM(Toy_VM* vm) {
 
 	//free the bytecode
 	free(vm->bc);
+
 	Toy_resetVM(vm);
 }
 
@@ -493,6 +501,5 @@ void Toy_resetVM(Toy_VM* vm) {
 
 	vm->routineCounter = 0;
 
-	//init the scope & stack
-	vm->stack = NULL;
+	//NOTE: stack, scope and memory are not altered by reset
 }
