@@ -56,7 +56,7 @@ int dir(char* dest, const char* src) {
 }
 
 #define APPEND(dest, src) \
-	memcpy((dest) + (strlen(dest)), (src), strlen((src)));
+	strncpy((dest) + (strlen(dest)), (src), strlen((src)) + 1);
 
 #if defined(_WIN32) || defined(_WIN64)
 	#define FLIPSLASH(str) for (int i = 0; str[i]; i++) str[i] = str[i] == '/' ? '\\' : str[i];
@@ -136,7 +136,7 @@ CmdLine parseCmdLine(int argc, const char* argv[]) {
 
 				//total space to reserve - it's actually longer than needed, due to the exe name being removed
 				cmd.infileLength = strlen(argv[0]) + strlen(argv[i]);
-				cmd.infile = malloc(cmd.infileLength);
+				cmd.infile = malloc(cmd.infileLength + 1);
 
 				if (cmd.infile == NULL) {
 					fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to allocate space while parsing the command line, exiting\n" TOY_CC_RESET);
@@ -211,7 +211,6 @@ int repl(const char* name) {
 		Toy_runVM(&vm);
 
 		//free the bytecode, and leave the VM ready for the next loop
-		Toy_freeBytecode(bc);
 		Toy_resetVM(&vm);
 
 		//count the bucket memory - hang on, this this garbage collection??
@@ -373,7 +372,6 @@ int main(int argc, const char* argv[]) { //TODO: this needs an interactive termi
 
 		//cleanup
 		Toy_freeVM(&vm);
-		Toy_freeBytecode(bc);
 		Toy_freeBucket(&bucket);
 		free(source);
 	}
