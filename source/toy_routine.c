@@ -92,7 +92,6 @@ static void emitString(Toy_Routine** rt, Toy_String* str) {
 static void writeRoutineCode(Toy_Routine** rt, Toy_Ast* ast); //forward declare for recursion
 
 static void writeInstructionValue(Toy_Routine** rt, Toy_AstValue ast) {
-	//TODO: store more complex values in the data code
 	EMIT_BYTE(rt, code, TOY_OPCODE_READ);
 	EMIT_BYTE(rt, code, ast.value.type);
 
@@ -369,7 +368,9 @@ static void* writeRoutine(Toy_Routine* rt, Toy_Ast* ast) {
 		emitInt((void**)&buffer, &capacity, &count, 0); //subs
 	}
 
-	//append various parts to the buffer TODO: add the rest
+	//append various parts to the buffer
+	//TODO: param region
+
 	if (rt->codeCount > 0) {
 		expand(&buffer, &capacity, &count, rt->codeCount);
 		memcpy((buffer + count), rt->code, rt->codeCount);
@@ -393,6 +394,8 @@ static void* writeRoutine(Toy_Routine* rt, Toy_Ast* ast) {
 		*((int*)(buffer + dataAddr)) = count;
 		count += rt->dataCount;
 	}
+
+	//TODO: subs region
 
 	//finally, record the total size within the header, and return the result
 	*((int*)buffer) = count;

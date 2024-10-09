@@ -251,7 +251,7 @@ static void errorAndExitCallback(const char* msg) {
 }
 
 //main file
-int main(int argc, const char* argv[]) { //TODO: this needs an interactive terminal mode
+int main(int argc, const char* argv[]) {
 	Toy_setPrintCallback(printCallback);
 	Toy_setErrorCallback(errorAndExitCallback);
 	Toy_setAssertFailureCallback(errorAndExitCallback);

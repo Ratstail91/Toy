@@ -25,7 +25,7 @@ bool Toy_private_isTruthy(Toy_Value value) {
 bool Toy_private_isEqual(Toy_Value left, Toy_Value right) {
 	//temp check
 	if (right.type > TOY_VALUE_STRING) {
-		Toy_error(TOY_CC_ERROR "ERROR: Unknown types in value equality comparison\n" TOY_CC_RESET); //TODO: varargs
+		Toy_error(TOY_CC_ERROR "ERROR: Unknown types in value equality comparison\n" TOY_CC_RESET);
 	}
 
 	switch(left.type) {
@@ -64,7 +64,7 @@ bool Toy_private_isEqual(Toy_Value left, Toy_Value right) {
 		case TOY_VALUE_FUNCTION:
 		case TOY_VALUE_OPAQUE:
 		default:
-		Toy_error(TOY_CC_ERROR "ERROR: Unknown types in value equality comparison\n" TOY_CC_RESET); //TODO: varargs
+		Toy_error(TOY_CC_ERROR "ERROR: Unknown types in value equality comparison\n" TOY_CC_RESET);
 	}
 
 	return 0;
@@ -111,7 +111,7 @@ unsigned int Toy_hashValue(Toy_Value value) {
 				return str->cachedHash;
 			}
 			else if (str->type == TOY_STRING_NODE) {
-				//TODO: I wonder it it would be possible to discretely swap the composite node string with a new leaf string here? Would that speed up other parts of the code by not having to walk the tree?
+				//TODO: I wonder if it would be possible to discretely swap the composite node string with a new leaf string here? Would that speed up other parts of the code by not having to walk the tree in future?
 				char* buffer = Toy_getStringRawBuffer(str);
 				str->cachedHash = hashCString(buffer);
 				free(buffer);

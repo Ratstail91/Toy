@@ -14,7 +14,7 @@ First, the main development branch of Toy is 'v2', with the branches 'v1' and 'v
 
 v2 is a ground-up rewrite, with additions, changes and deletions to the language that make sense. If you want to discuss the direction things are going, the [Discussions Tab](https://github.com/Ratstail91/Toy/discussions) is perfect for that.
 
-The [Issue Tracker](https://github.com/Ratstail91/Toy/issues) is a good place to see what tasks and issues are currently waiting to be addressed. The [toy.h](https://github.com/Ratstail91/Toy/blob/v2/source/toy.h) source file is a quick way to see what building blocks are available in the source code. There are also a number of comments prepended with `TODO:` scattered throughout the source code, as reminders of planned features.
+The [Issue Tracker](https://github.com/Ratstail91/Toy/issues) is a good place to see what tasks and issues are currently waiting to be addressed. The [toy.h](https://github.com/Ratstail91/Toy/blob/v2/source/toy.h) source file is a quick way to see what building blocks are available in the source code. There are also a number of comments prepended with `TODO` scattered throughout the source code, as reminders of planned features.
 
 The [test cases](https://github.com/Ratstail91/Toy/tree/v2/tests/cases), which test individual parts of the code in isolation, can be a good way to see how those parts are used. Likewise, the [REPL](https://github.com/Ratstail91/Toy/tree/v2/repl) shows a practical usage of Toy.
 
@@ -32,8 +32,6 @@ graph TB
     Toy_Value ---> Toy_Table
     Toy_Array
 ```
-
-*TODO: Toy_Value will eventually depend on other structures, includeing those shown here, once the related features are implemented in v2.*
 
 In addition, [toy_common.h](https://github.com/Ratstail91/Toy/blob/v2/source/toy_common.h) grants platform portability and version info, while [toy_console_colors.h](https://github.com/Ratstail91/Toy/blob/v2/source/toy_console_colors.h) provides string constants as macros that help with console output (where supported).
 

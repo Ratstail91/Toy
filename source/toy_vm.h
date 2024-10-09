@@ -29,8 +29,8 @@ typedef struct Toy_VM {
 	//stack - immediate-level values only
 	Toy_Stack* stack;
 
-	//heap - block-level key/value pairs
-	//TODO: needs string util for identifiers
+	//scope - block-level key/value pairs
+	//TODO: Toy_Scope* scope;
 
 	//easy access to memory
 	Toy_Bucket* stringBucket;

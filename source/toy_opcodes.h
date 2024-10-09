@@ -36,7 +36,7 @@ typedef enum Toy_OpcodeType {
 	//various action instructions
 	TOY_OPCODE_PRINT,
 	TOY_OPCODE_CONCAT,
-	//TODO: clear the program stack
+	//TODO: clear the program stack?
 
 	//meta instructions
 	TOY_OPCODE_PASS,

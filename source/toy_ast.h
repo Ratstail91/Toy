@@ -31,7 +31,7 @@ typedef enum Toy_AstFlag {
 	TOY_AST_FLAG_MULTIPLY,
 	TOY_AST_FLAG_DIVIDE,
 	TOY_AST_FLAG_MODULO,
-	TOY_AST_FLAG_ASSIGN, //TODO: implement the declare statement
+	TOY_AST_FLAG_ASSIGN,
 	TOY_AST_FLAG_ADD_ASSIGN,
 	TOY_AST_FLAG_SUBTRACT_ASSIGN,
 	TOY_AST_FLAG_MULTIPLY_ASSIGN,
@@ -99,7 +99,6 @@ typedef struct Toy_AstPass {
 
 typedef struct Toy_AstError {
 	Toy_AstType type;
-	//TODO: more data regarding the error
 } Toy_AstError;
 
 typedef struct Toy_AstEnd {

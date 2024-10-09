@@ -5,6 +5,7 @@
 #include "toy_bucket.h"
 #include "toy_value.h"
 
+//TODO: Remove this
 #define TOY_STRING_MAX_LENGTH 1000
 
 //rope pattern
