@@ -232,42 +232,6 @@ int test_values(Toy_Bucket** bucketHandle) {
 }
 
 int test_unary(Toy_Bucket** bucketHandle) {
-	//test unary boolean negation (!true)
-	{
-		Toy_Ast* ast = makeAstFromSource(bucketHandle, "!true;");
-
-		//check if it worked
-		if (
-			ast == NULL ||
-			ast->type != TOY_AST_BLOCK ||
-			ast->block.child == NULL ||
-			ast->block.child->type != TOY_AST_VALUE ||
-			TOY_VALUE_IS_BOOLEAN(ast->block.child->value.value) == false ||
-			TOY_VALUE_AS_BOOLEAN(ast->block.child->value.value) != false)
-		{
-			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to run the parser with boolean value !true (unary negation)\n" TOY_CC_RESET);
-			return -1;
-		}
-	}
-
-	//test unary boolean negation (!false, just to be safe)
-	{
-		Toy_Ast* ast = makeAstFromSource(bucketHandle, "!false;");
-
-		//check if it worked
-		if (
-			ast == NULL ||
-			ast->type != TOY_AST_BLOCK ||
-			ast->block.child == NULL ||
-			ast->block.child->type != TOY_AST_VALUE ||
-			TOY_VALUE_IS_BOOLEAN(ast->block.child->value.value) == false ||
-			TOY_VALUE_AS_BOOLEAN(ast->block.child->value.value) != true)
-		{
-			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to run the parser with boolean value !false (unary negation)\n" TOY_CC_RESET);
-			return -1;
-		}
-	}
-
 	//test unary integer negation
 	{
 		Toy_Ast* ast = makeAstFromSource(bucketHandle, "-42;");
@@ -563,28 +527,30 @@ int test_precedence(Toy_Bucket** bucketHandle) {
 			ast->block.child->binary.flag != TOY_AST_FLAG_MULTIPLY ||
 
 			ast->block.child->binary.left == NULL ||
-			ast->block.child->binary.left->type != TOY_AST_BINARY ||
-			ast->block.child->binary.left->binary.flag != TOY_AST_FLAG_ADD ||
-			ast->block.child->binary.left->binary.left == NULL ||
-			ast->block.child->binary.left->binary.left->type != TOY_AST_VALUE ||
-			TOY_VALUE_IS_INTEGER(ast->block.child->binary.left->binary.left->value.value) == false ||
-			TOY_VALUE_AS_INTEGER(ast->block.child->binary.left->binary.left->value.value) != 1 ||
-			ast->block.child->binary.left->binary.right == NULL ||
-			ast->block.child->binary.left->binary.right->type != TOY_AST_VALUE ||
-			TOY_VALUE_IS_INTEGER(ast->block.child->binary.left->binary.right->value.value) == false ||
-			TOY_VALUE_AS_INTEGER(ast->block.child->binary.left->binary.right->value.value) != 2 ||
+			ast->block.child->binary.left->type != TOY_AST_GROUP ||
+			ast->block.child->binary.left->group.child->type != TOY_AST_BINARY ||
+			ast->block.child->binary.left->group.child->binary.flag != TOY_AST_FLAG_ADD ||
+			ast->block.child->binary.left->group.child->binary.left == NULL ||
+			ast->block.child->binary.left->group.child->binary.left->type != TOY_AST_VALUE ||
+			TOY_VALUE_IS_INTEGER(ast->block.child->binary.left->group.child->binary.left->value.value) == false ||
+			TOY_VALUE_AS_INTEGER(ast->block.child->binary.left->group.child->binary.left->value.value) != 1 ||
+			ast->block.child->binary.left->group.child->binary.right == NULL ||
+			ast->block.child->binary.left->group.child->binary.right->type != TOY_AST_VALUE ||
+			TOY_VALUE_IS_INTEGER(ast->block.child->binary.left->group.child->binary.right->value.value) == false ||
+			TOY_VALUE_AS_INTEGER(ast->block.child->binary.left->group.child->binary.right->value.value) != 2 ||
 
 			ast->block.child->binary.right == NULL ||
-			ast->block.child->binary.right->type != TOY_AST_BINARY ||
-			ast->block.child->binary.right->binary.flag != TOY_AST_FLAG_ADD ||
-			ast->block.child->binary.right->binary.left == NULL ||
-			ast->block.child->binary.right->binary.left->type != TOY_AST_VALUE ||
-			TOY_VALUE_IS_INTEGER(ast->block.child->binary.right->binary.left->value.value) == false ||
-			TOY_VALUE_AS_INTEGER(ast->block.child->binary.right->binary.left->value.value) != 3 ||
-			ast->block.child->binary.right->binary.right == NULL ||
-			ast->block.child->binary.right->binary.right->type != TOY_AST_VALUE ||
-			TOY_VALUE_IS_INTEGER(ast->block.child->binary.right->binary.right->value.value) == false ||
-			TOY_VALUE_AS_INTEGER(ast->block.child->binary.right->binary.right->value.value) != 4)
+			ast->block.child->binary.right->type != TOY_AST_GROUP ||
+			ast->block.child->binary.right->group.child->type != TOY_AST_BINARY ||
+			ast->block.child->binary.right->group.child->binary.flag != TOY_AST_FLAG_ADD ||
+			ast->block.child->binary.right->group.child->binary.left == NULL ||
+			ast->block.child->binary.right->group.child->binary.left->type != TOY_AST_VALUE ||
+			TOY_VALUE_IS_INTEGER(ast->block.child->binary.right->group.child->binary.left->value.value) == false ||
+			TOY_VALUE_AS_INTEGER(ast->block.child->binary.right->group.child->binary.left->value.value) != 3 ||
+			ast->block.child->binary.right->group.child->binary.right == NULL ||
+			ast->block.child->binary.right->group.child->binary.right->type != TOY_AST_VALUE ||
+			TOY_VALUE_IS_INTEGER(ast->block.child->binary.right->group.child->binary.right->value.value) == false ||
+			TOY_VALUE_AS_INTEGER(ast->block.child->binary.right->group.child->binary.right->value.value) != 4)
 		{
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to run the parser precedence '(1 + 2) * (3 + 4)' (group)\n" TOY_CC_RESET);
 			return -1;

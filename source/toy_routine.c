@@ -250,6 +250,10 @@ static void writeInstructionBinary(Toy_Routine** rt, Toy_AstBinary ast) {
 	EMIT_BYTE(rt, code,0);
 }
 
+static void writeInstructionGroup(Toy_Routine** rt, Toy_AstGroup ast) {
+	writeRoutineCode(rt, ast.child);
+}
+
 static void writeInstructionPrint(Toy_Routine** rt, Toy_AstPrint ast) {
 	//the thing to print
 	writeRoutineCode(rt, ast.child);
@@ -292,23 +296,21 @@ static void writeRoutineCode(Toy_Routine** rt, Toy_Ast* ast) {
 			writeInstructionBinary(rt, ast->binary);
 			break;
 
+		case TOY_AST_GROUP:
+			writeInstructionGroup(rt, ast->group);
+			break;
+
 		case TOY_AST_PRINT:
 			writeInstructionPrint(rt, ast->print);
 			break;
 
-		//other disallowed instructions
-		case TOY_AST_GROUP:
-			fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid AST type found: Group shouldn't be used\n" TOY_CC_RESET);
-			exit(-1);
-			break;
-
+		//meta instructions are disallowed
 		case TOY_AST_PASS:
 			//NOTE: this should be disallowed, but for now it's required for testing
 			// fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid AST type found: Unknown pass\n" TOY_CC_RESET);
 			// exit(-1);
 			break;
 
-		//meta instructions are disallowed
 		case TOY_AST_ERROR:
 			fprintf(stderr, TOY_CC_ERROR "ERROR: Invalid AST type found: Unknown error\n" TOY_CC_RESET);
 			exit(-1);

@@ -310,10 +310,8 @@ static Toy_AstFlag literal(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_As
 
 static Toy_AstFlag unary(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
 	//'subtract' can only be applied to numbers and groups, while 'negate' can only be applied to booleans and groups
-	//this function takes the libery of peeking into the uppermost node, to see if it can apply this to it
 
 	if (parser->previous.type == TOY_TOKEN_OPERATOR_SUBTRACT) {
-
 		bool connectedDigit = parser->previous.lexeme[1] >= '0' && parser->previous.lexeme[1] <= '9'; //BUGFIX: '- 1' should not be optimised into a negative
 		parsePrecedence(bucketHandle, parser, rootHandle, PREC_UNARY);
 
@@ -332,15 +330,7 @@ static Toy_AstFlag unary(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast*
 
 	else if (parser->previous.type == TOY_TOKEN_OPERATOR_NEGATE) {
 		parsePrecedence(bucketHandle, parser, rootHandle, PREC_UNARY);
-
-		//inverted booleans
-		if ((*rootHandle)->type == TOY_AST_VALUE && TOY_VALUE_IS_BOOLEAN((*rootHandle)->value.value)) {
-			(*rootHandle)->value.value = TOY_VALUE_FROM_BOOLEAN( !TOY_VALUE_AS_BOOLEAN((*rootHandle)->value.value) );
-		}
-		else {
-			//actually emit the negation node
-			Toy_private_emitAstUnary(bucketHandle, rootHandle, TOY_AST_FLAG_NEGATE);
-		}
+		Toy_private_emitAstUnary(bucketHandle, rootHandle, TOY_AST_FLAG_NEGATE);
 	}
 
 	else {
@@ -462,8 +452,8 @@ static Toy_AstFlag group(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast*
 		parsePrecedence(bucketHandle, parser, rootHandle, PREC_GROUP);
 		consume(parser, TOY_TOKEN_OPERATOR_PAREN_RIGHT, "Expected ')' at end of group");
 
-		//Toy_AstGroup is omitted from generation, as an optimisation
-		// Toy_private_emitAstGroup(bucketHandle, rootHandle);
+		//Toy_AstGroup could be omitted, but is kept for now
+		Toy_private_emitAstGroup(bucketHandle, rootHandle);
 	}
 
 	else {
