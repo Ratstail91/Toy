@@ -41,7 +41,7 @@ typedef struct Toy_String {             //32 | 64 BITNESS
 TOY_API Toy_String* Toy_createString(Toy_Bucket** bucketHandle, const char* cstring);
 TOY_API Toy_String* Toy_createStringLength(Toy_Bucket** bucketHandle, const char* cstring, int length);
 
-TOY_API Toy_String* Toy_createNameString(Toy_Bucket** bucketHandle, const char* cname); //for variable names
+TOY_API Toy_String* Toy_createNameString(Toy_Bucket** bucketHandle, const char* cname, Toy_ValueType type); //for variable names
 
 TOY_API Toy_String* Toy_copyString(Toy_Bucket** bucketHandle, Toy_String* str);
 TOY_API Toy_String* Toy_deepCopyString(Toy_Bucket** bucketHandle, Toy_String* str);
@@ -57,3 +57,4 @@ TOY_API char* Toy_getStringRawBuffer(Toy_String* str); //allocates the buffer on
 
 TOY_API int Toy_compareStrings(Toy_String* left, Toy_String* right); //return value mimics strcmp()
 
+TOY_API unsigned int Toy_hashString(Toy_String* string);

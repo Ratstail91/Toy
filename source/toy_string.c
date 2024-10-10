@@ -34,6 +34,17 @@ static void decrementRefCount(Toy_String* str) {
 	}
 }
 
+static unsigned int hashCString(const char* string) {
+	unsigned int hash = 2166136261u;
+
+	for (unsigned int i = 0; string[i]; i++) {
+		hash *= string[i];
+		hash ^= 16777619;
+	}
+
+	return hash;
+}
+
 //exposed functions
 Toy_String* Toy_createString(Toy_Bucket** bucketHandle, const char* cstring) {
 	int length = strlen(cstring);
@@ -59,7 +70,7 @@ Toy_String* Toy_createStringLength(Toy_Bucket** bucketHandle, const char* cstrin
 	return ret;
 }
 
-TOY_API Toy_String* Toy_createNameString(Toy_Bucket** bucketHandle, const char* cname) {
+TOY_API Toy_String* Toy_createNameString(Toy_Bucket** bucketHandle, const char* cname, Toy_ValueType type) {
 	int length = strlen(cname);
 
 	if (length > TOY_STRING_MAX_LENGTH) {
@@ -75,6 +86,7 @@ TOY_API Toy_String* Toy_createNameString(Toy_Bucket** bucketHandle, const char* 
 	ret->cachedHash = 0; //don't calc until needed
 	memcpy(ret->as.name.data, cname, length + 1);
 	ret->as.name.data[length] = '\0';
+	ret->as.name.type = type;
 
 	return ret;
 }
@@ -270,4 +282,24 @@ int Toy_compareStrings(Toy_String* left, Toy_String* right) {
 	const char* rightHead = NULL;
 
 	return deepCompareUtil(left, right, &leftHead, &rightHead);
+}
+
+unsigned int Toy_hashString(Toy_String* str) {
+	if (str->cachedHash != 0) {
+		return str->cachedHash;
+	}
+	else if (str->type == TOY_STRING_NODE) {
+		//TODO: I wonder if it would be possible to discretely swap the composite node string with a new leaf string here? Would that speed up other parts of the code by not having to walk the tree in future?
+		char* buffer = Toy_getStringRawBuffer(str);
+		str->cachedHash = hashCString(buffer);
+		free(buffer);
+	}
+	else if (str->type == TOY_STRING_LEAF) {
+		str->cachedHash = hashCString(str->as.leaf.data);
+	}
+	else if (str->type == TOY_STRING_NAME) {
+		str->cachedHash = hashCString(str->as.name.data);
+	}
+
+	return str->cachedHash;
 }

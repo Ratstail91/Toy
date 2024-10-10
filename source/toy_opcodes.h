@@ -3,8 +3,6 @@
 typedef enum Toy_OpcodeType {
 	//variable instructions
 	TOY_OPCODE_READ,
-	TOY_OPCODE_LOAD,
-	TOY_OPCODE_LOAD_LONG, //corner case
 	TOY_OPCODE_DECLARE,
 	TOY_OPCODE_ASSIGN,
 	TOY_OPCODE_ACCESS,
@@ -18,7 +16,7 @@ typedef enum Toy_OpcodeType {
 
 	//comparison instructions
 	TOY_OPCODE_COMPARE_EQUAL,
-	// TOY_OPCODE_COMPARE_NOT,
+	// TOY_OPCODE_COMPARE_NOT, //NOTE: optimized into a composite of TOY_OPCODE_COMPARE_EQUAL + TOY_OPCODE_NEGATE
 	TOY_OPCODE_COMPARE_LESS,
 	TOY_OPCODE_COMPARE_LESS_EQUAL,
 	TOY_OPCODE_COMPARE_GREATER,

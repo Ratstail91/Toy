@@ -371,8 +371,6 @@ static void process(Toy_VM* vm) {
 				break;
 
 			//not yet implemented
-			case TOY_OPCODE_LOAD:
-			case TOY_OPCODE_LOAD_LONG:
 			case TOY_OPCODE_DECLARE:
 			case TOY_OPCODE_ASSIGN:
 			case TOY_OPCODE_ACCESS:
