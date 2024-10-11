@@ -26,3 +26,5 @@ TOY_API void Toy_insertTable(Toy_Table** tableHandle, Toy_Value key, Toy_Value v
 TOY_API Toy_Value Toy_lookupTable(Toy_Table** tableHandle, Toy_Value key);
 TOY_API void Toy_removeTable(Toy_Table** tableHandle, Toy_Value key);
 
+//NOTE: exposed to skip unnecessary allocations within Toy_Scope
+TOY_API Toy_Table* Toy_private_adjustTableCapacity(Toy_Table* oldTable, unsigned int newCapacity);

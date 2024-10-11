@@ -23,7 +23,7 @@ TEST_OBJDIR=obj
 
 #file names
 TEST_SOURCEFILES=$(wildcard $(TEST_SOURCEDIR)/*.c)
-TEST_CASESFILES=$(wildcard $(TEST_CASESDIR)/*.c)
+TEST_CASESFILES=$(wildcard $(TEST_CASESDIR)/test_*.c)
 
 #build the object files, compile the test cases, and run
 all: clean build-source build-cases build-link build-run

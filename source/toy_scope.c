@@ -20,7 +20,7 @@ static void decrementRefCount(Toy_Scope* scope) {
 	}
 }
 
-static Toy_Value* lookupScope(Toy_Scope* scope, Toy_Value key, unsigned int hash, bool recursive) {
+static Toy_Value* lookupScope(Toy_Scope* scope, Toy_String* key, unsigned int hash, bool recursive) {
 	//terminate
 	if (scope == NULL) {
 		return NULL;
@@ -31,11 +31,11 @@ static Toy_Value* lookupScope(Toy_Scope* scope, Toy_Value key, unsigned int hash
 
 	while (true) {
 		//found the entry
-		if (TOY_VALUES_ARE_EQUAL(scope->table->data[probe].key, key)) {
+		if (Toy_compareStrings(TOY_VALUE_AS_STRING(scope->table->data[probe].key), key)) {
 			return &(scope->table->data[probe].value);
 		}
 
-		//if its an empty slot
+		//if its an empty slot (didn't find it here)
 		if (TOY_VALUE_IS_NULL(scope->table->data[probe].key)) {
 			return recursive ? lookupScope(scope->next, key, hash, recursive) : NULL;
 		}
@@ -69,8 +69,15 @@ Toy_Scope* Toy_popScope(Toy_Scope* scope) {
 	return scope->next;
 }
 
-Toy_Scope* deepCopyScope(Toy_Bucket** bucketHandle, Toy_Scope* scope) {
-	Toy_Scope* newScope = Toy_pushScope(bucketHandle, scope->next);
+Toy_Scope* Toy_deepCopyScope(Toy_Bucket** bucketHandle, Toy_Scope* scope) {
+	//copy/pasted from pushScope, so I can allocate the table manually
+	Toy_Scope* newScope = Toy_partitionBucket(bucketHandle, sizeof(Toy_Scope));
+
+	newScope->next = scope->next;
+	newScope->table = Toy_private_adjustTableCapacity(NULL, scope->table->capacity);
+	newScope->refCount = 0;
+
+	incrementRefCount(newScope);
 
 	//forcibly copy the contents
 	for (int i = 0; i < scope->table->capacity; i++) {
@@ -82,36 +89,36 @@ Toy_Scope* deepCopyScope(Toy_Bucket** bucketHandle, Toy_Scope* scope) {
 	return newScope;
 }
 
-void Toy_declareScope(Toy_Bucket** bucketHandle, Toy_Scope* scope, Toy_String key, Toy_Value value) {
-	if (key.type != TOY_STRING_NAME) {
+void Toy_declareScope(Toy_Bucket** bucketHandle, Toy_Scope* scope, Toy_String* key, Toy_Value value) {
+	if (key->type != TOY_STRING_NAME) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Toy_Scope only allows name strings as keys\n" TOY_CC_RESET);
 		exit(-1);
 	}
 
-	Toy_Value* valuePtr = lookupScope(scope, key, Toy_hashValue(key), false);
+	Toy_Value* valuePtr = lookupScope(scope, key, Toy_hashString(key), false);
 
 	if (valuePtr != NULL) {
 
-		char buffer[key.length + 256];
-		snprintf(buffer, "Can't redefine a variable: %s", key.as.name.data);
+		char buffer[key->length + 256];
+		sprintf(buffer, "Can't redefine a variable: %s", key->as.name.data);
 		Toy_error(buffer);
 		return;
 	}
 
-	Toy_insertTable(&scope->table, key, value);
+	Toy_insertTable(&scope->table, TOY_VALUE_FROM_STRING(Toy_copyString(bucketHandle, key)), value);
 }
 
-void Toy_assignScope(Toy_Bucket** bucketHandle, Toy_Scope* scope, Toy_String key, Toy_Value value) {
-	if (key.type != TOY_STRING_NAME) {
+void Toy_assignScope(Toy_Bucket** bucketHandle, Toy_Scope* scope, Toy_String* key, Toy_Value value) {
+	if (key->type != TOY_STRING_NAME) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Toy_Scope only allows name strings as keys\n" TOY_CC_RESET);
 		exit(-1);
 	}
 
-	Toy_Value* valuePtr = lookupScope(scope, key, Toy_hashValue(key), true);
+	Toy_Value* valuePtr = lookupScope(scope, key, Toy_hashString(key), true);
 
 	if (valuePtr == NULL) {
-		char buffer[key.length + 256];
-		snprintf(buffer, "Undefined variable: %s", key.as.name.data);
+		char buffer[key->length + 256];
+		sprintf(buffer, "Undefined variable: %s", key->as.name.data);
 		Toy_error(buffer);
 		return;
 	}
@@ -119,31 +126,31 @@ void Toy_assignScope(Toy_Bucket** bucketHandle, Toy_Scope* scope, Toy_String key
 	*valuePtr = value;
 }
 
-Toy_Value Toy_accessScope(Toy_Bucket** bucketHandle, Toy_Scope* scope, Toy_String key) {
-	if (key.type != TOY_STRING_NAME) {
+Toy_Value Toy_accessScope(Toy_Bucket** bucketHandle, Toy_Scope* scope, Toy_String* key) {
+	if (key->type != TOY_STRING_NAME) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Toy_Scope only allows name strings as keys\n" TOY_CC_RESET);
 		exit(-1);
 	}
 
-	Toy_Value* valuePtr = lookupScope(scope, key, Toy_hashValue(key), true);
+	Toy_Value* valuePtr = lookupScope(scope, key, Toy_hashString(key), true);
 
 	if (valuePtr == NULL) {
-		char buffer[key.length + 256];
-		snprintf(buffer, "Undefined variable: %s", key.as.name.data);
+		char buffer[key->length + 256];
+		sprintf(buffer, "Undefined variable: %s", key->as.name.data);
 		Toy_error(buffer);
-		return;
+		return TOY_VALUE_FROM_NULL();
 	}
 
 	return *valuePtr;
 }
 
-bool Toy_isDeclaredScope(Toy_Bucket** bucketHandle, Toy_Scope* scope, Toy_String key) {
-	if (key.type != TOY_STRING_NAME) {
+bool Toy_isDeclaredScope(Toy_Bucket** bucketHandle, Toy_Scope* scope, Toy_String* key) {
+	if (key->type != TOY_STRING_NAME) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Toy_Scope only allows name strings as keys\n" TOY_CC_RESET);
 		exit(-1);
 	}
 
-	Toy_Value* valuePtr = lookupScope(scope, key, Toy_hashValue(key), true);
+	Toy_Value* valuePtr = lookupScope(scope, key, Toy_hashString(key), true);
 
 	return valuePtr != NULL;
 }

@@ -54,7 +54,8 @@ static void probeAndInsert(Toy_Table** tableHandle, Toy_Value key, Toy_Value val
 	}
 }
 
-static Toy_Table* adjustTableCapacity(Toy_Table* oldTable, unsigned int newCapacity) {
+//exposed functions
+Toy_Table* Toy_private_adjustTableCapacity(Toy_Table* oldTable, unsigned int newCapacity) {
 	//allocate and zero a new table in memory
 	Toy_Table* newTable = malloc(newCapacity * sizeof(Toy_TableEntry) + sizeof(Toy_Table));
 
@@ -86,9 +87,8 @@ static Toy_Table* adjustTableCapacity(Toy_Table* oldTable, unsigned int newCapac
 	return newTable;
 }
 
-//exposed functions
 Toy_Table* Toy_allocateTable() {
-	return adjustTableCapacity(NULL, MIN_CAPACITY);
+	return Toy_private_adjustTableCapacity(NULL, MIN_CAPACITY);
 }
 
 void Toy_freeTable(Toy_Table* table) {
@@ -104,7 +104,7 @@ void Toy_insertTable(Toy_Table** tableHandle, Toy_Value key, Toy_Value value) {
 
 	//expand the capacity
 	if ((*tableHandle)->count > (*tableHandle)->capacity * 0.8) {
-		(*tableHandle) = adjustTableCapacity((*tableHandle), (*tableHandle)->capacity * 2);
+		(*tableHandle) = Toy_private_adjustTableCapacity((*tableHandle), (*tableHandle)->capacity * 2);
 	}
 
 	probeAndInsert(tableHandle, key, value);
