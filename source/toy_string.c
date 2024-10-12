@@ -6,6 +6,8 @@
 #include <string.h>
 
 //utils
+#define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
+
 static void deepCopyUtil(char* dest, Toy_String* str) {
 	//sometimes, "clever" can be a bad thing...
 	if (str->type == TOY_STRING_NODE) {
@@ -45,20 +47,13 @@ static unsigned int hashCString(const char* string) {
 	return hash;
 }
 
-//exposed functions
-Toy_String* Toy_createString(Toy_Bucket** bucketHandle, const char* cstring) {
-	int length = strlen(cstring);
-
-	return Toy_createStringLength(bucketHandle, cstring, length);
-}
-
-Toy_String* Toy_createStringLength(Toy_Bucket** bucketHandle, const char* cstring, int length) {
-	if (length > TOY_STRING_MAX_LENGTH) {
-		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't create a string longer than %d\n" TOY_CC_RESET, TOY_STRING_MAX_LENGTH);
+static Toy_String* partitionStringLength(Toy_Bucket** bucketHandle, const char* cstring, unsigned int length) {
+	if (sizeof(Toy_String) + length + 1 > (*bucketHandle)->capacity) {
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't partition enough space for a string, requested %d length (%d total) but buckets have a capacity of %d\n" TOY_CC_RESET, (int)length, (int)(sizeof(Toy_String) + length + 1), (int)((*bucketHandle)->capacity));
 		exit(-1);
 	}
 
-	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucketHandle, sizeof(Toy_String) + length + 1); //TODO: compensate for partitioning more space than bucket capacity
+	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucketHandle, sizeof(Toy_String) + length + 1);
 
 	ret->type = TOY_STRING_LEAF;
 	ret->length = length;
@@ -70,15 +65,42 @@ Toy_String* Toy_createStringLength(Toy_Bucket** bucketHandle, const char* cstrin
 	return ret;
 }
 
-TOY_API Toy_String* Toy_createNameString(Toy_Bucket** bucketHandle, const char* cname, Toy_ValueType type) {
-	int length = strlen(cname);
+//exposed functions
+Toy_String* Toy_createString(Toy_Bucket** bucketHandle, const char* cstring) {
+	unsigned int length = strlen(cstring);
 
-	if (length > TOY_STRING_MAX_LENGTH) {
-		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't create a name string longer than %d\n" TOY_CC_RESET, TOY_STRING_MAX_LENGTH);
+	return Toy_createStringLength(bucketHandle, cstring, length);
+}
+
+Toy_String* Toy_createStringLength(Toy_Bucket** bucketHandle, const char* cstring, unsigned int length) {
+	//normal behaviour
+	if (length < (*bucketHandle)->capacity - sizeof(Toy_String) - 1) {
+		return partitionStringLength(bucketHandle, cstring, length);
+	}
+
+	//break the string up if it's too long
+	Toy_String* result = NULL;
+
+	for (unsigned int i = 0; i < length; i += (*bucketHandle)->capacity - sizeof(Toy_String) - 1) { //increment by the amount actually used by the cstring
+		unsigned int amount = MIN((length - i), (*bucketHandle)->capacity - sizeof(Toy_String) - 1);
+		Toy_String* fragment = partitionStringLength(bucketHandle, cstring + i, amount);
+
+		result = result == NULL ? fragment : Toy_concatStrings(bucketHandle, result, fragment);
+	}
+
+	return result;
+}
+
+TOY_API Toy_String* Toy_createNameString(Toy_Bucket** bucketHandle, const char* cname, Toy_ValueType type) {
+	unsigned int length = strlen(cname);
+
+	//name strings can't be broken up
+	if (sizeof(Toy_String) + length + 1 > (*bucketHandle)->capacity) {
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't partition enough space for a name string, requested %d length (%d total) but buckets have a capacity of %d\n" TOY_CC_RESET, (int)length, (int)(sizeof(Toy_String) + length + 1), (int)((*bucketHandle)->capacity));
 		exit(-1);
 	}
 
-	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucketHandle, sizeof(Toy_String) + length + 1); //TODO: compensate for partitioning more space than bucket capacity
+	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucketHandle, sizeof(Toy_String) + length + 1);
 
 	ret->type = TOY_STRING_NAME;
 	ret->length = length;
@@ -105,7 +127,16 @@ Toy_String* Toy_deepCopyString(Toy_Bucket** bucketHandle, Toy_String* str) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't deep copy a string with refcount of zero\n" TOY_CC_RESET);
 		exit(-1);
 	}
-	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucketHandle, sizeof(Toy_String) + str->length + 1); //TODO: compensate for partitioning more space than bucket capacity
+
+	//handle deep copies of strings that are too long for the bucket capacity NOTE: slow, could replace this at some point
+	if (sizeof(Toy_String) + str->length + 1 > (*bucketHandle)->capacity) {
+		char* buffer = Toy_getStringRawBuffer(str);
+		Toy_String* result = Toy_createStringLength(bucketHandle, buffer, str->length); //handles the fragmenting
+		free(buffer);
+		return result;
+	}
+
+	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucketHandle, sizeof(Toy_String) + str->length + 1);
 
 	if (str->type == TOY_STRING_NODE || str->type == TOY_STRING_LEAF) {
 		ret->type = TOY_STRING_LEAF;
@@ -138,11 +169,6 @@ Toy_String* Toy_concatStrings(Toy_Bucket** bucketHandle, Toy_String* left, Toy_S
 		exit(-1);
 	}
 
-	if (left->length + right->length > TOY_STRING_MAX_LENGTH) {
-		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't concat a string longer than %d\n" TOY_CC_RESET, TOY_STRING_MAX_LENGTH);
-		exit(-1);
-	}
-
 	Toy_String* ret = (Toy_String*)Toy_partitionBucket(bucketHandle, sizeof(Toy_String));
 
 	ret->type = TOY_STRING_NODE;
@@ -162,11 +188,11 @@ void Toy_freeString(Toy_String* str) {
 	decrementRefCount(str); //TODO: tool for checking the bucket is empty, and freeing it
 }
 
-int Toy_getStringLength(Toy_String* str) {
+unsigned int Toy_getStringLength(Toy_String* str) {
 	return str->length;
 }
 
-int Toy_getStringRefCount(Toy_String* str) {
+unsigned int Toy_getStringRefCount(Toy_String* str) {
 	return str->refCount;
 }
 

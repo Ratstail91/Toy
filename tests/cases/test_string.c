@@ -792,6 +792,36 @@ int test_string_diffs() {
 	return 0;
 }
 
+int test_string_fragmenting() {
+	//allocate a long string
+	{
+		//setup
+		Toy_Bucket* bucket = Toy_allocateBucket(128); //deliberately too small for the cstring
+
+		//445 charaters
+		const char* cstring = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+
+		Toy_String* str = Toy_createString(&bucket, cstring);
+
+		//check
+		if (str->type != TOY_STRING_NODE ||
+			str->length != 445 ||
+			str->refCount != 1)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to fragment a string within Toy_String\n" TOY_CC_RESET);
+			Toy_freeString(str);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//cleanup
+		Toy_freeString(str);
+		Toy_freeBucket(&bucket);
+	}
+
+	return 0;
+}
+
 int main() {
 	//run each test set, returning the total errors given
 	int total = 0, res = 0;
@@ -842,6 +872,14 @@ int main() {
 
 	{
 		res = test_string_diffs();
+		if (res == 0) {
+			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
+		}
+		total += res;
+	}
+
+	{
+		res = test_string_fragmenting();
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 		}

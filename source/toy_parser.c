@@ -608,11 +608,6 @@ void Toy_bindParser(Toy_Parser* parser, Toy_Lexer* lexer) {
 Toy_Ast* Toy_scanParser(Toy_Bucket** bucketHandle, Toy_Parser* parser) {
 	Toy_Ast* rootHandle = NULL;
 
-	//double check bucket capacity for strings
-	if ((*bucketHandle)->capacity < TOY_STRING_MAX_LENGTH) {
-		fprintf(stderr, TOY_CC_WARN "WARNING: Bucket capacity in Toy_scanParser() is smaller than TOY_STRING_MAX_LENGTH" TOY_CC_RESET);
-	}
-
 	//check for EOF
 	if (match(parser, TOY_TOKEN_EOF)) {
 		Toy_private_emitAstEnd(bucketHandle, &rootHandle);
