@@ -39,7 +39,7 @@ unsigned char* readFile(char* path, int* size) {
 	return buffer;
 }
 
-int dir(char* dest, const char* src) {
+int getDirPath(char* dest, const char* src) {
 	//extract the directory from src, and store it in dest
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -50,6 +50,22 @@ int dir(char* dest, const char* src) {
 
 	int len = p != NULL ? p - src + 1 : 0;
 	strncpy(dest, src, len);
+	dest[len] = '\0';
+
+	return len;
+}
+
+int getFileName(char* dest, const char* src) {
+	//extract the directory from src, and store it in dest
+
+#if defined(_WIN32) || defined(_WIN64)
+	char* p = strrchr(src, '\\') + 1;
+#else
+	char* p = strrchr(src, '/') + 1;
+#endif
+
+	int len = strlen(p);
+	strncpy(dest, p, len);
 	dest[len] = '\0';
 
 	return len;
@@ -143,7 +159,7 @@ CmdLine parseCmdLine(int argc, const char* argv[]) {
 					exit(-1);
 				}
 
-				dir(cmd.infile, argv[0]);
+				getDirPath(cmd.infile, argv[0]);
 				APPEND(cmd.infile, argv[i]);
 				FLIPSLASH(cmd.infile);
 			}
@@ -162,11 +178,13 @@ static void errorAndContinueCallback(const char* msg) {
 	fprintf(stderr, "%s\n", msg);
 }
 
-int repl(const char* name) {
+int repl(const char* filepath) {
 	Toy_setErrorCallback(errorAndContinueCallback);
 	Toy_setAssertFailureCallback(errorAndContinueCallback);
 
 	//vars to use
+	char prompt[256];
+	getFileName(prompt, filepath);
 	unsigned int INPUT_BUFFER_SIZE = 4096;
 	char inputBuffer[INPUT_BUFFER_SIZE];
 	memset(inputBuffer, 0, INPUT_BUFFER_SIZE);
@@ -176,7 +194,7 @@ int repl(const char* name) {
 	Toy_VM vm;
 	Toy_initVM(&vm);
 
-	printf("%s> ", name); //shows the terminal prompt
+	printf("%s> ", prompt); //shows the terminal prompt
 
 	//read from the terminal
 	while(fgets(inputBuffer, INPUT_BUFFER_SIZE, stdin)) {
@@ -187,7 +205,7 @@ int repl(const char* name) {
 		}
 
 		if (length == 0) {
-			printf("%s> ", name); //shows the terminal prompt
+			printf("%s> ", prompt); //shows the terminal prompt
 			continue;
 		}
 
@@ -205,7 +223,7 @@ int repl(const char* name) {
 
 		//parsing error, retry
 		if (parser.error) {
-			printf("%s> ", name); //shows the terminal prompt
+			printf("%s> ", prompt); //shows the terminal prompt
 			continue;
 		}
 
@@ -223,14 +241,14 @@ int repl(const char* name) {
 		int depth = 0;
 		while (iter->next) {
 			iter = iter->next;
-			if (++depth >= 7) { //8 buckets in the chain total, about 8kb allocated
+			if (++depth >= 7) {
 				Toy_freeBucket(&bucket);
 				bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 				break;
 			}
 		}
 
-		printf("%s> ", name); //shows the terminal prompt
+		printf("%s> ", prompt); //shows the terminal prompt
 	}
 
 	//cleanp all memory
