@@ -1,7 +1,8 @@
-#compiler settings
-CC=gcc
-CFLAGS+=-std=c17 -pedantic -Werror
-LIBS+=-lm
+#compiler settings reference
+#CC=gcc
+#CFLAGS+=-std=c17 -g -Wall -Werror -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable -Wformat=2
+#LIBS+=-lm
+#LDFLAGS+=
 
 #directories
 export TOY_SOURCEDIR=source

@@ -1,6 +1,6 @@
 #compiler settings
 CC=gcc
-CFLAGS+=-g -Wall -Werror -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
+CFLAGS+=-std=c17 -g -Wall -Werror -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable -Wformat=2
 LIBS+=-lm
 LDFLAGS+=
 
