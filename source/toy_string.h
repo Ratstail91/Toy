@@ -5,7 +5,7 @@
 #include "toy_bucket.h"
 #include "toy_value.h"
 
-//TODO: Remove this
+//TODO: Remove this (related to partitioning more space in a bucket issue)
 #define TOY_STRING_MAX_LENGTH 1000
 
 //rope pattern
@@ -43,7 +43,7 @@ TOY_API Toy_String* Toy_createStringLength(Toy_Bucket** bucketHandle, const char
 
 TOY_API Toy_String* Toy_createNameString(Toy_Bucket** bucketHandle, const char* cname, Toy_ValueType type); //for variable names
 
-TOY_API Toy_String* Toy_copyString(Toy_Bucket** bucketHandle, Toy_String* str);
+TOY_API Toy_String* Toy_copyString(Toy_String* str);
 TOY_API Toy_String* Toy_deepCopyString(Toy_Bucket** bucketHandle, Toy_String* str);
 
 TOY_API Toy_String* Toy_concatStrings(Toy_Bucket** bucketHandle, Toy_String* left, Toy_String* right);

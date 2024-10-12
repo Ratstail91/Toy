@@ -31,7 +31,7 @@ static Toy_Value* lookupScope(Toy_Scope* scope, Toy_String* key, unsigned int ha
 
 	while (true) {
 		//found the entry
-		if (Toy_compareStrings(TOY_VALUE_AS_STRING(scope->table->data[probe].key), key)) {
+		if (TOY_VALUE_IS_STRING(scope->table->data[probe].key) && Toy_compareStrings(TOY_VALUE_AS_STRING(scope->table->data[probe].key), key) == 0) {
 			return &(scope->table->data[probe].value);
 		}
 
@@ -89,7 +89,7 @@ Toy_Scope* Toy_deepCopyScope(Toy_Bucket** bucketHandle, Toy_Scope* scope) {
 	return newScope;
 }
 
-void Toy_declareScope(Toy_Bucket** bucketHandle, Toy_Scope* scope, Toy_String* key, Toy_Value value) {
+void Toy_declareScope(Toy_Scope* scope, Toy_String* key, Toy_Value value) {
 	if (key->type != TOY_STRING_NAME) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Toy_Scope only allows name strings as keys\n" TOY_CC_RESET);
 		exit(-1);
@@ -105,10 +105,10 @@ void Toy_declareScope(Toy_Bucket** bucketHandle, Toy_Scope* scope, Toy_String* k
 		return;
 	}
 
-	Toy_insertTable(&scope->table, TOY_VALUE_FROM_STRING(Toy_copyString(bucketHandle, key)), value);
+	Toy_insertTable(&scope->table, TOY_VALUE_FROM_STRING(Toy_copyString(key)), value);
 }
 
-void Toy_assignScope(Toy_Bucket** bucketHandle, Toy_Scope* scope, Toy_String* key, Toy_Value value) {
+void Toy_assignScope(Toy_Scope* scope, Toy_String* key, Toy_Value value) {
 	if (key->type != TOY_STRING_NAME) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Toy_Scope only allows name strings as keys\n" TOY_CC_RESET);
 		exit(-1);
@@ -126,7 +126,7 @@ void Toy_assignScope(Toy_Bucket** bucketHandle, Toy_Scope* scope, Toy_String* ke
 	*valuePtr = value;
 }
 
-Toy_Value Toy_accessScope(Toy_Bucket** bucketHandle, Toy_Scope* scope, Toy_String* key) {
+Toy_Value Toy_accessScope(Toy_Scope* scope, Toy_String* key) {
 	if (key->type != TOY_STRING_NAME) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Toy_Scope only allows name strings as keys\n" TOY_CC_RESET);
 		exit(-1);
@@ -144,7 +144,7 @@ Toy_Value Toy_accessScope(Toy_Bucket** bucketHandle, Toy_Scope* scope, Toy_Strin
 	return *valuePtr;
 }
 
-bool Toy_isDeclaredScope(Toy_Bucket** bucketHandle, Toy_Scope* scope, Toy_String* key) {
+bool Toy_isDeclaredScope(Toy_Scope* scope, Toy_String* key) {
 	if (key->type != TOY_STRING_NAME) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Toy_Scope only allows name strings as keys\n" TOY_CC_RESET);
 		exit(-1);

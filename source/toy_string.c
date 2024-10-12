@@ -91,7 +91,7 @@ TOY_API Toy_String* Toy_createNameString(Toy_Bucket** bucketHandle, const char* 
 	return ret;
 }
 
-Toy_String* Toy_copyString(Toy_Bucket** bucketHandle, Toy_String* str) {
+Toy_String* Toy_copyString(Toy_String* str) {
 	if (str->refCount == 0) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't copy a string with refcount of zero\n" TOY_CC_RESET);
 		exit(-1);

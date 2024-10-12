@@ -298,8 +298,194 @@ int test_scope_allocation() {
 }
 
 int test_scope_elements() {
-	//TODO: Ensure the scope's primary function of handling key-value pairs works correctly.
-	printf(TOY_CC_WARN "'test_scope_elements()' not yet implemented\n" TOY_CC_RESET);
+	//allocate, access and assign an element
+	{
+		//setup
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
+		Toy_Scope* scope = Toy_pushScope(&bucket, NULL);
+
+		Toy_String* hello1 = Toy_createNameString(&bucket, "hello", TOY_VALUE_NULL);
+		Toy_String* hello2 = Toy_createNameString(&bucket, "hello", TOY_VALUE_NULL);
+
+		//check nothing is here
+		if (Toy_isDeclaredScope(scope, hello2)) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Unexpected entry found in Toy_Scope\n" TOY_CC_RESET);
+			Toy_freeString(hello2);
+			Toy_freeString(hello1);
+			Toy_popScope(scope);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//declare and access values
+		Toy_declareScope(scope, hello1, TOY_VALUE_FROM_INTEGER(42));
+
+		if (!Toy_isDeclaredScope(scope, hello2)) {
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Unexpected missing entry in Toy_Scope\n" TOY_CC_RESET);
+			Toy_freeString(hello2);
+			Toy_freeString(hello1);
+			Toy_popScope(scope);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		Toy_Value result = Toy_accessScope(scope, hello2);
+
+		//check integer
+		if (scope == NULL ||
+			scope->next != NULL ||
+			scope->table == NULL ||
+			scope->table->capacity != 16 ||
+			scope->refCount != 1 ||
+
+			TOY_VALUE_IS_INTEGER(result) != true ||
+			TOY_VALUE_AS_INTEGER(result) != 42 ||
+
+			false)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to declare in Toy_Scope\n" TOY_CC_RESET);
+			Toy_freeString(hello2);
+			Toy_freeString(hello1);
+			Toy_popScope(scope);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//assign values
+		Toy_assignScope(scope, hello1, TOY_VALUE_FROM_FLOAT(3.1415f));
+
+		Toy_Value resultTwo = Toy_accessScope(scope, hello2);
+
+		//check float
+		if (scope == NULL ||
+			scope->next != NULL ||
+			scope->table == NULL ||
+			scope->table->capacity != 16 ||
+			scope->refCount != 1 ||
+
+			TOY_VALUE_IS_FLOAT(resultTwo) != true ||
+			TOY_VALUE_AS_FLOAT(resultTwo) != 3.1415f ||
+
+			false)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to assign in Toy_Scope\n" TOY_CC_RESET);
+			Toy_freeString(hello2);
+			Toy_freeString(hello1);
+			Toy_popScope(scope);
+			Toy_freeBucket(&bucket);
+			return -1;
+		}
+
+		//cleanup
+		Toy_freeString(hello2);
+		Toy_freeString(hello1);
+		Toy_popScope(scope);
+		Toy_freeBucket(&bucket);
+	}
+
+	//find an entry in an ancestor scope
+	{
+		//setup
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
+		Toy_Scope* scope = Toy_pushScope(&bucket, NULL);
+
+		Toy_String* hello = Toy_createNameString(&bucket, "hello", TOY_VALUE_NULL);
+
+		//declare and push
+		Toy_declareScope(scope, hello, TOY_VALUE_FROM_INTEGER(42));
+
+		scope = Toy_pushScope(&bucket, scope);
+		scope = Toy_pushScope(&bucket, scope);
+
+		{
+			//check it's accessible
+			Toy_Value result1 = Toy_accessScope(scope, hello);
+
+			if (TOY_VALUE_IS_INTEGER(result1) != true ||
+				TOY_VALUE_AS_INTEGER(result1) != 42)
+			{
+				fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to access from an ancestor Toy_Scope\n" TOY_CC_RESET);
+				Toy_freeString(hello);
+				while ((scope = Toy_popScope(scope)) != NULL) /* */;
+				Toy_freeBucket(&bucket);
+				return -1;
+			}
+		}
+
+		Toy_declareScope(scope, hello, TOY_VALUE_FROM_FLOAT(3.1415f));
+
+		{
+			//check it's shadowed correctly
+			Toy_Value result2 = Toy_accessScope(scope, hello);
+
+			if (TOY_VALUE_IS_FLOAT(result2) != true ||
+				TOY_VALUE_AS_FLOAT(result2) != 3.1415f)
+			{
+				fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to shadow an entry in Toy_Scope\n" TOY_CC_RESET);
+				Toy_freeString(hello);
+				while ((scope = Toy_popScope(scope)) != NULL) /* */;
+				Toy_freeBucket(&bucket);
+				return -1;
+			}
+		}
+
+		scope = Toy_popScope(scope);
+
+		{
+			//check it's recovered correctly
+			Toy_Value result3 = Toy_accessScope(scope, hello);
+
+			if (TOY_VALUE_IS_INTEGER(result3) != true ||
+				TOY_VALUE_AS_INTEGER(result3) != 42)
+			{
+				fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to recover an entry in Toy_Scope\n" TOY_CC_RESET);
+				Toy_freeString(hello);
+				while ((scope = Toy_popScope(scope)) != NULL) /* */;
+				Toy_freeBucket(&bucket);
+				return -1;
+			}
+		}
+
+		Toy_assignScope(scope, hello, TOY_VALUE_FROM_INTEGER(8891));
+
+		{
+			//check it's assigned correctly
+			Toy_Value result4 = Toy_accessScope(scope, hello);
+
+			if (TOY_VALUE_IS_INTEGER(result4) != true ||
+				TOY_VALUE_AS_INTEGER(result4) != 8891)
+			{
+				fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to assign to an ancestor in Toy_Scope\n" TOY_CC_RESET);
+				Toy_freeString(hello);
+				while ((scope = Toy_popScope(scope)) != NULL) /* */;
+				Toy_freeBucket(&bucket);
+				return -1;
+			}
+		}
+
+		scope = Toy_popScope(scope);
+
+		{
+			//check it's in the correct state
+			Toy_Value result5 = Toy_accessScope(scope, hello);
+
+			if (TOY_VALUE_IS_INTEGER(result5) != true ||
+				TOY_VALUE_AS_INTEGER(result5) != 8891)
+			{
+				fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to access an altered entry of an ancestor in Toy_Scope\n" TOY_CC_RESET);
+				Toy_freeString(hello);
+				while ((scope = Toy_popScope(scope)) != NULL) /* */;
+				Toy_freeBucket(&bucket);
+				return -1;
+			}
+		}
+
+		//cleanup
+		Toy_freeString(hello);
+		while ((scope = Toy_popScope(scope)) != NULL) /* */;
+		Toy_freeBucket(&bucket);
+	}
+
 	return 0;
 }
 
@@ -318,7 +504,7 @@ int main() {
 	{
 		res = test_scope_elements();
 		if (res == 0) {
-			// printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
+			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 		}
 		total += res;
 	}

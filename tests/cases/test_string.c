@@ -83,7 +83,7 @@ int test_string_allocation() {
 		Toy_String* str = Toy_createString(&bucket, cstring);
 
 		//shallow and deep
-		Toy_String* shallow = Toy_copyString(&bucket, str);
+		Toy_String* shallow = Toy_copyString(str);
 		Toy_String* deep = Toy_deepCopyString(&bucket, str);
 
 		if (str != shallow ||
@@ -109,7 +109,7 @@ int test_string_allocation() {
 		Toy_String* str = Toy_createNameString(&bucket, cstring, TOY_VALUE_NULL);
 
 		//shallow and deep
-		Toy_String* shallow = Toy_copyString(&bucket, str);
+		Toy_String* shallow = Toy_copyString(str);
 		Toy_String* deep = Toy_deepCopyString(&bucket, str);
 
 		if (str != shallow ||
