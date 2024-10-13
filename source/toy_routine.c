@@ -266,6 +266,19 @@ static void writeInstructionPrint(Toy_Routine** rt, Toy_AstPrint ast) {
 	EMIT_BYTE(rt, code,0);
 }
 
+static void writeInstructionVarDeclare(Toy_Routine** rt, Toy_AstVarDeclare ast) {
+	//initial value
+	writeRoutineCode(rt, ast.expr);
+
+	//delcare with the given name string
+	EMIT_BYTE(rt, code, TOY_OPCODE_DECLARE);
+	EMIT_BYTE(rt, code, Toy_getNameStringType(ast.name));
+	EMIT_BYTE(rt, code, ast.name->length); //quick optimisation to skip a 'strlen()' call
+	EMIT_BYTE(rt, code, 0);
+
+	emitString(rt, ast.name);
+}
+
 //routine structure
 // static void writeRoutineParam(Toy_Routine* rt) {
 // 	//
@@ -301,6 +314,10 @@ static void writeRoutineCode(Toy_Routine** rt, Toy_Ast* ast) {
 
 		case TOY_AST_PRINT:
 			writeInstructionPrint(rt, ast->print);
+			break;
+
+		case TOY_AST_VAR_DECLARE:
+			writeInstructionVarDeclare(rt, ast->varDeclare);
 			break;
 
 		//meta instructions are disallowed

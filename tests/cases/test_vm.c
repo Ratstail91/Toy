@@ -305,6 +305,57 @@ int test_keywords(Toy_Bucket** bucketHandle) {
 	return 0;
 }
 
+int test_scope(Toy_Bucket** bucketHandle) {
+	//test execution
+	{
+		//generate bytecode for testing
+		const char* source = "var foobar = 42;";
+
+		Toy_Lexer lexer;
+		Toy_bindLexer(&lexer, source);
+
+		Toy_Parser parser;
+		Toy_bindParser(&parser, &lexer);
+
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
+
+		Toy_Bytecode bc = Toy_compileBytecode(ast);
+
+		//run the setup
+		Toy_VM vm;
+		Toy_initVM(&vm);
+		Toy_bindVM(&vm, bc.ptr);
+
+		//run
+		Toy_runVM(&vm);
+
+		//check the final state of the stack
+		Toy_String* key = Toy_createNameStringLength(bucketHandle, "foobar", 6, TOY_VALUE_NULL);
+
+		if (vm.stack == NULL ||
+			vm.stack->count != 0 ||
+
+			vm.scope == NULL ||
+			Toy_isDeclaredScope(vm.scope, key) == false ||
+			TOY_VALUE_IS_INTEGER(Toy_accessScope(vm.scope, key)) != true ||
+			TOY_VALUE_AS_INTEGER(Toy_accessScope(vm.scope, key)) != 42
+
+		)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Unexpected result in 'Toy_VM' when testing scope, source: %s\n" TOY_CC_RESET, source);
+
+			//cleanup and return
+			Toy_freeVM(&vm);
+			return -1;
+		}
+
+		//teadown
+		Toy_freeVM(&vm);
+	}
+
+	return 0;
+}
+
 int test_vm_reuse(Toy_Bucket** bucketHandle) {
 	//run code in the same vm multiple times
 	{
@@ -417,6 +468,16 @@ int main() {
 	{
 		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		res = test_keywords(&bucket);
+		Toy_freeBucket(&bucket);
+		if (res == 0) {
+			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
+		}
+		total += res;
+	}
+
+	{
+		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
+		res = test_scope(&bucket);
 		Toy_freeBucket(&bucket);
 		if (res == 0) {
 			printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);

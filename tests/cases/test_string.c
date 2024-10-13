@@ -106,7 +106,7 @@ int test_string_allocation() {
 		Toy_Bucket* bucket = Toy_allocateBucket(1024);
 
 		const char* cstring = "Hello world";
-		Toy_String* str = Toy_createNameString(&bucket, cstring, TOY_VALUE_NULL);
+		Toy_String* str = Toy_createNameStringLength(&bucket, cstring, strlen(cstring), TOY_VALUE_NULL);
 
 		//shallow and deep
 		Toy_String* shallow = Toy_copyString(str);
@@ -652,9 +652,9 @@ int test_string_equality() {
 	{
 		//setup
 		Toy_Bucket* bucket = Toy_allocateBucket(1024);
-		Toy_String* helloWorldOne = Toy_createNameString(&bucket, "Hello world", TOY_VALUE_NULL);
-		Toy_String* helloWorldTwo = Toy_createNameString(&bucket, "Hello world", TOY_VALUE_NULL);
-		Toy_String* helloEveryone = Toy_createNameString(&bucket, "Hello everyone", TOY_VALUE_NULL); //TODO: compare types?
+		Toy_String* helloWorldOne = Toy_createNameStringLength(&bucket, "Hello world", strlen("Hello world"), TOY_VALUE_NULL);
+		Toy_String* helloWorldTwo = Toy_createNameStringLength(&bucket, "Hello world", strlen("Hello world"), TOY_VALUE_NULL);
+		Toy_String* helloEveryone = Toy_createNameStringLength(&bucket, "Hello everyone", strlen("Hello everyone"), TOY_VALUE_NULL); //TODO: compare types?
 
 		int result = 0; //for print the errors
 

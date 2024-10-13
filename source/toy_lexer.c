@@ -195,7 +195,7 @@ static Toy_Token makeString(Toy_Lexer* lexer, char terminator) {
 	return token;
 }
 
-static Toy_Token makeKeywordOrIdentifier(Toy_Lexer* lexer) {
+static Toy_Token makeKeywordOrName(Toy_Lexer* lexer) {
 	advance(lexer); //first letter can only be alpha
 
 	while(isDigit(lexer) || isAlpha(lexer)) {
@@ -218,10 +218,10 @@ static Toy_Token makeKeywordOrIdentifier(Toy_Lexer* lexer) {
 		}
 	}
 
-	//make token (identifier)
+	//make token (variable name)
 	Toy_Token token;
 
-	token.type = TOY_TOKEN_IDENTIFIER;
+	token.type = TOY_TOKEN_NAME;
 	token.length = lexer->current - lexer->start;
 	token.line = lexer->line;
 	token.lexeme = &lexer->source[lexer->start];
@@ -247,7 +247,7 @@ Toy_Token Toy_private_scanLexer(Toy_Lexer* lexer) {
 	if (isAtEnd(lexer)) return makeToken(lexer, TOY_TOKEN_EOF);
 
 	if (isDigit(lexer)) return makeIntegerOrFloat(lexer);
-	if (isAlpha(lexer)) return makeKeywordOrIdentifier(lexer);
+	if (isAlpha(lexer)) return makeKeywordOrName(lexer);
 
 	char c = advance(lexer);
 
@@ -335,7 +335,7 @@ void Toy_private_printToken(Toy_Token* token) {
 	printf("\t%d\t%d\t", token->type, (int)token->line);
 
 	//print based on type
-	if (token->type == TOY_TOKEN_IDENTIFIER || token->type == TOY_TOKEN_LITERAL_INTEGER || token->type == TOY_TOKEN_LITERAL_FLOAT || token->type == TOY_TOKEN_LITERAL_STRING) {
+	if (token->type == TOY_TOKEN_NAME || token->type == TOY_TOKEN_LITERAL_INTEGER || token->type == TOY_TOKEN_LITERAL_FLOAT || token->type == TOY_TOKEN_LITERAL_STRING) {
 		printf("%.*s\t", (int)token->length, token->lexeme);
 	} else {
 		const char* keyword = Toy_private_findKeywordByType(token->type);

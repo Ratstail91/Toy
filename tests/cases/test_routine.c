@@ -777,6 +777,114 @@ int test_routine_keywords(Toy_Bucket** bucketHandle) {
 		free(buffer);
 	}
 
+	//var declare
+	{
+		//setup
+		const char* source = "var foobar = 42;";
+		Toy_Lexer lexer;
+		Toy_Parser parser;
+
+		Toy_bindLexer(&lexer, source);
+		Toy_bindParser(&parser, &lexer);
+		Toy_Ast* ast = Toy_scanParser(bucketHandle, &parser);
+
+		//run
+		void* buffer = Toy_compileRoutine(ast);
+		int len = ((int*)buffer)[0];
+
+		//check header
+		int* header = (int*)buffer;
+
+		if (header[0] != 64 || //total size
+			header[1] != 0 || //param size
+			header[2] != 4 || //jumps size
+			header[3] != 8 || //data size
+			header[4] != 0 || //subs size
+
+			// header[??] != ?? || //params address
+			header[5] != 32 || //code address
+			header[6] != 52 || //jumps address
+			header[7] != 56 || //data address
+			// header[??] != ?? || //subs address
+
+			false)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine header, source: %s\n" TOY_CC_RESET, source);
+
+			//cleanup and return
+			free(buffer);
+			return -1;
+		}
+
+		void* code = buffer + 32; //8 values in the header, each 4 bytes
+
+		//check code
+		if (
+			//code start
+			*((unsigned char*)(code + 0)) != TOY_OPCODE_READ ||
+			*((unsigned char*)(code + 1)) != TOY_VALUE_INTEGER ||
+			*((unsigned char*)(code + 2)) != 0 ||
+			*((unsigned char*)(code + 3)) != 0 ||
+
+			*(int*)(code + 4) != 42 ||
+
+			*((unsigned char*)(code + 8)) != TOY_OPCODE_DECLARE ||
+			*((unsigned char*)(code + 9)) != TOY_VALUE_NULL || //NOTE: will change in future
+			*((unsigned char*)(code + 10)) != 6 || //strlen
+			*((unsigned char*)(code + 11)) != 0 ||
+
+			*(unsigned int*)(code + 12) != 0 || //the jump index
+
+			*((unsigned char*)(code + 16)) != TOY_OPCODE_RETURN ||
+			*((unsigned char*)(code + 17)) != 0 ||
+			*((unsigned char*)(code + 18)) != 0 ||
+			*((unsigned char*)(code + 19)) != 0 ||
+
+			false)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine code, source: %s\n" TOY_CC_RESET, source);
+
+			//cleanup and return
+			free(buffer);
+			return -1;
+		}
+
+		void* jumps = code + 20;
+
+		//check jumps
+		if (
+			//code start
+			*(unsigned int*)(jumps + 0) != 0 || //the address relative to the start of the data section
+
+			false)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine jumps, source: %s\n" TOY_CC_RESET, source);
+
+			//cleanup and return
+			free(buffer);
+			return -1;
+		}
+
+		void* data = jumps + 4;
+
+		//check data
+		if (
+			//data start (the end of the data is padded to the nearest multiple of 4)
+			strcmp( ((char*)data) + ((unsigned int*)jumps)[0], "foobar" ) != 0 ||
+
+			false)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to produce the expected routine data, source: %s\n" TOY_CC_RESET, source);
+
+			//cleanup and return
+			free(buffer);
+			return -1;
+		}
+
+		//cleanup
+		free(buffer);
+	}
+
 	return 0;
 }
 

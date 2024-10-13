@@ -4,6 +4,7 @@
 
 #include "toy_bucket.h"
 #include "toy_value.h"
+#include "toy_string.h"
 
 //each major type
 typedef enum Toy_AstType {
@@ -15,6 +16,8 @@ typedef enum Toy_AstType {
 	TOY_AST_GROUP,
 
 	TOY_AST_PRINT,
+
+	TOY_AST_VAR_DECLARE,
 
 	TOY_AST_PASS,
 	TOY_AST_ERROR,
@@ -93,6 +96,12 @@ typedef struct Toy_AstPrint {
 	Toy_Ast* child;
 } Toy_AstPrint;
 
+typedef struct Toy_AstVarDeclare {
+	Toy_AstType type;
+	Toy_String* name;
+	Toy_Ast* expr;
+} Toy_AstVarDeclare;
+
 typedef struct Toy_AstPass {
 	Toy_AstType type;
 } Toy_AstPass;
@@ -105,18 +114,19 @@ typedef struct Toy_AstEnd {
 	Toy_AstType type;
 } Toy_AstEnd;
 
-union Toy_Ast {             //32 | 64 BITNESS
-	Toy_AstType type;       //4  | 4
-	Toy_AstBlock block;     //16 | 32
-	Toy_AstValue value;     //12 | 24
-	Toy_AstUnary unary;     //12 | 16
-	Toy_AstBinary binary;   //16 | 24
-	Toy_AstGroup group;     //8  | 16
-	Toy_AstPrint print;     //8  | 16
-	Toy_AstPass pass;       //4  | 4
-	Toy_AstError error;     //4  | 4
-	Toy_AstEnd end;         //4  | 4
-};                          //16 | 32
+union Toy_Ast {                     //32 | 64 BITNESS
+	Toy_AstType type;               //4  | 4
+	Toy_AstBlock block;             //16 | 32
+	Toy_AstValue value;             //12 | 24
+	Toy_AstUnary unary;             //12 | 16
+	Toy_AstBinary binary;           //16 | 24
+	Toy_AstGroup group;             //8  | 16
+	Toy_AstPrint print;             //8  | 16
+	Toy_AstVarDeclare varDeclare;   //16 | 24
+	Toy_AstPass pass;               //4  | 4
+	Toy_AstError error;             //4  | 4
+	Toy_AstEnd end;                 //4  | 4
+};                                  //16 | 32
 
 void Toy_private_initAstBlock(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);
 void Toy_private_appendAstBlock(Toy_Bucket** bucketHandle, Toy_Ast* block, Toy_Ast* child);
@@ -127,6 +137,8 @@ void Toy_private_emitAstBinary(Toy_Bucket** bucketHandle, Toy_Ast** astHandle,To
 void Toy_private_emitAstGroup(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);
 
 void Toy_private_emitAstPrint(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);
+
+void Toy_private_emitAstVariableDeclaration(Toy_Bucket** bucketHandle, Toy_Ast** astHandle, Toy_String* name, Toy_Ast* expr);
 
 void Toy_private_emitAstPass(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);
 void Toy_private_emitAstError(Toy_Bucket** bucketHandle, Toy_Ast** astHandle);

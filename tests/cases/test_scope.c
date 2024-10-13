@@ -304,8 +304,8 @@ int test_scope_elements() {
 		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		Toy_Scope* scope = Toy_pushScope(&bucket, NULL);
 
-		Toy_String* hello1 = Toy_createNameString(&bucket, "hello", TOY_VALUE_NULL);
-		Toy_String* hello2 = Toy_createNameString(&bucket, "hello", TOY_VALUE_NULL);
+		Toy_String* hello1 = Toy_createNameStringLength(&bucket, "hello", 5, TOY_VALUE_NULL);
+		Toy_String* hello2 = Toy_createNameStringLength(&bucket, "hello", 5, TOY_VALUE_NULL);
 
 		//check nothing is here
 		if (Toy_isDeclaredScope(scope, hello2)) {
@@ -389,7 +389,7 @@ int test_scope_elements() {
 		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		Toy_Scope* scope = Toy_pushScope(&bucket, NULL);
 
-		Toy_String* hello = Toy_createNameString(&bucket, "hello", TOY_VALUE_NULL);
+		Toy_String* hello = Toy_createNameStringLength(&bucket, "hello", 5, TOY_VALUE_NULL);
 
 		//declare and push
 		Toy_declareScope(scope, hello, TOY_VALUE_FROM_INTEGER(42));

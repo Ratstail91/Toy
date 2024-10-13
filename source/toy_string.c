@@ -91,8 +91,7 @@ Toy_String* Toy_createStringLength(Toy_Bucket** bucketHandle, const char* cstrin
 	return result;
 }
 
-TOY_API Toy_String* Toy_createNameString(Toy_Bucket** bucketHandle, const char* cname, Toy_ValueType type) {
-	unsigned int length = strlen(cname);
+Toy_String* Toy_createNameStringLength(Toy_Bucket** bucketHandle, const char* cname, unsigned int length, Toy_ValueType type) {
 
 	//name strings can't be broken up
 	if (sizeof(Toy_String) + length + 1 > (*bucketHandle)->capacity) {
@@ -194,6 +193,15 @@ unsigned int Toy_getStringLength(Toy_String* str) {
 
 unsigned int Toy_getStringRefCount(Toy_String* str) {
 	return str->refCount;
+}
+
+Toy_ValueType Toy_getNameStringType(Toy_String* str) {
+	if (str->type != TOY_STRING_NAME) {
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Can't get the variable type of a non-name string\n" TOY_CC_RESET);
+		exit(-1);
+	}
+
+	return str->as.name.type;
 }
 
 char* Toy_getStringRawBuffer(Toy_String* str) {

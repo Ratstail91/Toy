@@ -574,6 +574,16 @@ int main() {
 		total += res;
 	}
 
+	// { //TODO: test_parser.c: test_var_declare()
+	// 	Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
+	// 	res = test_var_declare(&bucket);
+	// 	Toy_freeBucket(&bucket);
+	// 	if (res == 0) {
+	// 		printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
+	// 	}
+	// 	total += res;
+	// }
+
 	{
 		Toy_Bucket* bucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
 		res = test_values(&bucket);

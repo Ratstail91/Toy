@@ -2,8 +2,9 @@
 
 #include "toy_common.h"
 
-#include "toy_stack.h"
 #include "toy_bucket.h"
+#include "toy_stack.h"
+#include "toy_scope.h"
 
 typedef struct Toy_VM {
 	//hold the raw bytecode
@@ -30,10 +31,11 @@ typedef struct Toy_VM {
 	Toy_Stack* stack;
 
 	//scope - block-level key/value pairs
-	//TODO: Toy_Scope* scope;
+	Toy_Scope* scope;
 
 	//easy access to memory
-	Toy_Bucket* stringBucket;
+	Toy_Bucket* stringBucket; //stores the string literals
+	Toy_Bucket* scopeBucket; //stores the scopes
 } Toy_VM;
 
 TOY_API void Toy_initVM(Toy_VM* vm);

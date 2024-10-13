@@ -258,6 +258,130 @@ int repl(const char* filepath) {
 	return 0;
 }
 
+//debugging
+static void debugStackPrint(Toy_Stack* stack) {
+	//DEBUG: if there's anything on the stack, print it
+	if (stack->count > 0) {
+		printf("Stack Dump\n\ntype\tvalue\n");
+		for (int i = 0; i < stack->count; i++) {
+			Toy_Value v = ((Toy_Value*)(stack + 1))[i];
+
+			printf("%d\t", v.type);
+
+			switch(v.type) {
+				case TOY_VALUE_NULL:
+					printf("null");
+					break;
+
+				case TOY_VALUE_BOOLEAN:
+					printf("%s", TOY_VALUE_AS_BOOLEAN(v) ? "true" : "false");
+					break;
+
+				case TOY_VALUE_INTEGER:
+					printf("%d", TOY_VALUE_AS_INTEGER(v));
+					break;
+
+				case TOY_VALUE_FLOAT:
+					printf("%f", TOY_VALUE_AS_FLOAT(v));
+					break;
+
+				case TOY_VALUE_STRING: {
+					Toy_String* str = TOY_VALUE_AS_STRING(v);
+
+					//print based on type
+					if (str->type == TOY_STRING_NODE) {
+						char* buffer = Toy_getStringRawBuffer(str);
+						printf("%s", buffer);
+						free(buffer);
+					}
+					else if (str->type == TOY_STRING_LEAF) {
+						printf("%s", str->as.leaf.data);
+					}
+					else if (str->type == TOY_STRING_NAME) {
+						printf("%s", str->as.name.data);
+					}
+					break;
+				}
+
+				case TOY_VALUE_ARRAY:
+				case TOY_VALUE_DICTIONARY:
+				case TOY_VALUE_FUNCTION:
+				case TOY_VALUE_OPAQUE:
+					printf("???");
+					break;
+			}
+
+			printf("\n");
+		}
+	}
+}
+
+static void debugScopePrint(Toy_Scope* scope, int depth) {
+	//DEBUG: if there's anything in the scope, print it
+	if (scope->table->count > 0) {
+		printf("Scope %d Dump\n\ntype\tname\tvalue\n", depth);
+		for (int i = 0; i < scope->table->capacity; i++) {
+			if ( (TOY_VALUE_IS_STRING(scope->table->data[i].key) && TOY_VALUE_AS_STRING(scope->table->data[i].key)->type == TOY_STRING_NAME) == false) {
+				continue;
+			}
+
+			Toy_Value k = scope->table->data[i].key;
+			Toy_Value v = scope->table->data[i].value;
+
+			printf("%d\t%s\t", v.type, TOY_VALUE_AS_STRING(k)->as.name.data);
+
+			switch(v.type) {
+				case TOY_VALUE_NULL:
+					printf("null");
+					break;
+
+				case TOY_VALUE_BOOLEAN:
+					printf("%s", TOY_VALUE_AS_BOOLEAN(v) ? "true" : "false");
+					break;
+
+				case TOY_VALUE_INTEGER:
+					printf("%d", TOY_VALUE_AS_INTEGER(v));
+					break;
+
+				case TOY_VALUE_FLOAT:
+					printf("%f", TOY_VALUE_AS_FLOAT(v));
+					break;
+
+				case TOY_VALUE_STRING: {
+					Toy_String* str = TOY_VALUE_AS_STRING(v);
+
+					//print based on type
+					if (str->type == TOY_STRING_NODE) {
+						char* buffer = Toy_getStringRawBuffer(str);
+						printf("%s", buffer);
+						free(buffer);
+					}
+					else if (str->type == TOY_STRING_LEAF) {
+						printf("%s", str->as.leaf.data);
+					}
+					else if (str->type == TOY_STRING_NAME) {
+						printf("%s\nWarning: The above value is a name string", str->as.name.data);
+					}
+					break;
+				}
+
+				case TOY_VALUE_ARRAY:
+				case TOY_VALUE_DICTIONARY:
+				case TOY_VALUE_FUNCTION:
+				case TOY_VALUE_OPAQUE:
+					printf("???");
+					break;
+			}
+
+			printf("\n");
+		}
+	}
+
+	if (scope->next != NULL) {
+		debugScopePrint(scope->next, depth + 1);
+	}
+}
+
 //callbacks
 static void printCallback(const char* msg) {
 	fprintf(stdout, "%s\n", msg);
@@ -338,60 +462,9 @@ int main(int argc, const char* argv[]) {
 		//run
 		Toy_runVM(&vm);
 
-		//DEBUG: if there's anything left on the stack, print it
-		if (vm.stack->count > 0) {
-			printf("Debug output of the stack after execution\n\ntype\tvalue\n");
-			for (int i = 0; i < vm.stack->count; i++) {
-				Toy_Value v = ((Toy_Value*)(vm.stack + 1))[i];
-
-				printf(" %d\t ", v.type);
-
-				switch(v.type) {
-					case TOY_VALUE_NULL:
-						printf("null");
-						break;
-
-					case TOY_VALUE_BOOLEAN:
-						printf("%s", TOY_VALUE_AS_BOOLEAN(v) ? "true" : "false");
-						break;
-
-					case TOY_VALUE_INTEGER:
-						printf("%d", TOY_VALUE_AS_INTEGER(v));
-						break;
-
-					case TOY_VALUE_FLOAT:
-						printf("%f", TOY_VALUE_AS_FLOAT(v));
-						break;
-
-					case TOY_VALUE_STRING: {
-						Toy_String* str = TOY_VALUE_AS_STRING(v);
-
-						//print based on type
-						if (str->type == TOY_STRING_NODE) {
-							char* buffer = Toy_getStringRawBuffer(str);
-							printf("%s", buffer);
-							free(buffer);
-						}
-						else if (str->type == TOY_STRING_LEAF) {
-							printf("%s", str->as.leaf.data);
-						}
-						else if (str->type == TOY_STRING_NAME) {
-							printf("%s", str->as.name.data);
-						}
-						break;
-					}
-
-					case TOY_VALUE_ARRAY:
-					case TOY_VALUE_DICTIONARY:
-					case TOY_VALUE_FUNCTION:
-					case TOY_VALUE_OPAQUE:
-						printf("???");
-						break;
-				}
-
-				printf("\n");
-			}
-		}
+		//print the debug info
+		debugStackPrint(vm.stack);
+		debugScopePrint(vm.scope, 0);
 
 		//cleanup
 		Toy_freeVM(&vm);

@@ -2,6 +2,7 @@
 #include "toy_console_colors.h"
 
 #include <stdio.h>
+#include <string.h>
 
 int test_sizeof_ast_64bit() {
 #define TEST_SIZEOF(type, size) \
@@ -16,6 +17,7 @@ int test_sizeof_ast_64bit() {
 	//run for each type
 	TEST_SIZEOF(Toy_AstType, 4);
 	TEST_SIZEOF(Toy_AstBlock, 32);
+	TEST_SIZEOF(Toy_AstVarDeclare, 24);
 	TEST_SIZEOF(Toy_AstValue, 24);
 	TEST_SIZEOF(Toy_AstUnary, 16);
 	TEST_SIZEOF(Toy_AstBinary, 24);
@@ -44,6 +46,7 @@ int test_sizeof_ast_32bit() {
 	//run for each type
 	TEST_SIZEOF(Toy_AstType, 4);
 	TEST_SIZEOF(Toy_AstBlock, 16);
+	TEST_SIZEOF(Toy_AstVarDeclare, 12);
 	TEST_SIZEOF(Toy_AstValue, 12);
 	TEST_SIZEOF(Toy_AstUnary, 12);
 	TEST_SIZEOF(Toy_AstBinary, 16);
@@ -216,6 +219,34 @@ int test_type_emission(Toy_Bucket** bucketHandle) {
 
 			iter = iter->block.next;
 		}
+	}
+
+	//emit var declare
+	{
+		//build the AST
+		Toy_Ast* ast = NULL;
+		Toy_String* name = Toy_createNameStringLength(bucketHandle, "foobar", 6, TOY_VALUE_NULL);
+
+		Toy_private_emitAstVariableDeclaration(bucketHandle, &ast, name, NULL);
+
+		//check if it worked
+		if (
+			ast == NULL ||
+			ast->type != TOY_AST_VAR_DECLARE ||
+
+			ast->varDeclare.name == NULL ||
+			ast->varDeclare.name->type != TOY_STRING_NAME ||
+			strcmp(ast->varDeclare.name->as.name.data, "foobar") != 0 ||
+
+			ast->varDeclare.expr != NULL)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to emit a var declare as 'Toy_Ast', state unknown\n" TOY_CC_RESET);
+			Toy_freeString(name);
+			return -1;
+		}
+
+		//cleanup
+		Toy_freeString(name);
 	}
 
 	return 0;

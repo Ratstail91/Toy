@@ -110,6 +110,30 @@ static void processRead(Toy_VM* vm) {
 	fix_alignment(vm);
 }
 
+static void processDeclare(Toy_VM* vm) {
+	Toy_ValueType type = READ_BYTE(vm); //variable type
+	unsigned int len = READ_BYTE(vm); //name length
+	fix_alignment(vm); //one spare byte
+
+	//grab the jump
+	unsigned int jump = *(unsigned int*)(vm->routine + vm->jumpsAddr + READ_INT(vm));
+
+	//grab the data
+	char* cstring = (char*)(vm->routine + vm->dataAddr + jump);
+
+	//build the name string
+	Toy_String* name = Toy_createNameStringLength(&vm->stringBucket, cstring, len, type);
+
+	//get the value
+	Toy_Value value = Toy_popStack(&vm->stack);
+
+	//declare it
+	Toy_declareScope(vm->scope, name, value);
+
+	//cleanup
+	Toy_freeString(name);
+}
+
 static void processArithmetic(Toy_VM* vm, Toy_OpcodeType opcode) {
 	Toy_Value right = Toy_popStack(&vm->stack);
 	Toy_Value left = Toy_popStack(&vm->stack);
@@ -330,6 +354,10 @@ static void process(Toy_VM* vm) {
 				processRead(vm);
 				break;
 
+			case TOY_OPCODE_DECLARE:
+				processDeclare(vm);
+				break;
+
 			//arithmetic instructions
 			case TOY_OPCODE_ADD:
 			case TOY_OPCODE_SUBTRACT:
@@ -371,9 +399,11 @@ static void process(Toy_VM* vm) {
 				break;
 
 			//not yet implemented
-			case TOY_OPCODE_DECLARE:
 			case TOY_OPCODE_ASSIGN:
 			case TOY_OPCODE_ACCESS:
+				fprintf(stderr, TOY_CC_ERROR "ERROR: Incomplete opcode %d found, exiting\n" TOY_CC_RESET, opcode);
+				exit(-1);
+
 			case TOY_OPCODE_PASS:
 			case TOY_OPCODE_ERROR:
 			case TOY_OPCODE_EOF:
@@ -389,9 +419,10 @@ static void process(Toy_VM* vm) {
 //exposed functions
 void Toy_initVM(Toy_VM* vm) {
 	//clear the stack, scope and memory
-	vm->stack = NULL;
-	//TODO: clear the scope
 	vm->stringBucket = NULL;
+	vm->scopeBucket = NULL;
+	vm->stack = NULL;
+	vm->scope = NULL;
 
 	Toy_resetVM(vm);
 }
@@ -453,9 +484,10 @@ void Toy_bindVMToRoutine(Toy_VM* vm, unsigned char* routine) {
 	}
 
 	//allocate the stack, scope, and memory
-	vm->stack = Toy_allocateStack();
-	//TODO: scope
 	vm->stringBucket = Toy_allocateBucket(TOY_BUCKET_IDEAL);
+	vm->scopeBucket = Toy_allocateBucket(TOY_BUCKET_SMALL);
+	vm->stack = Toy_allocateStack();
+	vm->scope = Toy_pushScope(&vm->scopeBucket, NULL);
 }
 
 void Toy_runVM(Toy_VM* vm) {
@@ -471,8 +503,9 @@ void Toy_runVM(Toy_VM* vm) {
 void Toy_freeVM(Toy_VM* vm) {
 	//clear the stack, scope and memory
 	Toy_freeStack(vm->stack);
-	//TODO: clear the scope
+	Toy_popScope(vm->scope);
 	Toy_freeBucket(&vm->stringBucket);
+	Toy_freeBucket(&vm->scopeBucket);
 
 	//free the bytecode
 	free(vm->bc);
@@ -499,5 +532,5 @@ void Toy_resetVM(Toy_VM* vm) {
 
 	vm->routineCounter = 0;
 
-	//NOTE: stack, scope and memory are not altered by reset
+	//NOTE: stack, scope and memory are not altered during resets
 }

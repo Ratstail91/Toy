@@ -6,7 +6,7 @@ typedef enum Toy_TokenType {
 	TOY_TOKEN_NULL,
 
 	//variable names
-	TOY_TOKEN_IDENTIFIER,
+	TOY_TOKEN_NAME,
 
 	//types
 	TOY_TOKEN_TYPE_TYPE,

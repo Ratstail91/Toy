@@ -120,7 +120,7 @@ static ParsingTuple parsingRulesetTable[] = {
 	{PREC_PRIMARY,literal,NULL},// TOY_TOKEN_NULL,
 
 	//variable names
-	{PREC_NONE,NULL,NULL},// TOY_TOKEN_IDENTIFIER,
+	{PREC_NONE,NULL,NULL},// TOY_TOKEN_NAME,
 
 	//types
 	{PREC_NONE,NULL,NULL},// TOY_TOKEN_TYPE_TYPE,
@@ -528,6 +528,36 @@ static void makeExprStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast*
 	consume(parser, TOY_TOKEN_OPERATOR_SEMICOLON, "Expected ';' at the end of expression statement");
 }
 
+static void makeVariableDeclarationStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
+	consume(parser, TOY_TOKEN_NAME, "Expected variable name after 'var' keyword");
+
+	if (parser->previous.length > 256) {
+		printError(parser, parser->previous, "Can't have a variable name longer than 256 characters");
+		Toy_private_emitAstError(bucketHandle, rootHandle);
+		return;
+	}
+
+	Toy_Token nameToken = parser->previous;
+
+	//TODO: read the type specifier if present
+	// Toy_Token typeToken = TOY_BLANK_TOKEN();
+
+	//build the string
+	Toy_String* nameStr = Toy_createNameStringLength(bucketHandle, nameToken.lexeme, nameToken.length, TOY_VALUE_NULL);
+
+	//if there's an assignment, read it, or default to null
+	Toy_Ast* expr = NULL;
+	if (match(parser, TOY_TOKEN_OPERATOR_ASSIGN)) {
+		makeExpr(bucketHandle, parser, &expr);
+	}
+	else {
+		Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_FROM_NULL());
+	}
+
+	//finally, emit the declaration as an Ast
+	Toy_private_emitAstVariableDeclaration(bucketHandle, rootHandle, nameStr, expr);
+}
+
 static void makeStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
 	//block
 	//assert
@@ -558,10 +588,10 @@ static void makeStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** ro
 }
 
 static void makeDeclarationStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
-	// //variable declarations
-	// if (match(parser, TOY_TOKEN_KEYWORD_VAR)) {
-	// 	makeVariableDeclarationStmt(bucketHandle, parser, rootHandle);
-	// }
+	//variable declarations
+	if (match(parser, TOY_TOKEN_KEYWORD_VAR)) {
+		makeVariableDeclarationStmt(bucketHandle, parser, rootHandle);
+	}
 
 	// //function declarations
 	// else if (match(parser, TOY_TOKEN_KEYWORD_FUNCTION)) {
@@ -569,9 +599,9 @@ static void makeDeclarationStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, T
 	// }
 
 	//otherwise
-	// else {
+	else {
 		makeStmt(bucketHandle, parser, rootHandle);
-	// }
+	}
 }
 
 static void makeBlockStmt(Toy_Bucket** bucketHandle, Toy_Parser* parser, Toy_Ast** rootHandle) {
