@@ -551,7 +551,7 @@ static void makeVariableDeclarationStmt(Toy_Bucket** bucketHandle, Toy_Parser* p
 		makeExpr(bucketHandle, parser, &expr);
 	}
 	else {
-		Toy_private_emitAstValue(bucketHandle, rootHandle, TOY_VALUE_FROM_NULL());
+		Toy_private_emitAstValue(bucketHandle, &expr, TOY_VALUE_FROM_NULL());
 	}
 
 	//finally, emit the declaration as an Ast
