@@ -50,6 +50,7 @@ jobs:
         commands:
           - { build: make repl, run: out/repl.exe -f '../scripts/example.toy' }
           - { build: make repl, run: out/repl.exe -f '../scripts/example-print.toy' }
+          - { build: make repl, run: out/repl.exe -f '../scripts/example-variables.toy' }
     
     runs-on: ${{ matrix.platforms.os }}
     steps:

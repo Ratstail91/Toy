@@ -15,24 +15,23 @@
 	vm->routine[vm->routineCounter++]
 
 #define READ_UNSIGNED_INT(vm) \
-	*((unsigned int*)(vm->routine + _read_postfix(&(vm->routineCounter), 4)))
+	*((unsigned int*)(vm->routine + readPostfixUtil(&(vm->routineCounter), 4)))
 
 #define READ_INT(vm) \
-	*((int*)(vm->routine + _read_postfix(&(vm->routineCounter), 4)))
+	*((int*)(vm->routine + readPostfixUtil(&(vm->routineCounter), 4)))
 
 #define READ_FLOAT(vm) \
-	*((float*)(vm->routine + _read_postfix(&(vm->routineCounter), 4)))
+	*((float*)(vm->routine + readPostfixUtil(&(vm->routineCounter), 4)))
 
-static inline int _read_postfix(unsigned int* ptr, int amount) {
+static inline int readPostfixUtil(unsigned int* ptr, int amount) {
 	int ret = *ptr;
 	*ptr += amount;
 	return ret;
 }
 
-static inline void fix_alignment(Toy_VM* vm) {
-	if (vm->routineCounter % 4 != 0) {
-		vm->routineCounter += (4 - vm->routineCounter % 4);
-	}
+static inline void fixAlignment(Toy_VM* vm) {
+	//NOTE: It's a tilde, not a negative sign
+	vm->routineCounter = (vm->routineCounter + 3) & ~0b11;
 }
 
 //instruction handlers
@@ -53,19 +52,19 @@ static void processRead(Toy_VM* vm) {
 		}
 
 		case TOY_VALUE_INTEGER: {
-			fix_alignment(vm);
+			fixAlignment(vm);
 			value = TOY_VALUE_FROM_INTEGER(READ_INT(vm));
 			break;
 		}
 
 		case TOY_VALUE_FLOAT: {
-			fix_alignment(vm);
+			fixAlignment(vm);
 			value = TOY_VALUE_FROM_FLOAT(READ_FLOAT(vm));
 			break;
 		}
 
 		case TOY_VALUE_STRING: {
-			fix_alignment(vm);
+			fixAlignment(vm);
 			//grab the jump as an integer
 			unsigned int jump = *(unsigned int*)(vm->routine + vm->jumpsAddr + READ_INT(vm));
 
@@ -107,13 +106,13 @@ static void processRead(Toy_VM* vm) {
 	Toy_pushStack(&vm->stack, value);
 
 	//leave the counter in a good spot
-	fix_alignment(vm);
+	fixAlignment(vm);
 }
 
 static void processDeclare(Toy_VM* vm) {
 	Toy_ValueType type = READ_BYTE(vm); //variable type
 	unsigned int len = READ_BYTE(vm); //name length
-	fix_alignment(vm); //one spare byte
+	fixAlignment(vm); //one spare byte
 
 	//grab the jump
 	unsigned int jump = *(unsigned int*)(vm->routine + vm->jumpsAddr + READ_INT(vm));
@@ -412,7 +411,7 @@ static void process(Toy_VM* vm) {
 		}
 
 		//prepare for the next instruction
-		fix_alignment(vm);
+		fixAlignment(vm);
 	}
 }
 

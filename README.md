@@ -29,6 +29,9 @@ print 6 * 7;
 //strings can be concatenated with the .. operator
 print "Hello" .. "world!";
 
+//declare a variable
+var foobar = 42;
+
 //more examples to be added as the features are implemented
 ```
 
@@ -53,6 +56,7 @@ This source code is covered by the zlib license (see [LICENSE.md](LICENSE.md)).
 
 For a guide on how you can contribute, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
+@8051Enthusiast - `fixAlignment()` trick
 @hiperiondev - v1 Disassembler, v1 porting support and feedback  
 @add00 - v1 Library support  
 @gruelingpine185 - Unofficial v1 MacOS support  
