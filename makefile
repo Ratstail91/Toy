@@ -41,8 +41,8 @@ test-benchmarks:
 	$(MAKE) -C $(TOY_BENCHMARKSDIR) -k
 
 #same as above, but with GDB
-#.PHONY: gdb
-#gdb: clean test-cases-gdb test-integrations-gdb test-benchmarks-gdb
+.PHONY: test-gdb
+test-gdb: clean test-cases-gdb test-integrations-gdb test-benchmarks-gdb
 
 .PHONY: test-cases-gdb
 test-cases-gdb:

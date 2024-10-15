@@ -59,6 +59,10 @@ Toy_Scope* Toy_pushScope(Toy_Bucket** bucketHandle, Toy_Scope* scope) {
 }
 
 Toy_Scope* Toy_popScope(Toy_Scope* scope) {
+	if (scope == NULL) {
+		return NULL;
+	}
+
 	decrementRefCount(scope);
 
 	if (scope->refCount == 0) {

@@ -71,4 +71,4 @@ build-run-gdb: $(addprefix $(TEST_OUTDIR)/,$(notdir $(TEST_CASESFILES:%.c=%.exe)
 
 .PRECIOUS: $(TEST_OUTDIR)/%.run-gdb
 $(TEST_OUTDIR)/%.run-gdb: $(TEST_OUTDIR)/%.exe
-	gdb $< -ex "run" --batch
+	gdb $< -ix gdb_init -ex=run --batch --return-child-result --args "$<"

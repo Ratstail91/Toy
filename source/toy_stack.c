@@ -24,7 +24,9 @@ Toy_Stack* Toy_allocateStack() {
 void Toy_freeStack(Toy_Stack* stack) {
 	//TODO: slip in a call to free the complex values here
 
-	free(stack);
+	if (stack != NULL) {
+		free(stack);
+	}
 }
 
 void Toy_pushStack(Toy_Stack** stackHandle, Toy_Value value) {
