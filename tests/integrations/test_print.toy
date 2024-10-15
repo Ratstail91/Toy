@@ -1,0 +1,15 @@
+//basic print statement
+print 42;
+
+//print complex expressions
+print 3 * 5;
+
+//print a string
+print "Hello world!";
+
+//print a concatenated string
+print "Hello" .. "world!";
+
+//TODO: in the repl, -s to supress output, or -d to print debugging info
+
+//TODO: the `assert` keyword will be useful for these

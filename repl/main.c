@@ -26,22 +26,22 @@ unsigned char* readFile(char* path, int* size) {
 		return NULL;
 	}
 
-	//
+	//read the file
 	if (fread(buffer, sizeof(unsigned char), *size, file) < *size) {
 		fclose(file);
 		*size = -2; //singal a read error
 		return NULL;
 	}
 
-	fclose(file);
-
 	buffer[(*size)++] = '\0';
+
+	//clean up and return
+	fclose(file);
 	return buffer;
 }
 
 int getDirPath(char* dest, const char* src) {
 	//extract the directory from src, and store it in dest
-
 #if defined(_WIN32) || defined(_WIN64)
 	char* p = strrchr(src, '\\');
 #else
@@ -57,7 +57,6 @@ int getDirPath(char* dest, const char* src) {
 
 int getFileName(char* dest, const char* src) {
 	//extract the directory from src, and store it in dest
-
 #if defined(_WIN32) || defined(_WIN64)
 	char* p = strrchr(src, '\\') + 1;
 #else
@@ -95,6 +94,8 @@ void usageCmdLine(int argc, const char* argv[]) {
 
 void helpCmdLine(int argc, const char* argv[]) {
 	usageCmdLine(argc, argv);
+
+	printf("The Toy Programming Language, leave arguments blank for an interactive REPL.\n\n");
 
 	printf("  -h, --help\t\t\tShow this help then exit.\n");
 	printf("  -v, --version\t\t\tShow version and copyright information then exit.\n");

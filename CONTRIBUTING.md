@@ -16,7 +16,7 @@ v2 is a ground-up rewrite, with additions, changes and deletions to the language
 
 The [Issue Tracker](https://github.com/Ratstail91/Toy/issues) is a good place to see what tasks and issues are currently waiting to be addressed. The [toy.h](https://github.com/Ratstail91/Toy/blob/v2/source/toy.h) source file is a quick way to see what building blocks are available in the source code. There are also a number of comments prepended with `TODO` scattered throughout the source code, as reminders of planned features.
 
-The [test cases](https://github.com/Ratstail91/Toy/tree/v2/tests/cases), which test individual parts of the code in isolation, can be a good way to see how those parts are used. Likewise, the [REPL](https://github.com/Ratstail91/Toy/tree/v2/repl) shows a practical usage of Toy.
+The [tests directory](https://github.com/Ratstail91/Toy/tree/v2/tests), which holds a collection of automated tests for the CI pipeline, can be a good way to see how those parts are used. Likewise, the [REPL](https://github.com/Ratstail91/Toy/tree/v2/repl) shows a practical usage of Toy.
 
 *v2 is under heavy development, and as such may not be in a working state yet. Your patience and feedback can help, but missing features such as a documentation website are coming, eventually.*
 
@@ -30,10 +30,10 @@ graph TB
     Toy_Value ---> Toy_String
     Toy_Value ---> Toy_Stack
     Toy_Value ---> Toy_Table
-    Toy_Array
+    Toy_Value ---> Toy_Array
 ```
 
-In addition, [toy_common.h](https://github.com/Ratstail91/Toy/blob/v2/source/toy_common.h) grants platform portability and version info, while [toy_console_colors.h](https://github.com/Ratstail91/Toy/blob/v2/source/toy_console_colors.h) provides string constants as macros that help with console output (where supported).
+In addition, [toy_common.h](https://github.com/Ratstail91/Toy/blob/v2/source/toy_common.h) grants platform portability and version info, while [toy_console_colors.h](https://github.com/Ratstail91/Toy/blob/v2/source/toy_console_colors.h) provides string constants as macros that can help with console output (where supported).
 
 # Coding Habits
 
@@ -43,15 +43,29 @@ Here's a few coding habits that I use to keep the source code consistent. While 
 
 When adding a new piece of code, it must be thoroughly tested via a [test case](https://github.com/Ratstail91/Toy/tree/v2/tests/cases). If it has multiple features, they should be tested individually, and in combination with each other. Any kind of corner case which can cause an issue on any supported platform must be resolved (I'm happy to help with this, if needed).
 
+Once a feature has been tested on its own, it can be added to or expanded in the [integration tests](https://github.com/Ratstail91/Toy/tree/v2/tests/integrations).
+
 This is probably the most important habit listed here. While I'm not too fussy as to how the tests are written, they do need to prove that the code works flawlessly. Toy is intended to be used by others (potentially many others), so please write simple and straight forward tests to ensure correctness.
 
 ## Tabs, 4 Characters Wide
 
-I use tabs over spaces, with a width of 4. I don't have a linter, please don't make me use one.
+I use tabs over spaces, with a width of 4. I don't have a linter, please don't make me use one. For those who care, here's my `.vimrc`:
+
+```bash
+" Load the defaults
+runtime defaults.vim
+
+" my custom stuff
+set tabstop=4
+set shiftwidth=4
+
+set autoindent
+set smartindent
+```
 
 ## Error Messages
 
-Fatal errors have this general format:
+Fatal errors in the source code have this general format:
 
 ```c
 fprintf(stderr, TOY_CC_ERROR "ERROR: [Info]\n" TOY_CC_RESET);
@@ -60,7 +74,7 @@ exit(-1);
 
 The use of `fprintf()` will ensure the error is written to the console, and allows extra information to be printed - just replace `[Info]` with the relevant output. These kinds of fatal errors are intended to catch issues with the language itself, rather than errors in the Toy scripts.
 
-In the test cases, the `exit(-1)` is instead replaced with `return -1` to allow `main()` to clean up that test set, and run others if needed.
+In the test cases, the `exit(-1)` is instead replaced with `return -1` to allow `main()` to clean up that test case, and run others if needed.
 
 ## Naming Things
 
@@ -124,5 +138,5 @@ The directories in the repository's root have certain intended uses. If you find
 | scripts | Storage for various example scripts written in Toy that can be loaded and executed by the repl. |
 | source | The source directory for the core of the Toy programming language. |
 | tests | The source directory for the testing systems. Within, `cases/` is used for test cases, `benchmarks/` for benchmarking, etc. |
-| tools | The source directory for various external tools. |
+| tools | The source directory for various standalone tools. |
 

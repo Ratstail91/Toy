@@ -15,7 +15,7 @@ This repository holds the reference implementation for Toy version 2.x, written 
 * Simple C-like syntax
 * Intermediate AST representation
 * Strong, but optional type system
-* First-class functions
+* First-class functions and types
 * Extensible via external libraries
 * Can re-direct output, error and assertion failure messages
 * Open source under the zlib license
@@ -39,14 +39,13 @@ var foobar = 42;
 
 Supported platforms are: `linux-latest`, `windows-latest`, `macos-latest`, using [GitHub's standard runners](https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories).
 
-To build the library, run `make source`.  
-To build the library and repl, run `make repl`.  
-To build and run the test cases, run `make tests`.  
-To build and run the test cases under gdb, run `make tests-gdb`.  
+To build the shared library, run `make source`.  
+To build the shared library and repl, run `make repl`.  
+To build and run the standard available tests, run `make tests`.  
 
 # Tools
 
-*Coming Soon.*
+*Coming Soon, see #126 for details.*
 
 # License
 
@@ -56,7 +55,7 @@ This source code is covered by the zlib license (see [LICENSE.md](LICENSE.md)).
 
 For a guide on how you can contribute, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-@8051Enthusiast - `fixAlignment()` trick
+@8051Enthusiast - `fixAlignment()` trick  
 @hiperiondev - v1 Disassembler, v1 porting support and feedback  
 @add00 - v1 Library support  
 @gruelingpine185 - Unofficial v1 MacOS support  

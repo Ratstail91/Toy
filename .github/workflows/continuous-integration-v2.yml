@@ -14,48 +14,73 @@ on:
       - v2
   workflow_dispatch:
 
-#CI workflows using a matrix
+#CI workflows using the matrix strategy, skipping GDB if it's not supported for the platform
 jobs:
   run-test-cases:
     continue-on-error: true
     strategy:
       matrix:
         platforms:
-          - { os: ubuntu-latest, preinstall: sudo apt-get install gdb, gdb_skip: false }
-          - { os: windows-latest, preinstall: , gdb_skip: false }
-          - { os: macos-latest, preinstall: , gdb_skip: true }
+          - { os: ubuntu-latest, preinstall: sudo apt-get install gdb, gdb_enabled: true }
+          - { os: windows-latest, preinstall: , gdb_enabled: true }
+          - { os: macos-latest, preinstall: , gdb_enabled: false }
         commands:
-          - { exec: make tests, gdb: false }
-          - { exec: make tests-gdb, gdb: true }
+          - { exec: make test-cases, gdb: false }
+          - { exec: make test-cases-gdb, gdb: true }
     
     runs-on: ${{ matrix.platforms.os }}
     steps:
       - uses: actions/checkout@v4
       - name: Preinstall dependencies
+        if: (matrix.commands.gdb == true && matrix.platforms.gdb_enabled == false) != true
         run: ${{ matrix.platforms.preinstall }}
-      - name: run the test cases
-        if: matrix.commands.gdb == false || matrix.platforms.gdb_skip == false
+      - name: run the tests
+        if: (matrix.commands.gdb == true && matrix.platforms.gdb_enabled == false) != true
         run: ${{ matrix.commands.exec }}
-
-  #TODO: hook this up to real script files, preferably in the test section
-  run-test-repl-scripts:
-    continue-on-error: true
+  
+  run-test-integrations:
     needs: run-test-cases
+    continue-on-error: true
     strategy:
       matrix:
         platforms:
-          - { os: ubuntu-latest }
-          - { os: windows-latest }
-          - { os: macos-latest }
+          - { os: ubuntu-latest, preinstall: sudo apt-get install gdb, gdb_enabled: true }
+          - { os: windows-latest, preinstall: , gdb_enabled: true }
+          - { os: macos-latest, preinstall: , gdb_enabled: false }
         commands:
-          - { build: make repl, run: out/repl.exe -f '../scripts/example.toy' }
-          - { build: make repl, run: out/repl.exe -f '../scripts/example-print.toy' }
-          - { build: make repl, run: out/repl.exe -f '../scripts/example-variables.toy' }
+          - { exec: make test-integrations, gdb: false }
+          - { exec: make test-integrations-gdb, gdb: true }
     
     runs-on: ${{ matrix.platforms.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: compile the repl
-        run: ${{ matrix.commands.build }}
-      - name: run the repl scripts
-        run: ${{ matrix.commands.run }}
+      - name: Preinstall dependencies
+        if: (matrix.commands.gdb == true && matrix.platforms.gdb_enabled == false) != true
+        run: ${{ matrix.platforms.preinstall }}
+      - name: run the tests
+        if: (matrix.commands.gdb == true && matrix.platforms.gdb_enabled == false) != true
+        run: ${{ matrix.commands.exec }}
+  
+  run-test-benchmarks:
+    if: false #Not ready yet
+    needs: run-test-integrations
+    continue-on-error: true
+    strategy:
+      matrix:
+        platforms:
+          - { os: ubuntu-latest, preinstall: sudo apt-get install gdb, gdb_enabled: true }
+          - { os: windows-latest, preinstall: , gdb_enabled: true }
+          - { os: macos-latest, preinstall: , gdb_enabled: false }
+        commands:
+          - { exec: make test-benchmarks, gdb: false }
+          - { exec: make test-benchmarks-gdb, gdb: true }
+    
+    runs-on: ${{ matrix.platforms.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preinstall dependencies
+        if: (matrix.commands.gdb == true && matrix.platforms.gdb_enabled == false) != true
+        run: ${{ matrix.platforms.preinstall }}
+      - name: run the tests
+        if: (matrix.commands.gdb == true && matrix.platforms.gdb_enabled == false) != true
+        run: ${{ matrix.commands.exec }}

@@ -1,0 +1,6 @@
+//declare a variable with an initial value
+var answer = 42;
+
+//declare a variable without an initial value
+var empty;
+

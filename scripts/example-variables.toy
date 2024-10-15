@@ -1,7 +1,0 @@
-//declare a variable
-var foobar = 42;
-
-//defaults as null
-var empty;
-
-
