@@ -37,7 +37,7 @@ run: $(TEST_SCRIPTFILES)
 gdb: source repl run-gdb
 
 run-gdb: $(TEST_SCRIPTFILES)
-	gdb $(TEST_OUTDIR)/$(TEST_REPLNAME) -ex "run -f ../$<" --batch
+	gdb $(TEST_OUTDIR)/$(TEST_REPLNAME) -ex "cd $(TEST_OUTDIR)" -ex "run -f ../$<" --batch
 
 #compile the source and repl first
 source: $(TEST_OBJDIR) $(TEST_OUTDIR)
