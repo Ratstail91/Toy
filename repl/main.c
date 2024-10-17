@@ -160,9 +160,19 @@ CmdLine parseCmdLine(int argc, const char* argv[]) {
 					exit(-1);
 				}
 
+				fprintf(stdout, TOY_CC_WARN "Debug: Parsing the infile name\n" TOY_CC_RESET);
+
 				getDirPath(cmd.infile, argv[0]);
+
+				fprintf(stdout, TOY_CC_WARN "\t%s\n" TOY_CC_RESET, cmd.infile);
+
 				APPEND(cmd.infile, argv[i]);
+
+				fprintf(stdout, TOY_CC_WARN "\t%s\n" TOY_CC_RESET, cmd.infile);
+
 				FLIPSLASH(cmd.infile);
+
+				fprintf(stdout, TOY_CC_WARN "\t%s\n" TOY_CC_RESET, cmd.infile);
 			}
 		}
 
@@ -398,6 +408,12 @@ int main(int argc, const char* argv[]) {
 	Toy_setPrintCallback(printCallback);
 	Toy_setErrorCallback(errorAndExitCallback);
 	Toy_setAssertFailureCallback(errorAndExitCallback);
+
+	//print the args
+	fprintf(stdout, TOY_CC_WARN "Debug: command line args\n" TOY_CC_RESET);
+	for (int i = 0; i < argc; i++) {
+		fprintf(stdout, TOY_CC_WARN "\t%s\n" TOY_CC_RESET, argv[i]);
+	}
 
 	//repl
 	if (argc == 1) {

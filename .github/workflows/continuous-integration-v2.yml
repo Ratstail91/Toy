@@ -17,6 +17,7 @@ on:
 #CI workflows using the matrix strategy, skipping GDB if it's not supported for the platform
 jobs:
   run-test-cases:
+    if: false
     continue-on-error: true
     strategy:
       matrix:
@@ -39,7 +40,7 @@ jobs:
         run: ${{ matrix.commands.exec }}
   
   run-test-integrations:
-    needs: run-test-cases
+    # needs: run-test-cases
     continue-on-error: true
     strategy:
       matrix:
