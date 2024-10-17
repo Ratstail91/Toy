@@ -40,7 +40,7 @@ unsigned char* readFile(char* path, int* size) {
 	return buffer;
 }
 
-int getDirPath(char* dest, const char* src) {
+int getFilePath(char* dest, const char* src) {
 	//extract the directory from src, and store it in dest
 #if defined(_WIN32) || defined(_WIN64)
 	char* p = strrchr(src, '\\');
@@ -58,10 +58,15 @@ int getDirPath(char* dest, const char* src) {
 int getFileName(char* dest, const char* src) {
 	//extract the directory from src, and store it in dest
 #if defined(_WIN32) || defined(_WIN64)
-	char* p = strrchr(src, '\\') + 1;
+	char* p = strrchr(src, '\\');
 #else
-	char* p = strrchr(src, '/') + 1;
+	char* p = strrchr(src, '/');
 #endif
+
+	//if we're not at the end of the string, skip the slash
+	if (*p != '\0') {
+		p++;
+	}
 
 	int len = strlen(p);
 	strncpy(dest, p, len);
@@ -160,9 +165,9 @@ CmdLine parseCmdLine(int argc, const char* argv[]) {
 					exit(-1);
 				}
 
-				fprintf(stdout, TOY_CC_WARN "Debug: Parsing the infile name\n" TOY_CC_RESET);
+				fprintf(stdout, TOY_CC_WARN "Debug: Parsing the infile name from argv[0]: %s\n" TOY_CC_RESET, argv[0]);
 
-				getDirPath(cmd.infile, argv[0]);
+				getFilePath(cmd.infile, argv[0]);
 
 				fprintf(stdout, TOY_CC_WARN "\t%s\n" TOY_CC_RESET, cmd.infile);
 

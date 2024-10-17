@@ -1,0 +1,8 @@
+set breakpoint pending on
+
+break strlen
+
+command 1
+	bt
+	continue
+end
