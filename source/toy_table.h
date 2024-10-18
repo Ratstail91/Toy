@@ -1,7 +1,6 @@
 #pragma once
 
 #include "toy_common.h"
-
 #include "toy_value.h"
 
 //key-value entry, and probe sequence length - https://programming.guide/robin-hood-hashing.html
