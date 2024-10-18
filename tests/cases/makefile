@@ -15,9 +15,9 @@ else
 endif
 
 #directories
-TEST_ROOTDIR=..
+TEST_ROOTDIR=../..
 TEST_SOURCEDIR=$(TEST_ROOTDIR)/$(TOY_SOURCEDIR)
-TEST_CASESDIR=cases
+TEST_CASESDIR=.
 
 TEST_OUTDIR=out
 TEST_OBJDIR=obj
@@ -27,7 +27,7 @@ TEST_SOURCEFILES=$(wildcard $(TEST_SOURCEDIR)/*.c)
 TEST_CASESFILES=$(wildcard $(TEST_CASESDIR)/test_*.c)
 
 #build the object files, compile the test cases, and run
-all: clean build-source build-cases build-link build-run
+all: build-source build-cases build-link build-run
 
 #targets for each step
 .PHONY: build-source
@@ -64,42 +64,11 @@ $(TEST_OUTDIR)/%.run: $(TEST_OUTDIR)/%.exe
 	$<
 
 #debugging targets
-all-gdb: clean build-source build-cases build-link build-run-gdb
+gdb: build-source build-cases build-link build-run-gdb
 
 .PHONY: build-run-gdb
 build-run-gdb: $(addprefix $(TEST_OUTDIR)/,$(notdir $(TEST_CASESFILES:%.c=%.exe))) $(addprefix $(TEST_OUTDIR)/,$(notdir $(TEST_CASESFILES:%.c=%.run-gdb)))
 
 .PRECIOUS: $(TEST_OUTDIR)/%.run-gdb
 $(TEST_OUTDIR)/%.run-gdb: $(TEST_OUTDIR)/%.exe
-	gdb $< -ex "run" --batch
-
-#util commands
-.PHONY: clean
-clean:
-ifeq ($(shell uname),Linux)
-	find . -type f -name '*.o' -delete
-	find . -type f -name '*.a' -delete
-	find . -type f -name '*.exe' -delete
-	find . -type f -name '*.dll' -delete
-	find . -type f -name '*.lib' -delete
-	find . -type f -name '*.so' -delete
-	find . -type f -name '*.dylib' -delete
-	find . -type d -name 'out' -delete
-	find . -type d -name 'obj' -delete
-else ifeq ($(OS),Windows_NT)
-	$(RM) *.o *.a *.exe *.dll *.lib *.so *.dylib
-	$(RM) out
-	$(RM) obj
-else ifeq ($(shell uname),Darwin)
-	find . -type f -name '*.o' -delete
-	find . -type f -name '*.a' -delete
-	find . -type f -name '*.exe' -delete
-	find . -type f -name '*.dll' -delete
-	find . -type f -name '*.lib' -delete
-	find . -type f -name '*.so' -delete
-	find . -type f -name '*.dylib' -delete
-	find . -type d -name 'out' -delete
-	find . -type d -name 'obj' -delete
-else
-	@echo "Deletion failed - what platform is this?"
-endif
+	gdb $< -ix gdb_init -ex=run --batch --return-child-result --args "$<"

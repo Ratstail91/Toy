@@ -6,11 +6,15 @@
 
 #directories
 export TOY_SOURCEDIR=source
+export TOY_REPLDIR=repl
+export TOY_CASESDIR=tests/cases
+export TOY_INTEGRATIONSDIR=tests/integrations
+export TOY_BENCHMARKSDIR=tests/benchmarks
 export TOY_OUTDIR=out
 export TOY_OBJDIR=obj
 
 #targets
-all:
+#all:
 
 .PHONY: source
 source:
@@ -20,13 +24,39 @@ source:
 repl: source
 	$(MAKE) -C repl -k
 
+#various kinds of available tests
 .PHONY: tests
-tests: clean
-	$(MAKE) -C tests -k
+tests: clean test-cases test-integrations test-benchmarks
 
-.PHONY: tests-gdb
-tests-gdb: clean
-	$(MAKE) -C tests all-gdb -k
+.PHONY: test-cases
+test-cases:
+	$(MAKE) -C $(TOY_CASESDIR) -k
+
+.PHONY: test-integrations
+test-integrations:
+	$(MAKE) -C $(TOY_INTEGRATIONSDIR) -k
+
+.PHONY: test-benchmarks
+test-benchmarks:
+	$(MAKE) -C $(TOY_BENCHMARKSDIR) -k
+
+#same as above, but with GDB
+.PHONY: test-gdb
+test-gdb: clean test-cases-gdb test-integrations-gdb test-benchmarks-gdb
+
+.PHONY: test-cases-gdb
+test-cases-gdb:
+	$(MAKE) -C $(TOY_CASESDIR) gdb -k
+
+.PHONY: test-integrations-gdb
+test-integrations-gdb:
+	$(MAKE) -C $(TOY_INTEGRATIONSDIR) gdb -k
+
+.PHONY: test-benchmarks-gdb
+test-benchmarks-gdb:
+	$(MAKE) -C $(TOY_BENCHMARKSDIR) gdb -k
+
+#TODO: mustfail tests
 
 #util targets
 $(TOY_OUTDIR):

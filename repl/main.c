@@ -1,12 +1,27 @@
 #include "toy.h"
-#include "toy_print.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 //utilities
+#define APPEND(dest, src) \
+	strncpy((dest) + (strlen(dest)), (src), strlen((src)) + 1);
+
+#if defined(_WIN32) || defined(_WIN64)
+	#define FLIPSLASH(str) for (int i = 0; str[i]; i++) str[i] = str[i] == '/' ? '\\' : str[i];
+#else
+	#define FLIPSLASH(str) for (int i = 0; str[i]; i++) str[i] = str[i] == '\\' ? '/' : str[i];
+#endif
+
 unsigned char* readFile(char* path, int* size) {
+	//BUGFIX: fix the path based on platform - it might be slower, but it's better than dealing with platform crap
+	int pathLength = strlen(path);
+	char realPath[pathLength + 1];
+	strncpy(realPath, path, pathLength);
+	realPath[pathLength] = '\0';
+	FLIPSLASH(realPath);
+
 	//open the file
 	FILE* file = fopen(path, "rb");
 	if (file == NULL) {
@@ -26,29 +41,38 @@ unsigned char* readFile(char* path, int* size) {
 		return NULL;
 	}
 
-	//
+	//read the file
 	if (fread(buffer, sizeof(unsigned char), *size, file) < *size) {
 		fclose(file);
 		*size = -2; //singal a read error
 		return NULL;
 	}
 
-	fclose(file);
-
 	buffer[(*size)++] = '\0';
+
+	//clean up and return
+	fclose(file);
 	return buffer;
 }
 
-int getDirPath(char* dest, const char* src) {
-	//extract the directory from src, and store it in dest
+int getFilePath(char* dest, const char* src) {
+	char* p = NULL;
 
-#if defined(_WIN32) || defined(_WIN64)
-	char* p = strrchr(src, '\\');
-#else
-	char* p = strrchr(src, '/');
-#endif
+	//find the last slash, regardless of platform
+	p = strrchr(src, '\\');
+	if (p == NULL) {
+		p = strrchr(src, '/');
+	}
+	if (p == NULL) {
+		int len = strlen(src);
+		strncpy(dest, src, len);
+		return len;
+	}
 
-	int len = p != NULL ? p - src + 1 : 0;
+	//determine length of the path
+	int len = p - src + 1;
+
+	//copy to the dest
 	strncpy(dest, src, len);
 	dest[len] = '\0';
 
@@ -56,29 +80,30 @@ int getDirPath(char* dest, const char* src) {
 }
 
 int getFileName(char* dest, const char* src) {
-	//extract the directory from src, and store it in dest
+	char* p = NULL;
 
-#if defined(_WIN32) || defined(_WIN64)
-	char* p = strrchr(src, '\\') + 1;
-#else
-	char* p = strrchr(src, '/') + 1;
-#endif
+	//find the last slash, regardless of platform
+	p = strrchr(src, '\\');
+	if (p == NULL) {
+		p = strrchr(src, '/');
+	}
+	if (p == NULL) {
+		int len = strlen(src);
+		strncpy(dest, src, len);
+		return len;
+	}
 
+	p++; //skip the slash
+
+	//determine length of the file name
 	int len = strlen(p);
+
+	//copy to the dest
 	strncpy(dest, p, len);
 	dest[len] = '\0';
 
 	return len;
 }
-
-#define APPEND(dest, src) \
-	strncpy((dest) + (strlen(dest)), (src), strlen((src)) + 1);
-
-#if defined(_WIN32) || defined(_WIN64)
-	#define FLIPSLASH(str) for (int i = 0; str[i]; i++) str[i] = str[i] == '/' ? '\\' : str[i];
-#else
-	#define FLIPSLASH(str) for (int i = 0; str[i]; i++) str[i] = str[i] == '\\' ? '/' : str[i];
-#endif
 
 //handle command line arguments
 typedef struct CmdLine {
@@ -95,6 +120,8 @@ void usageCmdLine(int argc, const char* argv[]) {
 
 void helpCmdLine(int argc, const char* argv[]) {
 	usageCmdLine(argc, argv);
+
+	printf("The Toy Programming Language, leave arguments blank for an interactive REPL.\n\n");
 
 	printf("  -h, --help\t\t\tShow this help then exit.\n");
 	printf("  -v, --version\t\t\tShow version and copyright information then exit.\n");
@@ -159,7 +186,7 @@ CmdLine parseCmdLine(int argc, const char* argv[]) {
 					exit(-1);
 				}
 
-				getDirPath(cmd.infile, argv[0]);
+				getFilePath(cmd.infile, argv[0]);
 				APPEND(cmd.infile, argv[i]);
 				FLIPSLASH(cmd.infile);
 			}
