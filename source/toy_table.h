@@ -27,3 +27,17 @@ TOY_API void Toy_removeTable(Toy_Table** tableHandle, Toy_Value key);
 
 //NOTE: exposed to skip unnecessary allocations within Toy_Scope
 TOY_API Toy_Table* Toy_private_adjustTableCapacity(Toy_Table* oldTable, unsigned int newCapacity);
+
+//some useful sizes, could be swapped out as needed
+#ifndef TOY_TABLE_INITIAL_CAPACITY
+#define TOY_TABLE_INITIAL_CAPACITY 8
+#endif
+
+#ifndef TOY_TABLE_EXPANSION_RATE
+#define TOY_TABLE_EXPANSION_RATE 2
+#endif
+
+//expand when the contents passes a certain percentage of the capacity
+#ifndef TOY_TABLE_EXPANSION_THRESHOLD
+#define TOY_TABLE_EXPANSION_THRESHOLD 0.8
+#endif

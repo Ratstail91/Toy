@@ -20,13 +20,27 @@ TOY_API Toy_Bucket* Toy_allocateBucket(unsigned int capacity);
 TOY_API void* Toy_partitionBucket(Toy_Bucket** bucketHandle, unsigned int amount);
 TOY_API void Toy_freeBucket(Toy_Bucket** bucketHandle);
 
-//some useful bucket sizes, could be swapped or ifdef'd as needed
+//some useful sizes, could be swapped out as needed
+#ifndef TOY_BUCKET_TINY
 #define TOY_BUCKET_TINY (1024 * 2)
+#endif
+
+#ifndef TOY_BUCKET_SMALL
 #define TOY_BUCKET_SMALL (1024 * 4)
+#endif
+
+#ifndef TOY_BUCKET_MEDIUM
 #define TOY_BUCKET_MEDIUM (1024 * 8)
+#endif
+
+#ifndef TOY_BUCKET_LARGE
 #define TOY_BUCKET_LARGE (1024 * 16)
+#endif
+
+#ifndef TOY_BUCKET_HUGE
 #define TOY_BUCKET_HUGE (1024 * 32)
+#endif
 
-//sizeof(Toy_Bucket) is added internally, so reverse it here
+#ifndef TOY_BUCKET_IDEAL
 #define TOY_BUCKET_IDEAL (TOY_BUCKET_HUGE - sizeof(Toy_Bucket))
-
+#endif

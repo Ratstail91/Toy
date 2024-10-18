@@ -11,7 +11,7 @@ int test_stack_basics() {
 		//check if it worked
 		if (
 			stack == NULL ||
-			stack->capacity != 64 ||
+			stack->capacity != 8 ||
 			stack->count != 0)
 		{
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to allocate Toy_Stack\n" TOY_CC_RESET);
@@ -32,7 +32,7 @@ int test_stack_basics() {
 		Toy_pushStack(&stack, TOY_VALUE_FROM_INTEGER(420));
 		if (
 			stack == NULL ||
-			stack->capacity != 64 ||
+			stack->capacity != 8 ||
 			stack->count != 3)
 		{
 			fprintf(stderr, TOY_CC_ERROR "ERROR: failed to push Toy_Stack\n" TOY_CC_RESET);
@@ -55,7 +55,7 @@ int test_stack_basics() {
 		Toy_Value top2 = Toy_popStack(&stack);
 		if (
 			stack == NULL ||
-			stack->capacity != 64 ||
+			stack->capacity != 8 ||
 			stack->count != 2 ||
 			TOY_VALUE_IS_INTEGER(top2) != true ||
 			TOY_VALUE_AS_INTEGER(top2) != 420)

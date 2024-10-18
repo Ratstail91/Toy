@@ -6,9 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-//'count' actually tracks the number of values
-#define MIN_CAPACITY 16
-
 //utils
 static void probeAndInsert(Toy_Table** tableHandle, Toy_Value key, Toy_Value value) {
 	//make the entry
@@ -88,7 +85,7 @@ Toy_Table* Toy_private_adjustTableCapacity(Toy_Table* oldTable, unsigned int new
 }
 
 Toy_Table* Toy_allocateTable() {
-	return Toy_private_adjustTableCapacity(NULL, MIN_CAPACITY);
+	return Toy_private_adjustTableCapacity(NULL, TOY_TABLE_INITIAL_CAPACITY);
 }
 
 void Toy_freeTable(Toy_Table* table) {
@@ -103,8 +100,8 @@ void Toy_insertTable(Toy_Table** tableHandle, Toy_Value key, Toy_Value value) {
 	}
 
 	//expand the capacity
-	if ((*tableHandle)->count > (*tableHandle)->capacity * 0.8) {
-		(*tableHandle) = Toy_private_adjustTableCapacity((*tableHandle), (*tableHandle)->capacity * 2);
+	if ((*tableHandle)->count > (*tableHandle)->capacity * TOY_TABLE_EXPANSION_THRESHOLD) {
+		(*tableHandle) = Toy_private_adjustTableCapacity((*tableHandle), (*tableHandle)->capacity * TOY_TABLE_EXPANSION_RATE);
 	}
 
 	probeAndInsert(tableHandle, key, value);

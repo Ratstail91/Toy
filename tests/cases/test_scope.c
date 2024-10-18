@@ -21,7 +21,7 @@ int test_scope_allocation() {
 		if (scope == NULL ||
 			scope->next != NULL ||
 			scope->table == NULL ||
-			scope->table->capacity != 16 ||
+			scope->table->capacity != 8 ||
 			scope->refCount != 1 ||
 
 			false)
@@ -54,27 +54,27 @@ int test_scope_allocation() {
 			scope == NULL ||
 			scope->next == NULL ||
 			scope->table == NULL ||
-			scope->table->capacity != 16 ||
+			scope->table->capacity != 8 ||
 			scope->refCount != 1 ||
 
 			scope->next->next == NULL ||
 			scope->next->table == NULL ||
-			scope->next->table->capacity != 16 ||
+			scope->next->table->capacity != 8 ||
 			scope->next->refCount != 2 ||
 
 			scope->next->next->next == NULL ||
 			scope->next->next->table == NULL ||
-			scope->next->next->table->capacity != 16 ||
+			scope->next->next->table->capacity != 8 ||
 			scope->next->next->refCount != 3 ||
 
 			scope->next->next->next->next == NULL ||
 			scope->next->next->next->table == NULL ||
-			scope->next->next->next->table->capacity != 16 ||
+			scope->next->next->next->table->capacity != 8 ||
 			scope->next->next->next->refCount != 4 ||
 
 			scope->next->next->next->next->next != NULL ||
 			scope->next->next->next->next->table == NULL ||
-			scope->next->next->next->next->table->capacity != 16 ||
+			scope->next->next->next->next->table->capacity != 8 ||
 			scope->next->next->next->next->refCount != 5 || //refCount includes all ancestors
 
 			false)
@@ -115,17 +115,17 @@ int test_scope_allocation() {
 			scope == NULL ||
 			scope->next == NULL ||
 			scope->table == NULL ||
-			scope->table->capacity != 16 ||
+			scope->table->capacity != 8 ||
 			scope->refCount != 1 ||
 
 			scope->next->next == NULL ||
 			scope->next->table == NULL ||
-			scope->next->table->capacity != 16 ||
+			scope->next->table->capacity != 8 ||
 			scope->next->refCount != 2 ||
 
 			scope->next->next->next != NULL ||
 			scope->next->next->table == NULL ||
-			scope->next->next->table->capacity != 16 ||
+			scope->next->next->table->capacity != 8 ||
 			scope->next->next->refCount != 3 ||
 
 			false)
@@ -160,19 +160,19 @@ int test_scope_allocation() {
 			scopeBase == NULL ||
 			scopeBase->next != NULL ||
 			scopeBase->table == NULL ||
-			scopeBase->table->capacity != 16 ||
+			scopeBase->table->capacity != 8 ||
 			scopeBase->refCount != 3 ||
 
 			scopeA == NULL ||
 			scopeA->next != scopeBase ||
 			scopeA->table == NULL ||
-			scopeA->table->capacity != 16 ||
+			scopeA->table->capacity != 8 ||
 			scopeA->refCount != 1 ||
 
 			scopeB == NULL ||
 			scopeB->next != scopeBase ||
 			scopeB->table == NULL ||
-			scopeB->table->capacity != 16 ||
+			scopeB->table->capacity != 8 ||
 			scopeB->refCount != 1 ||
 
 			scopeA->next != scopeB->next || //double check
@@ -212,20 +212,20 @@ int test_scope_allocation() {
 			scopeA == NULL ||
 			scopeA->next != NULL ||
 			scopeA->table == NULL ||
-			scopeA->table->capacity != 16 ||
+			scopeA->table->capacity != 8 ||
 			scopeA->refCount != 2 ||
 
 			//scopeB still exists in memory until scopeC is popped
 			scopeB == NULL ||
 			scopeB->next != scopeA ||
 			scopeB->table == NULL ||
-			scopeB->table->capacity != 16 ||
+			scopeB->table->capacity != 8 ||
 			scopeB->refCount != 1 ||
 
 			scopeC == NULL ||
 			scopeC->next != scopeB ||
 			scopeC->table == NULL ||
-			scopeC->table->capacity != 16 ||
+			scopeC->table->capacity != 8 ||
 			scopeC->refCount != 1 ||
 
 			false)
@@ -259,19 +259,19 @@ int test_scope_allocation() {
 			scopeA == NULL ||
 			scopeA->next != NULL ||
 			scopeA->table == NULL ||
-			scopeA->table->capacity != 16 ||
+			scopeA->table->capacity != 8 ||
 			scopeA->refCount != 3 ||
 
 			scopeB == NULL ||
 			scopeB->next != scopeA ||
 			scopeB->table == NULL ||
-			scopeB->table->capacity != 16 ||
+			scopeB->table->capacity != 8 ||
 			scopeB->refCount != 1 ||
 
 			scopeB == NULL ||
 			scopeB->next != scopeA ||
 			scopeB->table == NULL ||
-			scopeB->table->capacity != 16 ||
+			scopeB->table->capacity != 8 ||
 			scopeB->refCount != 1 ||
 
 			scopeB == scopeCopy ||
@@ -335,7 +335,7 @@ int test_scope_elements() {
 		if (scope == NULL ||
 			scope->next != NULL ||
 			scope->table == NULL ||
-			scope->table->capacity != 16 ||
+			scope->table->capacity != 8 ||
 			scope->refCount != 1 ||
 
 			TOY_VALUE_IS_INTEGER(result) != true ||
@@ -360,7 +360,7 @@ int test_scope_elements() {
 		if (scope == NULL ||
 			scope->next != NULL ||
 			scope->table == NULL ||
-			scope->table->capacity != 16 ||
+			scope->table->capacity != 8 ||
 			scope->refCount != 1 ||
 
 			TOY_VALUE_IS_FLOAT(resultTwo) != true ||

@@ -4,18 +4,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//a good chunk of space - 'count' actually tracks the number of values
-#define MIN_CAPACITY 64
-
 Toy_Stack* Toy_allocateStack() {
-	Toy_Stack* stack = malloc(MIN_CAPACITY * sizeof(Toy_Value) + sizeof(Toy_Stack));
+	Toy_Stack* stack = malloc(TOY_STACK_INITIAL_CAPACITY * sizeof(Toy_Value) + sizeof(Toy_Stack));
 
 	if (stack == NULL) {
-		fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to allocate a 'Toy_Stack' of %d capacity (%d space in memory)\n" TOY_CC_RESET, MIN_CAPACITY, (int)(MIN_CAPACITY * sizeof(Toy_Value) + sizeof(Toy_Stack)));
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to allocate a 'Toy_Stack' of %d capacity (%d space in memory)\n" TOY_CC_RESET, TOY_STACK_INITIAL_CAPACITY, (int)(TOY_STACK_INITIAL_CAPACITY * sizeof(Toy_Value) + sizeof(Toy_Stack)));
 		exit(1);
 	}
 
-	stack->capacity = MIN_CAPACITY;
+	stack->capacity = TOY_STACK_INITIAL_CAPACITY;
 	stack->count = 0;
 
 	return stack;
@@ -30,8 +27,8 @@ void Toy_freeStack(Toy_Stack* stack) {
 }
 
 void Toy_pushStack(Toy_Stack** stackHandle, Toy_Value value) {
-	//don't go overboard - limit to 1mb of capacity used
-	if ((*stackHandle)->count >= 1024 * 1024 / sizeof(Toy_Value)) {
+	//don't go overboard
+	if ((*stackHandle)->count >= TOY_STACK_OVERFLOW) {
 		fprintf(stderr, TOY_CC_ERROR "ERROR: Stack overflow\n" TOY_CC_RESET);
 		exit(-1);
 	}
@@ -39,7 +36,7 @@ void Toy_pushStack(Toy_Stack** stackHandle, Toy_Value value) {
 	//expand the capacity if needed
 	if ((*stackHandle)->count + 1 > (*stackHandle)->capacity) {
 		while ((*stackHandle)->count + 1 > (*stackHandle)->capacity) {
-			(*stackHandle)->capacity = (*stackHandle)->capacity < MIN_CAPACITY ? MIN_CAPACITY : (*stackHandle)->capacity * 2;
+			(*stackHandle)->capacity = (*stackHandle)->capacity < TOY_STACK_INITIAL_CAPACITY ? TOY_STACK_INITIAL_CAPACITY : (*stackHandle)->capacity * TOY_STACK_EXPANSION_RATE;
 		}
 
 		unsigned int newCapacity = (*stackHandle)->capacity;
@@ -72,7 +69,7 @@ Toy_Value Toy_popStack(Toy_Stack** stackHandle) {
 	}
 
 	//shrink if possible
-	if ((*stackHandle)->count > MIN_CAPACITY && (*stackHandle)->count < (*stackHandle)->capacity / 4) {
+	if ((*stackHandle)->count > TOY_STACK_INITIAL_CAPACITY && (*stackHandle)->count < (*stackHandle)->capacity * TOY_STACK_CONTRACTION_RATE) {
 		(*stackHandle)->capacity /= 2;
 		unsigned int newCapacity = (*stackHandle)->capacity;
 

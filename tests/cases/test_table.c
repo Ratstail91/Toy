@@ -36,7 +36,7 @@ int test_table_simple_insert_lookup_and_remove() {
 		//insert
 		Toy_insertTable(&table, key, value);
 		if (table == NULL ||
-			table->capacity != 16 ||
+			table->capacity != 8 ||
 			table->count != 1)
 		{
 			fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to insert into a table\n" TOY_CC_RESET);
@@ -49,7 +49,7 @@ int test_table_simple_insert_lookup_and_remove() {
 
 		//check lookup
 		if (table == NULL ||
-			table->capacity != 16 ||
+			table->capacity != 8 ||
 			table->count != 1 ||
 			TOY_VALUE_AS_INTEGER(result) != 42)
 		{
@@ -63,7 +63,7 @@ int test_table_simple_insert_lookup_and_remove() {
 
 		//check remove
 		if (table == NULL ||
-			table->capacity != 16 ||
+			table->capacity != 8 ||
 			table->count != 0)
 		{
 			fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to remove from a table\n" TOY_CC_RESET);
@@ -97,7 +97,7 @@ int test_table_contents_no_expansion() {
 
 		//check the state
 		if (table == NULL ||
-			table->capacity != 16 ||
+			table->capacity != 8 ||
 			table->count != 1 ||
 
 			TEST_ENTRY_STATE(7, 1, 42, 0)
@@ -124,7 +124,7 @@ int test_table_contents_no_expansion() {
 
 		//check the state
 		if (table == NULL ||
-			table->capacity != 16 ||
+			table->capacity != 8 ||
 			table->count != 3 ||
 
 			TEST_ENTRY_STATE(7, 1, 42, 0) ||
@@ -154,7 +154,7 @@ int test_table_contents_no_expansion() {
 
 		//check the state
 		if (table == NULL ||
-			table->capacity != 16 ||
+			table->capacity != 8 ||
 			table->count != 4 ||
 
 			TEST_ENTRY_STATE(7, 1, 42, 0) ||
@@ -184,7 +184,7 @@ int test_table_contents_no_expansion() {
 
 		//check the state
 		if (table == NULL ||
-			table->capacity != 16 ||
+			table->capacity != 8 ||
 			table->count != 3 ||
 
 			TEST_ENTRY_STATE(15, 17, 42, 0) ||
@@ -216,7 +216,7 @@ int test_table_contents_no_expansion() {
 
 		//check the state
 		if (table == NULL ||
-			table->capacity != 16 ||
+			table->capacity != 8 ||
 			table->count != 3 ||
 
 			TOY_VALUE_IS_INTEGER(result) != true ||
@@ -245,7 +245,7 @@ int test_table_contents_no_expansion() {
 
 		//check the state
 		if (table == NULL ||
-			table->capacity != 16 ||
+			table->capacity != 8 ||
 			table->count != 4 ||
 
 			TEST_ENTRY_STATE(15, 17, 42, 0) ||
@@ -279,7 +279,7 @@ int test_table_contents_no_expansion() {
 
 		//check the state
 		if (table == NULL ||
-			table->capacity != 16 ||
+			table->capacity != 8 ||
 			table->count != 3 ||
 
 			TEST_ENTRY_STATE(15, 17, 42, 0) ||
