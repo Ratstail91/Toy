@@ -11,7 +11,8 @@ static unsigned int hashUInt(unsigned int x) {
 int main() {
     //print the index/hash pairs
     for (unsigned int i = 0; i < 100; i++) {
-        printf("{%u:%u}\n", i, hashUInt(i));
+        unsigned int h = hashUInt(i);
+        printf("%u: %u %% 8 = %u\n", i, h, h % 8);
     }
 
     return 0;

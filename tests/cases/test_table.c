@@ -119,7 +119,7 @@ int test_table_contents_no_expansion() {
 
 		//inserts
 		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(1), TOY_VALUE_FROM_INTEGER(42)); //hash: 7
-		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(2), TOY_VALUE_FROM_INTEGER(69)); //hash: 8
+		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(2), TOY_VALUE_FROM_INTEGER(69)); //hash: 0
 		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(3), TOY_VALUE_FROM_INTEGER(420)); //hash: 5
 
 		//check the state
@@ -128,11 +128,11 @@ int test_table_contents_no_expansion() {
 			table->count != 3 ||
 
 			TEST_ENTRY_STATE(7, 1, 42, 0) ||
-			TEST_ENTRY_STATE(8, 2, 69, 0) ||
+			TEST_ENTRY_STATE(0, 2, 69, 0) ||
 			TEST_ENTRY_STATE(5, 3, 420, 0)
 			)
 		{
-			fprintf(stderr, TOY_CC_ERROR "ERROR: Unrecognized state from table data, multiple inserts, no collisions {1:42},{2:69},{3:420}\n" TOY_CC_RESET);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Unrecognized state from table data, multiple inserts, no collisions\n" TOY_CC_RESET);
 			Toy_freeTable(table);
 			return -1;
 		}
@@ -142,6 +142,37 @@ int test_table_contents_no_expansion() {
 	}
 
 	//multiple inserts, with collisions
+	{
+		//setup
+		Toy_Table* table = Toy_allocateTable();
+
+		//inserts
+		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(5), TOY_VALUE_FROM_INTEGER(42)); //hash: 2
+		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(19), TOY_VALUE_FROM_INTEGER(69)); //hash: 2
+		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(37), TOY_VALUE_FROM_INTEGER(420)); //hash: 2
+		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(65), TOY_VALUE_FROM_INTEGER(8891)); //hash: 2
+
+		//check the state
+		if (table == NULL ||
+			table->capacity != 8 ||
+			table->count != 4 ||
+
+			TEST_ENTRY_STATE(2, 5, 42, 0) ||
+			TEST_ENTRY_STATE(3, 19, 69, 1) ||
+			TEST_ENTRY_STATE(4, 37, 420, 2) ||
+			TEST_ENTRY_STATE(5, 65, 8891, 3)
+			)
+		{
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Unrecognized state from table data, muiltiple inserts, with collisions\n" TOY_CC_RESET);
+			Toy_freeTable(table);
+			return -1;
+		}
+
+		//free
+		Toy_freeTable(table);
+	}
+
+	//multiple inserts, with collisions, modulo wrap
 	{
 		//setup
 		Toy_Table* table = Toy_allocateTable();
@@ -158,41 +189,13 @@ int test_table_contents_no_expansion() {
 			table->count != 4 ||
 
 			TEST_ENTRY_STATE(7, 1, 42, 0) ||
-			TEST_ENTRY_STATE(8, 14, 69, 1) ||
-			TEST_ENTRY_STATE(9, 76, 420, 2) ||
-			TEST_ENTRY_STATE(10, 80, 8891, 3)
+			TEST_ENTRY_STATE(0, 14, 69, 1) ||
+			TEST_ENTRY_STATE(1, 76, 420, 2) ||
+			TEST_ENTRY_STATE(2, 80, 8891, 3)
+
 			)
 		{
-			fprintf(stderr, TOY_CC_ERROR "ERROR: Unrecognized state from table data, muiltiple inserts, with collisions {1:42},{14:69},{76:420},{80:8891}\n" TOY_CC_RESET);
-			Toy_freeTable(table);
-			return -1;
-		}
-
-		//free
-		Toy_freeTable(table);
-	}
-
-	//multiple inserts, with collisions, modulo wrap
-	{
-		//setup
-		Toy_Table* table = Toy_allocateTable();
-
-		//inserts
-		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(17), TOY_VALUE_FROM_INTEGER(42)); //hash: 15
-		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(33), TOY_VALUE_FROM_INTEGER(69)); //hash: 15
-		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(70), TOY_VALUE_FROM_INTEGER(420)); //hash: 15
-
-		//check the state
-		if (table == NULL ||
-			table->capacity != 8 ||
-			table->count != 3 ||
-
-			TEST_ENTRY_STATE(15, 17, 42, 0) ||
-			TEST_ENTRY_STATE(0, 33, 69, 1) ||
-			TEST_ENTRY_STATE(1, 70, 420, 2)
-			)
-		{
-			fprintf(stderr, TOY_CC_ERROR "ERROR: Unrecognized state from table data, muiltiple inserts, with collisions, modulo wrap {17:42},{33:69},{70:420}\n" TOY_CC_RESET);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Unrecognized state from table data, muiltiple inserts, with collisions, modulo wrap\n" TOY_CC_RESET);
 			Toy_freeTable(table);
 			return -1;
 		}
@@ -207,9 +210,9 @@ int test_table_contents_no_expansion() {
 		Toy_Table* table = Toy_allocateTable();
 
 		//inserts
-		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(17), TOY_VALUE_FROM_INTEGER(42)); //hash: 15
-		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(33), TOY_VALUE_FROM_INTEGER(69)); //hash: 15
-		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(70), TOY_VALUE_FROM_INTEGER(420)); //hash: 15
+		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(17), TOY_VALUE_FROM_INTEGER(42)); //hash: 7
+		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(33), TOY_VALUE_FROM_INTEGER(69)); //hash: 7
+		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(70), TOY_VALUE_FROM_INTEGER(420)); //hash: 7
 
 		//lookup
 		Toy_Value result = Toy_lookupTable(&table, TOY_VALUE_FROM_INTEGER(33));
@@ -238,9 +241,9 @@ int test_table_contents_no_expansion() {
 		Toy_Table* table = Toy_allocateTable();
 
 		//inserts
-		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(17), TOY_VALUE_FROM_INTEGER(42)); //hash: 15
-		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(33), TOY_VALUE_FROM_INTEGER(69)); //hash: 15
-		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(70), TOY_VALUE_FROM_INTEGER(420)); //hash: 15
+		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(17), TOY_VALUE_FROM_INTEGER(42)); //hash: 7
+		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(33), TOY_VALUE_FROM_INTEGER(69)); //hash: 7
+		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(70), TOY_VALUE_FROM_INTEGER(420)); //hash: 7
 		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(35), TOY_VALUE_FROM_INTEGER(8891)); //hash: 1
 
 		//check the state
@@ -248,13 +251,13 @@ int test_table_contents_no_expansion() {
 			table->capacity != 8 ||
 			table->count != 4 ||
 
-			TEST_ENTRY_STATE(15, 17, 42, 0) ||
+			TEST_ENTRY_STATE(7, 17, 42, 0) ||
 			TEST_ENTRY_STATE(0, 33, 69, 1) ||
 			TEST_ENTRY_STATE(1, 70, 420, 2) ||
 			TEST_ENTRY_STATE(2, 35, 8891, 1)
 			)
 		{
-			fprintf(stderr, TOY_CC_ERROR "ERROR: Unrecognized state from table data, muiltiple inserts, with collisions, modulo wrap, psl overlap {17:42},{33:69},{70:420},{35:8891}\n" TOY_CC_RESET);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Unrecognized state from table data, muiltiple inserts, with collisions, modulo wrap, psl overlap\n" TOY_CC_RESET);
 			Toy_freeTable(table);
 			return -1;
 		}
@@ -269,9 +272,9 @@ int test_table_contents_no_expansion() {
 		Toy_Table* table = Toy_allocateTable();
 
 		//inserts
-		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(17), TOY_VALUE_FROM_INTEGER(42)); //hash: 15
-		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(33), TOY_VALUE_FROM_INTEGER(69)); //hash: 15
-		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(70), TOY_VALUE_FROM_INTEGER(420)); //hash: 15
+		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(17), TOY_VALUE_FROM_INTEGER(42)); //hash: 7
+		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(33), TOY_VALUE_FROM_INTEGER(69)); //hash: 7
+		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(70), TOY_VALUE_FROM_INTEGER(420)); //hash: 7
 		Toy_insertTable(&table, TOY_VALUE_FROM_INTEGER(35), TOY_VALUE_FROM_INTEGER(8891)); //hash: 1
 
 		//remove
@@ -282,12 +285,12 @@ int test_table_contents_no_expansion() {
 			table->capacity != 8 ||
 			table->count != 3 ||
 
-			TEST_ENTRY_STATE(15, 17, 42, 0) ||
+			TEST_ENTRY_STATE(7, 17, 42, 0) ||
 			TEST_ENTRY_STATE(0, 70, 420, 1) ||
 			TEST_ENTRY_STATE(1, 35, 8891, 0)
 			)
 		{
-			fprintf(stderr, TOY_CC_ERROR "ERROR: Unrecognized state from table data, muiltiple inserts, with collisions, modulo wrap, psl overlap, psl shift {17:42},{*33:69},{70:420},{35:8891}\n" TOY_CC_RESET);
+			fprintf(stderr, TOY_CC_ERROR "ERROR: Unrecognized state from table data, muiltiple inserts, with collisions, modulo wrap, psl overlap, psl shift\n" TOY_CC_RESET);
 			Toy_freeTable(table);
 			return -1;
 		}
@@ -561,7 +564,7 @@ int test_table_contents_with_expansions() {
 	//Skipped: multiple inserts, with collisions, modulo wrap, psl overlap
 	//Skipped: multiple inserts, with collisions, modulo wrap, psl overlap, psl shift
 
-	//Note: since psl overlap and psl shift both work without expansion, I'm leaving these tests unimplemented due to exhaustion.
+	//Note: since psl overlap and psl shift both work without expansion, I'm leaving these tests unimplemented.
 
 	return 0;
 }
@@ -605,8 +608,6 @@ int test_table_expansions_under_stress() {
 int main() {
 	//run each test set, returning the total errors given
 	int total = 0, res = 0;
-
-	//Note: there's some utility c programs in .notes called "hash_generator" that can help
 
 	{
 		res = test_table_allocation();
