@@ -16,7 +16,7 @@ typedef enum Toy_ValueType {
 	TOY_VALUE_FUNCTION,
 	TOY_VALUE_OPAQUE,
 
-	//TODO: type, any
+	//TODO: type, any, consider 'stack' as a possible addition
 } Toy_ValueType;
 
 //8 bytes in size
