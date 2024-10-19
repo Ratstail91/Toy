@@ -35,7 +35,6 @@ build: $(TEST_OBJDIR)$(TEST_SRCFILES:.c=.o)
 $(TEST_OBJDIR)%.o: $(TEST_SRCDIR)%.c
 	$(CC) -c -o $@ $< $(CFLAGS) -fdata-sections -ffunction-sections
 
-
 .PRECIOUS: $(TEST_OUTDIR)%.exe
 $(TEST_OUTDIR)%.exe: $(TEST_OBJDIR)%.o
 	$(CC) -o $@ $< $(CFLAGS) $(LIBS) $(LDFLAGS)
