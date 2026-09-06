@@ -9,11 +9,12 @@ typedef struct Toy_private_EscapeEntry_t {
 	unsigned int depth; //the current depth
 } Toy_private_EscapeEntry_t;
 
-typedef struct Toy_private_EscapeArray {
+typedef struct Toy_private_EscapeStack {
+	struct Toy_private_EscapeStack* next;
 	unsigned int capacity;
 	unsigned int count;
 	Toy_private_EscapeEntry_t data[];
-} Toy_private_EscapeArray;
+} Toy_private_EscapeStack;
 
 //not needed at runtime, so they can be bigger
 #ifndef TOY_ESCAPE_INITIAL_CAPACITY
@@ -24,7 +25,8 @@ typedef struct Toy_private_EscapeArray {
 #define TOY_ESCAPE_EXPANSION_RATE 4
 #endif
 
-Toy_private_EscapeArray* Toy_private_resizeEscapeArray(Toy_private_EscapeArray* ptr, unsigned int capacity);
+Toy_private_EscapeStack* Toy_private_resizeEscapeStack(Toy_private_EscapeStack* ptr, unsigned int capacity, Toy_private_EscapeStack* next);
+
 
 //structure for holding the bytecode during compilation
 typedef struct Toy_Bytecode {
@@ -50,8 +52,8 @@ typedef struct Toy_Bytecode {
 
 	//tools for handling the build process
 	unsigned int currentScopeDepth;
-	Toy_private_EscapeArray* breakEscapes;
-	Toy_private_EscapeArray* continueEscapes;
+	Toy_private_EscapeStack* breakEscapes;
+	Toy_private_EscapeStack* continueEscapes;
 
 	//compilation errors
 	bool panic;

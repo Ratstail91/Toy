@@ -1,6 +1,6 @@
 #compiler settings
 CC=gcc
-CFLAGS+=-std=c17 -g -Wall -Werror -Wextra -Wpedantic -Wformat=2 -Wno-newline-eof
+CFLAGS+=-std=c17 -g -O0 -Wall -Werror -Wextra -Wpedantic -Wformat=2 -Wno-newline-eof
 LIBS+=-lm
 LDFLAGS+=
 

@@ -72,23 +72,26 @@ static bool checkForChainedInvoke(Toy_Ast* ptr) {
 }
 
 //escapes
-Toy_private_EscapeArray* Toy_private_resizeEscapeArray(Toy_private_EscapeArray* ptr, unsigned int capacity) {
+Toy_private_EscapeStack* Toy_private_resizeEscapeStack(Toy_private_EscapeStack* ptr, unsigned int capacity, Toy_private_EscapeStack* next) {
 	//if you're freeing everything, just return
-	if (capacity == 0) {
+	if (ptr != NULL && capacity == 0) {
+		next = ptr->next;
 		free(ptr);
-		return NULL;
+		return next;
 	}
 
+	//NOTE: the 'next' parameter is handled a bit oddly due to the stack being grafted on long after the escape array was implemented.
 	unsigned int originalCapacity = ptr == NULL ? 0 : ptr->capacity;
 	unsigned int orignalCount = ptr == NULL ? 0 : ptr->count;
 
-	ptr = (Toy_private_EscapeArray*)realloc(ptr, capacity * sizeof(Toy_private_EscapeEntry_t) + sizeof(Toy_private_EscapeArray));
+	ptr = (Toy_private_EscapeStack*)realloc(ptr, capacity * sizeof(Toy_private_EscapeEntry_t) + sizeof(Toy_private_EscapeStack));
 
 	if (ptr == NULL) {
-		fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to resize an escape array within 'Toy_Bytecode' from %d to %d capacity\n" TOY_CC_RESET, (int)originalCapacity, (int)capacity);
+		fprintf(stderr, TOY_CC_ERROR "ERROR: Failed to resize an escape stack within 'Toy_Bytecode' from %d to %d capacity\n" TOY_CC_RESET, (int)originalCapacity, (int)capacity);
 		exit(-1);
 	}
 
+	ptr->next = next;
 	ptr->capacity = capacity;
 	ptr->count = orignalCount;
 
@@ -284,16 +287,16 @@ unsigned char* compileSourceToSubroutine(const char* source, const char* working
 
 	Toy_Bytecode compiler = { 0 };
 
-	compiler.breakEscapes = Toy_private_resizeEscapeArray(NULL, TOY_ESCAPE_INITIAL_CAPACITY);
-	compiler.continueEscapes = Toy_private_resizeEscapeArray(NULL, TOY_ESCAPE_INITIAL_CAPACITY);
+	compiler.breakEscapes = Toy_private_resizeEscapeStack(NULL, TOY_ESCAPE_INITIAL_CAPACITY, NULL);
+	compiler.continueEscapes = Toy_private_resizeEscapeStack(NULL, TOY_ESCAPE_INITIAL_CAPACITY, NULL);
 
 	//compile the ast to memory
 	writeBytecodeBody(&compiler, ast);
 	unsigned char* buffer = collateBytecodeBody(&compiler);
 
 	//cleanup
-	Toy_private_resizeEscapeArray(compiler.breakEscapes, 0);
-	Toy_private_resizeEscapeArray(compiler.continueEscapes, 0);
+	Toy_private_resizeEscapeStack(compiler.breakEscapes, 0, NULL);
+	Toy_private_resizeEscapeStack(compiler.continueEscapes, 0, NULL);
 
 	free(compiler.param);
 	free(compiler.code);
@@ -765,6 +768,10 @@ static unsigned int writeInstructionWhileThen(Toy_Bytecode** mb, Toy_AstWhileThe
 
 	unsigned int paramAddr = SKIP_INT(mb, code); //parameter to be written later
 
+	//push to the escape stacks
+	(*mb)->breakEscapes = Toy_private_resizeEscapeStack(NULL, TOY_ESCAPE_INITIAL_CAPACITY, (*mb)->breakEscapes);
+	(*mb)->continueEscapes = Toy_private_resizeEscapeStack(NULL, TOY_ESCAPE_INITIAL_CAPACITY, (*mb)->continueEscapes);
+
 	//emit then-branch
 	writeBytecodeFromAst(mb, ast.thenBranch);
 
@@ -780,7 +787,7 @@ static unsigned int writeInstructionWhileThen(Toy_Bytecode** mb, Toy_AstWhileThe
 	OVERWRITE_INT(mb, code, paramAddr, CURRENT_ADDRESS(mb, code) - (paramAddr + 4));
 
 	//set the break & continue data
-	while ((*mb)->breakEscapes->count > 0 && (*mb)->breakEscapes->data[(*mb)->breakEscapes->count - 1].depth >= (*mb)->currentScopeDepth) { //BUGFIX: also checking the depth of the keyword to avoid clashing loops
+	while ((*mb)->breakEscapes->count > 0) {
 		//extract
 		unsigned int addr = (*mb)->breakEscapes->data[(*mb)->breakEscapes->count - 1].addr;
 		unsigned int depth = (*mb)->breakEscapes->data[(*mb)->breakEscapes->count - 1].depth;
@@ -794,7 +801,7 @@ static unsigned int writeInstructionWhileThen(Toy_Bytecode** mb, Toy_AstWhileThe
 		(*mb)->breakEscapes->count--;
 	}
 
-	while ((*mb)->continueEscapes->count > 0 && (*mb)->continueEscapes->data[(*mb)->continueEscapes->count - 1].depth >= (*mb)->currentScopeDepth) { //BUGFIX: also checking the depth of the keyword to avoid clashing loops
+	while ((*mb)->continueEscapes->count > 0) {
 		//extract
 		unsigned int addr = (*mb)->continueEscapes->data[(*mb)->continueEscapes->count - 1].addr;
 		unsigned int depth = (*mb)->continueEscapes->data[(*mb)->continueEscapes->count - 1].depth;
@@ -808,13 +815,17 @@ static unsigned int writeInstructionWhileThen(Toy_Bytecode** mb, Toy_AstWhileThe
 		(*mb)->continueEscapes->count--;
 	}
 
+	//pop from the escape stacks
+	(*mb)->breakEscapes = Toy_private_resizeEscapeStack((*mb)->breakEscapes, 0, NULL);
+	(*mb)->continueEscapes = Toy_private_resizeEscapeStack((*mb)->continueEscapes, 0, NULL);
+
 	return 0;
 }
 
 static unsigned int writeInstructionForCondThen(Toy_Bytecode** mb, Toy_AstForCondThen ast) {
 	//for (init; cond; post) { then }
 
-	//push scope (built into the keyword b/c of the initBranch)
+	//push outer scope (built into the keyword b/c of the initBranch)
 	EMIT_BYTE(mb, code, TOY_OPCODE_SCOPE_PUSH);
 	EMIT_BYTE(mb, code, 0);
 	EMIT_BYTE(mb, code, 0);
@@ -843,6 +854,10 @@ static unsigned int writeInstructionForCondThen(Toy_Bytecode** mb, Toy_AstForCon
 	EMIT_BYTE(mb, code, 0);
 
 	unsigned int paramAddr = SKIP_INT(mb, code); //parameter to be written later
+
+	//push to the escape stacks
+	(*mb)->breakEscapes = Toy_private_resizeEscapeStack(NULL, TOY_ESCAPE_INITIAL_CAPACITY, (*mb)->breakEscapes);
+	(*mb)->continueEscapes = Toy_private_resizeEscapeStack(NULL, TOY_ESCAPE_INITIAL_CAPACITY, (*mb)->continueEscapes);
 
 	//emit then-branch
 	writeBytecodeFromAst(mb, ast.thenBranch);
@@ -882,7 +897,7 @@ static unsigned int writeInstructionForCondThen(Toy_Bytecode** mb, Toy_AstForCon
 	OVERWRITE_INT(mb, code, paramAddr, CURRENT_ADDRESS(mb, code) - (paramAddr + 4));
 
 	//set the break & continue data
-	while ((*mb)->breakEscapes->count > 0 && (*mb)->breakEscapes->data[(*mb)->breakEscapes->count - 1].depth >= (*mb)->currentScopeDepth) { //BUGFIX: also checking the depth of the keyword to avoid clashing loops
+	while ((*mb)->breakEscapes->count > 0) {
 		//extract
 		unsigned int addr = (*mb)->breakEscapes->data[(*mb)->breakEscapes->count - 1].addr;
 		unsigned int depth = (*mb)->breakEscapes->data[(*mb)->breakEscapes->count - 1].depth;
@@ -896,7 +911,7 @@ static unsigned int writeInstructionForCondThen(Toy_Bytecode** mb, Toy_AstForCon
 		(*mb)->breakEscapes->count--;
 	}
 
-	while ((*mb)->continueEscapes->count > 0 && (*mb)->continueEscapes->data[(*mb)->continueEscapes->count - 1].depth >= (*mb)->currentScopeDepth) { //BUGFIX: also checking the depth of the keyword to avoid clashing loops
+	while ((*mb)->continueEscapes->count > 0) {
 		//extract
 		unsigned int addr = (*mb)->continueEscapes->data[(*mb)->continueEscapes->count - 1].addr;
 		unsigned int depth = (*mb)->continueEscapes->data[(*mb)->continueEscapes->count - 1].depth;
@@ -910,7 +925,11 @@ static unsigned int writeInstructionForCondThen(Toy_Bytecode** mb, Toy_AstForCon
 		(*mb)->continueEscapes->count--;
 	}
 
-	//pop scope after the keyword-level scope
+	//pop from the escape stacks
+	(*mb)->breakEscapes = Toy_private_resizeEscapeStack((*mb)->breakEscapes, 0, NULL);
+	(*mb)->continueEscapes = Toy_private_resizeEscapeStack((*mb)->continueEscapes, 0, NULL);
+
+	//push outer scope (built into the keyword b/c of the initBranch)
 	EMIT_BYTE(mb, code, TOY_OPCODE_SCOPE_POP);
 	EMIT_BYTE(mb, code, 0);
 	EMIT_BYTE(mb, code, 0);
@@ -935,7 +954,7 @@ static unsigned int writeInstructionBreak(Toy_Bytecode** mb, Toy_AstBreak ast) {
 
 	//expand the escape array if needed
 	if ((*mb)->breakEscapes->capacity <= (*mb)->breakEscapes->count) {
-		(*mb)->breakEscapes = Toy_private_resizeEscapeArray((*mb)->breakEscapes, (*mb)->breakEscapes->capacity * TOY_ESCAPE_EXPANSION_RATE);
+		(*mb)->breakEscapes = Toy_private_resizeEscapeStack((*mb)->breakEscapes, (*mb)->breakEscapes->capacity * TOY_ESCAPE_EXPANSION_RATE, (*mb)->breakEscapes->next);
 	}
 
 	//store for later
@@ -959,7 +978,7 @@ static unsigned int writeInstructionContinue(Toy_Bytecode** mb, Toy_AstContinue 
 
 	//expand the escape array if needed
 	if ((*mb)->continueEscapes->capacity <= (*mb)->continueEscapes->count) {
-		(*mb)->continueEscapes = Toy_private_resizeEscapeArray((*mb)->continueEscapes, (*mb)->continueEscapes->capacity * TOY_ESCAPE_EXPANSION_RATE);
+		(*mb)->continueEscapes = Toy_private_resizeEscapeStack((*mb)->continueEscapes, (*mb)->continueEscapes->capacity * TOY_ESCAPE_EXPANSION_RATE, (*mb)->continueEscapes->next);
 	}
 
 	//store for later
@@ -1298,8 +1317,8 @@ static unsigned int writeInstructionFnDeclare(Toy_Bytecode** mb, Toy_AstFnDeclar
 	//generate the subroutine
 	Toy_Bytecode compiler = { 0 };
 
-	compiler.breakEscapes = Toy_private_resizeEscapeArray(NULL, TOY_ESCAPE_INITIAL_CAPACITY);
-	compiler.continueEscapes = Toy_private_resizeEscapeArray(NULL, TOY_ESCAPE_INITIAL_CAPACITY);
+	compiler.breakEscapes = Toy_private_resizeEscapeStack(NULL, TOY_ESCAPE_INITIAL_CAPACITY, NULL);
+	compiler.continueEscapes = Toy_private_resizeEscapeStack(NULL, TOY_ESCAPE_INITIAL_CAPACITY, NULL);
 
 	//compile the ast to memory
 	unsigned int paramCount = emitParameters(&compiler, ast.params);
@@ -1307,8 +1326,8 @@ static unsigned int writeInstructionFnDeclare(Toy_Bytecode** mb, Toy_AstFnDeclar
 	unsigned char* subroutine = collateBytecodeBody(&compiler);
 
 	//cleanup the compiler
-	Toy_private_resizeEscapeArray(compiler.breakEscapes, 0);
-	Toy_private_resizeEscapeArray(compiler.continueEscapes, 0);
+	Toy_private_resizeEscapeStack(compiler.breakEscapes, 0, NULL);
+	Toy_private_resizeEscapeStack(compiler.continueEscapes, 0, NULL);
 
 	free(compiler.param);
 	free(compiler.code);
@@ -1659,16 +1678,16 @@ unsigned char* Toy_compileToBytecode(Toy_Ast* ast) {
 	//setup
 	Toy_Bytecode compiler = { 0 };
 
-	compiler.breakEscapes = Toy_private_resizeEscapeArray(NULL, TOY_ESCAPE_INITIAL_CAPACITY);
-	compiler.continueEscapes = Toy_private_resizeEscapeArray(NULL, TOY_ESCAPE_INITIAL_CAPACITY);
+	compiler.breakEscapes = Toy_private_resizeEscapeStack(NULL, TOY_ESCAPE_INITIAL_CAPACITY, NULL);
+	compiler.continueEscapes = Toy_private_resizeEscapeStack(NULL, TOY_ESCAPE_INITIAL_CAPACITY, NULL);
 
 	//compile the ast to memory
 	writeBytecodeBody(&compiler, ast);
 	unsigned char* buffer = collateBytecodeBody(&compiler);
 
 	//cleanup
-	Toy_private_resizeEscapeArray(compiler.breakEscapes, 0);
-	Toy_private_resizeEscapeArray(compiler.continueEscapes, 0);
+	Toy_private_resizeEscapeStack(compiler.breakEscapes, 0, NULL);
+	Toy_private_resizeEscapeStack(compiler.continueEscapes, 0, NULL);
 
 	free(compiler.param);
 	free(compiler.code);

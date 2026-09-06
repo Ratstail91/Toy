@@ -1,0 +1,26 @@
+//check these nested loops and the new escape stacks don't conflict
+while (true) {
+	{
+		break;
+	}
+
+	for (var i = 0; i < 10; i++) {
+		pass;
+	}
+}
+
+for (var i = 0; i < 10; i++) {
+	{
+		continue;
+	}
+	while(true) {
+		break;
+	}
+}
+
+while(true) {
+	while(false) {
+		continue;
+	}
+	break;
+}

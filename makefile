@@ -1,6 +1,6 @@
 #compiler settings reference
 #CC=gcc
-#CFLAGS+=-std=c17 -g -Wall -Werror -Wextra -Wpedantic -Wformat=2
+#CFLAGS+=-std=c17 -g -O0 -Wall -Werror -Wextra -Wpedantic -Wformat=2 -Wno-newline-eof
 #LIBS+=-lm
 
 #directories
@@ -31,6 +31,8 @@ tests: clean
 
 tests-gdb: clean
 	$(MAKE) -C tests -k gdb
+
+#TODO: re-add valgrind option
 
 #util targets
 $(TOY_OUTDIR):
